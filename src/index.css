@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #2d6974;
+  --color-secondary: #7fae9b;
+  --color-success: #00b37466;
+  --color-error: #f5342566;
+  --color-warning: #e394004d;
+  --color-required: #f53425;
+
+  --font-roboto: 'Roboto', sans-serif;
+  --default-font-family: var(--font-roboto);
+
+  --gradient-primary: linear-gradient(180deg, #2d6974 0%, #7fae9b 100%);
+}
+
+@utility bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+/* Typography */
+
+/* Display */
+@utility display-large {
+  @apply text-[64px] font-bold;
+}
+
+@utility display-medium {
+  @apply text-[48px] font-semibold;
+}
+
+@utility display-small {
+  @apply text-[34px] leading-none font-medium tracking-normal;
+}
+
+/* Headline */
+@utility headline-large {
+  @apply text-[34px] font-bold;
+}
+
+@utility headline-medium {
+  @apply text-[24px] font-semibold;
+}
+
+/* Title */
+@utility title-large {
+  @apply text-[22px] font-bold;
+}
+
+@utility title-medium {
+  @apply text-[16px] font-semibold;
+}
+
+@utility title-small {
+  @apply text-[14px] font-semibold;
+}
+
+/* label */
+@utility label-large {
+  @apply text-[18px] leading-none font-semibold tracking-normal;
+}
+
+@utility label-medium {
+  @apply text-[14px] font-medium;
+}
+
+@utility label-small {
+  @apply text-[12px] font-medium;
+}
+
+/* body */
+@utility x-body-large {
+  @apply text-[18px] font-normal;
+}
+
+@utility body-large {
+  @apply text-[16px] leading-none font-normal tracking-normal;
+}
+
+@utility body-medium {
+  @apply text-[14px] font-normal;
+}
+
+@utility body-small {
+  @apply text-[12px] font-normal;
+}
+
+@utility x-body-small {
+  @apply text-[10px] font-light;
+}

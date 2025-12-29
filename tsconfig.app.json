@@ -1,0 +1,68 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2024",
+    "useDefineForClassFields": true,
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Strict Type Checking - Core Safety Rules */
+    "strict": true, // Enable all strict type-checking options
+    "noImplicitAny": true, // Error on expressions with implied 'any' type
+    "noImplicitReturns": true, // Error when not all code paths in function return a value
+    "noImplicitThis": true, // Error on 'this' expressions with implied 'any' type
+    "strictNullChecks": true, // Enable strict null checks (prevents null/undefined errors)
+    "strictBindCallApply": true, // Enable strict 'bind', 'call', and 'apply' methods on functions
+    "strictPropertyInitialization": true, // Enable strict checking of property initialization in classes
+    "useUnknownInCatchVariables": true, // Type catch clause variables as 'unknown' instead of 'any'
+    "noFallthroughCasesInSwitch": true, // Error on fallthrough cases in switch statement
+
+    /* Relaxed for Form Libraries & Development */
+    "exactOptionalPropertyTypes": false, // Allow T | undefined in optional properties (fixes React Hook Form issues)
+    "noUncheckedIndexedAccess": false, // Don't require index access to return T | undefined (allows obj[key])
+    "noPropertyAccessFromIndexSignature": false, // Allow dot notation access to index signature properties
+
+    /* Development Flexibility - Warnings Only */
+    "noUnusedLocals": false, // Don't error on unused local variables (helpful during development)
+    "noUnusedParameters": false, // Don't error on unused function parameters
+    "noImplicitOverride": false, // Don't require 'override' modifier when overriding
+    "allowUnreachableCode": false, // Error on unreachable code after return/throw
+    "allowUnusedLabels": false, // Error on unused labels
+
+    /* Import/Export */
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+
+    /* Path Mapping */
+    "baseUrl": "./src",
+    "paths": {
+      "@assets/*": ["assets/*"],
+      "@app/*": ["app/*"],
+      "@components/*": ["components/*"],
+      "@contexts/*": ["contexts/*"],
+      "@hooks/*": ["hooks/*"],
+      "@lib/*": ["lib/*"],
+      "@custom-types/*": ["types/*"],
+      "@utils/*": ["utils/*"],
+      "@config/*": ["config/*"],
+      "@slices/*": ["slices/*"],
+      "@constants/*": ["constants/*"],
+      "@features/*": ["features/*"],
+      "@auth/*": ["features/auth/*"],
+      "@user/*": ["features/user/*"],
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+}
