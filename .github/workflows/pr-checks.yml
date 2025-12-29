@@ -21,49 +21,54 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # 🔁 npm → bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20'
-          cache: 'npm'
+          bun-version: 'latest'
 
+      # 🔁 npm ci → bun install
       - name: Install dependencies
         run: |
-          npm ci
+          bun install --frozen-lockfile
           echo "Dependencies installed successfully"
 
+      # 🔁 cache key package-lock.json → bun.lockb
       - name: Cache ESLint and TypeScript
         uses: actions/cache@v3
         with:
           path: |
             node_modules/.cache
             .eslintcache
-          key: ${{ runner.os }}-lint-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-lint-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
             ${{ runner.os }}-lint-
 
+      # 🔁 npm run → bun run
       - name: Run TypeScript type checking
         run: |
           echo "🔍 Running TypeScript type checking..."
-          npm run type-check
+          bun run type-check
           echo "✅ TypeScript type checking passed"
 
       - name: Run ESLint
         run: |
           echo "🔍 Running ESLint..."
-          npm run lint
+          bun run lint
           echo "✅ ESLint checks passed"
 
+      # 🔁 npx → bunx
       - name: Check for formatting issues (Prettier)
         run: |
           echo "🔍 Checking code formatting..."
-          npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}"
+          bunx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}"
           echo "✅ Code formatting is correct"
 
+      # 🔁 npm run build → bun run build
       - name: Build application
         run: |
           echo "🏗️ Building application..."
           echo "This is the comprehensive build test moved from pre-commit hook"
-          npm run build
+          bun run build
           echo "✅ Build completed successfully"
           echo "Build artifacts created and verified"
