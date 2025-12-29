@@ -1,4 +1,7 @@
 export const apiUrl = {
+  otp: {
+    generate: '/users/otp/generate/',
+  },
   token: {
     verify: '/users/token/verify/',
     refresh: '/users/token/refresh/',
@@ -10,5 +13,8 @@ export const apiUrl = {
   profile: {
     admin: '/users/profile/',
     customer: '/users/profile/',
+  },
+  users: {
+    list: '/users/',
   },
 };
