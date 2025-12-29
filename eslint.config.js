@@ -66,24 +66,25 @@ export default tseslint.config(
         'error',
         {
           zones: [
+            // Example: Prevent importing from 'auth' feature directly into 'app'
+            // {
+            //   target: './src/features/auth',
+            //   from: './src/features',
+            //   except: ['./auth'],
+            // },
             {
-              target: './src/features/*',
-              from: './src/features/*',
-            },
-            {
-              target: './src/app/**/*',
-              from: './src/features/**/*',
+              target: './src/features',
+              from: './src/app',
             },
             {
               target: [
-                './src/components/**/*',
-                './src/hooks/**/*',
-                './src/utils/**/*',
-                './src/slices/**/*',
-                './src/config/**/*',
-                './src/constants/**/*',
+                './src/components',
+                './src/hooks',
+                './src/utils',
+                './src/config',
+                './src/constants',
               ],
-              from: ['./src/features/**/*', './src/app/**/*'],
+              from: ['./src/features', './src/app'],
             },
           ],
         },
