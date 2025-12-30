@@ -1,4 +1,4 @@
-import VerifyOTPForm from '@auth/components/patientLogin/VerifyOTPForm';
+import VerifyOTPForm from '@features/auth/components/customerLogin/VerifyOTPForm';
 import useLogin from '@auth/hooks/useLogin';
 import { LoginOTPSchema } from '@auth/utils/formSchema';
 import { CustomInput } from '@components/CustomInput';
@@ -9,25 +9,25 @@ import { selectIsGeneratedOTP, selectUserStatus } from '@slices/auth';
 import type { JSX } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 
-interface PatientLoginRequest {
+interface CustomerLoginRequest {
   phoneNumber: string;
   otp?: string;
 }
 
-const initialValues: PatientLoginRequest = { phoneNumber: '', otp: '' };
+const initialValues: CustomerLoginRequest = { phoneNumber: '', otp: '' };
 
-export const PatientLoginForm = (): JSX.Element => {
+export const CustomerLoginForm = (): JSX.Element => {
   const isGeneratedOTP = useAppSelector(selectIsGeneratedOTP);
   const userStatus = useAppSelector(selectUserStatus);
   const { onLoginSubmit } = useLogin();
 
-  const methods = useForm<PatientLoginRequest>({
+  const methods = useForm<CustomerLoginRequest>({
     defaultValues: initialValues,
     resolver: zodResolver(LoginOTPSchema),
   });
 
   const { control, handleSubmit, getValues, setError } = methods;
-  const onSubmit: SubmitHandler<PatientLoginRequest> = async (values) => {
+  const onSubmit: SubmitHandler<CustomerLoginRequest> = async (values) => {
     try {
       await onLoginSubmit(values, 'customer');
     } catch (error: unknown) {
@@ -43,7 +43,7 @@ export const PatientLoginForm = (): JSX.Element => {
       {userStatus === 'pending' ? (
         <CircularProgress enableTrackSlot size="40px" />
       ) : isGeneratedOTP ? (
-        <VerifyOTPForm<PatientLoginRequest>
+        <VerifyOTPForm<CustomerLoginRequest>
           phoneNumber={getValues('phoneNumber')}
           name="otp"
           onSubmit={onSubmit}

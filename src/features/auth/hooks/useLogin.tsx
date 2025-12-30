@@ -24,7 +24,7 @@ export default function useLogin(): {
   ): Promise<void> => {
     await dispatch(userLogin({ data: values, loginType })).unwrap();
     if (isNewUser && loginType === 'customer') {
-      navigate(`${ROUTES.NEW_PATIENT_PROFILE}`);
+      navigate(`${ROUTES.NEW_CUSTOMER_PROFILE}`);
     } else navigate(`/`);
   };
 
