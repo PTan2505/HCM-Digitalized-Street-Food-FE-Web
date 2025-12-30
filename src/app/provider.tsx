@@ -1,6 +1,6 @@
 import { store } from '@app/store';
 import { theme } from '@config/muiTheme';
-import { ThemeProvider } from '@emotion/react';
+import { ThemeProvider } from '@mui/material';
 import * as React from 'react';
 import { Provider } from 'react-redux';
 
