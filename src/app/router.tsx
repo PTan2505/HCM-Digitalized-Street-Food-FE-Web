@@ -10,6 +10,7 @@ import UsersPage from '@features/admin/pages/UsersPage';
 import CashoutPage from '@features/admin/pages/CashoutPage';
 import { createBrowserRouter } from 'react-router';
 import VendorVerification from '@features/admin/pages/VendorVerification';
+import VendorRegistration from '@features/vendor/pages/VendorRegistration';
 
 export const router = createBrowserRouter([
   {
@@ -22,10 +23,14 @@ export const router = createBrowserRouter([
     children: [{ index: true, element: <UserProfilePage /> }],
   },
   {
+    path: '/vendor',
+    element: <VendorRegistration />,
+  },
+  {
     path: '/admin',
     element: <AdminLayout />,
     children: [
-      { path: ROUTES.ADMIN.REVENUE, element: <RevenuePage /> },
+      { index: true, element: <RevenuePage /> },
       { path: ROUTES.ADMIN.TRANSACTIONS, element: <TransactionsPage /> },
       { path: ROUTES.ADMIN.VERIFICATION, element: <VendorVerification /> },
       { path: ROUTES.ADMIN.POSTS, element: <PostsPage /> },

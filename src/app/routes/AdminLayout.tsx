@@ -16,9 +16,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 import SidebarContent from '@components/layout/SidebarContent';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
+  { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
   { name: 'Quản lý giao dịch', href: '/admin/transactions', icon: HomeIcon },
-  { name: 'Xác minh người bán', href: '/admin/verification', icon: ShoppingBagIcon },
+  {
+    name: 'Xác minh người bán',
+    href: '/admin/verification',
+    icon: ShoppingBagIcon,
+  },
   { name: 'Quản lý bài viết', href: '/admin/posts', icon: UserGroupIcon },
   { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
@@ -150,8 +154,12 @@ function AdminLayout() {
 
               <div className="hidden md:block">
                 <h2 className="text-lg font-semibold">
-                  {navigation.find((item) => item.href === location.pathname)
-                    ?.name ?? 'Admin Panel'}
+                  {navigation.find(
+                    (item) =>
+                      item.href === location.pathname ||
+                      (location.pathname === '/admin/' &&
+                        item.href === '/admin')
+                  )?.name ?? 'Admin Panel'}
                 </h2>
               </div>
             </div>
