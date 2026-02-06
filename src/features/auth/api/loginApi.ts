@@ -11,9 +11,9 @@ export class LoginApi {
 
   async login(data: LoginRequest, loginType: LoginType): Promise<UserTokens> {
     let res = null;
-    if (loginType == 'admin') {
+    if (loginType == 'moderator') {
       res = await this.apiClient.post<UserTokens, LoginRequest>({
-        url: apiUrl.login.admin,
+        url: apiUrl.login.moderator,
         data,
       });
     } else {

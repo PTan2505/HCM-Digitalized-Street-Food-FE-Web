@@ -22,15 +22,15 @@ export const router = createBrowserRouter([
     children: [{ index: true, element: <UserProfilePage /> }],
   },
   {
-    path: '/admin',
+    path: '/moderator',
     element: <AdminLayout />,
     children: [
-      { path: ROUTES.ADMIN.REVENUE, element: <RevenuePage /> },
-      { path: ROUTES.ADMIN.TRANSACTIONS, element: <TransactionsPage /> },
-      { path: ROUTES.ADMIN.VERIFICATION, element: <VendorVerification /> },
-      { path: ROUTES.ADMIN.POSTS, element: <PostsPage /> },
-      { path: ROUTES.ADMIN.USERS, element: <UsersPage /> },
-      { path: ROUTES.ADMIN.CASHOUT, element: <CashoutPage /> },
+      { path: ROUTES.MODERATOR.REVENUE, element: <RevenuePage /> },
+      { path: ROUTES.MODERATOR.TRANSACTIONS, element: <TransactionsPage /> },
+      { path: ROUTES.MODERATOR.VERIFICATION, element: <VendorVerification /> },
+      { path: ROUTES.MODERATOR.POSTS, element: <PostsPage /> },
+      { path: ROUTES.MODERATOR.USERS, element: <UsersPage /> },
+      { path: ROUTES.MODERATOR.CASHOUT, element: <CashoutPage /> },
     ],
   },
 ]);

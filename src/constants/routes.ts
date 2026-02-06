@@ -3,13 +3,13 @@ export const ROUTES = {
   LOGIN: '/:userType?/login',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
 
-  // Admin routes
-  ADMIN: {
-    REVENUE: '/admin/revenue',
-    TRANSACTIONS: '/admin/transactions',
-    VERIFICATION: '/admin/verification',
-    POSTS: '/admin/posts',
-    USERS: '/admin/users',
-    CASHOUT: '/admin/cashout',
+  // Moderator routes
+  MODERATOR: {
+    REVENUE: '/moderator/revenue',
+    TRANSACTIONS: '/moderator/transactions',
+    VERIFICATION: '/moderator/verification',
+    POSTS: '/moderator/posts',
+    USERS: '/moderator/users',
+    CASHOUT: '/moderator/cashout',
   },
 };

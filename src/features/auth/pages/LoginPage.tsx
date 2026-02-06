@@ -15,7 +15,7 @@ export default function LoginPage(): JSX.Element {
   return (
     <Box className="bg-gradient-primary flex h-screen w-screen items-center justify-center">
       <LoginBoxBlur>
-        {userType === 'admin' ? <AdminLoginForm /> : <CustomerLoginForm />}
+        {userType === 'moderator' ? <AdminLoginForm /> : <CustomerLoginForm />}
       </LoginBoxBlur>
     </Box>
   );

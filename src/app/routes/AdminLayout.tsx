@@ -12,33 +12,47 @@ import {
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
+import type { JSX } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import SidebarContent from '@components/layout/SidebarContent';
+import { Box, Typography, IconButton, Avatar } from '@mui/material';
+import {
+  MODERATOR_THEME,
+  MODERATOR_USER_INFO,
+} from '@constants/moderatorTheme';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
-  { name: 'Quản lý giao dịch', href: '/admin/transactions', icon: HomeIcon },
-  { name: 'Xác minh người bán', href: '/admin/verification', icon: ShoppingBagIcon },
-  { name: 'Quản lý bài viết', href: '/admin/posts', icon: UserGroupIcon },
-  { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
+  { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
+  {
+    name: 'Quản lý giao dịch',
+    href: '/moderator/transactions',
+    icon: HomeIcon,
+  },
+  {
+    name: 'Xác minh người bán',
+    href: '/moderator/verification',
+    icon: ShoppingBagIcon,
+  },
+  { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
+  { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
   {
     name: 'Yêu cầu rút tiền',
-    href: '/admin/cashout',
+    href: '/moderator/cashout',
     icon: CurrencyDollarIcon,
   },
 ];
 
-function AdminLayout() {
+function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
   // Mock user data for UI only
   const user = {
-    firstName: 'Admin',
+    firstName: 'Moderator',
     lastName: 'User',
-    username: 'admin',
-    email: 'admin@example.com',
+    username: 'moderator',
+    email: 'moderator@example.com',
     avatarUrl: null,
   };
 
@@ -46,28 +60,24 @@ function AdminLayout() {
     console.log('Logging out...');
   };
 
-  const adminConfig = {
-    gradientColors: { from: '#06AA4C', to: '#06AA4C' },
-    textColors: { primary: '#ffffff', secondary: '#e8f5e9', active: '#045a2e' },
-    userInfo: {
-      name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'Admin Panel',
-    },
-  };
-
   const sidebarUserInfo = {
     name:
       user?.firstName && user?.lastName
         ? `${user.firstName} ${user.lastName}`
-        : adminConfig.userInfo.name,
-    email: user?.email ?? adminConfig.userInfo.email,
-    role: adminConfig.userInfo.role,
+        : MODERATOR_USER_INFO.name,
+    email: user?.email ?? MODERATOR_USER_INFO.email,
+    role: MODERATOR_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: 'white',
+        color: 'gray.900',
+      }}
+    >
       {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 z-40 md:hidden ${
@@ -91,10 +101,10 @@ function AdminLayout() {
           <SidebarContent
             collapsed={false}
             navigation={navigation}
-            gradientColors={adminConfig.gradientColors}
-            textColors={adminConfig.textColors}
+            gradientColors={MODERATOR_THEME.gradientColors}
+            textColors={MODERATOR_THEME.textColors}
             userInfo={sidebarUserInfo}
-            settingsPath="/admin/settings"
+            settingsPath="/moderator/settings"
             onLogout={handleLogout}
           />
         </div>
@@ -109,36 +119,52 @@ function AdminLayout() {
         <SidebarContent
           collapsed={sidebarCollapsed}
           navigation={navigation}
-          gradientColors={adminConfig.gradientColors}
-          textColors={adminConfig.textColors}
+          gradientColors={MODERATOR_THEME.gradientColors}
+          textColors={MODERATOR_THEME.textColors}
           userInfo={sidebarUserInfo}
-          settingsPath="/admin/settings"
+          settingsPath="/moderator/settings"
           onLogout={handleLogout}
         />
       </div>
 
       {/* Main content */}
-      <div
-        className={`transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
-        }`}
+      <Box
+        sx={{
+          transition: 'all 0.3s ease-in-out',
+          pl: { xs: 0, md: sidebarCollapsed ? 8 : 32 },
+        }}
       >
         {/* Top navigation */}
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center space-x-4">
-              <button
-                type="button"
-                className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:hidden"
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            borderBottom: '1px solid #e5e7eb',
+            bgcolor: 'white',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              height: '64px',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: { xs: 2, sm: 3, lg: 4 },
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton
+                sx={{ display: { md: 'none' } }}
                 onClick={() => setSidebarOpen(true)}
               >
                 <Bars3Icon className="h-6 w-6" />
-              </button>
+              </IconButton>
 
               {/* Desktop collapse button */}
-              <button
-                type="button"
-                className="hidden rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 md:block"
+              <IconButton
+                sx={{ display: { xs: 'none', md: 'block' } }}
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               >
                 {sidebarCollapsed ? (
@@ -146,56 +172,63 @@ function AdminLayout() {
                 ) : (
                   <ChevronLeftIcon className="h-5 w-5" />
                 )}
-              </button>
+              </IconButton>
 
-              <div className="hidden md:block">
-                <h2 className="text-lg font-semibold">
+              <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                <Typography variant="h6" component="h2">
                   {navigation.find((item) => item.href === location.pathname)
-                    ?.name ?? 'Admin Panel'}
-                </h2>
-              </div>
-            </div>
+                    ?.name ?? 'Moderator Panel'}
+                </Typography>
+              </Box>
+            </Box>
 
-            <div className="flex items-center space-x-3">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               {/* User menu */}
-              <div className="relative flex items-center space-x-3">
-                <div className="hidden sm:flex sm:flex-col sm:items-end">
-                  <span className="text-sm font-medium text-gray-900">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    display: { xs: 'none', sm: 'flex' },
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Admin User')}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {user?.email ?? 'admin@example.com'}
-                  </span>
-                </div>
-                <div
-                  className="flex cursor-pointer items-center rounded-full p-2 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
-                  title="User avatar"
+                      : (user?.username ?? 'Moderator User')}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {user?.email ?? 'moderator@example.com'}
+                  </Typography>
+                </Box>
+                <Avatar
+                  src={user?.avatarUrl ?? undefined}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 },
+                  }}
                 >
-                  {user?.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt="avatar"
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon className="h-8 w-8" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                  {!user?.avatarUrl && <UserCircleIcon className="h-6 w-6" />}
+                </Avatar>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
 
         {/* Page content */}
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Box component="main" sx={{ py: 3 }}>
+          <Box
+            sx={{
+              maxWidth: '1280px',
+              mx: 'auto',
+              px: { xs: 2, sm: 3, lg: 4 },
+            }}
+          >
             <Outlet />
-          </div>
-        </main>
-      </div>
-    </div>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 

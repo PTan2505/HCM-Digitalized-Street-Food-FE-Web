@@ -27,7 +27,7 @@ export const AdminLoginForm = (): JSX.Element => {
 
   const onSubmit: SubmitHandler<AdminLoginRequest> = async (values) => {
     try {
-      await onLoginSubmit(values, 'admin');
+      await onLoginSubmit(values, 'moderator');
     } catch (error: unknown) {
       const err = error as APIErrorResponse;
       const errorCode = err.code ?? 'ERR_500_INTERNAL_SERVER_ERROR';

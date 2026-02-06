@@ -7,11 +7,11 @@ export const apiUrl = {
     refresh: '/users/token/refresh/',
   },
   login: {
-    admin: 'users/admin-login/',
+    moderator: 'users/moderator-login/',
     customer: '/users/login/',
   },
   profile: {
-    admin: '/users/profile/',
+    moderator: '/users/profile/',
     customer: '/users/profile/',
   },
   users: {

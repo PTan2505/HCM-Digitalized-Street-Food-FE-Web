@@ -3,9 +3,9 @@ export const getProfileApi = async () => {
   return {
     data: {
       id: '1',
-      username: 'admin',
-      email: 'admin@example.com',
-      firstName: 'Admin',
+      username: 'moderator',
+      email: 'moderator@example.com',
+      firstName: 'Moderator',
       lastName: 'User',
       avatarUrl: null,
     },
