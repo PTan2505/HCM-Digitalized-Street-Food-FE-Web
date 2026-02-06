@@ -1,13 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import OwnerInfoSection from '../components/OwnerInfoSection';
 import StoreInfoSection from '../components/StoreInfoSection';
-import AddressSection from '../components/AddressSection';
-import OperatingInfoSection from '../components/OperatingInfoSection';
-import DocumentsSection from '../components/DocumentsSection';
+import BranchSection from '../components/BranchSection';
 import TermsDialog from '../components/TermsDialog';
+import type { Branch } from '../types/branch';
+import { createEmptyBranch } from '../types/branch';
 
-export default function VendorRegistration() {
+export default function VendorRegistration(): React.JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([createEmptyBranch()]);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [formData, setFormData] = useState({
     // Thông tin chủ quán
     ownerName: '',
@@ -19,87 +22,119 @@ export default function VendorRegistration() {
     storeType: '',
     storePhone: '',
 
-    // Địa chỉ
-    province: '',
-    district: '',
-    ward: '',
-    detailAddress: '',
-    mapLocation: '',
-
-    // Thông tin hoạt động
-    openTime: '08:00',
-    closeTime: '22:00',
-    workingDays: [] as string[],
-    closedDates: '',
-    serviceTypes: [] as string[],
-
-    // Upload files
-    storeAvatar: null as File | null,
-    storeFrontImage: null as File | null,
-    businessLicense: null as File | null,
-    idCard: null as File | null,
-
     // Điều khoản
     agreeTerms: false,
   });
 
+  // Đảm bảo currentPage luôn hợp lệ khi số lượng branches thay đổi
+  useEffect(() => {
+    if (currentPage > branches.length) {
+      setCurrentPage(branches.length);
+    }
+  }, [branches.length, currentPage]);
+
   const isFormValid = useMemo(() => {
-    return (
+    const hasOwnerInfo =
       formData.ownerName.trim() !== '' &&
       formData.ownerPhone.trim() !== '' &&
       formData.storeName.trim() !== '' &&
       formData.storeType !== '' &&
-      formData.province !== '' &&
-      formData.district !== '' &&
-      formData.ward !== '' &&
-      formData.detailAddress.trim() !== '' &&
-      formData.agreeTerms
-    );
-  }, [formData]);
+      formData.agreeTerms;
 
-  const handleInputChange = (field: string, value: any) => {
+    const allBranchesValid = branches.every(
+      (branch) =>
+        branch.detailAddress.trim() !== '' &&
+        branch.latitude !== null &&
+        branch.longitude !== null
+    );
+
+    return hasOwnerInfo && allBranchesValid;
+  }, [formData, branches]);
+
+  const handleInputChange = (field: string, value: unknown): void => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleWorkingDayToggle = (day: string) => {
-    const newDays = formData.workingDays.includes(day)
-      ? formData.workingDays.filter((d) => d !== day)
-      : [...formData.workingDays, day];
-    handleInputChange('workingDays', newDays);
+  const handleBranchChange = (
+    branchId: string,
+    field: string,
+    value: unknown
+  ): void => {
+    setBranches((prev) =>
+      prev.map((branch) =>
+        branch.id === branchId ? { ...branch, [field]: value } : branch
+      )
+    );
   };
 
-  const handleServiceTypeToggle = (service: string) => {
-    const newServices = formData.serviceTypes.includes(service)
-      ? formData.serviceTypes.filter((s) => s !== service)
-      : [...formData.serviceTypes, service];
-    handleInputChange('serviceTypes', newServices);
+  const handleAddBranch = (): void => {
+    setBranches((prev) => [...prev, createEmptyBranch()]);
+    // Chuyển đến trang mới sau khi thêm chi nhánh
+    setCurrentPage(branches.length + 1);
+  };
+
+  const handleRemoveBranch = (branchId: string): void => {
+    setBranches((prev) => prev.filter((branch) => branch.id !== branchId));
+  };
+
+  const handleWorkingDayToggle = (branchId: string, day: string): void => {
+    setBranches((prev) =>
+      prev.map((branch) => {
+        if (branch.id === branchId) {
+          const newDays = branch.workingDays.includes(day)
+            ? branch.workingDays.filter((d) => d !== day)
+            : [...branch.workingDays, day];
+          return { ...branch, workingDays: newDays };
+        }
+        return branch;
+      })
+    );
+  };
+
+  const handleServiceTypeToggle = (branchId: string, service: string): void => {
+    setBranches((prev) =>
+      prev.map((branch) => {
+        if (branch.id === branchId) {
+          const newServices = branch.serviceTypes.includes(service)
+            ? branch.serviceTypes.filter((s) => s !== service)
+            : [...branch.serviceTypes, service];
+          return { ...branch, serviceTypes: newServices };
+        }
+        return branch;
+      })
+    );
   };
 
   const handleFileChange = (
+    branchId: string,
     field: string,
     event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0] || null;
-    handleInputChange(field, file);
+  ): void => {
+    const file = event.target.files?.[0] ?? null;
+    handleBranchChange(branchId, field, file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Đăng ký thành công! Vui lòng kiểm tra console để xem dữ liệu.');
+    console.log('Form submitted:', { ...formData, branches });
+    alert(
+      `Đăng ký thành công với ${branches.length} ${branches.length === 1 ? 'cửa hàng' : 'chi nhánh'}!`
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 sm:py-16">
-      <div className="mx-auto max-w-4xl rounded-2xl border border-gray-100 bg-white p-6 shadow-lg sm:p-12">
-        <h1 className="mb-2 text-center text-3xl font-bold tracking-tight text-gray-900">
-          Đăng ký cửa hàng
-        </h1>
-        <p className="mb-12 text-center text-base text-gray-600">
-          Hoàn thành các thông tin bên dưới để bắt đầu
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f0fdf4] py-8">
+      <div className="mx-auto max-w-4xl px-4">
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-4xl font-bold text-gray-900">
+            Đăng ký trở thành Vendor
+          </h1>
+          <p className="text-lg text-gray-600">
+            Hoàn thành các bước dưới đây để bắt đầu kinh doanh
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-8">
           <OwnerInfoSection
             formData={{
               ownerName: formData.ownerName,
@@ -118,39 +153,92 @@ export default function VendorRegistration() {
             onChange={handleInputChange}
           />
 
-          <AddressSection
-            formData={{
-              province: formData.province,
-              district: formData.district,
-              ward: formData.ward,
-              detailAddress: formData.detailAddress,
-              mapLocation: formData.mapLocation,
-            }}
-            onChange={handleInputChange}
-          />
+          {/* Quản lý chi nhánh */}
+          <div className="mb-12">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Thông tin cửa hàng & Chi nhánh
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {branches.length === 1
+                    ? 'Thêm chi nhánh nếu cửa hàng có nhiều địa điểm'
+                    : `Đang quản lý ${branches.length} địa điểm`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddBranch}
+                className="flex items-center gap-2 rounded-lg bg-[#06AA4C] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#058f40] hover:shadow-lg active:scale-95"
+              >
+                <span className="text-lg">+</span>
+                Thêm chi nhánh
+              </button>
+            </div>
 
-          <OperatingInfoSection
-            formData={{
-              openTime: formData.openTime,
-              closeTime: formData.closeTime,
-              workingDays: formData.workingDays,
-              closedDates: formData.closedDates,
-              serviceTypes: formData.serviceTypes,
-            }}
-            onFieldChange={handleInputChange}
-            onWorkingDayToggle={handleWorkingDayToggle}
-            onServiceTypeToggle={handleServiceTypeToggle}
-          />
+            {/* Hiển thị chi nhánh hiện tại */}
+            <div className="mb-6">
+              {branches[currentPage - 1] && (
+                <BranchSection
+                  key={branches[currentPage - 1].id}
+                  branch={branches[currentPage - 1]}
+                  index={currentPage - 1}
+                  onBranchChange={handleBranchChange}
+                  onBranchRemove={handleRemoveBranch}
+                  showRemoveButton={branches.length > 1}
+                  onWorkingDayToggle={handleWorkingDayToggle}
+                  onServiceTypeToggle={handleServiceTypeToggle}
+                  onFileChange={handleFileChange}
+                />
+              )}
+            </div>
 
-          <DocumentsSection
-            formData={{
-              storeAvatar: formData.storeAvatar,
-              storeFrontImage: formData.storeFrontImage,
-              businessLicense: formData.businessLicense,
-              idCard: formData.idCard,
-            }}
-            onFileChange={handleFileChange}
-          />
+            {/* Phân trang */}
+            {branches.length > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  ← Trước
+                </button>
+
+                <div className="flex gap-1">
+                  {branches.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setCurrentPage(index + 1)}
+                      className={`h-10 w-10 rounded-lg text-sm font-semibold transition-all ${
+                        currentPage === index + 1
+                          ? 'bg-[#06AA4C] text-white shadow-md'
+                          : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(branches.length, prev + 1)
+                    )
+                  }
+                  disabled={currentPage === branches.length}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Sau →
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Điều khoản */}
           <div className="mt-10">
