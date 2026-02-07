@@ -1,26 +1,33 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
+import type { JSX } from 'react';
+
 interface Column {
   key: string;
   label: string;
-  render?: (value: any, row: any, index?: number) => React.ReactNode;
+  render?: (
+    value: unknown,
+    row: Record<string, unknown>,
+    index?: number
+  ) => React.ReactNode;
   className?: string;
 }
 
 interface Action {
   label: string | React.ReactNode;
-  onClick: (row: any) => void;
+  onClick: (row: Record<string, unknown>) => void;
   className?: string;
 }
 
 interface TableProps {
   columns: Column[];
-  data: any[];
+  data: Record<string, unknown>[];
   loading?: boolean;
   emptyMessage?: string;
   loadingMessage?: string;
   rowKey?: string;
   maxHeight?: string;
   actions?: Action[];
-  onRowClick?: (row: any) => void;
+  onRowClick?: (row: Record<string, unknown>) => void;
 }
 
 const Table = ({
@@ -33,7 +40,7 @@ const Table = ({
   maxHeight = '600px',
   actions,
   onRowClick,
-}: TableProps) => {
+}: TableProps): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
 
   return (
@@ -46,7 +53,7 @@ const Table = ({
                 <th
                   key={column.key}
                   className={`border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-600 uppercase ${
-                    column.className || ''
+                    column.className ?? ''
                   }`}
                 >
                   {column.label}
@@ -82,7 +89,7 @@ const Table = ({
             ) : (
               data.map((row, rowIndex) => (
                 <tr
-                  key={row[rowKey]}
+                  key={String(row[rowKey])}
                   className={`transition-colors ${
                     onRowClick
                       ? 'cursor-pointer hover:bg-gray-50'
@@ -93,17 +100,22 @@ const Table = ({
                   {columns.map((column) => {
                     const value = column.key
                       .split('.')
-                      .reduce((obj, key) => obj?.[key], row);
+                      .reduce<unknown>((obj, key) => {
+                        if (obj && typeof obj === 'object' && key in obj) {
+                          return (obj as Record<string, unknown>)[key];
+                        }
+                        return undefined;
+                      }, row);
                     return (
                       <td
                         key={column.key}
                         className={`px-6 py-4 text-sm whitespace-nowrap text-gray-900 ${
-                          column.className || ''
+                          column.className ?? ''
                         }`}
                       >
                         {column.render
                           ? column.render(value, row, rowIndex)
-                          : value || '-'}
+                          : String(value ?? '-')}
                       </td>
                     );
                   })}
@@ -118,7 +130,7 @@ const Table = ({
                               action.onClick(row);
                             }}
                             className={
-                              action.className ||
+                              action.className ??
                               'font-medium text-blue-600 hover:text-blue-800'
                             }
                           >
