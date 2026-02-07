@@ -10,7 +10,6 @@ import UsersPage from '@features/admin/pages/UsersPage';
 import CashoutPage from '@features/admin/pages/CashoutPage';
 import { createBrowserRouter } from 'react-router';
 import VendorVerification from '@features/admin/pages/VendorVerification';
-import VendorRegistration from '@features/vendor/pages/VendorRegistration';
 
 export const router = createBrowserRouter([
   {
