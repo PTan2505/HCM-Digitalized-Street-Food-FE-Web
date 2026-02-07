@@ -37,7 +37,7 @@ const SidebarContent = ({
   textColors = { primary: '#ffffff', secondary: '#e8f5e9', active: '#045a2e' },
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
-}: SidebarContentProps) => {
+}: SidebarContentProps): React.JSX.Element => {
   const location = useLocation();
 
   return (

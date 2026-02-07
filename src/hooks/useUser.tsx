@@ -6,9 +6,7 @@ export default function useUser(): {
 } {
   const [loading, setLoading] = useState(false);
 
-  const updateAvatar = async (
-    _file: File
-  ): Promise<{ success: boolean }> => {
+  const updateAvatar = async (): Promise<{ success: boolean }> => {
     setLoading(true);
     try {
       // Mock upload - replace with your actual API call

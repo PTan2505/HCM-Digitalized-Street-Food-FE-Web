@@ -146,11 +146,11 @@ export default function MapLocationPicker({
 
         onLocationChange(lat, lng);
       });
-    } catch (_error) {
+    } catch {
       setMapError('Không thể tải bản đồ');
     }
 
-    return () => {
+    return (): void => {
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -240,7 +240,7 @@ export default function MapLocationPicker({
             return true;
           }
           return false;
-        } catch (_error) {
+        } catch {
           return false;
         }
       };
@@ -262,7 +262,7 @@ export default function MapLocationPicker({
     }, 1500); // Đợi 1.5 giây sau khi người dùng dừng gõ
 
     // Cleanup: hủy timeout nếu address thay đổi trước khi hết thời gian
-    return () => {
+    return (): void => {
       clearTimeout(timeoutId);
       setIsGeocoding(false);
     };

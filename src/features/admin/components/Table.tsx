@@ -103,7 +103,7 @@ const Table = ({
                       >
                         {column.render
                           ? column.render(value, row, rowIndex)
-                          : (value as string) ?? '-'}
+                          : value ?? '-'}
                       </td>
                     );
                   })}

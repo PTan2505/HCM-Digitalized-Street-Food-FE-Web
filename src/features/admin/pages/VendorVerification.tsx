@@ -92,7 +92,7 @@ export default function VendorVerification(): React.JSX.Element {
     {
       key: 'id',
       label: 'STT',
-      render: (_: unknown, row: Record<string, unknown>, index?: number) => (index ?? 0) + 1,
+      render: (_: unknown, row: Record<string, unknown>, index?: number): number => (index ?? 0) + 1,
     },
     {
       key: 'ownerName',
