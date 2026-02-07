@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import React from 'react';
-import Table from '@features/admin/components/Table';
+import Table from '@features/moderator/components/Table';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';

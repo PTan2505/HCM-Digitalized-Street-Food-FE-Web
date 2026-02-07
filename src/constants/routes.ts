@@ -5,6 +5,7 @@ export const ROUTES = {
 
   // Moderator routes
   MODERATOR: {
+    BASE: '/moderator',
     REVENUE: '/moderator/revenue',
     TRANSACTIONS: '/moderator/transactions',
     VERIFICATION: '/moderator/verification',

@@ -42,7 +42,7 @@ const navigation = [
   },
 ];
 
-function AdminLayout(): JSX.Element {
+function ModeratorLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
@@ -232,4 +232,4 @@ function AdminLayout(): JSX.Element {
   );
 }
 
-export default AdminLayout;
+export default ModeratorLayout;
