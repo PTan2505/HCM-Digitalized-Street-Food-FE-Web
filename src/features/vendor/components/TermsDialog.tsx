@@ -5,7 +5,10 @@ interface TermsDialogProps {
   onClose: () => void;
 }
 
-export default function TermsDialog({ open, onClose }: TermsDialogProps): JSX.Element | null {
+export default function TermsDialog({
+  open,
+  onClose,
+}: TermsDialogProps): JSX.Element | null {
   if (!open) return null;
 
   return (

@@ -92,7 +92,11 @@ export default function VendorVerification(): React.JSX.Element {
     {
       key: 'id',
       label: 'STT',
-      render: (_: unknown, row: Record<string, unknown>, index?: number): number => (index ?? 0) + 1,
+      render: (
+        _: unknown,
+        row: Record<string, unknown>,
+        index?: number
+      ): number => (index ?? 0) + 1,
     },
     {
       key: 'ownerName',
@@ -102,7 +106,8 @@ export default function VendorVerification(): React.JSX.Element {
     {
       key: 'status',
       label: 'Trạng thái',
-      render: (value: unknown): React.JSX.Element => getStatusBadge(value as string),
+      render: (value: unknown): React.JSX.Element =>
+        getStatusBadge(value as string),
     },
     {
       key: 'licenseUrl',
@@ -126,12 +131,14 @@ export default function VendorVerification(): React.JSX.Element {
     {
       key: 'createdAt',
       label: 'Ngày tạo',
-      render: (value: unknown): string => new Date(value as string).toLocaleString('vi-VN'),
+      render: (value: unknown): string =>
+        new Date(value as string).toLocaleString('vi-VN'),
     },
     {
       key: 'updatedAt',
       label: 'Ngày cập nhật',
-      render: (value: unknown): string => new Date(value as string).toLocaleString('vi-VN'),
+      render: (value: unknown): string =>
+        new Date(value as string).toLocaleString('vi-VN'),
     },
   ];
 
@@ -144,7 +151,8 @@ export default function VendorVerification(): React.JSX.Element {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: Record<string, unknown>): void => console.log('View:', row),
+      onClick: (row: Record<string, unknown>): void =>
+        console.log('View:', row),
     },
     {
       label: (
@@ -154,7 +162,8 @@ export default function VendorVerification(): React.JSX.Element {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: Record<string, unknown>): void => console.log('Edit:', row),
+      onClick: (row: Record<string, unknown>): void =>
+        console.log('Edit:', row),
     },
     {
       label: (
@@ -164,7 +173,8 @@ export default function VendorVerification(): React.JSX.Element {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: Record<string, unknown>): void => console.log('Delete:', row),
+      onClick: (row: Record<string, unknown>): void =>
+        console.log('Delete:', row),
     },
   ];
 

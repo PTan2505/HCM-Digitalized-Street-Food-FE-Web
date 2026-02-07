@@ -1,7 +1,11 @@
 interface Column {
   key: string;
   label: string;
-  render?: (value: unknown, row: Record<string, unknown>, index?: number) => React.ReactNode;
+  render?: (
+    value: unknown,
+    row: Record<string, unknown>,
+    index?: number
+  ) => React.ReactNode;
   className?: string;
 }
 
@@ -103,7 +107,7 @@ const Table = ({
                       >
                         {column.render
                           ? column.render(value, row, rowIndex)
-                          : value ?? '-'}
+                          : (value ?? '-')}
                       </td>
                     );
                   })}

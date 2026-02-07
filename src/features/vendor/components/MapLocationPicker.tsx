@@ -177,9 +177,7 @@ export default function MapLocationPicker({
       ];
 
       // Hàm thử geocode với một địa chỉ
-      const tryGeocode = async (
-        addressToTry: string
-      ): Promise<boolean> => {
+      const tryGeocode = async (addressToTry: string): Promise<boolean> => {
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
