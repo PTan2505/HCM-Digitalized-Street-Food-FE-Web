@@ -1,0 +1,184 @@
+import { useAppDispatch } from '@hooks/reduxHooks';
+import {
+  Box,
+  Button,
+  FormHelperText,
+  Link,
+  styled,
+  Typography,
+} from '@mui/material';
+import { changeAccount, generateOTP } from '@slices/auth';
+import { MuiOtpInput } from 'mui-one-time-password-input';
+import { type JSX } from 'react';
+import {
+  Controller,
+  useFormContext,
+  useWatch,
+  type FieldPath,
+  type FieldValues,
+  type SubmitHandler,
+} from 'react-hook-form';
+import validator from 'validator';
+
+type Props<T extends FieldValues> = {
+  phoneNumber: string;
+  name: FieldPath<T>;
+  onSubmit: SubmitHandler<T>;
+};
+
+const CustomOTPInput = styled(MuiOtpInput)({
+  gap: '8px',
+  justifyContent: 'center',
+
+  '& .MuiInputBase-root.MuiOutlinedInput-root ': {
+    width: '40px',
+    height: '48px',
+    padding: '0px',
+    border: '1px solid #7FAE9B',
+    '& .MuiInputBase-input': {
+      padding: '0px',
+    },
+    '&.Mui-focused': {
+      color: '#14143D',
+      borderColor: '#14143D',
+    },
+  },
+
+  '& .disabled': {
+    '& .MuiInputBase-root.MuiOutlinedInput-root ': {
+      border: 'none',
+      background: 'none',
+      '& .Mui-disabled': {
+        WebkitTextFillColor: '#14143D',
+        opacity: 1,
+      },
+    },
+  },
+
+  '& .is-filled': {
+    '& .MuiInputBase-root.MuiOutlinedInput-root ': {
+      color: '#14143D',
+      borderColor: '#14143D',
+    },
+  },
+
+  '& .MuiOutlinedInput-notchedOutline': {
+    border: 'none',
+  },
+});
+
+const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
+  const { phoneNumber, name, onSubmit } = props;
+  const { control, handleSubmit } = useFormContext<T>();
+  const dispatch = useAppDispatch();
+
+  const disabledSubmitButton = useWatch({
+    name,
+    control,
+    compute: (otp: string) => {
+      if (otp?.length < 6) return true;
+
+      return false;
+    },
+  });
+
+  const secretPhoneNumber = (): string => {
+    const phoneNumberArray = phoneNumber.split('');
+    for (let i = 0; i < phoneNumber.length; i++) {
+      if (i >= 3 && i < phoneNumber.length - 3) {
+        phoneNumberArray[i] = '*';
+      }
+    }
+
+    return phoneNumberArray.join('');
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '24px',
+        width: '400px',
+      }}
+    >
+      <Typography className="display-small text-primary-900">
+        Nhập mã OTP
+      </Typography>
+      <Typography className="body-large text-primary-900">
+        Mã OTP đã được gửi tới số điện thoại {''}
+        <Typography className="label-large" component="span">
+          {secretPhoneNumber()}
+        </Typography>
+      </Typography>
+      <Controller
+        name={name}
+        control={control}
+        render={({ field, fieldState }) => {
+          return (
+            <Box>
+              <CustomOTPInput
+                {...field}
+                TextFieldsProps={(index) => {
+                  return {
+                    className: field.value[index] ? 'is-filled' : '',
+                    placeholder: '-',
+                  };
+                }}
+                autoFocus
+                value={field.value}
+                validateChar={(value) => validator.isNumeric(value)}
+                length={6}
+              />
+              {fieldState.error && (
+                <FormHelperText error>
+                  {fieldState.error.message}
+                </FormHelperText>
+              )}
+            </Box>
+          );
+        }}
+      />
+      <Typography className="body-large text-primary-900">
+        Bạn chưa nhận được mã OTP?{' '}
+        <Link
+          className="label-large text-primary-900"
+          component="button"
+          type="button"
+          onClick={async () =>
+            await dispatch(generateOTP({ phoneNumber: phoneNumber })).unwrap()
+          }
+        >
+          Gửi lại mã
+        </Link>
+      </Typography>
+      <Button
+        type="submit"
+        fullWidth
+        disabled={disabledSubmitButton}
+        sx={{
+          borderRadius: '20px',
+          height: '40px',
+          textTransform: 'none',
+        }}
+        variant="contained"
+        color="primary"
+        className="body-large"
+        onClick={handleSubmit(onSubmit)}
+      >
+        Đăng nhập
+      </Button>
+      <Link
+        className="body-large text-primary-700 font-bold"
+        component="button"
+        onClick={() => dispatch(changeAccount())}
+      >
+        Bạn muốn đổi tài khoản?
+      </Link>
+    </Box>
+  );
+};
+
+export default VerifyOTPForm;
