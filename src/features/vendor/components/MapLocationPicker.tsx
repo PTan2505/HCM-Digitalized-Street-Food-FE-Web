@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import maplibregl from '@openmapvn/openmapvn-gl';
 import '@openmapvn/openmapvn-gl/dist/maplibre-gl.css';
 
@@ -19,7 +19,7 @@ export default function MapLocationPicker({
   latitude,
   longitude,
   onLocationChange,
-}: MapLocationPickerProps) {
+}: MapLocationPickerProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
@@ -41,7 +41,7 @@ export default function MapLocationPicker({
   }, [latitude, longitude]);
 
   // Hàm cập nhật marker từ input tọa độ
-  const handleApplyCoordinates = () => {
+  const handleApplyCoordinates = (): void => {
     const lat = parseFloat(inputLat);
     const lng = parseFloat(inputLng);
 
@@ -146,7 +146,7 @@ export default function MapLocationPicker({
 
         onLocationChange(lat, lng);
       });
-    } catch (error) {
+    } catch (_error) {
       setMapError('Không thể tải bản đồ');
     }
 
@@ -178,8 +178,7 @@ export default function MapLocationPicker({
 
       // Hàm thử geocode với một địa chỉ
       const tryGeocode = async (
-        addressToTry: string,
-        index: number
+        addressToTry: string
       ): Promise<boolean> => {
         try {
           const response = await fetch(
@@ -191,9 +190,9 @@ export default function MapLocationPicker({
 
           if (data && data.length > 0) {
             // Lọc kết quả nằm trong khu vực TP.HCM (lat: 10.5-11.0, lng: 106.4-107.0)
-            const hcmResults = data.filter((item: any) => {
-              const itemLat = parseFloat(item.lat);
-              const itemLng = parseFloat(item.lon);
+            const hcmResults = data.filter((item: Record<string, unknown>) => {
+              const itemLat = parseFloat(item.lat as string);
+              const itemLng = parseFloat(item.lon as string);
               return (
                 itemLat >= 10.5 &&
                 itemLat <= 11.0 &&
@@ -241,15 +240,15 @@ export default function MapLocationPicker({
             return true;
           }
           return false;
-        } catch (error) {
+        } catch (_error) {
           return false;
         }
       };
 
       // Thử lần lượt các biến thể địa chỉ
-      (async () => {
+      (async (): Promise<void> => {
         for (let i = 0; i < addressVariants.length; i++) {
-          const success = await tryGeocode(addressVariants[i], i);
+          const success = await tryGeocode(addressVariants[i]);
           if (success) {
             return; // Thành công, dừng lại
           }

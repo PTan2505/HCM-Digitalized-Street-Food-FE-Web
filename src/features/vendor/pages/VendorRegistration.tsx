@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, type JSX } from 'react';
 import OwnerInfoSection from '../components/OwnerInfoSection';
 import StoreInfoSection from '../components/StoreInfoSection';
 import BranchSection from '../components/BranchSection';
@@ -6,7 +6,7 @@ import TermsDialog from '../components/TermsDialog';
 import type { Branch } from '../types/branch';
 import { createEmptyBranch } from '../types/branch';
 
-export default function VendorRegistration(): React.JSX.Element {
+export default function VendorRegistration(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
   const [branches, setBranches] = useState<Branch[]>([createEmptyBranch()]);
   const [currentPage, setCurrentPage] = useState(1);

@@ -1,4 +1,6 @@
-export default function UsersPage() {
+import React from 'react';
+
+export default function UsersPage(): React.JSX.Element {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Quản lý người dùng</h1>

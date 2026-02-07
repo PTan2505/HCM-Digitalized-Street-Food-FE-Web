@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import MapLocationPicker from './MapLocationPicker';
 
 interface AddressSectionProps {
@@ -11,13 +11,13 @@ interface AddressSectionProps {
     latitude: number | null;
     longitude: number | null;
   };
-  onChange: (field: string, value: any) => void;
+  onChange: (field: string, value: unknown) => void;
 }
 
 export default function AddressSection({
   formData,
   onChange,
-}: AddressSectionProps) {
+}: AddressSectionProps): JSX.Element {
   // Ghép địa chỉ đầy đủ - chỉ lấy địa chỉ chi tiết và TP.HCM
   const fullAddress = useMemo(() => {
     if (!formData.detailAddress || formData.detailAddress.trim() === '') {

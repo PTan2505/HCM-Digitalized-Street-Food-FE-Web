@@ -32,7 +32,7 @@ const navigation = [
   },
 ];
 
-function AdminLayout() {
+function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();

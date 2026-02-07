@@ -1,4 +1,6 @@
-export default function TransactionsPage() {
+import React from 'react';
+
+export default function TransactionsPage(): React.JSX.Element {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Quản lý giao dịch</h1>

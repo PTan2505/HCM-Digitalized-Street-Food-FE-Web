@@ -1,9 +1,11 @@
+import React from 'react';
+
 interface TermsDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-export default function TermsDialog({ open, onClose }: TermsDialogProps) {
+export default function TermsDialog({ open, onClose }: TermsDialogProps): JSX.Element | null {
   if (!open) return null;
 
   return (

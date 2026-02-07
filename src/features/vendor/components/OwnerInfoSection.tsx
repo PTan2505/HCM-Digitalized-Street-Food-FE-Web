@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface OwnerInfoSectionProps {
   formData: {
     ownerName: string;
@@ -10,7 +12,7 @@ interface OwnerInfoSectionProps {
 export default function OwnerInfoSection({
   formData,
   onChange,
-}: OwnerInfoSectionProps) {
+}: OwnerInfoSectionProps): JSX.Element {
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">

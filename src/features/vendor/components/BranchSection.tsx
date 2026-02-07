@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type JSX } from 'react';
 import { type Branch } from '../types/branch';
 import AddressSection from './AddressSection';
 import OperatingInfoSection from './OperatingInfoSection';
@@ -36,7 +36,7 @@ export default function BranchSection({
   onWorkingDayToggle,
   onServiceTypeToggle,
   onFileChange,
-}: BranchSectionProps): React.JSX.Element {
+}: BranchSectionProps): JSX.Element {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const handleFieldChange = (field: string, value: unknown): void => {

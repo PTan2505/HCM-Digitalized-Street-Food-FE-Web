@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import Table from '@features/admin/components/Table';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
@@ -6,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 
-export default function VendorVerification() {
+export default function VendorVerification(): React.JSX.Element {
   const [loading] = useState(false);
 
   // Mock data cho xác minh người bán
@@ -49,7 +50,7 @@ export default function VendorVerification() {
     },
   ];
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string): React.JSX.Element => {
     const statusConfig: Record<
       string,
       { bg: string; text: string; label: string }
@@ -72,7 +73,7 @@ export default function VendorVerification() {
       reject: { bg: 'bg-red-100', text: 'text-red-800', label: 'Từ chối' },
     };
 
-    const config = statusConfig[status] || {
+    const config = statusConfig[status] ?? {
       bg: 'bg-gray-100',
       text: 'text-gray-800',
       label: status,
@@ -91,7 +92,7 @@ export default function VendorVerification() {
     {
       key: 'id',
       label: 'STT',
-      render: (_: any, row: any, index: number) => index + 1,
+      render: (_: unknown, row: Record<string, unknown>, index?: number) => (index ?? 0) + 1,
     },
     {
       key: 'ownerName',
@@ -101,14 +102,14 @@ export default function VendorVerification() {
     {
       key: 'status',
       label: 'Trạng thái',
-      render: (value: string) => getStatusBadge(value),
+      render: (value: unknown): React.JSX.Element => getStatusBadge(value as string),
     },
     {
       key: 'licenseUrl',
       label: 'Giấy phép',
-      render: (value: string) => (
+      render: (value: unknown): React.JSX.Element => (
         <a
-          href={value}
+          href={value as string}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -120,17 +121,17 @@ export default function VendorVerification() {
     {
       key: 'processedBy',
       label: 'Người xử lý',
-      render: (value: string | null) => value || '-',
+      render: (value: unknown): string => (value as string | null) ?? '-',
     },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
-      render: (value: string) => new Date(value).toLocaleString('vi-VN'),
+      render: (value: unknown): string => new Date(value as string).toLocaleString('vi-VN'),
     },
     {
       key: 'updatedAt',
       label: 'Ngày cập nhật',
-      render: (value: string) => new Date(value).toLocaleString('vi-VN'),
+      render: (value: unknown): string => new Date(value as string).toLocaleString('vi-VN'),
     },
   ];
 
@@ -143,7 +144,7 @@ export default function VendorVerification() {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: any) => console.log('View:', row),
+      onClick: (row: Record<string, unknown>): void => console.log('View:', row),
     },
     {
       label: (
@@ -153,7 +154,7 @@ export default function VendorVerification() {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: any) => console.log('Edit:', row),
+      onClick: (row: Record<string, unknown>): void => console.log('Edit:', row),
     },
     {
       label: (
@@ -163,7 +164,7 @@ export default function VendorVerification() {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: any) => console.log('Delete:', row),
+      onClick: (row: Record<string, unknown>): void => console.log('Delete:', row),
     },
   ];
 

@@ -1,4 +1,6 @@
-export default function PostsPage() {
+import React from 'react';
+
+export default function PostsPage(): React.JSX.Element {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Quản lý bài viết</h1>

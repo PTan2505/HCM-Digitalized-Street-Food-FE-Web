@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface DocumentsSectionProps {
   formData: {
     storeAvatar: File | null;
@@ -28,7 +30,7 @@ const FileUploadButton = ({
     event: React.ChangeEvent<HTMLInputElement>
   ) => void;
   accept: string;
-}) => {
+}): JSX.Element => {
   const isImage = accept.includes('image');
   const imageUrl =
     fileObject && isImage ? URL.createObjectURL(fileObject) : null;
@@ -77,7 +79,7 @@ const FileUploadButton = ({
 export default function DocumentsSection({
   formData,
   onFileChange,
-}: DocumentsSectionProps) {
+}: DocumentsSectionProps): JSX.Element {
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">
@@ -87,7 +89,7 @@ export default function DocumentsSection({
       <FileUploadButton
         label="Ảnh đại diện cửa hàng"
         field="storeAvatar"
-        fileName={formData.storeAvatar?.name || null}
+        fileName={formData.storeAvatar?.name ?? null}
         fileObject={formData.storeAvatar}
         onFileChange={onFileChange}
         accept="image/*"
@@ -96,7 +98,7 @@ export default function DocumentsSection({
       <FileUploadButton
         label="Ảnh mặt tiền cửa hàng"
         field="storeFrontImage"
-        fileName={formData.storeFrontImage?.name || null}
+        fileName={formData.storeFrontImage?.name ?? null}
         fileObject={formData.storeFrontImage}
         onFileChange={onFileChange}
         accept="image/*"
@@ -105,7 +107,7 @@ export default function DocumentsSection({
       <FileUploadButton
         label="Giấy phép kinh doanh"
         field="businessLicense"
-        fileName={formData.businessLicense?.name || null}
+        fileName={formData.businessLicense?.name ?? null}
         fileObject={formData.businessLicense}
         onFileChange={onFileChange}
         accept="image/*,.pdf"
@@ -114,7 +116,7 @@ export default function DocumentsSection({
       <FileUploadButton
         label="CMND/CCCD chủ quán"
         field="idCard"
-        fileName={formData.idCard?.name || null}
+        fileName={formData.idCard?.name ?? null}
         fileObject={formData.idCard}
         onFileChange={onFileChange}
         accept="image/*,.pdf"

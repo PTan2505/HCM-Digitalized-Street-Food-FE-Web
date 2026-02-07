@@ -1,3 +1,5 @@
+import React from 'react';
+
 const storeTypes = [
   'Quán ăn vỉa hè',
   'Xe đẩy thức ăn',
@@ -22,7 +24,7 @@ interface StoreInfoSectionProps {
 export default function StoreInfoSection({
   formData,
   onChange,
-}: StoreInfoSectionProps) {
+}: StoreInfoSectionProps): JSX.Element {
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">

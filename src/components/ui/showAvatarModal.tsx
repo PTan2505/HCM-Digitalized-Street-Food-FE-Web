@@ -5,10 +5,10 @@ interface ShowAvatarModalProps {
   setAvatarFile: (file: File | null) => void;
   previewUrl: string | null;
   setPreviewUrl: (url: string | null) => void;
-  updateAvatar: (file: File) => Promise<any>;
+  updateAvatar: (file: File) => Promise<{ success: boolean }>;
   loading: boolean;
-  getProfileApi: () => Promise<any>;
-  setUser: (user: any) => void;
+  getProfileApi: () => Promise<{ data: Record<string, unknown> }>;
+  setUser: (user: Record<string, unknown>) => void;
 }
 
 export default function ShowAvatarModal({
@@ -22,10 +22,10 @@ export default function ShowAvatarModal({
   loading,
   getProfileApi,
   setUser,
-}: ShowAvatarModalProps) {
+}: ShowAvatarModalProps): JSX.Element | null {
   if (!show) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
     if (file) {
       setAvatarFile(file);
@@ -34,7 +34,7 @@ export default function ShowAvatarModal({
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (): Promise<void> => {
     if (!avatarFile) return;
 
     const result = await updateAvatar(avatarFile);

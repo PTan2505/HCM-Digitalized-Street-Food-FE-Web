@@ -1,3 +1,5 @@
+import React from 'react';
+
 const daysOfWeek = [
   { value: 'monday', label: 'Thứ 2' },
   { value: 'tuesday', label: 'Thứ 3' },
@@ -18,7 +20,7 @@ interface OperatingInfoSectionProps {
     closedDates: string;
     serviceTypes: string[];
   };
-  onFieldChange: (field: string, value: any) => void;
+  onFieldChange: (field: string, value: unknown) => void;
   onWorkingDayToggle: (day: string) => void;
   onServiceTypeToggle: (service: string) => void;
 }
@@ -28,7 +30,7 @@ export default function OperatingInfoSection({
   onFieldChange,
   onWorkingDayToggle,
   onServiceTypeToggle,
-}: OperatingInfoSectionProps) {
+}: OperatingInfoSectionProps): JSX.Element {
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">
