@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
+import type { JSX } from 'react';
+
 interface Column {
   key: string;
   label: string;
@@ -86,7 +89,7 @@ const Table = ({
             ) : (
               data.map((row, rowIndex) => (
                 <tr
-                  key={row[rowKey]}
+                  key={String(row[rowKey])}
                   className={`transition-colors ${
                     onRowClick
                       ? 'cursor-pointer hover:bg-gray-50'
@@ -97,7 +100,12 @@ const Table = ({
                   {columns.map((column) => {
                     const value = column.key
                       .split('.')
-                      .reduce((obj, key) => obj?.[key], row);
+                      .reduce<unknown>((obj, key) => {
+                        if (obj && typeof obj === 'object' && key in obj) {
+                          return (obj as Record<string, unknown>)[key];
+                        }
+                        return undefined;
+                      }, row);
                     return (
                       <td
                         key={column.key}
@@ -107,7 +115,7 @@ const Table = ({
                       >
                         {column.render
                           ? column.render(value, row, rowIndex)
-                          : (value ?? '-')}
+                          : String(value ?? '-')}
                       </td>
                     );
                   })}

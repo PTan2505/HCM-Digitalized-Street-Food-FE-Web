@@ -1,4 +1,4 @@
-import React from 'react';
+import type { JSX } from 'react';
 
 const storeTypes = [
   'Quán ăn vỉa hè',

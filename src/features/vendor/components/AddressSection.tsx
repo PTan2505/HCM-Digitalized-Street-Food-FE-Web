@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import MapLocationPicker from './MapLocationPicker';
+import type { JSX } from 'react';
 
 interface AddressSectionProps {
   formData: {
@@ -72,9 +73,6 @@ export default function AddressSection({
           onLocationChange={(lat, lng) => {
             onChange('latitude', lat);
             onChange('longitude', lng);
-          }}
-          onAddressChange={(newAddress) => {
-            onChange('detailAddress', newAddress);
           }}
         />
       </div>

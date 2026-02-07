@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import SidebarContent from '@components/layout/SidebarContent';
+import type { JSX } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },

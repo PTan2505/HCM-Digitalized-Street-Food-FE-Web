@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import maplibregl from '@openmapvn/openmapvn-gl';
 import '@openmapvn/openmapvn-gl/dist/maplibre-gl.css';
+import type { JSX } from 'react';
 
 const defaultCenter = {
   lat: 10.762622,
