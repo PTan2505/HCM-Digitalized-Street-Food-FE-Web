@@ -4,7 +4,10 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import logoImage from '@assets/lowca-logo.png';
-import glassImage from '@assets/ios-light.png';
+import type { JSX } from 'react';
+import { Box, Typography, Avatar, Tooltip } from '@mui/material';
+import type { ColorConfig } from '@constants/moderatorTheme';
+import { MODERATOR_THEME } from '@constants/moderatorTheme';
 
 interface NavigationItem {
   name: string;
@@ -19,7 +22,7 @@ interface SidebarContentProps {
   collapsed?: boolean;
   navigation?: NavigationItem[];
   gradientColors?: { from: string; to: string };
-  textColors?: { primary: string; secondary: string; active: string };
+  textColors?: ColorConfig;
   userInfo?: {
     name: string;
     email: string;
@@ -33,190 +36,303 @@ interface SidebarContentProps {
 const SidebarContent = ({
   collapsed = false,
   navigation = [],
-  gradientColors = { from: '#06AA4C', to: '#06AA4C' },
-  textColors = { primary: '#ffffff', secondary: '#e8f5e9', active: '#045a2e' },
+  gradientColors = MODERATOR_THEME.gradientColors,
+  textColors = MODERATOR_THEME.textColors,
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
-}: SidebarContentProps): React.JSX.Element => {
+}: SidebarContentProps): JSX.Element => {
   const location = useLocation();
 
   return (
-    <div
-      className="flex flex-1 flex-col shadow-xl"
-      style={{
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
         background: `linear-gradient(to bottom, ${gradientColors.from}, ${gradientColors.to})`,
+        boxShadow: 'rgba(0, 0, 0, 0.1) 0px 4px 12px',
       }}
     >
-      <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          overflowY: 'auto',
+          pt: 2.5,
+          pb: 2,
+        }}
+      >
         {/* Logo/Brand */}
-        <div className="mb-8 flex shrink-0 items-center px-4">
-          <div className="flex w-full items-center">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-              <img
-                src={glassImage}
-                alt="Lowca Icon"
-                className="h-full w-full object-contain"
+        <Box
+          sx={{
+            mb: 4,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+          }}
+        >
+          {collapsed ? (
+            <Tooltip title={userInfo.role} placement="right">
+              <Box
+                component="img"
+                src={logoImage}
+                alt="Lowca Logo"
+                sx={{
+                  height: 32,
+                  width: 32,
+                  objectFit: 'contain',
+                }}
               />
-            </div>
-            {!collapsed && (
-              <div className="ml-4 flex flex-col justify-center">
-                <img
-                  src={logoImage}
-                  alt="Lowca Logo"
-                  className="h-8 object-contain"
-                  style={{ maxWidth: '120px' }}
-                />
-                <p
-                  className="mt-1 text-xs opacity-90"
-                  style={{ color: textColors.primary }}
-                >
-                  {userInfo.role}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+            </Tooltip>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+                width: '100%',
+              }}
+            >
+              <Box
+                component="img"
+                src={logoImage}
+                alt="Lowca Logo"
+                sx={{
+                  height: 32,
+                  objectFit: 'contain',
+                  maxWidth: '100px',
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: textColors.primary,
+                  fontWeight: 800,
+                  fontSize: '1rem',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {userInfo.role}
+              </Typography>
+            </Box>
+          )}
+        </Box>
 
         {/* Navigation */}
-        <nav className="mt-5 flex-1 space-y-2 px-2">
+        <Box component="nav" sx={{ mt: 2, flex: 1, px: 1 }}>
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <Link
+              <Tooltip
                 key={item.name}
-                to={item.href}
-                className={`${
-                  isActive ? 'text-white shadow-lg' : 'group-hover:text-white'
-                } group flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 ${
-                  collapsed ? 'justify-center' : ''
-                }`}
-                style={{
-                  backgroundColor: isActive ? textColors.active : 'transparent',
-                  color: isActive ? '#ffffff' : textColors.primary,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = gradientColors.to;
-                    e.currentTarget.style.color = '#ffffff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = textColors.primary;
-                  }
-                }}
                 title={collapsed ? item.name : ''}
+                placement="right"
+                disableHoverListener={!collapsed}
               >
-                <item.icon
-                  className={`${
-                    isActive ? 'text-white' : 'group-hover:text-white'
-                  } h-6 w-6 shrink-0 transition-colors duration-200`}
-                  style={{
-                    color: isActive ? '#ffffff' : textColors.primary,
-                  }}
-                />
-                {!collapsed && (
-                  <span className="ml-3 transition-opacity duration-200">
-                    {item.name}
-                  </span>
-                )}
-              </Link>
+                <Link to={item.href} style={{ textDecoration: 'none' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: collapsed ? 'center' : 'flex-start',
+                      px: 1.5,
+                      py: 1.5,
+                      mb: 0.5,
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      backgroundColor: isActive
+                        ? textColors.active
+                        : 'transparent',
+                      color: isActive
+                        ? textColors.activeText
+                        : textColors.primary,
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      boxShadow: isActive
+                        ? '0 2px 8px rgba(0,0,0,0.1)'
+                        : 'none',
+                      '&:hover': {
+                        backgroundColor: isActive
+                          ? textColors.active
+                          : textColors.hover,
+                        color: isActive
+                          ? textColors.activeText
+                          : textColors.hoverText,
+                      },
+                    }}
+                  >
+                    <item.icon
+                      className="h-5 w-5"
+                      style={{
+                        color: 'inherit',
+                        flexShrink: 0,
+                      }}
+                    />
+                    {!collapsed && (
+                      <Typography
+                        sx={{
+                          ml: 1.5,
+                          fontSize: '0.9rem',
+                          fontWeight: 500,
+                          color: 'inherit',
+                        }}
+                      >
+                        {item.name}
+                      </Typography>
+                    )}
+                  </Box>
+                </Link>
+              </Tooltip>
             );
           })}
-        </nav>
+        </Box>
 
         {/* Bottom actions */}
-        <div className="mt-auto space-y-2 px-2">
-          <button
-            onClick={onLogout}
-            className={`group flex w-full items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 ${
-              collapsed ? 'justify-center' : ''
-            }`}
-            style={{ color: textColors.primary }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#d32f2f';
-              e.currentTarget.style.color = '#ffffff';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = textColors.primary;
-            }}
+        <Box sx={{ mt: 'auto', px: 1 }}>
+          <Tooltip
             title={collapsed ? 'Đăng xuất' : ''}
+            placement="right"
+            disableHoverListener={!collapsed}
           >
-            <ArrowRightOnRectangleIcon
-              className="h-6 w-6 shrink-0 transition-colors duration-200"
-              style={{ color: textColors.primary }}
-            />
-            {!collapsed && <span className="ml-3">Đăng xuất</span>}
-          </button>
+            <Box
+              component="button"
+              onClick={onLogout}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                width: '100%',
+                px: 1.5,
+                py: 1.5,
+                mb: 1,
+                borderRadius: 2,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                backgroundColor: 'transparent',
+                color: textColors.logout,
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                '&:hover': {
+                  backgroundColor: textColors.logout,
+                  color: '#ffffff',
+                },
+              }}
+            >
+              <ArrowRightOnRectangleIcon
+                className="h-5 w-5"
+                style={{ color: 'inherit', flexShrink: 0 }}
+              />
+              {!collapsed && (
+                <Typography
+                  sx={{
+                    ml: 1.5,
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: 'inherit',
+                  }}
+                >
+                  Đăng xuất
+                </Typography>
+              )}
+            </Box>
+          </Tooltip>
 
           {/* User info in collapsed mode */}
           {collapsed && (
-            <div
-              className="pt-4"
-              style={{ borderTop: `1px solid ${textColors.secondary}` }}
+            <Box
+              sx={{
+                pt: 2,
+                borderTop: `1px solid ${textColors.border}`,
+              }}
             >
-              <div className="flex justify-center">
-                <div
-                  className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full"
-                  style={{ backgroundColor: textColors.active }}
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Tooltip
+                  title={`${userInfo.name}\n${userInfo.email}`}
+                  placement="right"
                 >
-                  {userInfo?.avatarUrl ? (
-                    <img
-                      src={userInfo.avatarUrl}
-                      alt="avatar"
-                      className="h-8 w-8 object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon
-                      className="h-6 w-6"
-                      style={{ color: textColors.primary }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
+                  <Avatar
+                    src={userInfo?.avatarUrl ?? undefined}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: textColors.active,
+                      color: textColors.activeText,
+                    }}
+                  >
+                    {!userInfo?.avatarUrl && (
+                      <UserCircleIcon className="h-5 w-5" />
+                    )}
+                  </Avatar>
+                </Tooltip>
+              </Box>
+            </Box>
           )}
 
           {/* User info in expanded mode */}
           {!collapsed && (
-            <div
-              className="pt-4"
-              style={{ borderTop: `1px solid ${textColors.secondary}` }}
+            <Box
+              sx={{
+                pt: 2,
+                borderTop: `1px solid ${textColors.border}`,
+              }}
             >
-              <div className="flex items-center px-3 py-2">
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full"
-                  style={{ backgroundColor: textColors.active }}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  px: 1.5,
+                  py: 1,
+                }}
+              >
+                <Avatar
+                  src={userInfo?.avatarUrl ?? undefined}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    bgcolor: textColors.active,
+                    color: textColors.activeText,
+                  }}
                 >
-                  {userInfo?.avatarUrl ? (
-                    <img
-                      src={userInfo.avatarUrl}
-                      alt="avatar"
-                      className="h-8 w-8 object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon
-                      className="h-6 w-6"
-                      style={{ color: textColors.primary }}
-                    />
+                  {!userInfo?.avatarUrl && (
+                    <UserCircleIcon className="h-5 w-5" />
                   )}
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">
+                </Avatar>
+                <Box sx={{ ml: 1.5, overflow: 'hidden' }}>
+                  <Typography
+                    sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: textColors.primary,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
                     {userInfo.name}
-                  </p>
-                  <p className="text-xs" style={{ color: textColors.primary }}>
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: '0.75rem',
+                      color: textColors.secondary,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
                     {userInfo.email}
-                  </p>
-                </div>
-              </div>
-            </div>
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

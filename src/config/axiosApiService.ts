@@ -16,7 +16,7 @@ interface RefreshTokenResponse {
 let isRefreshing = false;
 const refreshAndRetryQueue: RefreshTokenResponse[] = [];
 const skipAuthorizationPaths = [
-  apiUrl.login.admin,
+  apiUrl.login.moderator,
   apiUrl.login.customer,
   apiUrl.token.refresh,
 ];
@@ -63,7 +63,7 @@ axiosInstance.interceptors.response.use(
 
     const isAuthenEndpoint =
       originalRequest.url &&
-      (originalRequest.url.includes(apiUrl.login.admin) ||
+      (originalRequest.url.includes(apiUrl.login.moderator) ||
         originalRequest.url.includes(apiUrl.login.customer) ||
         originalRequest.url.includes(apiUrl.token.refresh));
 
@@ -111,9 +111,9 @@ axiosInstance.interceptors.response.use(
             return axiosInstance(originalRequest);
           }
         } catch {
-          const isAdminUrl = location.pathname.includes('admin');
+          const isModeratorUrl = location.pathname.includes('moderator');
           tokenManagement.clearTokens();
-          window.location.href = isAdminUrl ? '/admin/login' : '/login';
+          window.location.href = isModeratorUrl ? '/moderator/login' : '/login';
         } finally {
           isRefreshing = false;
         }

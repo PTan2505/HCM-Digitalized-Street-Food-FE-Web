@@ -1,16 +1,15 @@
 import RootLayout from '@app/routes/RootLayout';
-import AdminLayout from '@app/routes/AdminLayout';
+import ModeratorLayout from '@app/routes/ModeratorLayout';
 import { ROUTES } from '@constants/routes';
 import LoginPage from '@features/auth/pages/LoginPage';
 import { UserProfilePage } from '@features/user/UserProfilePage';
-import RevenuePage from '@features/admin/pages/RevenuePage';
-import TransactionsPage from '@features/admin/pages/TransactionsPage';
-import PostsPage from '@features/admin/pages/PostsPage';
-import UsersPage from '@features/admin/pages/UsersPage';
-import CashoutPage from '@features/admin/pages/CashoutPage';
+import RevenuePage from '@features/moderator/pages/RevenuePage';
+import TransactionsPage from '@features/moderator/pages/TransactionsPage';
+import PostsPage from '@features/moderator/pages/PostsPage';
+import UsersPage from '@features/moderator/pages/UsersPage';
+import CashoutPage from '@features/moderator/pages/CashoutPage';
 import { createBrowserRouter } from 'react-router';
-import VendorVerification from '@features/admin/pages/VendorVerification';
-import VendorRegistration from '@features/vendor/pages/VendorRegistration';
+import VendorVerification from '@features/moderator/pages/VendorVerification';
 
 export const router = createBrowserRouter([
   {
@@ -23,19 +22,16 @@ export const router = createBrowserRouter([
     children: [{ index: true, element: <UserProfilePage /> }],
   },
   {
-    path: '/vendor',
-    element: <VendorRegistration />,
-  },
-  {
-    path: '/admin',
-    element: <AdminLayout />,
+    path: '/moderator',
+    element: <ModeratorLayout />,
     children: [
       { index: true, element: <RevenuePage /> },
-      { path: ROUTES.ADMIN.TRANSACTIONS, element: <TransactionsPage /> },
-      { path: ROUTES.ADMIN.VERIFICATION, element: <VendorVerification /> },
-      { path: ROUTES.ADMIN.POSTS, element: <PostsPage /> },
-      { path: ROUTES.ADMIN.USERS, element: <UsersPage /> },
-      { path: ROUTES.ADMIN.CASHOUT, element: <CashoutPage /> },
+      { path: 'revenue', element: <RevenuePage /> },
+      { path: 'transactions', element: <TransactionsPage /> },
+      { path: 'verification', element: <VendorVerification /> },
+      { path: 'posts', element: <PostsPage /> },
+      { path: 'users', element: <UsersPage /> },
+      { path: 'cashout', element: <CashoutPage /> },
     ],
   },
 ]);

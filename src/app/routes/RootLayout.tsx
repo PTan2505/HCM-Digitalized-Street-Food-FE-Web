@@ -14,7 +14,7 @@ const RootLayout = (): JSX.Element => {
   const user = useAppSelector(selectUser);
   const userStatus = useAppSelector(selectUserStatus);
   const dispatch = useAppDispatch();
-  const isAdminUrl = location.pathname.includes('admin');
+  const isModeratorUrl = location.pathname.includes('moderator');
   const isDone = userStatus === 'succeeded' || userStatus === 'failed';
 
   useEffect(() => {
@@ -25,10 +25,10 @@ const RootLayout = (): JSX.Element => {
 
   useEffect(() => {
     if (isDone && !user) {
-      const redirectPath = isAdminUrl ? '/admin/login' : '/login';
+      const redirectPath = isModeratorUrl ? '/moderator/login' : '/login';
       navigate(redirectPath);
     }
-  }, [user, userStatus, navigate, isAdminUrl]);
+  }, [user, userStatus, navigate, isModeratorUrl]);
 
   return (
     <>

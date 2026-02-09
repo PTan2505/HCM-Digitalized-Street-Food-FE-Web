@@ -11,7 +11,7 @@ export interface LoginRequest {
   otp?: string | undefined;
 }
 
-export type LoginType = 'admin' | 'customer';
+export type LoginType = 'moderator' | 'customer';
 
 export interface OTPResponse {
   phoneNumber: string;
