@@ -2,7 +2,6 @@ import {
   Bars3Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CurrencyDollarIcon,
   HomeIcon,
   ShoppingBagIcon,
   UserCircleIcon,
@@ -10,36 +9,37 @@ import {
   UsersIcon,
   XMarkIcon,
   ChartBarIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import type { JSX } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import SidebarContent from '@components/layout/SidebarContent';
 import { Box, Typography, IconButton, Avatar } from '@mui/material';
-import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
+import { ADMIN_USER_INFO } from '@constants/adminTheme';
 
 const navigation = [
-  { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
+  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
   {
     name: 'Quản lý giao dịch',
-    href: '/moderator/transactions',
+    href: '/admin/transactions',
     icon: HomeIcon,
   },
+  { name: 'Quản lý bài viết', href: '/admin/posts', icon: UserGroupIcon },
+  { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
-    name: 'Xác minh người bán',
-    href: '/moderator/verification',
-    icon: ShoppingBagIcon,
+    name: 'Quản lý Badge',
+    href: '/admin/badge',
+    icon: StarIcon,
   },
-  { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
-  { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
   {
-    name: 'Yêu cầu rút tiền',
-    href: '/moderator/cashout',
-    icon: CurrencyDollarIcon,
+    name: 'Badge của nguời dùng',
+    href: '/admin/badge-users',
+    icon: ShoppingBagIcon,
   },
 ];
 
-function ModeratorLayout(): JSX.Element {
+function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
@@ -47,10 +47,10 @@ function ModeratorLayout(): JSX.Element {
 
   // Mock user data for UI only
   const user = {
-    firstName: 'Moderator',
+    firstName: 'Admin',
     lastName: 'User',
-    username: 'moderator',
-    email: 'moderator@example.com',
+    username: 'admin',
+    email: 'admin@example.com',
     avatarUrl: null,
   };
 
@@ -59,16 +59,16 @@ function ModeratorLayout(): JSX.Element {
   };
 
   const handleLogoClick = (): void => {
-    navigate('/moderator');
+    navigate('/admin');
   };
 
   const sidebarUserInfo = {
     name:
       user?.firstName && user?.lastName
         ? `${user.firstName} ${user.lastName}`
-        : MODERATOR_USER_INFO.name,
-    email: user?.email ?? MODERATOR_USER_INFO.email,
-    role: MODERATOR_USER_INFO.role,
+        : ADMIN_USER_INFO.name,
+    email: user?.email ?? ADMIN_USER_INFO.email,
+    role: ADMIN_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
 
@@ -104,7 +104,7 @@ function ModeratorLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/moderator/settings"
+            settingsPath="/admin/settings"
             onLogout={handleLogout}
             onLogoClick={handleLogoClick}
           />
@@ -121,7 +121,7 @@ function ModeratorLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/moderator/settings"
+          settingsPath="/admin/settings"
           onLogout={handleLogout}
           onLogoClick={handleLogoClick}
         />
@@ -195,10 +195,10 @@ function ModeratorLayout(): JSX.Element {
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Moderator User')}
+                      : (user?.username ?? 'Admin User')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {user?.email ?? 'moderator@example.com'}
+                    {user?.email ?? 'admin@example.com'}
                   </Typography>
                 </Box>
                 <Avatar
@@ -232,4 +232,4 @@ function ModeratorLayout(): JSX.Element {
   );
 }
 
-export default ModeratorLayout;
+export default AdminLayout;
