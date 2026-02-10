@@ -11,7 +11,7 @@ import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorVendorVerification from '@features/moderator/pages/VendorVerification';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
-import AdminPostsPage from '@features/admin/pages/PostsPage';
+import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import UserBadgeManagement from '@features/admin/pages/UserBadgeManagement';
@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
       { path: 'revenue', element: <AdminRevenuePage /> },
       { path: 'transactions', element: <AdminTransactionsPage /> },
       { path: 'badge-users', element: <UserBadgeManagement /> },
-      { path: 'posts', element: <AdminPostsPage /> },
+      { path: 'user-dietary', element: <AdminDietaryPage /> },
       { path: 'users', element: <AdminUsersPage /> },
       { path: 'badge', element: <AdminBadgePage /> },
     ],

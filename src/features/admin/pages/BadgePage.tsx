@@ -7,6 +7,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
+import BadgeFormModal from '@features/admin/components/BadgeFormModal';
 import {
   MOCK_BADGES,
   type BadgeDefinition,
@@ -206,133 +207,14 @@ export default function BadgePage(): JSX.Element {
       />
 
       {/* Modal Form */}
-      {openDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={handleCloseDialog}
-        >
-          <div
-            className="mx-4 w-full max-w-lg rounded-lg bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-                {editingBadge ? 'Chỉnh sửa Badge' : 'Thêm Badge mới'}
-              </h2>
-            </div>
-
-            {/* Modal Content */}
-            <div className="space-y-4 px-6 py-4">
-              {/* Tên Badge */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
-                  Tên Badge <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.badgeName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, badgeName: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
-                  placeholder="Tên Badge"
-                />
-              </div>
-
-              {/* Điểm yêu cầu */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
-                  Điểm yêu cầu <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.pointToGet}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      pointToGet: Number(e.target.value),
-                    })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
-                  placeholder="0"
-                />
-              </div>
-
-              {/* URL Icon */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
-                  URL Icon <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.iconUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, iconUrl: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
-                  placeholder="URL Icon"
-                />
-                <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
-                  Nhập URL hình ảnh icon
-                </p>
-              </div>
-
-              {/* Mô tả */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
-                  Mô tả <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={3}
-                  className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
-                  placeholder="Mô tả"
-                />
-              </div>
-
-              {/* Preview */}
-              {formData.iconUrl && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-[var(--color-table-text-secondary)]">
-                    Preview:
-                  </span>
-                  <Avatar
-                    src={formData.iconUrl}
-                    alt="Preview"
-                    sx={{ width: 48, height: 48 }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-              <button
-                onClick={handleCloseDialog}
-                className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={
-                  !formData.badgeName ||
-                  !formData.pointToGet ||
-                  !formData.iconUrl ||
-                  !formData.description
-                }
-                className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                {editingBadge ? 'Cập nhật' : 'Thêm mới'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BadgeFormModal
+        isOpen={openDialog}
+        isEditMode={!!editingBadge}
+        formData={formData}
+        onClose={handleCloseDialog}
+        onSave={handleSave}
+        onChange={(data) => setFormData(data as Partial<Badge>)}
+      />
     </div>
   );
 }
