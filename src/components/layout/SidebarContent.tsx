@@ -6,8 +6,6 @@ import {
 import logoImage from '@assets/lowca-logo.png';
 import type { JSX } from 'react';
 import { Box, Typography, Avatar, Tooltip } from '@mui/material';
-import type { ColorConfig } from '@constants/moderatorTheme';
-import { MODERATOR_THEME } from '@constants/moderatorTheme';
 
 interface NavigationItem {
   name: string;
@@ -21,8 +19,6 @@ interface NavigationItem {
 interface SidebarContentProps {
   collapsed?: boolean;
   navigation?: NavigationItem[];
-  gradientColors?: { from: string; to: string };
-  textColors?: ColorConfig;
   userInfo?: {
     name: string;
     email: string;
@@ -31,15 +27,15 @@ interface SidebarContentProps {
   };
   settingsPath?: string;
   onLogout?: () => void;
+  onLogoClick?: () => void;
 }
 
 const SidebarContent = ({
   collapsed = false,
   navigation = [],
-  gradientColors = MODERATOR_THEME.gradientColors,
-  textColors = MODERATOR_THEME.textColors,
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
+  onLogoClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
 
@@ -49,8 +45,9 @@ const SidebarContent = ({
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        background: `linear-gradient(to bottom, ${gradientColors.from}, ${gradientColors.to})`,
+        background: 'var(--gradient-moderator)',
         boxShadow: 'rgba(0, 0, 0, 0.1) 0px 4px 12px',
+        fontFamily: 'var(--font-nunito)',
       }}
     >
       <Box
@@ -78,22 +75,27 @@ const SidebarContent = ({
               <Box
                 component="img"
                 src={logoImage}
-                alt="Lowca Logo"
+                onClick={onLogoClick}
                 sx={{
                   height: 32,
                   width: 32,
                   objectFit: 'contain',
+                  cursor: onLogoClick ? 'pointer' : 'default',
+                  '&:hover': onLogoClick ? { opacity: 0.8 } : {},
                 }}
               />
             </Tooltip>
           ) : (
             <Box
+              onClick={onLogoClick}
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 0.5,
                 width: '100%',
+                cursor: onLogoClick ? 'pointer' : 'default',
+                '&:hover': onLogoClick ? { opacity: 0.8 } : {},
               }}
             >
               <Box
@@ -109,10 +111,11 @@ const SidebarContent = ({
               <Typography
                 variant="body2"
                 sx={{
-                  color: textColors.primary,
+                  color: 'var(--color-moderator-text-primary)',
                   fontWeight: 800,
                   fontSize: '1rem',
                   letterSpacing: '0.02em',
+                  fontFamily: 'var(--font-nunito)',
                 }}
               >
                 {userInfo.role}
@@ -145,23 +148,24 @@ const SidebarContent = ({
                       cursor: 'pointer',
                       transition: 'all 0.2s ease-in-out',
                       backgroundColor: isActive
-                        ? textColors.active
+                        ? 'var(--color-moderator-active-bg)'
                         : 'transparent',
                       color: isActive
-                        ? textColors.activeText
-                        : textColors.primary,
+                        ? 'var(--color-moderator-active-text)'
+                        : 'var(--color-moderator-text-primary)',
                       fontWeight: 500,
                       fontSize: '0.875rem',
+                      fontFamily: 'var(--font-nunito)',
                       boxShadow: isActive
                         ? '0 2px 8px rgba(0,0,0,0.1)'
                         : 'none',
                       '&:hover': {
                         backgroundColor: isActive
-                          ? textColors.active
-                          : textColors.hover,
+                          ? 'var(--color-moderator-active-bg)'
+                          : 'var(--color-moderator-hover-bg)',
                         color: isActive
-                          ? textColors.activeText
-                          : textColors.hoverText,
+                          ? 'var(--color-moderator-active-text)'
+                          : 'var(--color-moderator-hover-text)',
                       },
                     }}
                   >
@@ -179,6 +183,7 @@ const SidebarContent = ({
                           fontSize: '0.9rem',
                           fontWeight: 500,
                           color: 'inherit',
+                          fontFamily: 'var(--font-nunito)',
                         }}
                       >
                         {item.name}
@@ -214,11 +219,12 @@ const SidebarContent = ({
                 cursor: 'pointer',
                 transition: 'all 0.2s ease-in-out',
                 backgroundColor: 'transparent',
-                color: textColors.logout,
+                color: 'var(--color-moderator-logout)',
                 fontWeight: 500,
                 fontSize: '0.875rem',
+                fontFamily: 'var(--font-nunito)',
                 '&:hover': {
-                  backgroundColor: textColors.logout,
+                  backgroundColor: 'var(--color-moderator-logout-hover)',
                   color: '#ffffff',
                 },
               }}
@@ -234,6 +240,7 @@ const SidebarContent = ({
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     color: 'inherit',
+                    fontFamily: 'var(--font-nunito)',
                   }}
                 >
                   Đăng xuất
@@ -247,7 +254,7 @@ const SidebarContent = ({
             <Box
               sx={{
                 pt: 2,
-                borderTop: `1px solid ${textColors.border}`,
+                borderTop: '1px solid var(--color-moderator-border)',
               }}
             >
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -260,8 +267,8 @@ const SidebarContent = ({
                     sx={{
                       width: 32,
                       height: 32,
-                      bgcolor: textColors.active,
-                      color: textColors.activeText,
+                      bgcolor: 'var(--color-moderator-active-bg)',
+                      color: 'var(--color-moderator-active-text)',
                     }}
                   >
                     {!userInfo?.avatarUrl && (
@@ -278,7 +285,7 @@ const SidebarContent = ({
             <Box
               sx={{
                 pt: 2,
-                borderTop: `1px solid ${textColors.border}`,
+                borderTop: '1px solid var(--color-moderator-border)',
               }}
             >
               <Box
@@ -294,8 +301,8 @@ const SidebarContent = ({
                   sx={{
                     width: 36,
                     height: 36,
-                    bgcolor: textColors.active,
-                    color: textColors.activeText,
+                    bgcolor: 'var(--color-moderator-active-bg)',
+                    color: 'var(--color-moderator-active-text)',
                   }}
                 >
                   {!userInfo?.avatarUrl && (
@@ -307,10 +314,11 @@ const SidebarContent = ({
                     sx={{
                       fontSize: '0.875rem',
                       fontWeight: 600,
-                      color: textColors.primary,
+                      color: 'var(--color-moderator-text-primary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
+                      fontFamily: 'var(--font-nunito)',
                     }}
                   >
                     {userInfo.name}
@@ -318,10 +326,11 @@ const SidebarContent = ({
                   <Typography
                     sx={{
                       fontSize: '0.75rem',
-                      color: textColors.secondary,
+                      color: 'var(--color-moderator-text-secondary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
+                      fontFamily: 'var(--font-nunito)',
                     }}
                   >
                     {userInfo.email}
