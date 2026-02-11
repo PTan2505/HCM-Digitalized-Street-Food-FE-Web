@@ -1,46 +1,60 @@
-import type { LoginRequest, LoginType } from '@auth/types/login';
-import { ROUTES } from '@constants/routes';
-import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
+import type { LoginWithPhoneNumberRequest } from '@auth/types/login';
+import { useAppDispatch } from '@hooks/reduxHooks';
 import {
-  generateOTP,
-  selectIsGeneratedOTP,
-  selectIsNewUser,
-  userLogin,
+  logout,
+  userLoginWithPhoneNumber,
+  verifyPhoneNumber,
 } from '@slices/auth';
-
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
-  onLoginSubmit: (values: LoginRequest, loginType: LoginType) => Promise<void>;
+  // onGoogleLoginSubmit: () => Promise<void>;
+  // onFacebookLoginSubmit: () => Promise<void>;
+  onPhoneNumberLoginSubmit: (
+    values: LoginWithPhoneNumberRequest
+  ) => Promise<void>;
+  onVerifyPhoneNumberSubmit: (payload: {
+    phoneNumber: string;
+    otp: string;
+  }) => Promise<void>;
+  onLogout: () => void;
 } {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const isGeneratedOTP = useAppSelector(selectIsGeneratedOTP);
-  const isNewUser = useAppSelector(selectIsNewUser);
+  const navigation = useNavigate();
 
-  const handleLogin = async (
-    values: LoginRequest,
-    loginType: LoginType
-  ): Promise<void> => {
-    await dispatch(userLogin({ data: values, loginType })).unwrap();
-    if (isNewUser && loginType === 'customer') {
-      navigate(`${ROUTES.NEW_CUSTOMER_PROFILE}`);
-    } else navigate(`/`);
-  };
+  // async function onGoogleLoginSubmit(): Promise<void> {
+  //   await dispatch(userLoginWithGoogle()).unwrap();
+  // }
 
-  async function onLoginSubmit(
-    values: LoginRequest,
-    loginType: LoginType
+  // async function onFacebookLoginSubmit(): Promise<void> {
+  //   await dispatch(userLoginWithFacebook()).unwrap();
+  // }
+
+  async function onPhoneNumberLoginSubmit(
+    values: LoginWithPhoneNumberRequest
   ): Promise<void> {
-    if (loginType === 'customer' && !isGeneratedOTP) {
-      await dispatch(generateOTP(values)).unwrap();
-      return;
-    }
-
-    await handleLogin(values, loginType);
+    await dispatch(userLoginWithPhoneNumber(values)).unwrap();
+    navigation('/login');
   }
 
+  async function onVerifyPhoneNumberSubmit(payload: {
+    phoneNumber: string;
+    otp: string;
+  }): Promise<void> {
+    await dispatch(verifyPhoneNumber(payload)).unwrap();
+    navigation('/');
+  }
+
+  function onLogout(): void {
+    dispatch(logout());
+    navigation('/login');
+    // Implementation for logout if needed
+  }
   return {
-    onLoginSubmit,
+    // onGoogleLoginSubmit,
+    // onFacebookLoginSubmit,
+    onPhoneNumberLoginSubmit,
+    onVerifyPhoneNumberSubmit,
+    onLogout,
   };
 }

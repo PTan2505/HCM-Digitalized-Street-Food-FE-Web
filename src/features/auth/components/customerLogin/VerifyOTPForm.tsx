@@ -7,7 +7,7 @@ import {
   styled,
   Typography,
 } from '@mui/material';
-import { changeAccount, generateOTP } from '@slices/auth';
+import { changeAccount, userLoginWithPhoneNumber } from '@slices/auth';
 import { MuiOtpInput } from 'mui-one-time-password-input';
 import { type JSX } from 'react';
 import {
@@ -148,7 +148,9 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
           component="button"
           type="button"
           onClick={async () =>
-            await dispatch(generateOTP({ phoneNumber: phoneNumber })).unwrap()
+            await dispatch(
+              userLoginWithPhoneNumber({ phoneNumber: phoneNumber })
+            ).unwrap()
           }
         >
           Gửi lại mã
