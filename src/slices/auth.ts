@@ -81,10 +81,7 @@ export const verifyPhoneNumber = createAppAsyncThunk(
 export const loadUserFromStorage = createAppAsyncThunk(
   'user/loadUserFromStorage',
   async () => {
-    if (
-      !tokenManagement.getAccessToken() ||
-      !tokenManagement.getRefreshToken()
-    ) {
+    if (!tokenManagement.getAccessToken()) {
       tokenManagement.clearTokens();
       return null;
     }
