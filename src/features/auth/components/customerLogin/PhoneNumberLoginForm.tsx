@@ -1,7 +1,8 @@
-import VerifyOTPForm from '@features/auth/components/customerLogin/VerifyOTPForm';
 import useLogin from '@auth/hooks/useLogin';
 import { LoginOTPSchema } from '@auth/utils/formSchema';
 import { CustomInput } from '@components/CustomInput';
+import VerifyOTPForm from '@features/auth/components/customerLogin/VerifyOTPForm';
+import type { LoginWithPhoneNumberRequest } from '@features/auth/types/login';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
@@ -9,27 +10,30 @@ import { selectIsGeneratedOTP, selectUserStatus } from '@slices/auth';
 import type { JSX } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 
-interface CustomerLoginRequest {
-  phoneNumber: string;
-  otp?: string;
-}
+const initialValues: LoginWithPhoneNumberRequest = { phoneNumber: '', otp: '' };
 
-const initialValues: CustomerLoginRequest = { phoneNumber: '', otp: '' };
-
-export const CustomerLoginForm = (): JSX.Element => {
+export const PhoneNumberLoginForm = (): JSX.Element => {
   const isGeneratedOTP = useAppSelector(selectIsGeneratedOTP);
   const userStatus = useAppSelector(selectUserStatus);
-  const { onLoginSubmit } = useLogin();
+  const { onPhoneNumberLoginSubmit, onVerifyPhoneNumberSubmit } = useLogin();
 
-  const methods = useForm<CustomerLoginRequest>({
+  const methods = useForm<LoginWithPhoneNumberRequest>({
     defaultValues: initialValues,
     resolver: zodResolver(LoginOTPSchema),
   });
 
   const { control, handleSubmit, getValues, setError } = methods;
-  const onSubmit: SubmitHandler<CustomerLoginRequest> = async (values) => {
+  const onSubmit: SubmitHandler<LoginWithPhoneNumberRequest> = async (
+    values
+  ) => {
     try {
-      await onLoginSubmit(values, 'customer');
+      if (!isGeneratedOTP) {
+        await onPhoneNumberLoginSubmit(values);
+      } else {
+        await onVerifyPhoneNumberSubmit(
+          values as { phoneNumber: string; otp: string }
+        );
+      }
     } catch (error: unknown) {
       // const err = error as APIErrorResponse;
       // const errorCode = err.code ?? 'ERR_500_INTERNAL_SERVER_ERROR';
@@ -43,7 +47,7 @@ export const CustomerLoginForm = (): JSX.Element => {
       {userStatus === 'pending' ? (
         <CircularProgress enableTrackSlot size="40px" />
       ) : isGeneratedOTP ? (
-        <VerifyOTPForm<CustomerLoginRequest>
+        <VerifyOTPForm<LoginWithPhoneNumberRequest>
           phoneNumber={getValues('phoneNumber')}
           name="otp"
           onSubmit={onSubmit}

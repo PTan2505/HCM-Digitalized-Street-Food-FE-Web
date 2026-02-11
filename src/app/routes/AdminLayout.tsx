@@ -25,15 +25,19 @@ const navigation = [
     href: '/admin/transactions',
     icon: HomeIcon,
   },
-  { name: 'Quản lý bài viết', href: '/admin/posts', icon: UserGroupIcon },
+  {
+    name: 'Quản lý chế độ ăn',
+    href: '/admin/user-dietary',
+    icon: UserGroupIcon,
+  },
   { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
-    name: 'Quản lý Badge',
+    name: 'Quản lý huy hiệu',
     href: '/admin/badge',
     icon: StarIcon,
   },
   {
-    name: 'Badge của nguời dùng',
+    name: 'Huy hiệu của người dùng',
     href: '/admin/badge-users',
     icon: ShoppingBagIcon,
   },
