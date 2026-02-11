@@ -1,4 +1,7 @@
-import type { LoginRequest, LoginType, UserTokens } from '@auth/types/login';
+import type {
+  LoginResponse,
+  LoginWithPhoneNumberRequest,
+} from '@features/auth/types/login';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
@@ -9,19 +12,30 @@ export class LoginApi {
     this.apiClient = apiClient;
   }
 
-  async login(data: LoginRequest, loginType: LoginType): Promise<UserTokens> {
+  async loginWithPhoneNumber(
+    data: LoginWithPhoneNumberRequest
+  ): Promise<{ message: string }> {
     let res = null;
-    if (loginType == 'admin') {
-      res = await this.apiClient.post<UserTokens, LoginRequest>({
-        url: apiUrl.login.admin,
+    res = await this.apiClient.post<
+      { message: string },
+      LoginWithPhoneNumberRequest
+    >({
+      url: apiUrl.auth.phoneLogin,
+      data,
+    });
+    return res.data;
+  }
+
+  async verifyPhoneNumber(
+    data: LoginWithPhoneNumberRequest
+  ): Promise<LoginResponse> {
+    let res = null;
+    res = await this.apiClient.post<LoginResponse, LoginWithPhoneNumberRequest>(
+      {
+        url: apiUrl.auth.phoneVerify,
         data,
-      });
-    } else {
-      res = await this.apiClient.post<UserTokens, LoginRequest>({
-        url: apiUrl.login.customer,
-        data,
-      });
-    }
+      }
+    );
     return res.data;
   }
 }

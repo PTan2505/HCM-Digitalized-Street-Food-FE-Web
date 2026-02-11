@@ -1,19 +1,25 @@
-export interface UserTokens {
-  refreshToken: string;
-  accessToken: string;
-  accessExpires: number;
-  refreshExpires: number;
-}
+import type { User } from '@custom-types/user';
 
 export interface LoginRequest {
-  phoneNumber: string;
-  password?: string | undefined;
-  otp?: string | undefined;
+  email: string;
+  password: string;
 }
 
-export type LoginType = 'admin' | 'customer';
-
-export interface OTPResponse {
+export interface LoginWithPhoneNumberRequest {
   phoneNumber: string;
-  isNewUser: boolean;
+  otp?: string;
+}
+
+export interface LoginWithGoogleRequest {
+  idToken: string;
+}
+
+export interface LoginWithFacebookRequest {
+  accessToken: string;
+}
+
+export interface LoginResponse {
+  message?: string;
+  token: string;
+  user: User;
 }

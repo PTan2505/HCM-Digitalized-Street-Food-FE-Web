@@ -1,51 +1,78 @@
 import type { RootState } from '@app/store';
-import type { LoginRequest, LoginType, OTPResponse } from '@auth/types/login';
-import type { APIErrorResponse } from '@custom-types/apiResponse';
+import type { LoginResponse } from '@auth/types/login';
 import type { User } from '@custom-types/user';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
-import { createSlice } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  isFulfilled,
+  isPending,
+  isRejected,
+} from '@reduxjs/toolkit';
 import { tokenManagement } from '@utils/tokenManagement';
 
 // Define a type for the slice state
-export interface UserState {
-  value: User | OTPResponse | null;
+export interface AuthState {
+  value: User | null;
+  loginResponse: LoginResponse | null;
   isGeneratedOTP: boolean;
-  isNewUser: boolean;
+  registerEmail: string | null;
+  forgetPasswordEmail: string | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
-  error: APIErrorResponse | unknown | null;
+  error: unknown;
 }
 
-interface LoginPayload {
-  data: LoginRequest;
-  loginType: LoginType;
-}
-
-// Define the initial state using that type
-const initialState: UserState = {
+const initialState: AuthState = {
   value: null,
+  loginResponse: null,
+  registerEmail: null,
   isGeneratedOTP: false,
-  isNewUser: false,
+  forgetPasswordEmail: null,
   status: 'idle',
   error: null,
 };
 
-export const userLogin = createAppAsyncThunk(
-  'user/login',
-  async (payload: LoginPayload, { rejectWithValue }) => {
+export const userLoginWithPhoneNumber = createAppAsyncThunk(
+  'auth/loginWithPhoneNumber',
+  async (payload: { phoneNumber: string }, { rejectWithValue }) => {
     try {
-      const tokenData = await axiosApi.loginApi.login(
-        payload.data,
-        payload.loginType
-      );
-      tokenManagement.setTokens({
-        newAccessToken: tokenData.accessToken,
-        newRefreshToken: tokenData.refreshToken,
+      const response = await axiosApi.loginApi.loginWithPhoneNumber({
+        phoneNumber: payload.phoneNumber,
       });
-
-      const userProfile = await axiosApi.userProfileApi.getUserProfile();
-      return userProfile;
+      console.log('Phone login response:', response);
+      return response;
     } catch (error) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        return rejectWithValue({
+          code: 'PHONE_LOGIN_ERROR',
+          message: (error as { message: string }).message,
+        });
+      }
+
+      return rejectWithValue({
+        code: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred during phone login',
+      });
+    }
+  }
+);
+
+export const verifyPhoneNumber = createAppAsyncThunk(
+  'auth/verifyPhoneNumber',
+  async (
+    payload: { phoneNumber: string; otp: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { user, token } = await axiosApi.loginApi.verifyPhoneNumber({
+        phoneNumber: payload.phoneNumber,
+        otp: payload.otp,
+      });
+      tokenManagement.setTokens({ newAccessToken: token });
+
+      return { user };
+    } catch (error) {
+      // API errors are already formatted by ApiClient
       return rejectWithValue(error);
     }
   }
@@ -67,14 +94,6 @@ export const loadUserFromStorage = createAppAsyncThunk(
   }
 );
 
-export const generateOTP = createAppAsyncThunk(
-  'user/generateOTP',
-  async (payload: LoginRequest) => {
-    const OTPResponse = await axiosApi.otpApi.generateOTP(payload);
-    return OTPResponse;
-  }
-);
-
 export const authSlice = createSlice({
   name: 'user',
   initialState,
@@ -89,44 +108,32 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(userLogin.pending, (state) => {
-        state.status = 'pending';
-        state.error = null;
+      .addCase(userLoginWithPhoneNumber.fulfilled, (state) => {
+        state.isGeneratedOTP = true;
       })
-      .addCase(userLogin.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.value = action.payload;
-      })
-      .addCase(userLogin.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload ?? { message: 'Login failed' };
-      })
-      .addCase(loadUserFromStorage.pending, (state) => {
-        state.status = 'pending';
-        state.error = null;
+      .addCase(verifyPhoneNumber.fulfilled, (state, action) => {
+        state.value = action.payload.user;
       })
       .addCase(loadUserFromStorage.fulfilled, (state, action) => {
-        state.status = 'succeeded';
         state.value = action.payload;
       })
-      .addCase(loadUserFromStorage.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload ?? { message: 'Load user failed' };
-        state.value = null;
-      })
-      .addCase(generateOTP.pending, (state) => {
+      // Matcher: Gom tất cả các case đang chạy (pending)
+      .addMatcher(isPending, (state) => {
         state.status = 'pending';
         state.error = null;
       })
-      .addCase(generateOTP.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.isGeneratedOTP = true;
-        state.isNewUser = action.payload.isNewUser;
-      })
-      .addCase(generateOTP.rejected, (state, action) => {
+      // Matcher: Gom tất cả các case thất bại (rejected)
+      .addMatcher(isRejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload ?? { message: 'Generate OTP failed' };
-      });
+        state.error = action.payload ?? { message: 'An error occurred' };
+      })
+      // Matcher: Gom các case thành công (ngoại trừ logout) để set status succeeded
+      .addMatcher(
+        (action) => isFulfilled(action) && !action.type.includes('logout'),
+        (state) => {
+          state.status = 'succeeded';
+        }
+      );
   },
 });
 
@@ -135,19 +142,14 @@ export const { logout, changeAccount } = authSlice.actions;
 
 export default authSlice.reducer;
 
-export const selectUser = (state: RootState): User | OTPResponse | null =>
-  state.user.value;
-
-export const selectIsGeneratedOTP = (state: RootState): boolean =>
-  state.user.isGeneratedOTP;
+// Selectors
+export const selectUser = (state: RootState): User | null => state.user.value;
 
 export const selectUserStatus = (
   state: RootState
 ): 'idle' | 'pending' | 'succeeded' | 'failed' => state.user.status;
 
-export const selectUserError = (
-  state: RootState
-): APIErrorResponse | unknown | null => state.user.error;
+export const selectIsGeneratedOTP = (state: RootState): boolean =>
+  state.user.isGeneratedOTP;
 
-export const selectIsNewUser = (state: RootState): boolean =>
-  state.user.isNewUser;
+export const selectAuthError = (state: RootState): unknown => state.user.error;
