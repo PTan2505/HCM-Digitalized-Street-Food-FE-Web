@@ -16,13 +16,15 @@ export const apiUrl = {
   dietaryPreference: {
     getAll: '/DietaryPreference',
   },
-  userDietary: {
-    userDietary: '/UserDietary/user',
+  login: {
+    moderator: 'users/moderator-login/',
+    customer: '/users/login/',
   },
-  user: {
-    userSetup: {
-      userinfo: '/UserSetup/userinfo-setup',
-      dietary: '/UserSetup/dietary-setup',
-    },
+  profile: {
+    moderator: '/users/profile/',
+    customer: '/users/profile/',
+  },
+  users: {
+    list: '/users/',
   },
 };

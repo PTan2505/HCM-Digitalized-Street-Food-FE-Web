@@ -1,9 +1,13 @@
 export interface User {
-  id: number;
-  phoneNumber: string;
+  id?: number;
+  username: string;
+  email: string;
   firstName: string;
   lastName: string;
-  gender: string;
-  birthDate: Date;
-  roles: Array<string>;
+  avatarUrl?: string;
+  role: string;
+  point?: number;
+  createdAt?: string;
+  emailVerified?: boolean;
+  phoneNumber?: string;
 }
