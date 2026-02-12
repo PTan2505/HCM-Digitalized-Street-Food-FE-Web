@@ -1,23 +1,25 @@
+import SidebarContent from '@components/layout/SidebarContent';
+import { ADMIN_USER_INFO } from '@constants/adminTheme';
+import useLogin from '@features/auth/hooks/useLogin';
 import {
   Bars3Icon,
+  ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   HomeIcon,
   ShoppingBagIcon,
+  StarIcon,
   UserCircleIcon,
   UserGroupIcon,
   UsersIcon,
   XMarkIcon,
-  ChartBarIcon,
-  StarIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import SidebarContent from '@components/layout/SidebarContent';
-import { Box, Typography, IconButton, Avatar } from '@mui/material';
-import { ADMIN_USER_INFO } from '@constants/adminTheme';
-import useLogin from '@features/auth/hooks/useLogin';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
@@ -50,15 +52,8 @@ function AdminLayout(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
-
   // Mock user data for UI only
-  const user = {
-    firstName: 'Admin',
-    lastName: 'User',
-    username: 'admin',
-    email: 'admin@example.com',
-    avatarUrl: null,
-  };
+  const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
     navigate('/admin');

@@ -1,4 +1,5 @@
-import Navbar from '@components/Navbar';
+import { ROLES } from '@constants/role';
+import { ROUTES } from '@constants/routes';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import {
   loadUserFromStorage,
@@ -10,12 +11,11 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const RootLayout = (): JSX.Element => {
   const navigate = useNavigate();
-  const location = useLocation();
   const user = useAppSelector(selectUser);
   const userStatus = useAppSelector(selectUserStatus);
   const dispatch = useAppDispatch();
-  const isModeratorUrl = location.pathname.includes('moderator');
   const isDone = userStatus === 'succeeded' || userStatus === 'failed';
+  const location = useLocation();
 
   useEffect(() => {
     if (userStatus === 'idle') {
@@ -25,16 +25,34 @@ const RootLayout = (): JSX.Element => {
 
   useEffect(() => {
     if (isDone && !user) {
-      const redirectPath = isModeratorUrl ? '/moderator/login' : '/login';
-      navigate(redirectPath);
+      navigate(ROUTES.LOGIN);
+      return;
     }
-  }, [user, userStatus, navigate, isModeratorUrl]);
+
+    if (isDone && user) {
+      const currentPath = location.pathname;
+      if (user.role === ROLES.ADMIN) {
+        if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.ADMIN.BASE)
+        ) {
+          navigate(ROUTES.ADMIN.BASE, { replace: true });
+        }
+      } else if (user.role === ROLES.MODERATOR) {
+        if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.MODERATOR.BASE)
+        ) {
+          navigate(ROUTES.MODERATOR.BASE, { replace: true });
+        }
+      }
+    }
+  }, [user, userStatus, navigate, isDone, location]);
 
   return (
     <>
       {user && (
         <div className="app-layout">
-          <Navbar />
           <main className="content">
             <Outlet />
           </main>
