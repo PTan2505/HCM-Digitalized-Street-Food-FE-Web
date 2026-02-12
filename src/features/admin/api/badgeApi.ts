@@ -1,4 +1,8 @@
-import type { Badge, CreateOrUpdateBadgeRequest, CreateOrUpdateBadgeResponse } from '@features/admin/types/badge';
+import type {
+  Badge,
+  CreateOrUpdateBadgeRequest,
+  CreateOrUpdateBadgeResponse,
+} from '@features/admin/types/badge';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
@@ -54,4 +58,3 @@ export class BadgeApi {
     return res.data;
   }
 }
-
