@@ -1,7 +1,14 @@
 import type { LoginWithPhoneNumberRequest } from '@auth/types/login';
+import {
+  initFacebookSDK,
+  loginWithFacebook,
+} from '@features/auth/libs/FacebookSDK';
 import { useAppDispatch } from '@hooks/reduxHooks';
+import { useGoogleLogin } from '@react-oauth/google';
 import {
   logout,
+  userLoginWithFacebook,
+  userLoginWithGoogle,
   userLoginWithPhoneNumber,
   verifyPhoneNumber,
 } from '@slices/auth';
@@ -9,8 +16,8 @@ import { useNavigate } from 'react-router';
 import { ROLES } from '@constants/role';
 
 export default function useLogin(): {
-  // onGoogleLoginSubmit: () => Promise<void>;
-  // onFacebookLoginSubmit: () => Promise<void>;
+  onGoogleLoginSubmit: () => void;
+  onFacebookLoginSubmit: () => Promise<void>;
   onPhoneNumberLoginSubmit: (
     values: LoginWithPhoneNumberRequest
   ) => Promise<void>;
@@ -23,13 +30,21 @@ export default function useLogin(): {
   const dispatch = useAppDispatch();
   const navigation = useNavigate();
 
-  // async function onGoogleLoginSubmit(): Promise<void> {
-  //   await dispatch(userLoginWithGoogle()).unwrap();
-  // }
+  const onGoogleLoginSubmit = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      await dispatch(
+        userLoginWithGoogle({ accessToken: tokenResponse.access_token })
+      ).unwrap();
+      navigation('/');
+    },
+  });
 
-  // async function onFacebookLoginSubmit(): Promise<void> {
-  //   await dispatch(userLoginWithFacebook()).unwrap();
-  // }
+  async function onFacebookLoginSubmit(): Promise<void> {
+    await initFacebookSDK();
+    const accessToken = await loginWithFacebook();
+    await dispatch(userLoginWithFacebook({ accessToken })).unwrap();
+    navigation('/');
+  }
 
   async function onPhoneNumberLoginSubmit(
     values: LoginWithPhoneNumberRequest
@@ -56,8 +71,8 @@ export default function useLogin(): {
     // Implementation for logout if needed
   }
   return {
-    // onGoogleLoginSubmit,
-    // onFacebookLoginSubmit,
+    onGoogleLoginSubmit,
+    onFacebookLoginSubmit,
     onPhoneNumberLoginSubmit,
     onVerifyPhoneNumberSubmit,
     onLogout,

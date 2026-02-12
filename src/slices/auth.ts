@@ -1,6 +1,9 @@
 import type { RootState } from '@app/store';
-import type { LoginResponse } from '@auth/types/login';
 import type { User } from '@custom-types/user';
+import type {
+  LoginWithFacebookRequest,
+  LoginWithGoogleRequest,
+} from '@features/auth/types/login';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -14,23 +17,51 @@ import { tokenManagement } from '@utils/tokenManagement';
 // Define a type for the slice state
 export interface AuthState {
   value: User | null;
-  loginResponse: LoginResponse | null;
   isGeneratedOTP: boolean;
-  registerEmail: string | null;
-  forgetPasswordEmail: string | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
 
 const initialState: AuthState = {
   value: null,
-  loginResponse: null,
-  registerEmail: null,
   isGeneratedOTP: false,
-  forgetPasswordEmail: null,
   status: 'idle',
   error: null,
 };
+
+export const userLoginWithGoogle = createAppAsyncThunk(
+  'auth/loginWithGoogle',
+  async (payload: LoginWithGoogleRequest, { rejectWithValue }) => {
+    try {
+      const { user, token } = await axiosApi.loginApi.loginWithGoogle({
+        accessToken: payload.accessToken,
+      });
+
+      tokenManagement.setTokens({ newAccessToken: token });
+
+      return { user };
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const userLoginWithFacebook = createAppAsyncThunk(
+  'auth/loginWithFacebook',
+  async (payload: LoginWithFacebookRequest, { rejectWithValue }) => {
+    try {
+      const { user, token } = await axiosApi.loginApi.loginWithFacebook({
+        accessToken: payload.accessToken,
+      });
+
+      tokenManagement.setTokens({ newAccessToken: token });
+
+      return { user };
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 export const userLoginWithPhoneNumber = createAppAsyncThunk(
   'auth/loginWithPhoneNumber',
@@ -105,6 +136,12 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(userLoginWithGoogle.fulfilled, (state, action) => {
+        state.value = action.payload.user;
+      })
+      .addCase(userLoginWithFacebook.fulfilled, (state, action) => {
+        state.value = action.payload.user;
+      })
       .addCase(userLoginWithPhoneNumber.fulfilled, (state) => {
         state.isGeneratedOTP = true;
       })

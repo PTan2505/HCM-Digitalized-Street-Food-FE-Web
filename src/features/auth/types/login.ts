@@ -11,7 +11,8 @@ export interface LoginWithPhoneNumberRequest {
 }
 
 export interface LoginWithGoogleRequest {
-  idToken: string;
+  idToken?: string;
+  accessToken?: string;
 }
 
 export interface LoginWithFacebookRequest {

@@ -23,6 +23,7 @@
     "@mui/material": "^7.3.6",
     "@openmapvn/openmapvn-gl": "^1.0.1",
     "@react-google-maps/api": "^2.20.8",
+    "@react-oauth/google": "^0.13.4",
     "@reduxjs/toolkit": "^2.11.1",
     "axios": "^1.11.0",
     "lucide-react": "^0.563.0",
