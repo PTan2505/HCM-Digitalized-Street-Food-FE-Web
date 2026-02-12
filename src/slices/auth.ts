@@ -39,7 +39,7 @@ export const userLoginWithGoogle = createAppAsyncThunk(
 
       tokenManagement.setTokens({ newAccessToken: token });
 
-      return { user };
+      return user;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -56,7 +56,7 @@ export const userLoginWithFacebook = createAppAsyncThunk(
 
       tokenManagement.setTokens({ newAccessToken: token });
 
-      return { user };
+      return user;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -101,7 +101,7 @@ export const verifyPhoneNumber = createAppAsyncThunk(
       });
       tokenManagement.setTokens({ newAccessToken: token });
 
-      return { user };
+      return user;
     } catch (error) {
       // API errors are already formatted by ApiClient
       return rejectWithValue(error);
@@ -137,16 +137,16 @@ export const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(userLoginWithGoogle.fulfilled, (state, action) => {
-        state.value = action.payload.user;
+        state.value = action.payload;
       })
       .addCase(userLoginWithFacebook.fulfilled, (state, action) => {
-        state.value = action.payload.user;
+        state.value = action.payload;
       })
       .addCase(userLoginWithPhoneNumber.fulfilled, (state) => {
         state.isGeneratedOTP = true;
       })
       .addCase(verifyPhoneNumber.fulfilled, (state, action) => {
-        state.value = action.payload.user;
+        state.value = action.payload;
       })
       .addCase(loadUserFromStorage.fulfilled, (state, action) => {
         state.value = action.payload;

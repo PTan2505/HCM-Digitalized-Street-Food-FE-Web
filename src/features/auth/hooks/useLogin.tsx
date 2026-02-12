@@ -1,4 +1,5 @@
 import type { LoginWithPhoneNumberRequest } from '@auth/types/login';
+import { ROUTES } from '@constants/routes';
 import {
   initFacebookSDK,
   loginWithFacebook,
@@ -13,7 +14,6 @@ import {
   verifyPhoneNumber,
 } from '@slices/auth';
 import { useNavigate } from 'react-router';
-import { ROLES } from '@constants/role';
 
 export default function useLogin(): {
   onGoogleLoginSubmit: () => void;
@@ -28,14 +28,14 @@ export default function useLogin(): {
   onLogout: () => void;
 } {
   const dispatch = useAppDispatch();
-  const navigation = useNavigate();
+  const navigate = useNavigate();
 
   const onGoogleLoginSubmit = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       await dispatch(
         userLoginWithGoogle({ accessToken: tokenResponse.access_token })
       ).unwrap();
-      navigation('/');
+      navigate(ROUTES.ROOT);
     },
   });
 
@@ -43,31 +43,27 @@ export default function useLogin(): {
     await initFacebookSDK();
     const accessToken = await loginWithFacebook();
     await dispatch(userLoginWithFacebook({ accessToken })).unwrap();
-    navigation('/');
+    navigate(ROUTES.ROOT);
   }
 
   async function onPhoneNumberLoginSubmit(
     values: LoginWithPhoneNumberRequest
   ): Promise<void> {
     await dispatch(userLoginWithPhoneNumber(values)).unwrap();
-    navigation('/login');
+    navigate(ROUTES.LOGIN);
   }
 
   async function onVerifyPhoneNumberSubmit(payload: {
     phoneNumber: string;
     otp: string;
   }): Promise<void> {
-    const { user } = await dispatch(verifyPhoneNumber(payload)).unwrap();
-    if (user.role === ROLES.ADMIN) {
-      navigation('/admin');
-    } else {
-      navigation('/');
-    }
+    await dispatch(verifyPhoneNumber(payload)).unwrap();
+    navigate(ROUTES.ROOT);
   }
 
   function onLogout(): void {
     dispatch(logout());
-    navigation('/login');
+    navigate(ROUTES.LOGIN);
     // Implementation for logout if needed
   }
   return {

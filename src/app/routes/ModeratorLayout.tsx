@@ -1,5 +1,9 @@
+import SidebarContent from '@components/layout/SidebarContent';
+import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
+import useLogin from '@features/auth/hooks/useLogin';
 import {
   Bars3Icon,
+  ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CurrencyDollarIcon,
@@ -9,15 +13,13 @@ import {
   UserGroupIcon,
   UsersIcon,
   XMarkIcon,
-  ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import SidebarContent from '@components/layout/SidebarContent';
-import { Box, Typography, IconButton, Avatar } from '@mui/material';
-import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
-import useLogin from '@features/auth/hooks/useLogin';
 
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
@@ -48,13 +50,7 @@ function ModeratorLayout(): JSX.Element {
   const { onLogout } = useLogin();
 
   // Mock user data for UI only
-  const user = {
-    firstName: 'Moderator',
-    lastName: 'User',
-    username: 'moderator',
-    email: 'moderator@example.com',
-    avatarUrl: null,
-  };
+  const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
     navigate('/moderator');
