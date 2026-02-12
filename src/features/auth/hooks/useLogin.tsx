@@ -6,6 +6,7 @@ import {
   verifyPhoneNumber,
 } from '@slices/auth';
 import { useNavigate } from 'react-router';
+import { ROLES } from '@constants/role';
 
 export default function useLogin(): {
   // onGoogleLoginSubmit: () => Promise<void>;
@@ -41,8 +42,12 @@ export default function useLogin(): {
     phoneNumber: string;
     otp: string;
   }): Promise<void> {
-    await dispatch(verifyPhoneNumber(payload)).unwrap();
-    navigation('/');
+    const { user } = await dispatch(verifyPhoneNumber(payload)).unwrap();
+    if (user.role === ROLES.ADMIN) {
+      navigation('/admin');
+    } else {
+      navigation('/');
+    }
   }
 
   function onLogout(): void {
