@@ -1,23 +1,23 @@
-interface FieldError {
-  field: string;
-  errorType: string;
+export interface BackendResponse<T = unknown> {
+  status: number;
   message: string;
+  data: T;
+  errorCode: string | null;
 }
 
-export interface ErrorResponse {
+export interface ErrorResponse extends BackendResponse<unknown> {
   errorCode: string;
-  message: string;
-  fieldErrors?: FieldError[];
 }
 
 export interface APIErrorResponse {
   code?: string;
   status?: number;
   message?: string;
-  fieldErrors?: FieldError[];
+  fieldErrors?: Record<string, string[]>;
 }
 
 export interface ApiResponse<T> {
   data: T;
   status: number;
+  message: string;
 }

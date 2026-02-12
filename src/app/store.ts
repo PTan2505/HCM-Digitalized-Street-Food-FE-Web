@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '@slices/auth';
+import badgeReducer from '@slices/badge';
 
 export const store = configureStore({
   reducer: {
     user: authReducer,
+    badge: badgeReducer,
   },
 });
 

@@ -29,4 +29,16 @@ export const VALIDATE_ERROR_MESSAGES: Record<string, string> = {
   EMPTY_LAST_NAME: 'Vui lòng nhập họ!',
   INVALID_NAME: 'Tên không hợp lệ!',
   INVALID_LAST_NAME: 'Họ không hợp lệ!',
+  // Badge validation
+  EMPTY_BADGE_NAME: 'Vui lòng nhập tên huy hiệu!',
+  MIN_BADGE_NAME_LENGTH: 'Tên huy hiệu phải có ít nhất 3 ký tự!',
+  MAX_BADGE_NAME_LENGTH: 'Tên huy hiệu không được vượt quá 100 ký tự!',
+  EMPTY_POINT_TO_GET: 'Vui lòng nhập số điểm cần đạt!',
+  INVALID_POINT_TO_GET: 'Số điểm phải là số nguyên dương!',
+  MIN_POINT_TO_GET: 'Số điểm phải lớn hơn 0!',
+  EMPTY_ICON_URL: 'Vui lòng nhập URL biểu tượng!',
+  INVALID_ICON_URL: 'URL biểu tượng không hợp lệ!',
+  EMPTY_DESCRIPTION: 'Vui lòng nhập mô tả!',
+  MIN_DESCRIPTION_LENGTH: 'Mô tả phải có ít nhất 10 ký tự!',
+  MAX_DESCRIPTION_LENGTH: 'Mô tả không được vượt quá 500 ký tự!',
 };
