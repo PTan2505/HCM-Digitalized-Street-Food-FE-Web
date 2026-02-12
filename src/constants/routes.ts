@@ -1,15 +1,33 @@
 export const ROUTES = {
   LOGIN: '/login',
+  HOME: '/',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
 
   // Moderator routes
   MODERATOR: {
     BASE: '/moderator',
-    REVENUE: '/moderator/revenue',
-    TRANSACTIONS: '/moderator/transactions',
-    VERIFICATION: '/moderator/verification',
-    POSTS: '/moderator/posts',
-    USERS: '/moderator/users',
-    CASHOUT: '/moderator/cashout',
+    // Child paths
+    PATHS: {
+      REVENUE: 'revenue',
+      TRANSACTIONS: 'transactions',
+      VERIFICATION: 'verification',
+      POSTS: 'posts',
+      USERS: 'users',
+      CASHOUT: 'cashout',
+    },
+  },
+
+  // Admin routes
+  ADMIN: {
+    BASE: '/admin',
+    // Child paths
+    PATHS: {
+      REVENUE: 'revenue',
+      TRANSACTIONS: 'transactions',
+      BADGE_USERS: 'badge-users',
+      USER_DIETARY: 'user-dietary',
+      USERS: 'users',
+      BADGE: 'badge',
+    },
   },
 };

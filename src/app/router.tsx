@@ -11,7 +11,7 @@ import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorVendorVerification from '@features/moderator/pages/VendorVerification';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
-import AdminPostsPage from '@features/admin/pages/PostsPage';
+import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import UserBadgeManagement from '@features/admin/pages/UserBadgeManagement';
@@ -24,34 +24,52 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/',
+    path: ROUTES.HOME,
     element: <RootLayout />,
     children: [{ index: true, element: <UserProfilePage /> }],
   },
   {
-    path: '/moderator',
+    path: ROUTES.MODERATOR.BASE,
     element: <ModeratorLayout />,
     children: [
       { index: true, element: <ModeratorRevenuePage /> },
-      { path: 'revenue', element: <ModeratorRevenuePage /> },
-      { path: 'transactions', element: <ModeratorTransactionsPage /> },
-      { path: 'verification', element: <ModeratorVendorVerification /> },
-      { path: 'posts', element: <ModeratorPostsPage /> },
-      { path: 'users', element: <ModeratorUsersPage /> },
-      { path: 'cashout', element: <ModeratorCashoutPage /> },
+      {
+        path: ROUTES.MODERATOR.PATHS.REVENUE,
+        element: <ModeratorRevenuePage />,
+      },
+      {
+        path: ROUTES.MODERATOR.PATHS.TRANSACTIONS,
+        element: <ModeratorTransactionsPage />,
+      },
+      {
+        path: ROUTES.MODERATOR.PATHS.VERIFICATION,
+        element: <ModeratorVendorVerification />,
+      },
+      { path: ROUTES.MODERATOR.PATHS.POSTS, element: <ModeratorPostsPage /> },
+      { path: ROUTES.MODERATOR.PATHS.USERS, element: <ModeratorUsersPage /> },
+      {
+        path: ROUTES.MODERATOR.PATHS.CASHOUT,
+        element: <ModeratorCashoutPage />,
+      },
     ],
   },
   {
-    path: '/admin',
+    path: ROUTES.ADMIN.BASE,
     element: <AdminLayout />,
     children: [
       { index: true, element: <AdminRevenuePage /> },
-      { path: 'revenue', element: <AdminRevenuePage /> },
-      { path: 'transactions', element: <AdminTransactionsPage /> },
-      { path: 'badge-users', element: <UserBadgeManagement /> },
-      { path: 'posts', element: <AdminPostsPage /> },
-      { path: 'users', element: <AdminUsersPage /> },
-      { path: 'badge', element: <AdminBadgePage /> },
+      { path: ROUTES.ADMIN.PATHS.REVENUE, element: <AdminRevenuePage /> },
+      {
+        path: ROUTES.ADMIN.PATHS.TRANSACTIONS,
+        element: <AdminTransactionsPage />,
+      },
+      {
+        path: ROUTES.ADMIN.PATHS.BADGE_USERS,
+        element: <UserBadgeManagement />,
+      },
+      { path: ROUTES.ADMIN.PATHS.USER_DIETARY, element: <AdminDietaryPage /> },
+      { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
+      { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
     ],
   },
 ]);

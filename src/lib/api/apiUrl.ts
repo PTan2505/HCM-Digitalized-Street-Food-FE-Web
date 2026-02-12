@@ -27,4 +27,8 @@ export const apiUrl = {
   users: {
     list: '/users/',
   },
+  badge: {
+    getAllOrPostBadge: '/Badge',
+    updateOrDeleteBadge: (id: number): string => `/Badge/${id}`,
+  },
 };
