@@ -5,7 +5,7 @@ export interface User {
   firstName: string;
   lastName: string;
   avatarUrl?: string;
-  role: string;
+  role: number;
   point?: number;
   createdAt?: string;
   emailVerified?: boolean;

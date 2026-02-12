@@ -17,6 +17,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import SidebarContent from '@components/layout/SidebarContent';
 import { Box, Typography, IconButton, Avatar } from '@mui/material';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
+import useLogin from '@features/auth/hooks/useLogin';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
@@ -48,6 +49,7 @@ function AdminLayout(): JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { onLogout } = useLogin();
 
   // Mock user data for UI only
   const user = {
@@ -56,10 +58,6 @@ function AdminLayout(): JSX.Element {
     username: 'admin',
     email: 'admin@example.com',
     avatarUrl: null,
-  };
-
-  const handleLogout = (): void => {
-    console.log('Logging out...');
   };
 
   const handleLogoClick = (): void => {
@@ -109,7 +107,7 @@ function AdminLayout(): JSX.Element {
             navigation={navigation}
             userInfo={sidebarUserInfo}
             settingsPath="/admin/settings"
-            onLogout={handleLogout}
+            onLogout={onLogout}
             onLogoClick={handleLogoClick}
           />
         </div>
@@ -126,7 +124,7 @@ function AdminLayout(): JSX.Element {
           navigation={navigation}
           userInfo={sidebarUserInfo}
           settingsPath="/admin/settings"
-          onLogout={handleLogout}
+          onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
       </div>

@@ -17,6 +17,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import SidebarContent from '@components/layout/SidebarContent';
 import { Box, Typography, IconButton, Avatar } from '@mui/material';
 import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
+import useLogin from '@features/auth/hooks/useLogin';
 
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
@@ -44,6 +45,7 @@ function ModeratorLayout(): JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { onLogout } = useLogin();
 
   // Mock user data for UI only
   const user = {
@@ -52,10 +54,6 @@ function ModeratorLayout(): JSX.Element {
     username: 'moderator',
     email: 'moderator@example.com',
     avatarUrl: null,
-  };
-
-  const handleLogout = (): void => {
-    console.log('Logging out...');
   };
 
   const handleLogoClick = (): void => {
@@ -105,7 +103,7 @@ function ModeratorLayout(): JSX.Element {
             navigation={navigation}
             userInfo={sidebarUserInfo}
             settingsPath="/moderator/settings"
-            onLogout={handleLogout}
+            onLogout={onLogout}
             onLogoClick={handleLogoClick}
           />
         </div>
@@ -122,7 +120,7 @@ function ModeratorLayout(): JSX.Element {
           navigation={navigation}
           userInfo={sidebarUserInfo}
           settingsPath="/moderator/settings"
-          onLogout={handleLogout}
+          onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
       </div>

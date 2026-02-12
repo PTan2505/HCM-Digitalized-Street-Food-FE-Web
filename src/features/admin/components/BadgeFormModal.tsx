@@ -1,11 +1,19 @@
 import type { JSX } from 'react';
 import { Avatar } from '@mui/material';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { BadgeFormSchema } from '@features/admin/utils/badgeFormSchema';
+import { useEffect } from 'react';
+import type { z } from 'zod';
+
+type BadgeFormSchemaType = z.infer<typeof BadgeFormSchema>;
 
 interface BadgeFormData {
   badgeName?: string;
   pointToGet?: number;
   iconUrl?: string;
   description?: string;
+  badgeId?: number;
 }
 
 interface BadgeFormModalProps {
@@ -13,7 +21,7 @@ interface BadgeFormModalProps {
   isEditMode: boolean;
   formData: BadgeFormData;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (data: BadgeFormSchemaType) => void | Promise<void>;
   onChange: (data: BadgeFormData) => void;
 }
 
@@ -23,15 +31,42 @@ export default function BadgeFormModal({
   formData,
   onClose,
   onSave,
-  onChange,
 }: BadgeFormModalProps): JSX.Element | null {
-  if (!isOpen) return null;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<BadgeFormSchemaType>({
+    resolver: zodResolver(BadgeFormSchema),
+    mode: 'onChange',
+    defaultValues: {
+      badgeName: '',
+      pointToGet: '',
+      iconUrl: '',
+      description: '',
+    },
+  });
 
-  const isFormValid =
-    formData.badgeName &&
-    formData.pointToGet &&
-    formData.iconUrl &&
-    formData.description;
+  const iconUrl = watch('iconUrl');
+
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        badgeName: formData.badgeName ?? '',
+        pointToGet: formData.pointToGet?.toString() ?? '',
+        iconUrl: formData.iconUrl ?? '',
+        description: formData.description ?? '',
+      });
+    }
+  }, [isOpen, formData, reset]);
+
+  const handleFormSubmit = (data: BadgeFormSchemaType): void => {
+    void onSave(data);
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -58,13 +93,15 @@ export default function BadgeFormModal({
             </label>
             <input
               type="text"
-              value={formData.badgeName ?? ''}
-              onChange={(e) =>
-                onChange({ ...formData, badgeName: e.target.value })
-              }
+              {...register('badgeName')}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               placeholder="Tên Badge"
             />
+            {errors.badgeName && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.badgeName.message}
+              </p>
+            )}
           </div>
 
           {/* Điểm yêu cầu */}
@@ -73,14 +110,16 @@ export default function BadgeFormModal({
               Điểm yêu cầu <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
-              value={formData.pointToGet ?? 0}
-              onChange={(e) =>
-                onChange({ ...formData, pointToGet: Number(e.target.value) })
-              }
+              type="text"
+              {...register('pointToGet')}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               placeholder="0"
             />
+            {errors.pointToGet && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.pointToGet.message}
+              </p>
+            )}
           </div>
 
           {/* URL Icon */}
@@ -90,16 +129,19 @@ export default function BadgeFormModal({
             </label>
             <input
               type="text"
-              value={formData.iconUrl ?? ''}
-              onChange={(e) =>
-                onChange({ ...formData, iconUrl: e.target.value })
-              }
+              {...register('iconUrl')}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               placeholder="URL Icon"
             />
-            <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
-              Nhập URL hình ảnh icon
-            </p>
+            {errors.iconUrl ? (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.iconUrl.message}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
+                Nhập URL hình ảnh icon
+              </p>
+            )}
           </div>
 
           {/* Mô tả */}
@@ -108,24 +150,26 @@ export default function BadgeFormModal({
               Mô tả <span className="text-red-500">*</span>
             </label>
             <textarea
-              value={formData.description ?? ''}
-              onChange={(e) =>
-                onChange({ ...formData, description: e.target.value })
-              }
+              {...register('description')}
               rows={3}
               className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               placeholder="Mô tả"
             />
+            {errors.description && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.description.message}
+              </p>
+            )}
           </div>
 
           {/* Preview */}
-          {formData.iconUrl && (
+          {iconUrl && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-[var(--color-table-text-secondary)]">
                 Preview:
               </span>
               <Avatar
-                src={formData.iconUrl}
+                src={iconUrl}
                 alt="Preview"
                 sx={{ width: 48, height: 48 }}
               />
@@ -137,13 +181,15 @@ export default function BadgeFormModal({
         <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
           <button
             onClick={onClose}
+            type="button"
             className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
           >
             Hủy
           </button>
           <button
-            onClick={onSave}
-            disabled={!isFormValid}
+            onClick={handleSubmit(handleFormSubmit)}
+            type="button"
+            disabled={!isValid}
             className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isEditMode ? 'Cập nhật' : 'Thêm mới'}

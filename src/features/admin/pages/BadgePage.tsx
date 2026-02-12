@@ -1,6 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import { Avatar, Chip, Box } from '@mui/material';
+import {
+  Avatar,
+  Chip,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -8,20 +18,19 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import BadgeFormModal from '@features/admin/components/BadgeFormModal';
-import {
-  MOCK_BADGES,
-  type BadgeDefinition,
-} from '@features/admin/data/mockBadgeData';
-
-interface Badge extends BadgeDefinition {
-  [key: string]: unknown;
-}
+import type { Badge } from '@features/admin/types/badge';
+import useBadge from '@features/admin/hooks/useBadge';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { selectBadges, selectBadgeStatus } from '@slices/badge';
 
 export default function BadgePage(): JSX.Element {
-  const [badges, setBadges] = useState<Badge[]>(
-    MOCK_BADGES.map((b) => ({ ...b }))
-  );
+  const badges = useAppSelector(selectBadges);
+  const status = useAppSelector(selectBadgeStatus);
+  const { onGetAllBadges, onCreateBadge, onUpdateBadge, onDeleteBadge } =
+    useBadge();
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deletingBadge, setDeletingBadge] = useState<Badge | null>(null);
   const [editingBadge, setEditingBadge] = useState<Badge | null>(null);
   const [formData, setFormData] = useState<Partial<Badge>>({
     badgeName: '',
@@ -29,6 +38,10 @@ export default function BadgePage(): JSX.Element {
     iconUrl: '',
     description: '',
   });
+
+  useEffect(() => {
+    void onGetAllBadges();
+  }, [onGetAllBadges]);
 
   const handleOpenDialog = (badge?: Badge): void => {
     if (badge) {
@@ -57,32 +70,51 @@ export default function BadgePage(): JSX.Element {
     });
   };
 
-  const handleSave = (): void => {
-    if (editingBadge) {
-      // Cập nhật badge
-      setBadges(
-        badges.map((b) =>
-          b.badgeId === editingBadge.badgeId
-            ? { ...(formData as Badge), badgeId: editingBadge.badgeId }
-            : b
-        )
-      );
-    } else {
-      // Thêm mới badge
-      const newBadge: Badge = {
-        ...(formData as Badge),
-        badgeId: Math.max(0, ...badges.map((b) => b.badgeId)) + 1,
+  const handleSave = async (data: {
+    badgeName: string;
+    pointToGet: string;
+    iconUrl: string;
+    description: string;
+  }): Promise<void> => {
+    try {
+      const payload = {
+        badgeName: data.badgeName,
+        pointToGet: parseInt(data.pointToGet, 10),
+        iconUrl: data.iconUrl,
+        description: data.description,
       };
-      setBadges([...badges, newBadge]);
+
+      if (editingBadge) {
+        await onUpdateBadge({ id: editingBadge.badgeId, ...payload });
+      } else {
+        await onCreateBadge(payload);
+      }
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Failed to save badge:', error);
     }
-    handleCloseDialog();
   };
 
   const handleDelete = (badge: Badge): void => {
-    const badgeName = String(badge.badgeName);
-    if (window.confirm(`Bạn có chắc chắn muốn xóa badge "${badgeName}"?`)) {
-      setBadges(badges.filter((b) => b.badgeId !== badge.badgeId));
+    setDeletingBadge(badge);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (deletingBadge) {
+      try {
+        await onDeleteBadge(deletingBadge.badgeId);
+        setOpenDeleteDialog(false);
+        setDeletingBadge(null);
+      } catch (error) {
+        console.error('Failed to delete badge:', error);
+      }
     }
+  };
+
+  const handleCancelDelete = (): void => {
+    setOpenDeleteDialog(false);
+    setDeletingBadge(null);
   };
 
   const columns = [
@@ -162,15 +194,13 @@ export default function BadgePage(): JSX.Element {
   const actions = [
     {
       label: <EditIcon fontSize="small" />,
-      onClick: (row: Record<string, unknown>): void =>
-        handleOpenDialog(row as unknown as Badge),
+      onClick: (row: Badge): void => handleOpenDialog(row),
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Record<string, unknown>): void =>
-        handleDelete(row as unknown as Badge),
+      onClick: (row: Badge): void => handleDelete(row),
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -203,6 +233,7 @@ export default function BadgePage(): JSX.Element {
         data={badges}
         rowKey="badgeId"
         actions={actions}
+        loading={status === 'pending'}
         emptyMessage="Chưa có badge nào"
       />
 
@@ -215,6 +246,40 @@ export default function BadgePage(): JSX.Element {
         onSave={handleSave}
         onChange={(data) => setFormData(data as Partial<Badge>)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Xác nhận xóa badge</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa badge &quot;
+            {deletingBadge?.badgeName}&quot;? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCancelDelete}
+            color="primary"
+            sx={{ fontFamily: 'var(--font-nunito)' }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={() => void handleConfirmDelete()}
+            color="error"
+            variant="contained"
+            sx={{ fontFamily: 'var(--font-nunito)' }}
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
