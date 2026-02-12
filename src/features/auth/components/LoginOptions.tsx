@@ -10,7 +10,7 @@ type Props = {
 };
 
 export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
-  const { onGoogleLoginSubmit } = useLogin();
+  const { onGoogleLoginSubmit, onFacebookLoginSubmit } = useLogin();
 
   return (
     <Box className="flex w-full flex-col gap-4 px-10">
@@ -31,6 +31,7 @@ export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
         fullWidth
         className="relative flex flex-row items-center justify-center gap-2 rounded-full bg-[#1877F2] p-4 font-semibold text-white hover:opacity-50"
         sx={{ boxShadow: 'none', textTransform: 'none' }}
+        onClick={() => onFacebookLoginSubmit()}
       >
         <Icon className="absolute left-4">
           <img src={FacebookIcon} alt="Facebook Logo" className="h-6 w-6" />

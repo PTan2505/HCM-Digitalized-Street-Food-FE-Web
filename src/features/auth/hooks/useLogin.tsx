@@ -1,8 +1,13 @@
 import type { LoginWithPhoneNumberRequest } from '@auth/types/login';
+import {
+  initFacebookSDK,
+  loginWithFacebook,
+} from '@features/auth/libs/FacebookSDK';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import { useGoogleLogin } from '@react-oauth/google';
 import {
   logout,
+  userLoginWithFacebook,
   userLoginWithGoogle,
   userLoginWithPhoneNumber,
   verifyPhoneNumber,
@@ -11,7 +16,7 @@ import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
   onGoogleLoginSubmit: () => void;
-  // onFacebookLoginSubmit: () => Promise<void>;
+  onFacebookLoginSubmit: () => Promise<void>;
   onPhoneNumberLoginSubmit: (
     values: LoginWithPhoneNumberRequest
   ) => Promise<void>;
@@ -33,9 +38,12 @@ export default function useLogin(): {
     },
   });
 
-  // async function onFacebookLoginSubmit(): Promise<void> {
-  //   await dispatch(userLoginWithFacebook()).unwrap();
-  // }
+  async function onFacebookLoginSubmit(): Promise<void> {
+    await initFacebookSDK();
+    const accessToken = await loginWithFacebook();
+    await dispatch(userLoginWithFacebook({ accessToken })).unwrap();
+    navigation('/');
+  }
 
   async function onPhoneNumberLoginSubmit(
     values: LoginWithPhoneNumberRequest
@@ -59,7 +67,7 @@ export default function useLogin(): {
   }
   return {
     onGoogleLoginSubmit,
-    // onFacebookLoginSubmit,
+    onFacebookLoginSubmit,
     onPhoneNumberLoginSubmit,
     onVerifyPhoneNumberSubmit,
     onLogout,
