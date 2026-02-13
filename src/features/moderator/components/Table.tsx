@@ -22,7 +22,7 @@ interface Column {
     row: Record<string, unknown>,
     index?: number
   ) => React.ReactNode;
-  sx?: object;
+  style?: React.CSSProperties;
 }
 
 interface Action {
@@ -60,14 +60,8 @@ const Table = ({
   return (
     <TableContainer
       component={Paper}
-      sx={{
-        maxHeight,
-        boxShadow: 1,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'var(--color-table-border)',
-        fontFamily: 'var(--font-nunito)',
-      }}
+      className="rounded-lg border border-[var(--color-table-border)] font-[var(--font-nunito)] shadow-sm"
+      style={{ maxHeight }}
     >
       <MuiTable stickyHeader>
         <TableHead>
@@ -75,34 +69,14 @@ const Table = ({
             {columns.map((column) => (
               <TableCell
                 key={column.key}
-                sx={{
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.05em',
-                  bgcolor: 'var(--color-table-header-bg)',
-                  color: 'var(--color-table-header-text)',
-                  fontFamily: 'var(--font-nunito)',
-                  borderBottom: '1px solid var(--color-table-divider)',
-                  ...column.sx,
-                }}
+                className="border-b border-[var(--color-table-divider)] bg-[var(--color-table-header-bg)] text-xs font-[var(--font-nunito)] font-semibold tracking-wide text-[var(--color-table-header-text)] uppercase"
+                style={{ ...column.style }}
               >
                 {column.label}
               </TableCell>
             ))}
             {actions && actions.length > 0 && (
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.05em',
-                  bgcolor: 'var(--color-table-header-bg)',
-                  color: 'var(--color-table-header-text)',
-                  fontFamily: 'var(--font-nunito)',
-                  borderBottom: '1px solid var(--color-table-divider)',
-                }}
-              >
+              <TableCell className="border-b border-[var(--color-table-divider)] bg-[var(--color-table-header-bg)] text-xs font-[var(--font-nunito)] font-semibold tracking-wide text-[var(--color-table-header-text)] uppercase">
                 Thao tác
               </TableCell>
             )}
@@ -112,20 +86,10 @@ const Table = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={totalColumns} align="center" sx={{ py: 4 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 2,
-                  }}
-                >
+              <TableCell colSpan={totalColumns} align="center" className="py-8">
+                <Box className="flex flex-col items-center gap-4">
                   <CircularProgress size={32} />
-                  <Typography
-                    color="var(--color-table-text-secondary)"
-                    sx={{ fontFamily: 'var(--font-nunito)' }}
-                  >
+                  <Typography className="font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
                     {loadingMessage}
                   </Typography>
                 </Box>
@@ -133,11 +97,8 @@ const Table = ({
             </TableRow>
           ) : data.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={totalColumns} align="center" sx={{ py: 4 }}>
-                <Typography
-                  color="var(--color-table-text-secondary)"
-                  sx={{ fontFamily: 'var(--font-nunito)' }}
-                >
+              <TableCell colSpan={totalColumns} align="center" className="py-8">
+                <Typography className="font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
                   {emptyMessage}
                 </Typography>
               </TableCell>
@@ -148,13 +109,7 @@ const Table = ({
                 key={String(row[rowKey])}
                 hover
                 onClick={() => onRowClick?.(row)}
-                sx={{
-                  cursor: onRowClick ? 'pointer' : 'default',
-                  '&:last-child td, &:last-child th': { border: 0 },
-                  '&:hover': {
-                    bgcolor: 'var(--color-table-row-hover)',
-                  },
-                }}
+                className={`hover:bg-[var(--color-table-row-hover)] last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
               >
                 {columns.map((column) => {
                   const value = column.key
@@ -168,14 +123,8 @@ const Table = ({
                   return (
                     <TableCell
                       key={column.key}
-                      sx={{
-                        fontSize: '0.875rem',
-                        whiteSpace: 'nowrap',
-                        color: 'var(--color-table-text-primary)',
-                        fontFamily: 'var(--font-nunito)',
-                        borderBottom: '1px solid var(--color-table-divider)',
-                        ...column.sx,
-                      }}
+                      className="border-b border-[var(--color-table-divider)] text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-primary)]"
+                      style={{ ...column.style }}
                     >
                       {column.render
                         ? column.render(value, row, rowIndex)
@@ -184,13 +133,8 @@ const Table = ({
                   );
                 })}
                 {actions && actions.length > 0 && (
-                  <TableCell
-                    sx={{
-                      whiteSpace: 'nowrap',
-                      borderBottom: '1px solid var(--color-table-divider)',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TableCell className="border-b border-[var(--color-table-divider)] whitespace-nowrap">
+                    <Box className="flex gap-2">
                       {actions.map((action, index) => (
                         <Button
                           key={index}
@@ -201,7 +145,7 @@ const Table = ({
                           color={action.color ?? 'primary'}
                           variant={action.variant ?? 'text'}
                           size="small"
-                          sx={{ fontFamily: 'var(--font-nunito)' }}
+                          className="font-[var(--font-nunito)]"
                         >
                           {action.label}
                         </Button>

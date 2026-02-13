@@ -84,12 +84,12 @@ export default function UserBadgeManagement(): JSX.Element {
     {
       key: 'userId',
       label: 'ID',
-      sx: { width: '80px' },
+      style: { width: '80px' },
     },
     {
       key: 'userAvatar',
       label: 'Avatar',
-      sx: { width: '80px' },
+      style: { width: '80px' },
       render: (
         value: unknown,
         row: Record<string, unknown>
@@ -97,11 +97,7 @@ export default function UserBadgeManagement(): JSX.Element {
         <Avatar
           src={(value as string) ?? ''}
           alt={String(row.userName)}
-          sx={{
-            width: 40,
-            height: 40,
-            bgcolor: 'var(--color-primary-100)',
-          }}
+          className="h-10 w-10 bg-[var(--color-primary-100)]"
         />
       ),
     },
@@ -142,7 +138,7 @@ export default function UserBadgeManagement(): JSX.Element {
                   <Avatar
                     src={badge.iconUrl}
                     alt={badge.badgeName}
-                    sx={{ width: 16, height: 16 }}
+                    className="h-4 w-4"
                   />
                   <span className="text-xs font-medium text-[var(--color-primary-800)]">
                     {badge.badgeName}
@@ -157,17 +153,12 @@ export default function UserBadgeManagement(): JSX.Element {
     {
       key: 'totalPoints',
       label: 'Tổng điểm',
-      sx: { width: '120px' },
+      style: { width: '120px' },
       render: (value: unknown): React.ReactNode => (
         <Chip
           label={`${String(value)} điểm`}
           size="small"
-          sx={{
-            bgcolor: 'var(--color-admin-active-bg)',
-            color: 'var(--color-admin-active-text)',
-            fontWeight: 600,
-            fontFamily: 'var(--font-nunito)',
-          }}
+          className="bg-[var(--color-admin-active-bg)] font-[var(--font-nunito)] font-semibold text-[var(--color-admin-active-text)]"
         />
       ),
     },
@@ -250,7 +241,7 @@ export default function UserBadgeManagement(): JSX.Element {
                           <Avatar
                             src={badge.iconUrl}
                             alt={badge.badgeName}
-                            sx={{ width: 40, height: 40 }}
+                            className="h-10 w-10"
                           />
                           <div>
                             <div className="font-medium text-[var(--color-table-text-primary)]">
@@ -312,7 +303,7 @@ export default function UserBadgeManagement(): JSX.Element {
                         <Avatar
                           src={badge.iconUrl}
                           alt={badge.badgeName}
-                          sx={{ width: 40, height: 40 }}
+                          className="h-10 w-10"
                         />
                         <span className="font-medium text-[var(--color-table-text-primary)]">
                           {badge.badgeName}
