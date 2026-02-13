@@ -178,37 +178,6 @@ function AdminLayout(): JSX.Element {
                 </Typography>
               </Box>
             </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              {/* User menu */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box
-                  sx={{
-                    display: { xs: 'none', sm: 'flex' },
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {user?.firstName && user?.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Admin User')}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {user?.email ?? 'admin@example.com'}
-                  </Typography>
-                </Box>
-                <Avatar
-                  src={user?.avatarUrl ?? undefined}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 },
-                  }}
-                >
-                  {!user?.avatarUrl && <UserCircleIcon className="h-6 w-6" />}
-                </Avatar>
-              </Box>
-            </Box>
           </Box>
         </Box>
 
