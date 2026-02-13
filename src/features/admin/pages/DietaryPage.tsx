@@ -124,30 +124,15 @@ export default function DietaryPage(): JSX.Element {
     {
       key: 'dietaryPreferenceId',
       label: 'ID',
-      sx: { width: '80px' },
+      style: { width: '80px' },
     },
     {
       key: 'name',
       label: 'Tên chế độ ăn',
       render: (value: unknown): React.ReactNode => (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <RestaurantIcon
-            fontSize="small"
-            sx={{ color: 'var(--color-primary-600)' }}
-          />
-          <Box
-            sx={{
-              fontWeight: 600,
-              color: 'var(--color-table-text-primary)',
-              fontFamily: 'var(--font-nunito)',
-            }}
-          >
+        <Box className="flex items-center gap-2">
+          <RestaurantIcon fontSize="small" className="text-primary-600" />
+          <Box className="text-table-text-primary font-semibold">
             {String(value)}
           </Box>
         </Box>
@@ -157,13 +142,7 @@ export default function DietaryPage(): JSX.Element {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box
-          sx={{
-            maxWidth: '500px',
-            color: 'var(--color-table-text-secondary)',
-            fontFamily: 'var(--font-nunito)',
-          }}
-        >
+        <Box className="text-table-text-secondary block max-w-[500px]">
           {String(value)}
         </Box>
       ),
@@ -246,7 +225,7 @@ export default function DietaryPage(): JSX.Element {
           <Button
             onClick={handleCancelDelete}
             color="primary"
-            sx={{ fontFamily: 'var(--font-nunito)' }}
+            className="font-[var(--font-nunito)]"
           >
             Hủy
           </Button>
@@ -254,7 +233,7 @@ export default function DietaryPage(): JSX.Element {
             onClick={() => void handleConfirmDelete()}
             color="error"
             variant="contained"
-            sx={{ fontFamily: 'var(--font-nunito)' }}
+            className="font-[var(--font-nunito)]"
             autoFocus
           >
             Xóa

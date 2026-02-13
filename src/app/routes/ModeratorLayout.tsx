@@ -67,13 +67,7 @@ function ModeratorLayout(): JSX.Element {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: 'white',
-        color: 'gray.900',
-      }}
-    >
+    <Box className="min-h-screen bg-white text-gray-900">
       {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 z-40 md:hidden ${
@@ -123,34 +117,16 @@ function ModeratorLayout(): JSX.Element {
 
       {/* Main content */}
       <Box
-        sx={{
-          transition: 'all 0.3s ease-in-out',
-          pl: { xs: 0, md: sidebarCollapsed ? 8 : 32 },
-        }}
+        className={`pl-0 transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
+        }`}
       >
         {/* Top navigation */}
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
-            borderBottom: '1px solid #e5e7eb',
-            bgcolor: 'white',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              height: '64px',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              px: { xs: 2, sm: 3, lg: 4 },
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+          <Box className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Box className="flex items-center gap-4">
               <IconButton
-                sx={{ display: { md: 'none' } }}
+                className="md:hidden"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Bars3Icon className="h-6 w-6" />
@@ -158,7 +134,7 @@ function ModeratorLayout(): JSX.Element {
 
               {/* Desktop collapse button */}
               <IconButton
-                sx={{ display: { xs: 'none', md: 'block' } }}
+                className="hidden md:block"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               >
                 {sidebarCollapsed ? (
@@ -168,39 +144,37 @@ function ModeratorLayout(): JSX.Element {
                 )}
               </IconButton>
 
-              <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Typography variant="h6" component="h2">
+              <Box className="hidden md:block">
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  className="text-xl font-semibold"
+                >
                   {navigation.find((item) => item.href === location.pathname)
                     ?.name ?? 'Dashboard'}
                 </Typography>
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box className="flex items-center gap-3">
               {/* User menu */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box
-                  sx={{
-                    display: { xs: 'none', sm: 'flex' },
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              <Box className="flex items-center gap-3">
+                <Box className="hidden flex-col items-end sm:flex">
+                  <Typography variant="body2" className="text-sm font-medium">
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
                       : (user?.username ?? 'Moderator User')}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    className="text-xs text-gray-500"
+                  >
                     {user?.email ?? 'moderator@example.com'}
                   </Typography>
                 </Box>
                 <Avatar
                   src={user?.avatarUrl ?? undefined}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 },
-                  }}
+                  className="cursor-pointer hover:opacity-80"
                 >
                   {!user?.avatarUrl && <UserCircleIcon className="h-6 w-6" />}
                 </Avatar>
@@ -210,14 +184,8 @@ function ModeratorLayout(): JSX.Element {
         </Box>
 
         {/* Page content */}
-        <Box component="main" sx={{ py: 3 }}>
-          <Box
-            sx={{
-              maxWidth: '1280px',
-              mx: 'auto',
-              px: { xs: 2, sm: 3, lg: 4 },
-            }}
-          >
+        <Box component="main" className="py-6">
+          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
             <Outlet />
           </Box>
         </Box>
