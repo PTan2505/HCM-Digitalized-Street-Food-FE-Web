@@ -13,9 +13,9 @@ export const apiUrl = {
     resetPassword: '/Auth/reset-password',
     resendForgetPasswordOTP: '/Auth/resend-forget-password-otp',
   },
-  dietaryPreference: {
-    getAll: '/DietaryPreference',
-  },
+  // dietaryPreference: {
+  //   getAll: '/DietaryPreference',
+  // },
   login: {
     moderator: 'users/moderator-login/',
     customer: '/users/login/',
@@ -30,5 +30,10 @@ export const apiUrl = {
   badge: {
     getAllOrPostBadge: '/Badge',
     updateOrDeleteBadge: (id: number): string => `/Badge/${id}`,
+  },
+  userDietaryPreference: {
+    getAllOrPostDietaryPreference: '/DietaryPreference',
+    updateOrDeleteDietaryPreference: (id: number): string =>
+      `/DietaryPreference/${id}`,
   },
 };

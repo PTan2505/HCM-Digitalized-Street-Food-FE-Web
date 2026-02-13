@@ -1,6 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import { Box, Chip } from '@mui/material';
+import {
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -9,27 +17,39 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import DietaryFormModal from '@features/admin/components/DietaryFormModal';
+import type { UserDietaryPreference } from '@features/admin/types/userDietaryPreference';
+import useDietary from '@features/admin/hooks/useDietary';
+import { useAppSelector } from '@hooks/reduxHooks';
 import {
-  MOCK_DIETARY,
-  type DietaryDefinition,
-} from '@features/admin/data/mockDietaryData';
-
-interface Dietary extends DietaryDefinition {
-  [key: string]: unknown;
-}
+  selectUserDietaryPreferences,
+  selectUserDietaryPreferenceStatus,
+} from '@slices/userPreferenceDietary';
 
 export default function DietaryPage(): JSX.Element {
-  const [dietaries, setDietaries] = useState<Dietary[]>(
-    MOCK_DIETARY.map((d) => ({ ...d }))
-  );
+  const dietaries = useAppSelector(selectUserDietaryPreferences);
+  const status = useAppSelector(selectUserDietaryPreferenceStatus);
+  const {
+    onGetAllUserDietaryPreferences,
+    onCreateUserDietaryPreference,
+    onUpdateUserDietaryPreference,
+    onDeleteUserDietaryPreference,
+  } = useDietary();
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingDietary, setEditingDietary] = useState<Dietary | null>(null);
-  const [formData, setFormData] = useState<Partial<Dietary>>({
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deletingDietary, setDeletingDietary] =
+    useState<UserDietaryPreference | null>(null);
+  const [editingDietary, setEditingDietary] =
+    useState<UserDietaryPreference | null>(null);
+  const [formData, setFormData] = useState<Partial<UserDietaryPreference>>({
     name: '',
     description: '',
   });
 
-  const handleOpenDialog = (dietary?: Dietary): void => {
+  useEffect(() => {
+    void onGetAllUserDietaryPreferences();
+  }, [onGetAllUserDietaryPreferences]);
+
+  const handleOpenDialog = (dietary?: UserDietaryPreference): void => {
     if (dietary) {
       setEditingDietary(dietary);
       setFormData(dietary);
@@ -52,39 +72,57 @@ export default function DietaryPage(): JSX.Element {
     });
   };
 
-  const handleSave = (): void => {
-    if (editingDietary) {
-      // Cập nhật dietary
-      setDietaries(
-        dietaries.map((d) =>
-          d.dietaryId === editingDietary.dietaryId
-            ? { ...(formData as Dietary), dietaryId: editingDietary.dietaryId }
-            : d
-        )
-      );
-    } else {
-      // Thêm mới dietary
-      const newDietary: Dietary = {
-        ...(formData as Dietary),
-        dietaryId: Math.max(0, ...dietaries.map((d) => d.dietaryId)) + 1,
+  const handleSave = async (data: {
+    name: string;
+    description: string;
+  }): Promise<void> => {
+    try {
+      const payload = {
+        name: data.name,
+        description: data.description,
       };
-      setDietaries([...dietaries, newDietary]);
+
+      if (editingDietary) {
+        await onUpdateUserDietaryPreference({
+          id: editingDietary.dietaryPreferenceId,
+          ...payload,
+        });
+      } else {
+        await onCreateUserDietaryPreference(payload);
+      }
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Failed to save dietary preference:', error);
     }
-    handleCloseDialog();
   };
 
-  const handleDelete = (dietary: Dietary): void => {
-    const dietaryName = String(dietary.name);
-    if (
-      window.confirm(`Bạn có chắc chắn muốn xóa chế độ ăn "${dietaryName}"?`)
-    ) {
-      setDietaries(dietaries.filter((d) => d.dietaryId !== dietary.dietaryId));
+  const handleDelete = (dietary: UserDietaryPreference): void => {
+    setDeletingDietary(dietary);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (deletingDietary) {
+      try {
+        await onDeleteUserDietaryPreference(
+          deletingDietary.dietaryPreferenceId
+        );
+        setOpenDeleteDialog(false);
+        setDeletingDietary(null);
+      } catch (error) {
+        console.error('Failed to delete dietary preference:', error);
+      }
     }
+  };
+
+  const handleCancelDelete = (): void => {
+    setOpenDeleteDialog(false);
+    setDeletingDietary(null);
   };
 
   const columns = [
     {
-      key: 'dietaryId',
+      key: 'dietaryPreferenceId',
       label: 'ID',
       sx: { width: '80px' },
     },
@@ -130,37 +168,18 @@ export default function DietaryPage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'status',
-      label: 'Trạng thái',
-      sx: { width: '120px' },
-      render: (): React.ReactNode => (
-        <Chip
-          label="Hoạt động"
-          size="small"
-          sx={{
-            bgcolor: 'var(--color-success-100)',
-            color: 'var(--color-success-800)',
-            fontWeight: 600,
-            fontFamily: 'var(--font-nunito)',
-          }}
-        />
-      ),
-    },
   ];
 
   const actions = [
     {
       label: <EditIcon fontSize="small" />,
-      onClick: (row: Record<string, unknown>): void =>
-        handleOpenDialog(row as unknown as Dietary),
+      onClick: (row: UserDietaryPreference): void => handleOpenDialog(row),
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Record<string, unknown>): void =>
-        handleDelete(row as unknown as Dietary),
+      onClick: (row: UserDietaryPreference): void => handleDelete(row),
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -191,8 +210,9 @@ export default function DietaryPage(): JSX.Element {
       <Table
         columns={columns}
         data={dietaries}
-        rowKey="dietaryId"
+        rowKey="dietaryPreferenceId"
         actions={actions}
+        loading={status === 'pending'}
         emptyMessage="Chưa có chế độ ăn nào"
       />
 
@@ -203,8 +223,44 @@ export default function DietaryPage(): JSX.Element {
         formData={formData}
         onClose={handleCloseDialog}
         onSave={handleSave}
-        onChange={(data) => setFormData(data as Partial<Dietary>)}
+        onChange={(data) => setFormData(data as Partial<UserDietaryPreference>)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Xác nhận xóa chế độ ăn
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa chế độ ăn &quot;{deletingDietary?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCancelDelete}
+            color="primary"
+            sx={{ fontFamily: 'var(--font-nunito)' }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={() => void handleConfirmDelete()}
+            color="error"
+            variant="contained"
+            sx={{ fontFamily: 'var(--font-nunito)' }}
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
