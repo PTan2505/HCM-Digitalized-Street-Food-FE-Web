@@ -4,6 +4,7 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import logoImage from '@assets/lowca-logo.png';
+import unionLogo from '@assets/logos/Union.png';
 import type { JSX } from 'react';
 import { Box, Typography, Avatar, Tooltip } from '@mui/material';
 
@@ -56,72 +57,70 @@ const SidebarContent = ({
           flexDirection: 'column',
           flex: 1,
           overflowY: 'auto',
+          overflowX: 'hidden',
           pt: 2.5,
           pb: 2,
         }}
       >
         {/* Logo/Brand */}
         <Box
+          onClick={onLogoClick}
           sx={{
             mb: 4,
             px: 2,
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: 0.5,
+            cursor: onLogoClick ? 'pointer' : 'default',
+            '&:hover': onLogoClick ? { opacity: 0.8 } : {},
+            transition: 'all 0.3s ease-in-out',
           }}
         >
-          {collapsed ? (
-            <Tooltip title={userInfo.role} placement="right">
-              <Box
-                component="img"
-                src={logoImage}
-                onClick={onLogoClick}
-                sx={{
-                  height: 32,
-                  width: 32,
-                  objectFit: 'contain',
-                  cursor: onLogoClick ? 'pointer' : 'default',
-                  '&:hover': onLogoClick ? { opacity: 0.8 } : {},
-                }}
-              />
-            </Tooltip>
-          ) : (
+          <Box
+            sx={{
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <Box
-              onClick={onLogoClick}
+              component="img"
+              src={collapsed ? unionLogo : logoImage}
+              alt="Logo"
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 0.5,
-                width: '100%',
-                cursor: onLogoClick ? 'pointer' : 'default',
-                '&:hover': onLogoClick ? { opacity: 0.8 } : {},
+                height: collapsed ? 18 : 32,
+                width: collapsed ? 18 : 'auto',
+                objectFit: 'contain',
+                maxWidth: collapsed ? 18 : '100px',
+                transition: 'all 0.3s ease-in-out',
+              }}
+            />
+          </Box>
+          <Box
+            sx={{
+              height: '24px',
+              overflow: 'hidden',
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'var(--color-moderator-text-primary)',
+                fontWeight: 800,
+                fontSize: '1rem',
+                letterSpacing: '0.02em',
+                fontFamily: 'var(--font-nunito)',
+                opacity: collapsed ? 0 : 1,
+                transition: 'opacity 0.3s ease-in-out',
+                whiteSpace: 'nowrap',
+                lineHeight: '24px',
               }}
             >
-              <Box
-                component="img"
-                src={logoImage}
-                alt="Lowca Logo"
-                sx={{
-                  height: 32,
-                  objectFit: 'contain',
-                  maxWidth: '100px',
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'var(--color-moderator-text-primary)',
-                  fontWeight: 800,
-                  fontSize: '1rem',
-                  letterSpacing: '0.02em',
-                  fontFamily: 'var(--font-nunito)',
-                }}
-              >
-                {userInfo.role}
-              </Typography>
-            </Box>
-          )}
+              {userInfo.role}
+            </Typography>
+          </Box>
         </Box>
 
         {/* Navigation */}
@@ -140,13 +139,13 @@ const SidebarContent = ({
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: collapsed ? 'center' : 'flex-start',
                       px: 1.5,
                       py: 1.5,
                       mb: 0.5,
                       borderRadius: 2,
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
+                      transition:
+                        'background-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                       backgroundColor: isActive
                         ? 'var(--color-moderator-active-bg)'
                         : 'transparent',
@@ -159,6 +158,7 @@ const SidebarContent = ({
                       boxShadow: isActive
                         ? '0 2px 8px rgba(0,0,0,0.1)'
                         : 'none',
+                      overflow: 'hidden',
                       '&:hover': {
                         backgroundColor: isActive
                           ? 'var(--color-moderator-active-bg)'
@@ -169,26 +169,40 @@ const SidebarContent = ({
                       },
                     }}
                   >
-                    <item.icon
-                      className="h-5 w-5"
-                      style={{
-                        color: 'inherit',
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 20,
+                        height: 20,
                         flexShrink: 0,
                       }}
-                    />
-                    {!collapsed && (
-                      <Typography
-                        sx={{
-                          ml: 1.5,
-                          fontSize: '0.9rem',
-                          fontWeight: 500,
+                    >
+                      <item.icon
+                        className="h-5 w-5"
+                        style={{
                           color: 'inherit',
-                          fontFamily: 'var(--font-nunito)',
                         }}
-                      >
-                        {item.name}
-                      </Typography>
-                    )}
+                      />
+                    </Box>
+                    <Typography
+                      sx={{
+                        ml: 1.5,
+                        fontSize: '0.9rem',
+                        fontWeight: 500,
+                        color: 'inherit',
+                        fontFamily: 'var(--font-nunito)',
+                        opacity: collapsed ? 0 : 1,
+                        width: collapsed ? 0 : 'auto',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        transition:
+                          'opacity 0.3s ease-in-out, width 0.3s ease-in-out',
+                      }}
+                    >
+                      {item.name}
+                    </Typography>
                   </Box>
                 </Link>
               </Tooltip>
@@ -209,7 +223,6 @@ const SidebarContent = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: collapsed ? 'center' : 'flex-start',
                 width: '100%',
                 px: 1.5,
                 py: 1.5,
@@ -217,76 +230,66 @@ const SidebarContent = ({
                 borderRadius: 2,
                 border: 'none',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease-in-out',
+                transition:
+                  'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
                 backgroundColor: 'transparent',
                 color: 'var(--color-moderator-logout)',
                 fontWeight: 500,
                 fontSize: '0.875rem',
                 fontFamily: 'var(--font-nunito)',
+                overflow: 'hidden',
                 '&:hover': {
                   backgroundColor: 'var(--color-moderator-logout-hover)',
                   color: '#ffffff',
                 },
               }}
             >
-              <ArrowRightOnRectangleIcon
-                className="h-5 w-5"
-                style={{ color: 'inherit', flexShrink: 0 }}
-              />
-              {!collapsed && (
-                <Typography
-                  sx={{
-                    ml: 1.5,
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: 'inherit',
-                    fontFamily: 'var(--font-nunito)',
-                  }}
-                >
-                  Đăng xuất
-                </Typography>
-              )}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 20,
+                  height: 20,
+                  flexShrink: 0,
+                }}
+              >
+                <ArrowRightOnRectangleIcon
+                  className="h-5 w-5"
+                  style={{ color: 'inherit' }}
+                />
+              </Box>
+              <Typography
+                sx={{
+                  ml: 1.5,
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: 'inherit',
+                  fontFamily: 'var(--font-nunito)',
+                  opacity: collapsed ? 0 : 1,
+                  width: collapsed ? 0 : 'auto',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  transition:
+                    'opacity 0.3s ease-in-out, width 0.3s ease-in-out',
+                }}
+              >
+                Đăng xuất
+              </Typography>
             </Box>
           </Tooltip>
 
-          {/* User info in collapsed mode */}
-          {collapsed && (
-            <Box
-              sx={{
-                pt: 2,
-                borderTop: '1px solid var(--color-moderator-border)',
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Tooltip
-                  title={`${userInfo.name}\n${userInfo.email}`}
-                  placement="right"
-                >
-                  <Avatar
-                    src={userInfo?.avatarUrl ?? undefined}
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      bgcolor: 'var(--color-moderator-active-bg)',
-                      color: 'var(--color-moderator-active-text)',
-                    }}
-                  >
-                    {!userInfo?.avatarUrl && (
-                      <UserCircleIcon className="h-5 w-5" />
-                    )}
-                  </Avatar>
-                </Tooltip>
-              </Box>
-            </Box>
-          )}
-
-          {/* User info in expanded mode */}
-          {!collapsed && (
-            <Box
-              sx={{
-                pt: 2,
-                borderTop: '1px solid var(--color-moderator-border)',
-              }}
+          {/* User info */}
+          <Box
+            sx={{
+              pt: 2,
+              borderTop: '1px solid var(--color-moderator-border)',
+            }}
+          >
+            <Tooltip
+              title={collapsed ? `${userInfo.name}\n${userInfo.email}` : ''}
+              placement="right"
+              disableHoverListener={!collapsed}
             >
               <Box
                 sx={{
@@ -294,22 +297,35 @@ const SidebarContent = ({
                   alignItems: 'center',
                   px: 1.5,
                   py: 1,
+                  overflow: 'hidden',
                 }}
               >
                 <Avatar
                   src={userInfo?.avatarUrl ?? undefined}
                   sx={{
-                    width: 36,
-                    height: 36,
+                    width: collapsed ? 32 : 36,
+                    height: collapsed ? 32 : 36,
                     bgcolor: 'var(--color-moderator-active-bg)',
                     color: 'var(--color-moderator-active-text)',
+                    flexShrink: 0,
+                    transition:
+                      'width 0.3s ease-in-out, height 0.3s ease-in-out',
                   }}
                 >
                   {!userInfo?.avatarUrl && (
                     <UserCircleIcon className="h-5 w-5" />
                   )}
                 </Avatar>
-                <Box sx={{ ml: 1.5, overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    ml: 1.5,
+                    overflow: 'hidden',
+                    opacity: collapsed ? 0 : 1,
+                    width: collapsed ? 0 : 'auto',
+                    transition:
+                      'opacity 0.3s ease-in-out, width 0.3s ease-in-out',
+                  }}
+                >
                   <Typography
                     sx={{
                       fontSize: '0.875rem',
@@ -337,8 +353,8 @@ const SidebarContent = ({
                   </Typography>
                 </Box>
               </Box>
-            </Box>
-          )}
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
     </Box>
