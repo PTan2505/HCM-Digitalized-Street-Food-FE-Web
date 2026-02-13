@@ -56,13 +56,7 @@ export const PhoneNumberLoginForm = (): JSX.Element => {
         <Box
           component="form"
           onSubmit={handleSubmit(onSubmit)}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '400px',
-          }}
+          className="flex w-[400px] flex-col items-center justify-between"
         >
           <Typography className="display-small text-primary-900">
             Đăng nhập

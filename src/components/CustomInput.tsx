@@ -35,14 +35,7 @@ export const CustomInput = <T extends FieldValues>(
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            width: '100%',
-          }}
-        >
+        <Box className="flex w-full flex-col gap-2">
           <Typography className="title-medium text-primary-900">
             {label}
             {required && (
@@ -69,9 +62,7 @@ export const CustomInput = <T extends FieldValues>(
               type === 'password' && (
                 <InputAdornment position="end">
                   <IconButton
-                    sx={{
-                      padding: 0,
-                    }}
+                    className="p-0"
                     onClick={() => setHidePassword(!hidePassword)}
                   >
                     {hidePassword ? <VisibilityOff /> : <Visibility />}
@@ -81,13 +72,7 @@ export const CustomInput = <T extends FieldValues>(
             }
           />
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              height: '19px',
-            }}
-          >
+          <Box className="flex h-[19px] justify-between">
             <Typography className="body-medium text-[#FE4763]">
               {fieldState.error?.message}
             </Typography>
