@@ -105,10 +105,8 @@ export const userDietaryPreferenceSlice = createSlice({
       })
       .addCase(updateUserDietaryPreference.fulfilled, (state, action) => {
         if (action.payload) {
-          const responseData = action.payload as unknown as {
-            userDietaryPreference: UserDietaryPreference;
-          };
-          const userDietaryPreference = responseData.userDietaryPreference;
+          const userDietaryPreference =
+            action.payload as unknown as UserDietaryPreference;
           const index = state.userDietaryPreferences.findIndex(
             (b) =>
               b.dietaryPreferenceId ===
