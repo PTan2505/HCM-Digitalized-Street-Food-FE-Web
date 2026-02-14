@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
 import {
   Avatar,
-  Chip,
   Box,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -121,21 +121,17 @@ export default function BadgePage(): JSX.Element {
     {
       key: 'badgeId',
       label: 'ID',
-      sx: { width: '80px' },
+      style: { width: '80px' },
     },
     {
       key: 'iconUrl',
       label: 'Icon',
-      sx: { width: '100px' },
+      style: { width: '100px' },
       render: (value: unknown): React.ReactNode => (
         <Avatar
           src={String(value)}
           alt="Badge Icon"
-          sx={{
-            width: 40,
-            height: 40,
-            bgcolor: 'var(--color-primary-100)',
-          }}
+          className="h-10 w-10 bg-[var(--color-primary-100)]"
         />
       ),
     },
@@ -143,13 +139,7 @@ export default function BadgePage(): JSX.Element {
       key: 'badgeName',
       label: 'Tên Badge',
       render: (value: unknown): React.ReactNode => (
-        <Box
-          sx={{
-            fontWeight: 600,
-            color: 'var(--color-table-text-primary)',
-            fontFamily: 'var(--font-nunito)',
-          }}
-        >
+        <Box className="text-table-text-primary font-semibold">
           {String(value)}
         </Box>
       ),
@@ -157,17 +147,12 @@ export default function BadgePage(): JSX.Element {
     {
       key: 'pointToGet',
       label: 'Điểm yêu cầu',
-      sx: { width: '140px' },
+      style: { width: '140px' },
       render: (value: unknown): React.ReactNode => (
         <Chip
           label={`${String(value)} điểm`}
           size="small"
-          sx={{
-            bgcolor: 'var(--color-primary-100)',
-            color: 'var(--color-primary-800)',
-            fontWeight: 600,
-            fontFamily: 'var(--font-nunito)',
-          }}
+          className="bg-[var(--color-primary-100)] font-[var(--font-nunito)] font-semibold text-[var(--color-primary-800)]"
         />
       ),
     },
@@ -175,16 +160,7 @@ export default function BadgePage(): JSX.Element {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box
-          sx={{
-            maxWidth: '300px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            color: 'var(--color-table-text-secondary)',
-            fontFamily: 'var(--font-nunito)',
-          }}
-        >
+        <Box className="text-table-text-secondary block max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">
           {String(value)}
         </Box>
       ),
@@ -265,7 +241,7 @@ export default function BadgePage(): JSX.Element {
           <Button
             onClick={handleCancelDelete}
             color="primary"
-            sx={{ fontFamily: 'var(--font-nunito)' }}
+            className="font-[var(--font-nunito)]"
           >
             Hủy
           </Button>
@@ -273,7 +249,7 @@ export default function BadgePage(): JSX.Element {
             onClick={() => void handleConfirmDelete()}
             color="error"
             variant="contained"
-            sx={{ fontFamily: 'var(--font-nunito)' }}
+            className="font-[var(--font-nunito)]"
             autoFocus
           >
             Xóa

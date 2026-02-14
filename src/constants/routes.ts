@@ -1,6 +1,6 @@
 export const ROUTES = {
   LOGIN: '/login',
-  HOME: '/',
+  ROOT: '/',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
 
   // Moderator routes
@@ -28,6 +28,7 @@ export const ROUTES = {
       USER_DIETARY: 'user-dietary',
       USERS: 'users',
       BADGE: 'badge',
+      USER_WITH_DIETARY: 'users-with-dietary',
     },
   },
 };

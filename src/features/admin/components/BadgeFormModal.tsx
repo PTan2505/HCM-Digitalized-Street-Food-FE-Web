@@ -166,13 +166,9 @@ export default function BadgeFormModal({
           {iconUrl && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-[var(--color-table-text-secondary)]">
-                Preview:
+                Xem trước icon huy hiệu:
               </span>
-              <Avatar
-                src={iconUrl}
-                alt="Preview"
-                sx={{ width: 48, height: 48 }}
-              />
+              <Avatar src={iconUrl} alt="Preview" className="h-12 w-12" />
             </div>
           )}
         </div>

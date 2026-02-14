@@ -4,8 +4,9 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import logoImage from '@assets/lowca-logo.png';
+import unionLogo from '@assets/logos/Union.png';
 import type { JSX } from 'react';
-import { Box, Typography, Avatar, Tooltip } from '@mui/material';
+import { Avatar, Box, Tooltip, Typography } from '@mui/material';
 
 interface NavigationItem {
   name: string;
@@ -40,92 +41,40 @@ const SidebarContent = ({
   const location = useLocation();
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        background: 'var(--gradient-moderator)',
-        boxShadow: 'rgba(0, 0, 0, 0.1) 0px 4px 12px',
-        fontFamily: 'var(--font-nunito)',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          overflowY: 'auto',
-          pt: 2.5,
-          pb: 2,
-        }}
-      >
+    <Box className="bg-gradient-moderator flex flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+      <Box className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4">
         {/* Logo/Brand */}
         <Box
-          sx={{
-            mb: 4,
-            px: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-          }}
+          onClick={onLogoClick}
+          className={`mb-8 flex flex-col items-center gap-1 px-4 transition-all duration-300 ease-in-out ${
+            onLogoClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+          }`}
         >
-          {collapsed ? (
-            <Tooltip title={userInfo.role} placement="right">
-              <Box
-                component="img"
-                src={logoImage}
-                onClick={onLogoClick}
-                sx={{
-                  height: 32,
-                  width: 32,
-                  objectFit: 'contain',
-                  cursor: onLogoClick ? 'pointer' : 'default',
-                  '&:hover': onLogoClick ? { opacity: 0.8 } : {},
-                }}
-              />
-            </Tooltip>
-          ) : (
+          <Box className="flex h-8 items-center justify-center">
             <Box
-              onClick={onLogoClick}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 0.5,
-                width: '100%',
-                cursor: onLogoClick ? 'pointer' : 'default',
-                '&:hover': onLogoClick ? { opacity: 0.8 } : {},
-              }}
+              component="img"
+              src={collapsed ? unionLogo : logoImage}
+              alt="Logo"
+              className={`object-contain transition-all duration-300 ease-in-out ${
+                collapsed
+                  ? 'h-[18px] w-[18px] max-w-[18px]'
+                  : 'h-8 w-auto max-w-[100px]'
+              }`}
+            />
+          </Box>
+          <Box className="h-6 overflow-hidden">
+            <Typography
+              className={`text-moderator-text-primary block text-base leading-6 font-extrabold tracking-[0.02em] whitespace-nowrap transition-opacity duration-300 ease-in-out ${
+                collapsed ? 'opacity-0' : 'opacity-100'
+              }`}
             >
-              <Box
-                component="img"
-                src={logoImage}
-                alt="Lowca Logo"
-                sx={{
-                  height: 32,
-                  objectFit: 'contain',
-                  maxWidth: '100px',
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'var(--color-moderator-text-primary)',
-                  fontWeight: 800,
-                  fontSize: '1rem',
-                  letterSpacing: '0.02em',
-                  fontFamily: 'var(--font-nunito)',
-                }}
-              >
-                {userInfo.role}
-              </Typography>
-            </Box>
-          )}
+              {userInfo.role}
+            </Typography>
+          </Box>
         </Box>
 
         {/* Navigation */}
-        <Box component="nav" sx={{ mt: 2, flex: 1, px: 1 }}>
+        <Box component="nav" className="mt-4 flex-1 px-2">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -135,60 +84,27 @@ const SidebarContent = ({
                 placement="right"
                 disableHoverListener={!collapsed}
               >
-                <Link to={item.href} style={{ textDecoration: 'none' }}>
+                <Link to={item.href} className="no-underline">
                   <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      px: 1.5,
-                      py: 1.5,
-                      mb: 0.5,
-                      borderRadius: 2,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
-                      backgroundColor: isActive
-                        ? 'var(--color-moderator-active-bg)'
-                        : 'transparent',
-                      color: isActive
-                        ? 'var(--color-moderator-active-text)'
-                        : 'var(--color-moderator-text-primary)',
-                      fontWeight: 500,
-                      fontSize: '0.875rem',
-                      fontFamily: 'var(--font-nunito)',
-                      boxShadow: isActive
-                        ? '0 2px 8px rgba(0,0,0,0.1)'
-                        : 'none',
-                      '&:hover': {
-                        backgroundColor: isActive
-                          ? 'var(--color-moderator-active-bg)'
-                          : 'var(--color-moderator-hover-bg)',
-                        color: isActive
-                          ? 'var(--color-moderator-active-text)'
-                          : 'var(--color-moderator-hover-text)',
-                      },
-                    }}
+                    className={`mb-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
+                      isActive
+                        ? 'bg-moderator-active-bg text-moderator-active-text hover:bg-moderator-active-bg hover:text-moderator-active-text shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                        : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
+                    }`}
                   >
-                    <item.icon
-                      className="h-5 w-5"
-                      style={{
-                        color: 'inherit',
-                        flexShrink: 0,
-                      }}
-                    />
-                    {!collapsed && (
-                      <Typography
-                        sx={{
-                          ml: 1.5,
-                          fontSize: '0.9rem',
-                          fontWeight: 500,
-                          color: 'inherit',
-                          fontFamily: 'var(--font-nunito)',
-                        }}
-                      >
-                        {item.name}
-                      </Typography>
-                    )}
+                    <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
+                      <item.icon
+                        className="h-5 w-5"
+                        style={{ color: 'inherit' }}
+                      />
+                    </Box>
+                    <Typography
+                      className={`ml-3 overflow-hidden text-[0.9rem] font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+                        collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                      }`}
+                    >
+                      {item.name}
+                    </Typography>
                   </Box>
                 </Link>
               </Tooltip>
@@ -197,7 +113,7 @@ const SidebarContent = ({
         </Box>
 
         {/* Bottom actions */}
-        <Box sx={{ mt: 'auto', px: 1 }}>
+        <Box className="mt-auto px-2">
           <Tooltip
             title={collapsed ? 'Đăng xuất' : ''}
             placement="right"
@@ -206,139 +122,59 @@ const SidebarContent = ({
             <Box
               component="button"
               onClick={onLogout}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                width: '100%',
-                px: 1.5,
-                py: 1.5,
-                mb: 1,
-                borderRadius: 2,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease-in-out',
-                backgroundColor: 'transparent',
-                color: 'var(--color-moderator-logout)',
-                fontWeight: 500,
-                fontSize: '0.875rem',
-                fontFamily: 'var(--font-nunito)',
-                '&:hover': {
-                  backgroundColor: 'var(--color-moderator-logout-hover)',
-                  color: '#ffffff',
-                },
-              }}
+              className="text-moderator-logout hover:bg-moderator-logout-hover mb-2 flex w-full cursor-pointer items-center overflow-hidden rounded-lg border-none bg-transparent px-3 py-3 text-sm font-medium transition-[background-color,color] duration-200 ease-in-out hover:text-white"
             >
-              <ArrowRightOnRectangleIcon
-                className="h-5 w-5"
-                style={{ color: 'inherit', flexShrink: 0 }}
-              />
-              {!collapsed && (
-                <Typography
-                  sx={{
-                    ml: 1.5,
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: 'inherit',
-                    fontFamily: 'var(--font-nunito)',
-                  }}
-                >
-                  Đăng xuất
-                </Typography>
-              )}
+              <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
+                <ArrowRightOnRectangleIcon
+                  className="h-5 w-5"
+                  style={{ color: 'inherit' }}
+                />
+              </Box>
+              <Typography
+                className={`ml-3 overflow-hidden text-sm font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+                  collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                }`}
+              >
+                Đăng xuất
+              </Typography>
             </Box>
           </Tooltip>
 
-          {/* User info in collapsed mode */}
-          {collapsed && (
-            <Box
-              sx={{
-                pt: 2,
-                borderTop: '1px solid var(--color-moderator-border)',
-              }}
+          {/* User info */}
+          <Box className="border-moderator-border border-t pt-4">
+            <Tooltip
+              title={collapsed ? `${userInfo.name}\n${userInfo.email}` : ''}
+              placement="right"
+              disableHoverListener={!collapsed}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Tooltip
-                  title={`${userInfo.name}\n${userInfo.email}`}
-                  placement="right"
-                >
-                  <Avatar
-                    src={userInfo?.avatarUrl ?? undefined}
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      bgcolor: 'var(--color-moderator-active-bg)',
-                      color: 'var(--color-moderator-active-text)',
-                    }}
-                  >
-                    {!userInfo?.avatarUrl && (
-                      <UserCircleIcon className="h-5 w-5" />
-                    )}
-                  </Avatar>
-                </Tooltip>
-              </Box>
-            </Box>
-          )}
-
-          {/* User info in expanded mode */}
-          {!collapsed && (
-            <Box
-              sx={{
-                pt: 2,
-                borderTop: '1px solid var(--color-moderator-border)',
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  px: 1.5,
-                  py: 1,
-                }}
-              >
+              <Box className="flex items-center overflow-hidden px-3 py-2">
                 <Avatar
                   src={userInfo?.avatarUrl ?? undefined}
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    bgcolor: 'var(--color-moderator-active-bg)',
-                    color: 'var(--color-moderator-active-text)',
+                  className="shrink-0 bg-[var(--color-moderator-active-bg)] text-[var(--color-moderator-active-text)] transition-[width,height] duration-300 ease-in-out"
+                  style={{
+                    width: collapsed ? 32 : 36,
+                    height: collapsed ? 32 : 36,
                   }}
                 >
                   {!userInfo?.avatarUrl && (
                     <UserCircleIcon className="h-5 w-5" />
                   )}
                 </Avatar>
-                <Box sx={{ ml: 1.5, overflow: 'hidden' }}>
-                  <Typography
-                    sx={{
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: 'var(--color-moderator-text-primary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      fontFamily: 'var(--font-nunito)',
-                    }}
-                  >
+                <Box
+                  className={`ml-3 overflow-hidden transition-[opacity,width] duration-300 ease-in-out ${
+                    collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                  }`}
+                >
+                  <Typography className="text-moderator-text-primary overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
                     {userInfo.name}
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: '0.75rem',
-                      color: 'var(--color-moderator-text-secondary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      fontFamily: 'var(--font-nunito)',
-                    }}
-                  >
+                  <Typography className="text-moderator-text-secondary overflow-hidden text-xs text-ellipsis whitespace-nowrap">
                     {userInfo.email}
                   </Typography>
                 </Box>
               </Box>
-            </Box>
-          )}
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
     </Box>

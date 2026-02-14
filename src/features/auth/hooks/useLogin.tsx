@@ -1,16 +1,23 @@
 import type { LoginWithPhoneNumberRequest } from '@auth/types/login';
+import { ROUTES } from '@constants/routes';
+import {
+  initFacebookSDK,
+  loginWithFacebook,
+} from '@features/auth/libs/FacebookSDK';
 import { useAppDispatch } from '@hooks/reduxHooks';
+import { useGoogleLogin } from '@react-oauth/google';
 import {
   logout,
+  userLoginWithFacebook,
+  userLoginWithGoogle,
   userLoginWithPhoneNumber,
   verifyPhoneNumber,
 } from '@slices/auth';
 import { useNavigate } from 'react-router';
-import { ROLES } from '@constants/role';
 
 export default function useLogin(): {
-  // onGoogleLoginSubmit: () => Promise<void>;
-  // onFacebookLoginSubmit: () => Promise<void>;
+  onGoogleLoginSubmit: () => void;
+  onFacebookLoginSubmit: () => Promise<void>;
   onPhoneNumberLoginSubmit: (
     values: LoginWithPhoneNumberRequest
   ) => Promise<void>;
@@ -21,43 +28,47 @@ export default function useLogin(): {
   onLogout: () => void;
 } {
   const dispatch = useAppDispatch();
-  const navigation = useNavigate();
+  const navigate = useNavigate();
 
-  // async function onGoogleLoginSubmit(): Promise<void> {
-  //   await dispatch(userLoginWithGoogle()).unwrap();
-  // }
+  const onGoogleLoginSubmit = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      await dispatch(
+        userLoginWithGoogle({ accessToken: tokenResponse.access_token })
+      ).unwrap();
+      navigate(ROUTES.ROOT);
+    },
+  });
 
-  // async function onFacebookLoginSubmit(): Promise<void> {
-  //   await dispatch(userLoginWithFacebook()).unwrap();
-  // }
+  async function onFacebookLoginSubmit(): Promise<void> {
+    await initFacebookSDK();
+    const accessToken = await loginWithFacebook();
+    await dispatch(userLoginWithFacebook({ accessToken })).unwrap();
+    navigate(ROUTES.ROOT);
+  }
 
   async function onPhoneNumberLoginSubmit(
     values: LoginWithPhoneNumberRequest
   ): Promise<void> {
     await dispatch(userLoginWithPhoneNumber(values)).unwrap();
-    navigation('/login');
+    navigate(ROUTES.LOGIN);
   }
 
   async function onVerifyPhoneNumberSubmit(payload: {
     phoneNumber: string;
     otp: string;
   }): Promise<void> {
-    const { user } = await dispatch(verifyPhoneNumber(payload)).unwrap();
-    if (user.role === ROLES.ADMIN) {
-      navigation('/admin');
-    } else {
-      navigation('/');
-    }
+    await dispatch(verifyPhoneNumber(payload)).unwrap();
+    navigate(ROUTES.ROOT);
   }
 
   function onLogout(): void {
     dispatch(logout());
-    navigation('/login');
+    navigate(ROUTES.LOGIN);
     // Implementation for logout if needed
   }
   return {
-    // onGoogleLoginSubmit,
-    // onFacebookLoginSubmit,
+    onGoogleLoginSubmit,
+    onFacebookLoginSubmit,
     onPhoneNumberLoginSubmit,
     onVerifyPhoneNumberSubmit,
     onLogout,
