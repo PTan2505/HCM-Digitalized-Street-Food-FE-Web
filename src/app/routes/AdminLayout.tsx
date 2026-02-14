@@ -28,11 +28,6 @@ const navigation = [
     href: '/admin/transactions',
     icon: HomeIcon,
   },
-  {
-    name: 'Quản lý chế độ ăn',
-    href: '/admin/user-dietary',
-    icon: UserGroupIcon,
-  },
   { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
     name: 'Quản lý huy hiệu',
@@ -45,7 +40,12 @@ const navigation = [
     icon: ShoppingBagIcon,
   },
   {
-    name: 'Người dùng với chế độ ăn',
+    name: 'Quản lý chế độ ăn',
+    href: '/admin/user-dietary',
+    icon: UserGroupIcon,
+  },
+  {
+    name: 'Chế độ ăn của người dùng',
     href: '/admin/users-with-dietary',
     icon: UserCircleIcon,
   },

@@ -29,7 +29,12 @@ export const apiUrl = {
   },
   badge: {
     getAllOrPostBadge: '/Badge',
+    getUsersWithBadges: '/Badge/users',
     updateOrDeleteBadge: (id: number): string => `/Badge/${id}`,
+    awardUserBadge: (userId: number, badgeId: number): string =>
+      `/Badge/user/${userId}/award/${badgeId}`,
+    revokeUserBadge: (userId: number, badgeId: number): string =>
+      `/Badge/user/${userId}/badge/${badgeId}`,
   },
   userDietaryPreference: {
     getAllOrPostDietaryPreference: '/DietaryPreference',
