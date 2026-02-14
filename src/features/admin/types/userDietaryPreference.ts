@@ -4,6 +4,12 @@ export interface UserDietaryPreference {
   description: string;
 }
 
+export interface UsersWithDietaryPreferences {
+  userId: number;
+  userName: string;
+  dietaryPreferences: string[];
+}
+
 export interface CreateOrUpdateUserDietaryPreferenceRequest {
   name: string;
   description: string;

@@ -28,6 +28,7 @@ export const ROUTES = {
       USER_DIETARY: 'user-dietary',
       USERS: 'users',
       BADGE: 'badge',
+      USER_WITH_DIETARY: 'users-with-dietary',
     },
   },
 };

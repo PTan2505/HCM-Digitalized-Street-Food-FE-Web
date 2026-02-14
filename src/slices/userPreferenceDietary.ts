@@ -3,6 +3,7 @@ import type {
   UserDietaryPreference,
   CreateOrUpdateUserDietaryPreferenceRequest,
   CreateOrUpdateUserDietaryPreferenceResponse,
+  UsersWithDietaryPreferences,
 } from '@features/admin/types/userDietaryPreference';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -15,12 +16,14 @@ import {
 
 export interface UserDietaryPreferenceState {
   userDietaryPreferences: UserDietaryPreference[];
+  usersWithDietaryPreferences: UsersWithDietaryPreferences[];
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
 
 const initialState: UserDietaryPreferenceState = {
   userDietaryPreferences: [],
+  usersWithDietaryPreferences: [],
   status: 'idle',
   error: null,
 };
@@ -87,6 +90,19 @@ export const deleteUserDietaryPreference = createAppAsyncThunk(
   }
 );
 
+export const getUsersWithDietaryPreferences = createAppAsyncThunk(
+  'userDietaryPreference/getUsersWithDietaryPreferences',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: UsersWithDietaryPreferences[] =
+        await axiosApi.userDietaryPreferenceApi.getUsersWithDietaryPreferences();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const userDietaryPreferenceSlice = createSlice({
   name: 'userDietaryPreference',
   initialState,
@@ -125,12 +141,16 @@ export const userDietaryPreferenceSlice = createSlice({
           );
         }
       })
+      .addCase(getUsersWithDietaryPreferences.fulfilled, (state, action) => {
+        state.usersWithDietaryPreferences = action.payload;
+      })
       .addMatcher(
         isPending(
           getAllUserDietaryPreferences,
           createUserDietaryPreference,
           updateUserDietaryPreference,
-          deleteUserDietaryPreference
+          deleteUserDietaryPreference,
+          getUsersWithDietaryPreferences
         ),
         (state) => {
           state.status = 'pending';
@@ -141,7 +161,8 @@ export const userDietaryPreferenceSlice = createSlice({
           getAllUserDietaryPreferences,
           createUserDietaryPreference,
           updateUserDietaryPreference,
-          deleteUserDietaryPreference
+          deleteUserDietaryPreference,
+          getUsersWithDietaryPreferences
         ),
         (state) => {
           state.status = 'succeeded';
@@ -153,7 +174,8 @@ export const userDietaryPreferenceSlice = createSlice({
           getAllUserDietaryPreferences,
           createUserDietaryPreference,
           updateUserDietaryPreference,
-          deleteUserDietaryPreference
+          deleteUserDietaryPreference,
+          getUsersWithDietaryPreferences
         ),
         (state, action) => {
           state.status = 'failed';
@@ -172,5 +194,10 @@ export const selectUserDietaryPreferences = (
   state: RootState
 ): UserDietaryPreference[] =>
   state.userDietaryPreference.userDietaryPreferences;
+
+export const selectUsersWithDietaryPreferences = (
+  state: RootState
+): UsersWithDietaryPreferences[] =>
+  state.userDietaryPreference.usersWithDietaryPreferences;
 
 export default userDietaryPreferenceSlice.reducer;

@@ -5,8 +5,9 @@ import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
-import UserBadgeManagement from '@features/admin/pages/UserBadgeManagement';
+import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
+import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -80,6 +81,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.USER_DIETARY,
             element: <AdminDietaryPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USER_WITH_DIETARY,
+            element: <UsersWithDietaryPreferencesPage />,
           },
           { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
