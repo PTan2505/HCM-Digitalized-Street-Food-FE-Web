@@ -48,7 +48,7 @@ const navigation = [
     name: 'Người dùng với chế độ ăn',
     href: '/admin/users-with-dietary',
     icon: UserCircleIcon,
-  }
+  },
 ];
 
 function AdminLayout(): JSX.Element {
