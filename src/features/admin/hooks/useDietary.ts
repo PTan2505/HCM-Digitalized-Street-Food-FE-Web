@@ -2,6 +2,7 @@ import type {
   UserDietaryPreference,
   CreateOrUpdateUserDietaryPreferenceRequest,
   CreateOrUpdateUserDietaryPreferenceResponse,
+  UsersWithDietaryPreferences,
 } from '@features/admin/types/userDietaryPreference';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -9,11 +10,15 @@ import {
   getAllUserDietaryPreferences,
   updateUserDietaryPreference,
   deleteUserDietaryPreference,
+  getUsersWithDietaryPreferences,
 } from '@slices/userPreferenceDietary';
 import { useCallback } from 'react';
 
 export default function useDietary(): {
   onGetAllUserDietaryPreferences: () => Promise<UserDietaryPreference[]>;
+  onGetUsersWithDietaryPreferences: () => Promise<
+    UsersWithDietaryPreferences[]
+  >;
   onCreateUserDietaryPreference: (
     payload: CreateOrUpdateUserDietaryPreferenceRequest
   ) => Promise<CreateOrUpdateUserDietaryPreferenceResponse>;
@@ -62,10 +67,18 @@ export default function useDietary(): {
     [dispatch]
   );
 
+  const onGetUsersWithDietaryPreferences = useCallback(async (): Promise<
+    UsersWithDietaryPreferences[]
+  > => {
+    const response = await dispatch(getUsersWithDietaryPreferences()).unwrap();
+    return response;
+  }, [dispatch]);
+
   return {
     onGetAllUserDietaryPreferences,
     onCreateUserDietaryPreference,
     onUpdateUserDietaryPreference,
     onDeleteUserDietaryPreference,
+    onGetUsersWithDietaryPreferences,
   };
 }

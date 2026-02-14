@@ -33,6 +33,7 @@ export const apiUrl = {
   },
   userDietaryPreference: {
     getAllOrPostDietaryPreference: '/DietaryPreference',
+    getUsersWithDietaryPreferences: '/UserDietary/users',
     updateOrDeleteDietaryPreference: (id: number): string =>
       `/DietaryPreference/${id}`,
   },
