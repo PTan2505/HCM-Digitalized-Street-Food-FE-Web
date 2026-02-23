@@ -1,0 +1,15 @@
+import { VALIDATE_ERROR_MESSAGES } from '@constants/errorMessage';
+import { z } from 'zod';
+
+export const DietaryFormSchema = z.object({
+  name: z
+    .string()
+    .nonempty(VALIDATE_ERROR_MESSAGES.EMPTY_DIETARY_NAME)
+    .min(3, VALIDATE_ERROR_MESSAGES.MIN_DIETARY_NAME_LENGTH)
+    .max(100, VALIDATE_ERROR_MESSAGES.MAX_DIETARY_NAME_LENGTH),
+  description: z
+    .string()
+    .nonempty(VALIDATE_ERROR_MESSAGES.EMPTY_DIETARY_DESCRIPTION)
+    .min(10, VALIDATE_ERROR_MESSAGES.MIN_DIETARY_DESCRIPTION_LENGTH)
+    .max(500, VALIDATE_ERROR_MESSAGES.MAX_DIETARY_DESCRIPTION_LENGTH),
+});

@@ -1,14 +1,11 @@
-import useLogin from '@auth/hooks/useLogin';
 import { LoginPasswordSchema } from '@auth/utils/formSchema';
 import { CustomInput } from '@components/CustomInput';
-import { API_ERROR_MESSAGES } from '@constants/errorMessage';
-import type { APIErrorResponse } from '@custom-types/apiResponse';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { selectUserStatus } from '@slices/auth';
 import type { JSX } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 
 interface AdminLoginRequest {
   phoneNumber: string;
@@ -17,7 +14,6 @@ interface AdminLoginRequest {
 const initialValues: AdminLoginRequest = { phoneNumber: '', password: '' };
 
 export const AdminLoginForm = (): JSX.Element => {
-  const { onLoginSubmit } = useLogin();
   const userStatus = useAppSelector(selectUserStatus);
 
   const { control, handleSubmit, setError } = useForm<AdminLoginRequest>({
@@ -25,21 +21,21 @@ export const AdminLoginForm = (): JSX.Element => {
     resolver: zodResolver(LoginPasswordSchema),
   });
 
-  const onSubmit: SubmitHandler<AdminLoginRequest> = async (values) => {
-    try {
-      await onLoginSubmit(values, 'admin');
-    } catch (error: unknown) {
-      const err = error as APIErrorResponse;
-      const errorCode = err.code ?? 'ERR_500_INTERNAL_SERVER_ERROR';
-      console.error(error);
-      setError('phoneNumber', {
-        message:
-          API_ERROR_MESSAGES[errorCode] ??
-          'Đã có lỗi xảy ra. Vui lòng thử lại.',
-      });
-      setError('password', {});
-    }
-  };
+  // const onSubmit: SubmitHandler<AdminLoginRequest> = async (values) => {
+  //   try {
+  //     await onLoginSubmit(values, 'moderator');
+  //   } catch (error: unknown) {
+  //     const err = error as APIErrorResponse;
+  //     const errorCode = err.code ?? 'ERR_500_INTERNAL_SERVER_ERROR';
+  //     console.error(error);
+  //     setError('phoneNumber', {
+  //       message:
+  //         API_ERROR_MESSAGES[errorCode] ??
+  //         'Đã có lỗi xảy ra. Vui lòng thử lại.',
+  //     });
+  //     setError('password', {});
+  //   }
+  // };
 
   return (
     <>
@@ -48,28 +44,14 @@ export const AdminLoginForm = (): JSX.Element => {
       ) : (
         <Box
           component="form"
-          onSubmit={handleSubmit(onSubmit)}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '400px',
-          }}
+          // onSubmit={handleSubmit(onSubmit)}
+          className="flex w-[400px] flex-col items-center justify-between"
         >
           <Typography className="display-small text-primary-900">
             Đăng nhập
           </Typography>
 
-          <Box
-            sx={{
-              gap: '8px',
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              my: '24px',
-            }}
-          >
+          <Box className="my-6 flex w-full flex-col gap-2">
             <CustomInput
               control={control}
               name="phoneNumber"
@@ -89,15 +71,10 @@ export const AdminLoginForm = (): JSX.Element => {
           <Button
             type="submit"
             fullWidth
-            sx={{
-              borderRadius: '20px',
-              height: '40px',
-              textTransform: 'none',
-            }}
+            className="body-large h-10 rounded-[20px] normal-case"
             variant="contained"
             color="primary"
             loadingPosition="start"
-            className="body-large"
           >
             Đăng nhập
           </Button>

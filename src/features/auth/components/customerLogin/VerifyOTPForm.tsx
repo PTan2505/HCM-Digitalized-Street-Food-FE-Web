@@ -7,7 +7,7 @@ import {
   styled,
   Typography,
 } from '@mui/material';
-import { changeAccount, generateOTP } from '@slices/auth';
+import { changeAccount, userLoginWithPhoneNumber } from '@slices/auth';
 import { MuiOtpInput } from 'mui-one-time-password-input';
 import { type JSX } from 'react';
 import {
@@ -94,16 +94,7 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '24px',
-        width: '400px',
-      }}
-    >
+    <Box className="flex w-[400px] flex-col items-center justify-center gap-6">
       <Typography className="display-small text-primary-900">
         Nhập mã OTP
       </Typography>
@@ -148,7 +139,9 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
           component="button"
           type="button"
           onClick={async () =>
-            await dispatch(generateOTP({ phoneNumber: phoneNumber })).unwrap()
+            await dispatch(
+              userLoginWithPhoneNumber({ phoneNumber: phoneNumber })
+            ).unwrap()
           }
         >
           Gửi lại mã
@@ -158,14 +151,9 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
         type="submit"
         fullWidth
         disabled={disabledSubmitButton}
-        sx={{
-          borderRadius: '20px',
-          height: '40px',
-          textTransform: 'none',
-        }}
+        className="body-large h-10 rounded-[20px] normal-case"
         variant="contained"
         color="primary"
-        className="body-large"
         onClick={handleSubmit(onSubmit)}
       >
         Đăng nhập

@@ -1,46 +1,76 @@
-import type { LoginRequest, LoginType } from '@auth/types/login';
+import type { LoginWithPhoneNumberRequest } from '@auth/types/login';
 import { ROUTES } from '@constants/routes';
-import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import {
-  generateOTP,
-  selectIsGeneratedOTP,
-  selectIsNewUser,
-  userLogin,
+  initFacebookSDK,
+  loginWithFacebook,
+} from '@features/auth/libs/FacebookSDK';
+import { useAppDispatch } from '@hooks/reduxHooks';
+import { useGoogleLogin } from '@react-oauth/google';
+import {
+  logout,
+  userLoginWithFacebook,
+  userLoginWithGoogle,
+  userLoginWithPhoneNumber,
+  verifyPhoneNumber,
 } from '@slices/auth';
-
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
-  onLoginSubmit: (values: LoginRequest, loginType: LoginType) => Promise<void>;
+  onGoogleLoginSubmit: () => void;
+  onFacebookLoginSubmit: () => Promise<void>;
+  onPhoneNumberLoginSubmit: (
+    values: LoginWithPhoneNumberRequest
+  ) => Promise<void>;
+  onVerifyPhoneNumberSubmit: (payload: {
+    phoneNumber: string;
+    otp: string;
+  }) => Promise<void>;
+  onLogout: () => void;
 } {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const isGeneratedOTP = useAppSelector(selectIsGeneratedOTP);
-  const isNewUser = useAppSelector(selectIsNewUser);
+  const navigate = useNavigate();
 
-  const handleLogin = async (
-    values: LoginRequest,
-    loginType: LoginType
-  ): Promise<void> => {
-    await dispatch(userLogin({ data: values, loginType })).unwrap();
-    if (isNewUser && loginType === 'customer') {
-      navigate(`${ROUTES.NEW_CUSTOMER_PROFILE}`);
-    } else navigate(`/`);
-  };
+  const onGoogleLoginSubmit = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      await dispatch(
+        userLoginWithGoogle({ accessToken: tokenResponse.access_token })
+      ).unwrap();
+      navigate(ROUTES.ROOT);
+    },
+  });
 
-  async function onLoginSubmit(
-    values: LoginRequest,
-    loginType: LoginType
-  ): Promise<void> {
-    if (loginType === 'customer' && !isGeneratedOTP) {
-      await dispatch(generateOTP(values)).unwrap();
-      return;
-    }
-
-    await handleLogin(values, loginType);
+  async function onFacebookLoginSubmit(): Promise<void> {
+    await initFacebookSDK();
+    const accessToken = await loginWithFacebook();
+    await dispatch(userLoginWithFacebook({ accessToken })).unwrap();
+    navigate(ROUTES.ROOT);
   }
 
+  async function onPhoneNumberLoginSubmit(
+    values: LoginWithPhoneNumberRequest
+  ): Promise<void> {
+    await dispatch(userLoginWithPhoneNumber(values)).unwrap();
+    navigate(ROUTES.LOGIN);
+  }
+
+  async function onVerifyPhoneNumberSubmit(payload: {
+    phoneNumber: string;
+    otp: string;
+  }): Promise<void> {
+    await dispatch(verifyPhoneNumber(payload)).unwrap();
+    navigate(ROUTES.ROOT);
+  }
+
+  function onLogout(): void {
+    dispatch(logout());
+    navigate(ROUTES.LOGIN);
+    // Implementation for logout if needed
+  }
   return {
-    onLoginSubmit,
+    onGoogleLoginSubmit,
+    onFacebookLoginSubmit,
+    onPhoneNumberLoginSubmit,
+    onVerifyPhoneNumberSubmit,
+    onLogout,
   };
 }

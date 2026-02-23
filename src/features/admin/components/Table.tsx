@@ -1,36 +1,46 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import type { JSX } from 'react';
+import {
+  Table as MuiTable,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  CircularProgress,
+  Box,
+  Typography,
+} from '@mui/material';
 
-interface Column {
+interface Column<T> {
   key: string;
   label: string;
-  render?: (
-    value: unknown,
-    row: Record<string, unknown>,
-    index?: number
-  ) => React.ReactNode;
-  className?: string;
+  render?: (value: unknown, row: T, index?: number) => React.ReactNode;
+  style?: React.CSSProperties;
 }
 
-interface Action {
+interface Action<T> {
   label: string | React.ReactNode;
-  onClick: (row: Record<string, unknown>) => void;
-  className?: string;
+  onClick: (row: T) => void;
+  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+  variant?: 'text' | 'outlined' | 'contained';
 }
 
-interface TableProps {
-  columns: Column[];
-  data: Record<string, unknown>[];
+interface TableProps<T extends object> {
+  columns: Column<T>[];
+  data: T[];
   loading?: boolean;
   emptyMessage?: string;
   loadingMessage?: string;
   rowKey?: string;
   maxHeight?: string;
-  actions?: Action[];
-  onRowClick?: (row: Record<string, unknown>) => void;
+  actions?: Action<T>[];
+  onRowClick?: (row: T) => void;
 }
 
-const Table = ({
+const Table = <T extends object>({
   columns,
   data,
   loading = false,
@@ -40,113 +50,130 @@ const Table = ({
   maxHeight = '600px',
   actions,
   onRowClick,
-}: TableProps): JSX.Element => {
+}: TableProps<T>): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
 
   return (
-    <div className="overflow-hidden border border-gray-300 bg-white shadow sm:rounded-lg">
-      <div className="overflow-auto" style={{ maxHeight }}>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="sticky top-0 z-10 bg-gray-50 shadow-sm">
-            <tr>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  className={`border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-600 uppercase ${
-                    column.className ?? ''
-                  }`}
-                >
-                  {column.label}
-                </th>
-              ))}
-              {actions && actions.length > 0 && (
-                <th className="border-b border-gray-200 bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-600 uppercase">
-                  Thao tác
-                </th>
-              )}
-            </tr>
-          </thead>
+    <TableContainer
+      component={Paper}
+      className="rounded-lg border border-[var(--color-table-border)] font-[var(--font-nunito)] shadow-sm"
+      style={{ maxHeight }}
+    >
+      <MuiTable stickyHeader>
+        <TableHead>
+          <TableRow>
+            {columns.map((column) => (
+              <TableCell
+                key={column.key}
+                className="border-b border-[var(--color-table-divider)] bg-[var(--color-table-header-bg)] text-xs font-[var(--font-nunito)] font-semibold tracking-wide text-[var(--color-table-header-text)] uppercase"
+                style={{ ...column.style }}
+              >
+                {column.label}
+              </TableCell>
+            ))}
+            {actions && actions.length > 0 && (
+              <TableCell className="border-b border-[var(--color-table-divider)] bg-[var(--color-table-header-bg)] text-xs font-[var(--font-nunito)] font-semibold tracking-wide text-[var(--color-table-header-text)] uppercase">
+                Thao tác
+              </TableCell>
+            )}
+          </TableRow>
+        </TableHead>
 
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {loading ? (
-              <tr>
-                <td
-                  colSpan={totalColumns}
-                  className="px-6 py-4 text-center text-gray-500"
-                >
-                  {loadingMessage}
-                </td>
-              </tr>
-            ) : data.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={totalColumns}
-                  className="px-6 py-4 text-center text-gray-500"
-                >
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={totalColumns} align="center" className="py-8">
+                <Box className="flex flex-col items-center gap-4">
+                  <CircularProgress size={32} />
+                  <Typography className="font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+                    {loadingMessage}
+                  </Typography>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ) : data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={totalColumns} align="center" className="py-8">
+                <Typography className="font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
                   {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              data.map((row, rowIndex) => (
-                <tr
-                  key={String(row[rowKey])}
-                  className={`transition-colors ${
-                    onRowClick
-                      ? 'cursor-pointer hover:bg-gray-50'
-                      : 'hover:bg-gray-50'
-                  }`}
+                </Typography>
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((row, rowIndex) => {
+              const rowKeyValue = (row as Record<string, unknown>)[rowKey];
+              if (!rowKeyValue) return null;
+
+              return (
+                <TableRow
+                  key={String(rowKeyValue)}
+                  hover
                   onClick={() => onRowClick?.(row)}
+                  className={`hover:bg-[var(--color-table-row-hover)] last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
+                  style={{ height: '60px' }}
                 >
                   {columns.map((column) => {
-                    const value = column.key
-                      .split('.')
-                      .reduce<unknown>((obj, key) => {
+                    const value = column.key.split('.').reduce<unknown>(
+                      (obj, key) => {
                         if (obj && typeof obj === 'object' && key in obj) {
                           return (obj as Record<string, unknown>)[key];
                         }
                         return undefined;
-                      }, row);
+                      },
+                      row as Record<string, unknown>
+                    );
                     return (
-                      <td
+                      <TableCell
                         key={column.key}
-                        className={`px-6 py-4 text-sm whitespace-nowrap text-gray-900 ${
-                          column.className ?? ''
-                        }`}
+                        className="border-b border-[var(--color-table-divider)] text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-primary)]"
+                        style={{
+                          ...column.style,
+                          paddingTop: '12px',
+                          paddingBottom: '12px',
+                          verticalAlign: 'middle',
+                        }}
                       >
                         {column.render
                           ? column.render(value, row, rowIndex)
                           : String(value ?? '-')}
-                      </td>
+                      </TableCell>
                     );
                   })}
                   {actions && actions.length > 0 && (
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <div className="flex gap-2">
+                    <TableCell
+                      className="border-b border-[var(--color-table-divider)] whitespace-nowrap"
+                      style={{
+                        paddingTop: '12px',
+                        paddingBottom: '12px',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      <Box className="flex gap-2">
                         {actions.map((action, index) => (
-                          <button
+                          <Button
                             key={index}
                             onClick={(e) => {
                               e.stopPropagation();
                               action.onClick(row);
                             }}
-                            className={
-                              action.className ??
-                              'font-medium text-blue-600 hover:text-blue-800'
-                            }
+                            color={action.color ?? 'primary'}
+                            variant={action.variant ?? 'text'}
+                            size="small"
+                            className="font-[var(--font-nunito)]"
                           >
                             {action.label}
-                          </button>
+                          </Button>
                         ))}
-                      </div>
-                    </td>
+                      </Box>
+                    </TableCell>
                   )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </MuiTable>
+    </TableContainer>
   );
 };
 

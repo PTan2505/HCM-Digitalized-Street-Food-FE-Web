@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function DashboardPage(): React.JSX.Element {
+export default function RevenuePage(): React.JSX.Element {
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">

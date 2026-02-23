@@ -4,7 +4,9 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import logoImage from '@assets/lowca-logo.png';
-import glassImage from '@assets/ios-light.png';
+import unionLogo from '@assets/logos/Union.png';
+import type { JSX } from 'react';
+import { Avatar, Box, Tooltip, Typography } from '@mui/material';
 
 interface NavigationItem {
   name: string;
@@ -18,8 +20,6 @@ interface NavigationItem {
 interface SidebarContentProps {
   collapsed?: boolean;
   navigation?: NavigationItem[];
-  gradientColors?: { from: string; to: string };
-  textColors?: { primary: string; secondary: string; active: string };
   userInfo?: {
     name: string;
     email: string;
@@ -28,195 +28,156 @@ interface SidebarContentProps {
   };
   settingsPath?: string;
   onLogout?: () => void;
+  onLogoClick?: () => void;
 }
 
 const SidebarContent = ({
   collapsed = false,
   navigation = [],
-  gradientColors = { from: '#06AA4C', to: '#06AA4C' },
-  textColors = { primary: '#ffffff', secondary: '#e8f5e9', active: '#045a2e' },
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
-}: SidebarContentProps): React.JSX.Element => {
+  onLogoClick,
+}: SidebarContentProps): JSX.Element => {
   const location = useLocation();
 
   return (
-    <div
-      className="flex flex-1 flex-col shadow-xl"
-      style={{
-        background: `linear-gradient(to bottom, ${gradientColors.from}, ${gradientColors.to})`,
-      }}
-    >
-      <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+    <Box className="bg-gradient-moderator flex flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+      <Box className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4">
         {/* Logo/Brand */}
-        <div className="mb-8 flex shrink-0 items-center px-4">
-          <div className="flex w-full items-center">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-              <img
-                src={glassImage}
-                alt="Lowca Icon"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            {!collapsed && (
-              <div className="ml-4 flex flex-col justify-center">
-                <img
-                  src={logoImage}
-                  alt="Lowca Logo"
-                  className="h-8 object-contain"
-                  style={{ maxWidth: '120px' }}
-                />
-                <p
-                  className="mt-1 text-xs opacity-90"
-                  style={{ color: textColors.primary }}
-                >
-                  {userInfo.role}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <Box
+          onClick={onLogoClick}
+          className={`mb-8 flex flex-col items-center gap-1 px-4 transition-all duration-300 ease-in-out ${
+            onLogoClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+          }`}
+        >
+          <Box className="flex h-8 items-center justify-center">
+            <Box
+              component="img"
+              src={collapsed ? unionLogo : logoImage}
+              alt="Logo"
+              className={`object-contain transition-all duration-300 ease-in-out ${
+                collapsed
+                  ? 'h-[18px] w-[18px] max-w-[18px]'
+                  : 'h-8 w-auto max-w-[100px]'
+              }`}
+            />
+          </Box>
+          <Box className="h-6 overflow-hidden">
+            <Typography
+              className={`text-moderator-text-primary block text-base leading-6 font-extrabold tracking-[0.02em] whitespace-nowrap transition-opacity duration-300 ease-in-out ${
+                collapsed ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
+              {userInfo.role}
+            </Typography>
+          </Box>
+        </Box>
 
         {/* Navigation */}
-        <nav className="mt-5 flex-1 space-y-2 px-2">
+        <Box component="nav" className="mt-4 flex-1 px-2">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <Link
+              <Tooltip
                 key={item.name}
-                to={item.href}
-                className={`${
-                  isActive ? 'text-white shadow-lg' : 'group-hover:text-white'
-                } group flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 ${
-                  collapsed ? 'justify-center' : ''
-                }`}
-                style={{
-                  backgroundColor: isActive ? textColors.active : 'transparent',
-                  color: isActive ? '#ffffff' : textColors.primary,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = gradientColors.to;
-                    e.currentTarget.style.color = '#ffffff';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = textColors.primary;
-                  }
-                }}
                 title={collapsed ? item.name : ''}
+                placement="right"
+                disableHoverListener={!collapsed}
               >
-                <item.icon
-                  className={`${
-                    isActive ? 'text-white' : 'group-hover:text-white'
-                  } h-6 w-6 shrink-0 transition-colors duration-200`}
-                  style={{
-                    color: isActive ? '#ffffff' : textColors.primary,
-                  }}
-                />
-                {!collapsed && (
-                  <span className="ml-3 transition-opacity duration-200">
-                    {item.name}
-                  </span>
-                )}
-              </Link>
+                <Link to={item.href} className="no-underline">
+                  <Box
+                    className={`mb-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
+                      isActive
+                        ? 'bg-moderator-active-bg text-moderator-active-text hover:bg-moderator-active-bg hover:text-moderator-active-text shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                        : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
+                    }`}
+                  >
+                    <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
+                      <item.icon
+                        className="h-5 w-5"
+                        style={{ color: 'inherit' }}
+                      />
+                    </Box>
+                    <Typography
+                      className={`ml-3 overflow-hidden text-[0.9rem] font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+                        collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                      }`}
+                    >
+                      {item.name}
+                    </Typography>
+                  </Box>
+                </Link>
+              </Tooltip>
             );
           })}
-        </nav>
+        </Box>
 
         {/* Bottom actions */}
-        <div className="mt-auto space-y-2 px-2">
-          <button
-            onClick={onLogout}
-            className={`group flex w-full items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 ${
-              collapsed ? 'justify-center' : ''
-            }`}
-            style={{ color: textColors.primary }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#d32f2f';
-              e.currentTarget.style.color = '#ffffff';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = textColors.primary;
-            }}
+        <Box className="mt-auto px-2">
+          <Tooltip
             title={collapsed ? 'Đăng xuất' : ''}
+            placement="right"
+            disableHoverListener={!collapsed}
           >
-            <ArrowRightOnRectangleIcon
-              className="h-6 w-6 shrink-0 transition-colors duration-200"
-              style={{ color: textColors.primary }}
-            />
-            {!collapsed && <span className="ml-3">Đăng xuất</span>}
-          </button>
-
-          {/* User info in collapsed mode */}
-          {collapsed && (
-            <div
-              className="pt-4"
-              style={{ borderTop: `1px solid ${textColors.secondary}` }}
+            <Box
+              component="button"
+              onClick={onLogout}
+              className="text-moderator-logout hover:bg-moderator-logout-hover mb-2 flex w-full cursor-pointer items-center overflow-hidden rounded-lg border-none bg-transparent px-3 py-3 text-sm font-medium transition-[background-color,color] duration-200 ease-in-out hover:text-white"
             >
-              <div className="flex justify-center">
-                <div
-                  className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full"
-                  style={{ backgroundColor: textColors.active }}
-                >
-                  {userInfo?.avatarUrl ? (
-                    <img
-                      src={userInfo.avatarUrl}
-                      alt="avatar"
-                      className="h-8 w-8 object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon
-                      className="h-6 w-6"
-                      style={{ color: textColors.primary }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+              <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
+                <ArrowRightOnRectangleIcon
+                  className="h-5 w-5"
+                  style={{ color: 'inherit' }}
+                />
+              </Box>
+              <Typography
+                className={`ml-3 overflow-hidden text-sm font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+                  collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                }`}
+              >
+                Đăng xuất
+              </Typography>
+            </Box>
+          </Tooltip>
 
-          {/* User info in expanded mode */}
-          {!collapsed && (
-            <div
-              className="pt-4"
-              style={{ borderTop: `1px solid ${textColors.secondary}` }}
+          {/* User info */}
+          <Box className="border-moderator-border border-t pt-4">
+            <Tooltip
+              title={collapsed ? `${userInfo.name}\n${userInfo.email}` : ''}
+              placement="right"
+              disableHoverListener={!collapsed}
             >
-              <div className="flex items-center px-3 py-2">
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full"
-                  style={{ backgroundColor: textColors.active }}
+              <Box className="flex items-center overflow-hidden px-3 py-2">
+                <Avatar
+                  src={userInfo?.avatarUrl ?? undefined}
+                  className="shrink-0 bg-[var(--color-moderator-active-bg)] text-[var(--color-moderator-active-text)] transition-[width,height] duration-300 ease-in-out"
+                  style={{
+                    width: collapsed ? 32 : 36,
+                    height: collapsed ? 32 : 36,
+                  }}
                 >
-                  {userInfo?.avatarUrl ? (
-                    <img
-                      src={userInfo.avatarUrl}
-                      alt="avatar"
-                      className="h-8 w-8 object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon
-                      className="h-6 w-6"
-                      style={{ color: textColors.primary }}
-                    />
+                  {!userInfo?.avatarUrl && (
+                    <UserCircleIcon className="h-5 w-5" />
                   )}
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">
+                </Avatar>
+                <Box
+                  className={`ml-3 overflow-hidden transition-[opacity,width] duration-300 ease-in-out ${
+                    collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                  }`}
+                >
+                  <Typography className="text-moderator-text-primary overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
                     {userInfo.name}
-                  </p>
-                  <p className="text-xs" style={{ color: textColors.primary }}>
+                  </Typography>
+                  <Typography className="text-moderator-text-secondary overflow-hidden text-xs text-ellipsis whitespace-nowrap">
                     {userInfo.email}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                  </Typography>
+                </Box>
+              </Box>
+            </Tooltip>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

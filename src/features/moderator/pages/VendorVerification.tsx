@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import React from 'react';
-import Table from '@features/admin/components/Table';
+import Table from '@features/moderator/components/Table';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -26,7 +26,7 @@ export default function VendorVerification(): React.JSX.Element {
       ownerName: 'Trần Thị B',
       status: 'verified',
       licenseUrl: 'https://example.com/license2.pdf',
-      processedBy: 'Admin Nguyễn',
+      processedBy: 'Moderator Nguyễn',
       createdAt: '2024-02-20T14:15:00',
       updatedAt: '2024-02-22T09:20:00',
     },
@@ -44,7 +44,7 @@ export default function VendorVerification(): React.JSX.Element {
       ownerName: 'Phạm Thị D',
       status: 'reject',
       licenseUrl: 'https://example.com/license4.pdf',
-      processedBy: 'Admin Trần',
+      processedBy: 'Moderator Trần',
       createdAt: '2024-03-05T16:00:00',
       updatedAt: '2024-03-06T10:30:00',
     },

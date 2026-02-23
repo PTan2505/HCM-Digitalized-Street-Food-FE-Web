@@ -1,16 +1,22 @@
+import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
-import AdminLayout from '@app/routes/AdminLayout';
 import { ROUTES } from '@constants/routes';
+import AdminBadgePage from '@features/admin/pages/BadgePage';
+import AdminDietaryPage from '@features/admin/pages/DietaryPage';
+import AdminRevenuePage from '@features/admin/pages/RevenuePage';
+import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
+import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
+import AdminUsersPage from '@features/admin/pages/UsersPage';
+import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import LoginPage from '@features/auth/pages/LoginPage';
-import { UserProfilePage } from '@features/user/UserProfilePage';
-import RevenuePage from '@features/admin/pages/RevenuePage';
-import TransactionsPage from '@features/admin/pages/TransactionsPage';
-import PostsPage from '@features/admin/pages/PostsPage';
-import UsersPage from '@features/admin/pages/UsersPage';
-import CashoutPage from '@features/admin/pages/CashoutPage';
-import { createBrowserRouter } from 'react-router';
-import VendorVerification from '@features/admin/pages/VendorVerification';
-import VendorRegistration from '@features/vendor/pages/VendorRegistration';
+import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
+import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
+import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
+import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
+import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
+import ModeratorVendorVerification from '@features/moderator/pages/VendorVerification';
+import { createBrowserRouter, Navigate } from 'react-router';
+import AdminLayout from './routes/AdminLayout';
 
 export const router = createBrowserRouter([
   {
@@ -18,24 +24,72 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/',
+    path: ROUTES.ROOT,
     element: <RootLayout />,
-    children: [{ index: true, element: <UserProfilePage /> }],
-  },
-  {
-    path: '/vendor',
-    element: <VendorRegistration />,
-  },
-  {
-    path: '/admin',
-    element: <AdminLayout />,
     children: [
-      { index: true, element: <RevenuePage /> },
-      { path: ROUTES.ADMIN.TRANSACTIONS, element: <TransactionsPage /> },
-      { path: ROUTES.ADMIN.VERIFICATION, element: <VendorVerification /> },
-      { path: ROUTES.ADMIN.POSTS, element: <PostsPage /> },
-      { path: ROUTES.ADMIN.USERS, element: <UsersPage /> },
-      { path: ROUTES.ADMIN.CASHOUT, element: <CashoutPage /> },
+      {
+        path: ROUTES.MODERATOR.BASE,
+        element: <ModeratorLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.MODERATOR.PATHS.REVENUE} replace />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.REVENUE,
+            element: <ModeratorRevenuePage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.TRANSACTIONS,
+            element: <ModeratorTransactionsPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.VERIFICATION,
+            element: <ModeratorVendorVerification />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.POSTS,
+            element: <ModeratorPostsPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.USERS,
+            element: <ModeratorUsersPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.CASHOUT,
+            element: <ModeratorCashoutPage />,
+          },
+        ],
+      },
+      {
+        path: ROUTES.ADMIN.BASE,
+        element: <AdminLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.ADMIN.PATHS.REVENUE} replace />,
+          },
+          { path: ROUTES.ADMIN.PATHS.REVENUE, element: <AdminRevenuePage /> },
+          {
+            path: ROUTES.ADMIN.PATHS.TRANSACTIONS,
+            element: <AdminTransactionsPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.BADGE_USERS,
+            element: <UserBadgeManagement />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USER_DIETARY,
+            element: <AdminDietaryPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USER_WITH_DIETARY,
+            element: <UsersWithDietaryPreferencesPage />,
+          },
+          { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
+          { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
+        ],
+      },
     ],
   },
 ]);

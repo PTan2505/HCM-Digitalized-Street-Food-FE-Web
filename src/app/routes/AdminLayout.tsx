@@ -1,35 +1,53 @@
+import SidebarContent from '@components/layout/SidebarContent';
+import { ADMIN_USER_INFO } from '@constants/adminTheme';
+import useLogin from '@features/auth/hooks/useLogin';
 import {
   Bars3Icon,
+  ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CurrencyDollarIcon,
   HomeIcon,
   ShoppingBagIcon,
+  StarIcon,
   UserCircleIcon,
   UserGroupIcon,
   UsersIcon,
   XMarkIcon,
-  ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import SidebarContent from '@components/layout/SidebarContent';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
+import { useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
-  { name: 'Quản lý giao dịch', href: '/admin/transactions', icon: HomeIcon },
+  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
   {
-    name: 'Xác minh người bán',
-    href: '/admin/verification',
-    icon: ShoppingBagIcon,
+    name: 'Quản lý giao dịch',
+    href: '/admin/transactions',
+    icon: HomeIcon,
   },
-  { name: 'Quản lý bài viết', href: '/admin/posts', icon: UserGroupIcon },
   { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
-    name: 'Yêu cầu rút tiền',
-    href: '/admin/cashout',
-    icon: CurrencyDollarIcon,
+    name: 'Quản lý huy hiệu',
+    href: '/admin/badge',
+    icon: StarIcon,
+  },
+  {
+    name: 'Huy hiệu của người dùng',
+    href: '/admin/badge-users',
+    icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý chế độ ăn',
+    href: '/admin/user-dietary',
+    icon: UserGroupIcon,
+  },
+  {
+    name: 'Chế độ ăn của người dùng',
+    href: '/admin/users-with-dietary',
+    icon: UserCircleIcon,
   },
 ];
 
@@ -37,42 +55,27 @@ function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
-
+  const navigate = useNavigate();
+  const { onLogout } = useLogin();
   // Mock user data for UI only
-  const user = {
-    firstName: 'Admin',
-    lastName: 'User',
-    username: 'admin',
-    email: 'admin@example.com',
-    avatarUrl: null,
-  };
+  const user = useAppSelector(selectUser);
 
-  const handleLogout = (): void => {
-    console.log('Logging out...');
-  };
-
-  const adminConfig = {
-    gradientColors: { from: '#06AA4C', to: '#06AA4C' },
-    textColors: { primary: '#ffffff', secondary: '#e8f5e9', active: '#045a2e' },
-    userInfo: {
-      name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'Admin Panel',
-    },
+  const handleLogoClick = (): void => {
+    navigate('/admin');
   };
 
   const sidebarUserInfo = {
     name:
       user?.firstName && user?.lastName
         ? `${user.firstName} ${user.lastName}`
-        : adminConfig.userInfo.name,
-    email: user?.email ?? adminConfig.userInfo.email,
-    role: adminConfig.userInfo.role,
+        : ADMIN_USER_INFO.name,
+    email: user?.email ?? ADMIN_USER_INFO.email,
+    role: ADMIN_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <Box className="min-h-screen bg-white text-gray-900">
       {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 z-40 md:hidden ${
@@ -96,11 +99,10 @@ function AdminLayout(): JSX.Element {
           <SidebarContent
             collapsed={false}
             navigation={navigation}
-            gradientColors={adminConfig.gradientColors}
-            textColors={adminConfig.textColors}
             userInfo={sidebarUserInfo}
             settingsPath="/admin/settings"
-            onLogout={handleLogout}
+            onLogout={onLogout}
+            onLogoClick={handleLogoClick}
           />
         </div>
       </div>
@@ -114,36 +116,33 @@ function AdminLayout(): JSX.Element {
         <SidebarContent
           collapsed={sidebarCollapsed}
           navigation={navigation}
-          gradientColors={adminConfig.gradientColors}
-          textColors={adminConfig.textColors}
           userInfo={sidebarUserInfo}
           settingsPath="/admin/settings"
-          onLogout={handleLogout}
+          onLogout={onLogout}
+          onLogoClick={handleLogoClick}
         />
       </div>
 
       {/* Main content */}
-      <div
-        className={`transition-all duration-300 ease-in-out ${
+      <Box
+        className={`pl-0 transition-all duration-300 ease-in-out ${
           sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
         }`}
       >
         {/* Top navigation */}
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center space-x-4">
-              <button
-                type="button"
-                className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:hidden"
+        <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+          <Box className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Box className="flex items-center gap-4">
+              <IconButton
+                className="md:hidden"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Bars3Icon className="h-6 w-6" />
-              </button>
+              </IconButton>
 
               {/* Desktop collapse button */}
-              <button
-                type="button"
-                className="hidden rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 md:block"
+              <IconButton
+                className="hidden md:block"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               >
                 {sidebarCollapsed ? (
@@ -151,60 +150,30 @@ function AdminLayout(): JSX.Element {
                 ) : (
                   <ChevronLeftIcon className="h-5 w-5" />
                 )}
-              </button>
+              </IconButton>
 
-              <div className="hidden md:block">
-                <h2 className="text-lg font-semibold">
-                  {navigation.find(
-                    (item) =>
-                      item.href === location.pathname ||
-                      (location.pathname === '/admin/' &&
-                        item.href === '/admin')
-                  )?.name ?? 'Admin Panel'}
-                </h2>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              {/* User menu */}
-              <div className="relative flex items-center space-x-3">
-                <div className="hidden sm:flex sm:flex-col sm:items-end">
-                  <span className="text-sm font-medium text-gray-900">
-                    {user?.firstName && user?.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Admin User')}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {user?.email ?? 'admin@example.com'}
-                  </span>
-                </div>
-                <div
-                  className="flex cursor-pointer items-center rounded-full p-2 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
-                  title="User avatar"
+              <Box className="hidden md:block">
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  className="text-xl font-semibold"
                 >
-                  {user?.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt="avatar"
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon className="h-8 w-8" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                  {navigation.find((item) => item.href === location.pathname)
+                    ?.name ?? 'Dashboard'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
 
         {/* Page content */}
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Box component="main" className="py-6">
+          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
             <Outlet />
-          </div>
-        </main>
-      </div>
-    </div>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 

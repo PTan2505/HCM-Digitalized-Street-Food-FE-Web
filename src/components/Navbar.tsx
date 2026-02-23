@@ -14,7 +14,7 @@ export default function Navbar(): JSX.Element {
   const dispatch = useAppDispatch();
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <Box className="grow">
       <AppBar position="static">
         <Toolbar>
           <IconButton
@@ -22,11 +22,11 @@ export default function Navbar(): JSX.Element {
             edge="start"
             color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
+            className="mr-4"
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" className="grow">
             News
           </Typography>
           <Button color="inherit" onClick={() => dispatch(logout())}>
