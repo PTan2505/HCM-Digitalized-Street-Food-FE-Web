@@ -2,7 +2,7 @@ import type {
   Badge,
   CreateOrUpdateBadgeRequest,
   CreateOrUpdateBadgeResponse,
-  UserWithBadges,
+  GetUsersWithBadges,
   AwardOrRevokeBadgeRequest,
   AwardOrRevokeBadgeResponse,
 } from '@features/admin/types/badge';
@@ -27,7 +27,10 @@ export default function useBadge(): {
     payload: { id: number } & CreateOrUpdateBadgeRequest
   ) => Promise<CreateOrUpdateBadgeResponse>;
   onDeleteBadge: (id: number) => Promise<void>;
-  onGetUsersWithBadges: () => Promise<UserWithBadges[]>;
+  onGetUsersWithBadges: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetUsersWithBadges>;
   onAwardBadgeToUser: (
     payload: AwardOrRevokeBadgeRequest
   ) => Promise<AwardOrRevokeBadgeResponse>;
@@ -67,12 +70,16 @@ export default function useBadge(): {
     [dispatch]
   );
 
-  const onGetUsersWithBadges = useCallback(async (): Promise<
-    UserWithBadges[]
-  > => {
-    const response = await dispatch(getUsersWithBadges()).unwrap();
-    return response;
-  }, [dispatch]);
+  const onGetUsersWithBadges = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetUsersWithBadges> => {
+      const response = await dispatch(getUsersWithBadges(params)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
 
   const onAwardBadgeToUser = useCallback(
     async (
