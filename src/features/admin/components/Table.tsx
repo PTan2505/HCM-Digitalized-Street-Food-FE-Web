@@ -110,6 +110,7 @@ const Table = <T extends object>({
                   hover
                   onClick={() => onRowClick?.(row)}
                   className={`hover:bg-[var(--color-table-row-hover)] last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
+                  style={{ height: '60px' }}
                 >
                   {columns.map((column) => {
                     const value = column.key.split('.').reduce<unknown>(
@@ -125,7 +126,12 @@ const Table = <T extends object>({
                       <TableCell
                         key={column.key}
                         className="border-b border-[var(--color-table-divider)] text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-primary)]"
-                        style={{ ...column.style }}
+                        style={{
+                          ...column.style,
+                          paddingTop: '12px',
+                          paddingBottom: '12px',
+                          verticalAlign: 'middle',
+                        }}
                       >
                         {column.render
                           ? column.render(value, row, rowIndex)
@@ -134,7 +140,14 @@ const Table = <T extends object>({
                     );
                   })}
                   {actions && actions.length > 0 && (
-                    <TableCell className="border-b border-[var(--color-table-divider)] whitespace-nowrap">
+                    <TableCell
+                      className="border-b border-[var(--color-table-divider)] whitespace-nowrap"
+                      style={{
+                        paddingTop: '12px',
+                        paddingBottom: '12px',
+                        verticalAlign: 'middle',
+                      }}
+                    >
                       <Box className="flex gap-2">
                         {actions.map((action, index) => (
                           <Button

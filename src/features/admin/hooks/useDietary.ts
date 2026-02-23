@@ -2,7 +2,7 @@ import type {
   UserDietaryPreference,
   CreateOrUpdateUserDietaryPreferenceRequest,
   CreateOrUpdateUserDietaryPreferenceResponse,
-  UsersWithDietaryPreferences,
+  GetUsersWithDietaryPreferencesResponse,
 } from '@features/admin/types/userDietaryPreference';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -16,9 +16,10 @@ import { useCallback } from 'react';
 
 export default function useDietary(): {
   onGetAllUserDietaryPreferences: () => Promise<UserDietaryPreference[]>;
-  onGetUsersWithDietaryPreferences: () => Promise<
-    UsersWithDietaryPreferences[]
-  >;
+  onGetUsersWithDietaryPreferences: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetUsersWithDietaryPreferencesResponse>;
   onCreateUserDietaryPreference: (
     payload: CreateOrUpdateUserDietaryPreferenceRequest
   ) => Promise<CreateOrUpdateUserDietaryPreferenceResponse>;
@@ -67,12 +68,18 @@ export default function useDietary(): {
     [dispatch]
   );
 
-  const onGetUsersWithDietaryPreferences = useCallback(async (): Promise<
-    UsersWithDietaryPreferences[]
-  > => {
-    const response = await dispatch(getUsersWithDietaryPreferences()).unwrap();
-    return response;
-  }, [dispatch]);
+  const onGetUsersWithDietaryPreferences = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetUsersWithDietaryPreferencesResponse> => {
+      const response = await dispatch(
+        getUsersWithDietaryPreferences(params)
+      ).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
 
   return {
     onGetAllUserDietaryPreferences,
