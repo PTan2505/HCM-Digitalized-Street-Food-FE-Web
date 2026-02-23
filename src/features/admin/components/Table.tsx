@@ -130,7 +130,7 @@ const Table = <T extends object>({
                           ...column.style,
                           paddingTop: '12px',
                           paddingBottom: '12px',
-                          verticalAlign: 'middle'
+                          verticalAlign: 'middle',
                         }}
                       >
                         {column.render
@@ -145,7 +145,7 @@ const Table = <T extends object>({
                       style={{
                         paddingTop: '12px',
                         paddingBottom: '12px',
-                        verticalAlign: 'middle'
+                        verticalAlign: 'middle',
                       }}
                     >
                       <Box className="flex gap-2">

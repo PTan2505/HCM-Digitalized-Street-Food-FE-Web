@@ -2,175 +2,175 @@ import type { JSX } from 'react';
 import { Box, Button, Select, MenuItem, Typography } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import {
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    FirstPage as FirstPageIcon,
-    LastPage as LastPageIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  FirstPage as FirstPageIcon,
+  LastPage as LastPageIcon,
 } from '@mui/icons-material';
 
 export interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-    pageSize: number;
-    hasPrevious: boolean;
-    hasNext: boolean;
-    onPageChange: (page: number) => void;
-    onPageSizeChange?: (pageSize: number) => void;
-    pageSizeOptions?: number[];
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
 }
 
 export default function Pagination({
-    currentPage,
-    totalPages,
-    totalCount,
-    pageSize,
-    hasPrevious,
-    hasNext,
-    onPageChange,
-    onPageSizeChange,
-    pageSizeOptions = [5, 10, 20, 50],
+  currentPage,
+  totalPages,
+  totalCount,
+  pageSize,
+  hasPrevious,
+  hasNext,
+  onPageChange,
+  onPageSizeChange,
+  pageSizeOptions = [5, 10, 20, 50],
 }: PaginationProps): JSX.Element {
-    const startItem = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-    const endItem = Math.min(currentPage * pageSize, totalCount);
+  const startItem = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalCount);
 
-    const handlePageSizeChange = (event: SelectChangeEvent<number>): void => {
-        onPageSizeChange?.(Number(event.target.value));
-    };
+  const handlePageSizeChange = (event: SelectChangeEvent<number>): void => {
+    onPageSizeChange?.(Number(event.target.value));
+  };
 
-    const getVisiblePages = (): number[] => {
-        const maxVisible = 5;
-        const pages: number[] = [];
+  const getVisiblePages = (): number[] => {
+    const maxVisible = 5;
+    const pages: number[] = [];
 
-        if (totalPages <= maxVisible) {
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i);
-            }
-        } else {
-            const half = Math.floor(maxVisible / 2);
-            let start = Math.max(1, currentPage - half);
-            const end = Math.min(totalPages, start + maxVisible - 1);
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const half = Math.floor(maxVisible / 2);
+      let start = Math.max(1, currentPage - half);
+      const end = Math.min(totalPages, start + maxVisible - 1);
 
-            if (end - start + 1 < maxVisible) {
-                start = Math.max(1, end - maxVisible + 1);
-            }
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
 
-            for (let i = start; i <= end; i++) {
-                pages.push(i);
-            }
-        }
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
 
-        return pages;
-    };
+    return pages;
+  };
 
-    const visiblePages = getVisiblePages();
+  const visiblePages = getVisiblePages();
 
-    return (
-        <Box className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[var(--color-table-border)] bg-white px-4 py-3">
-            {/* Left: Info & Page size */}
-            <Box className="flex items-center gap-4">
-                <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
-                    Hiển thị {startItem}–{endItem} / {totalCount} kết quả
-                </Typography>
+  return (
+    <Box className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[var(--color-table-border)] bg-white px-4 py-3">
+      {/* Left: Info & Page size */}
+      <Box className="flex items-center gap-4">
+        <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+          Hiển thị {startItem}–{endItem} / {totalCount} kết quả
+        </Typography>
 
-                {onPageSizeChange && (
-                    <Box className="flex items-center gap-2">
-                        <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
-                            Số dòng:
-                        </Typography>
-                        <Select
-                            size="small"
-                            value={pageSize}
-                            onChange={handlePageSizeChange}
-                            className="font-[var(--font-nunito)]"
-                            sx={{
-                                minWidth: 70,
-                                height: 32,
-                                fontSize: '0.875rem',
-                            }}
-                        >
-                            {pageSizeOptions.map((option) => (
-                                <MenuItem key={option} value={option}>
-                                    {option}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </Box>
-                )}
-            </Box>
+        {onPageSizeChange && (
+          <Box className="flex items-center gap-2">
+            <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+              Số dòng:
+            </Typography>
+            <Select
+              size="small"
+              value={pageSize}
+              onChange={handlePageSizeChange}
+              className="font-[var(--font-nunito)]"
+              sx={{
+                minWidth: 70,
+                height: 32,
+                fontSize: '0.875rem',
+              }}
+            >
+              {pageSizeOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+        )}
+      </Box>
 
-            {/* Right: Page navigation */}
-            <Box className="flex items-center gap-1">
-                <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!hasPrevious}
-                    onClick={() => onPageChange(1)}
-                    sx={{ minWidth: 36, height: 36, padding: 0 }}
-                >
-                    <FirstPageIcon fontSize="small" />
-                </Button>
+      {/* Right: Page navigation */}
+      <Box className="flex items-center gap-1">
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={!hasPrevious}
+          onClick={() => onPageChange(1)}
+          sx={{ minWidth: 36, height: 36, padding: 0 }}
+        >
+          <FirstPageIcon fontSize="small" />
+        </Button>
 
-                <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!hasPrevious}
-                    onClick={() => onPageChange(currentPage - 1)}
-                    sx={{ minWidth: 36, height: 36, padding: 0 }}
-                >
-                    <ChevronLeftIcon fontSize="small" />
-                </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={!hasPrevious}
+          onClick={() => onPageChange(currentPage - 1)}
+          sx={{ minWidth: 36, height: 36, padding: 0 }}
+        >
+          <ChevronLeftIcon fontSize="small" />
+        </Button>
 
-                {visiblePages[0] > 1 && (
-                    <Typography className="px-1 text-sm text-[var(--color-table-text-secondary)]">
-                        ...
-                    </Typography>
-                )}
+        {visiblePages[0] > 1 && (
+          <Typography className="px-1 text-sm text-[var(--color-table-text-secondary)]">
+            ...
+          </Typography>
+        )}
 
-                {visiblePages.map((page) => (
-                    <Button
-                        key={page}
-                        size="small"
-                        variant={page === currentPage ? 'contained' : 'outlined'}
-                        onClick={() => onPageChange(page)}
-                        sx={{
-                            minWidth: 36,
-                            height: 36,
-                            padding: 0,
-                            fontWeight: page === currentPage ? 700 : 400,
-                            fontFamily: 'var(--font-nunito)',
-                        }}
-                    >
-                        {page}
-                    </Button>
-                ))}
+        {visiblePages.map((page) => (
+          <Button
+            key={page}
+            size="small"
+            variant={page === currentPage ? 'contained' : 'outlined'}
+            onClick={() => onPageChange(page)}
+            sx={{
+              minWidth: 36,
+              height: 36,
+              padding: 0,
+              fontWeight: page === currentPage ? 700 : 400,
+              fontFamily: 'var(--font-nunito)',
+            }}
+          >
+            {page}
+          </Button>
+        ))}
 
-                {visiblePages[visiblePages.length - 1] < totalPages && (
-                    <Typography className="px-1 text-sm text-[var(--color-table-text-secondary)]">
-                        ...
-                    </Typography>
-                )}
+        {visiblePages[visiblePages.length - 1] < totalPages && (
+          <Typography className="px-1 text-sm text-[var(--color-table-text-secondary)]">
+            ...
+          </Typography>
+        )}
 
-                <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!hasNext}
-                    onClick={() => onPageChange(currentPage + 1)}
-                    sx={{ minWidth: 36, height: 36, padding: 0 }}
-                >
-                    <ChevronRightIcon fontSize="small" />
-                </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={!hasNext}
+          onClick={() => onPageChange(currentPage + 1)}
+          sx={{ minWidth: 36, height: 36, padding: 0 }}
+        >
+          <ChevronRightIcon fontSize="small" />
+        </Button>
 
-                <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!hasNext}
-                    onClick={() => onPageChange(totalPages)}
-                    sx={{ minWidth: 36, height: 36, padding: 0 }}
-                >
-                    <LastPageIcon fontSize="small" />
-                </Button>
-            </Box>
-        </Box>
-    );
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={!hasNext}
+          onClick={() => onPageChange(totalPages)}
+          sx={{ minWidth: 36, height: 36, padding: 0 }}
+        >
+          <LastPageIcon fontSize="small" />
+        </Button>
+      </Box>
+    </Box>
+  );
 }
