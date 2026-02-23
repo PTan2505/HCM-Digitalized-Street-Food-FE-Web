@@ -1,33 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Chip } from '@mui/material';
-import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
+import UserBadgeFormModal from '@features/admin/components/UserBadgeFormModal';
+import type { UserWithBadges, Badge } from '@features/admin/types/badge';
+import useBadge from '@features/admin/hooks/useBadge';
+import { useAppSelector } from '@hooks/reduxHooks';
 import {
-  MOCK_BADGES,
-  MOCK_USER_BADGES,
-  type UserBadgeData,
-} from '@features/admin/data/mockBadgeData';
-
-interface UserBadge extends UserBadgeData {
-  [key: string]: unknown;
-}
+  selectUsersWithBadges,
+  selectBadges,
+  selectBadgeStatus,
+} from '@slices/badge';
 
 export default function UserBadgeManagement(): JSX.Element {
-  const [userBadges, setUserBadges] = useState<UserBadge[]>(
-    MOCK_USER_BADGES.map((u) => ({ ...u }))
-  );
+  const usersWithBadges = useAppSelector(selectUsersWithBadges);
+  const allBadges = useAppSelector(selectBadges);
+  const status = useAppSelector(selectBadgeStatus);
+  const {
+    onGetUsersWithBadges,
+    onGetAllBadges,
+    onAwardBadgeToUser,
+    onRevokeBadgeFromUser,
+  } = useBadge();
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserBadge | null>(null);
-  const availableBadges = MOCK_BADGES.map((b) => ({
+  const [selectedUser, setSelectedUser] = useState<UserWithBadges | null>(null);
+
+  useEffect(() => {
+    void onGetUsersWithBadges();
+    void onGetAllBadges();
+  }, [onGetUsersWithBadges, onGetAllBadges]);
+
+  const availableBadges = allBadges.map((b) => ({
     badgeId: b.badgeId,
     badgeName: b.badgeName,
     iconUrl: b.iconUrl,
   }));
-  const [selectedBadgeId, setSelectedBadgeId] = useState<number | null>(null);
 
-  const handleOpenDialog = (user: UserBadge): void => {
+  const handleOpenDialog = (user: UserWithBadges): void => {
     setSelectedUser(user);
     setOpenDialog(true);
   };
@@ -35,48 +46,28 @@ export default function UserBadgeManagement(): JSX.Element {
   const handleCloseDialog = (): void => {
     setOpenDialog(false);
     setSelectedUser(null);
-    setSelectedBadgeId(null);
   };
 
-  const handleAssignBadge = (): void => {
-    if (!selectedUser || !selectedBadgeId) return;
-
-    const badge = availableBadges.find((b) => b.badgeId === selectedBadgeId);
-    if (!badge) return;
-
-    setUserBadges(
-      userBadges.map((u) =>
-        u.userId === selectedUser.userId
-          ? {
-              ...u,
-              badges: [
-                ...u.badges,
-                {
-                  ...badge,
-                  earnedDate: new Date().toISOString().split('T')[0],
-                },
-              ],
-            }
-          : u
-      )
-    );
-    handleCloseDialog();
+  const handleAssignBadge = async (
+    userId: number,
+    badgeId: number
+  ): Promise<void> => {
+    try {
+      await onAwardBadgeToUser({ userId, badgeId });
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Failed to award badge:', error);
+    }
   };
 
-  const handleRemoveBadge = (userId: number, badgeId: number): void => {
-    if (
-      window.confirm('Bạn có chắc chắn muốn thu hồi badge này khỏi người dùng?')
-    ) {
-      setUserBadges(
-        userBadges.map((u) =>
-          u.userId === userId
-            ? {
-                ...u,
-                badges: u.badges.filter((b) => b.badgeId !== badgeId),
-              }
-            : u
-        )
-      );
+  const handleRemoveBadge = async (
+    userId: number,
+    badgeId: number
+  ): Promise<void> => {
+    try {
+      await onRevokeBadgeFromUser({ userId, badgeId });
+    } catch (error) {
+      console.error('Failed to revoke badge:', error);
     }
   };
 
@@ -85,21 +76,6 @@ export default function UserBadgeManagement(): JSX.Element {
       key: 'userId',
       label: 'ID',
       style: { width: '80px' },
-    },
-    {
-      key: 'userAvatar',
-      label: 'Avatar',
-      style: { width: '80px' },
-      render: (
-        value: unknown,
-        row: Record<string, unknown>
-      ): React.ReactNode => (
-        <Avatar
-          src={(value as string) ?? ''}
-          alt={String(row.userName)}
-          className="h-10 w-10 bg-[var(--color-primary-100)]"
-        />
-      ),
     },
     {
       key: 'userName',
@@ -113,21 +89,21 @@ export default function UserBadgeManagement(): JSX.Element {
             {String(value)}
           </div>
           <div className="text-xs text-[var(--color-table-text-secondary)]">
-            {String(row.userEmail)}
+            {String(row.email)}
           </div>
         </div>
       ),
     },
     {
       key: 'badges',
-      label: 'Badges',
+      label: 'Huy hiệu',
       render: (value: unknown): React.ReactNode => {
-        const badges = value as UserBadge['badges'];
+        const badges = value as Badge[];
         return (
           <div className="flex flex-wrap gap-1">
             {badges.length === 0 ? (
               <span className="text-xs text-[var(--color-table-text-secondary)]">
-                Chưa có badge
+                Chưa có huy hiệu nào
               </span>
             ) : (
               badges.map((badge) => (
@@ -151,7 +127,7 @@ export default function UserBadgeManagement(): JSX.Element {
       },
     },
     {
-      key: 'totalPoints',
+      key: 'point',
       label: 'Tổng điểm',
       style: { width: '120px' },
       render: (value: unknown): React.ReactNode => (
@@ -168,12 +144,12 @@ export default function UserBadgeManagement(): JSX.Element {
     {
       label: (
         <div className="flex items-center gap-1">
-          <AddIcon fontSize="small" />
-          <span>Thêm Badge</span>
+          {/* <AddIcon fontSize="small" /> */}
+          <span>Thêm hoặc thu hồi huy hiệu</span>
         </div>
       ),
       onClick: (row: Record<string, unknown>): void =>
-        handleOpenDialog(row as unknown as UserBadge),
+        handleOpenDialog(row as unknown as UserWithBadges),
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
@@ -196,153 +172,22 @@ export default function UserBadgeManagement(): JSX.Element {
       {/* Table */}
       <Table
         columns={columns}
-        data={userBadges}
+        data={usersWithBadges as unknown as Record<string, unknown>[]}
         rowKey="userId"
         actions={actions}
+        loading={status === 'pending'}
         emptyMessage="Chưa có người dùng nào"
       />
 
       {/* Modal Form */}
-      {openDialog && selectedUser && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={handleCloseDialog}
-        >
-          <div
-            className="mx-4 w-full max-w-2xl rounded-lg bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-                Quản lý Badges - {selectedUser.userName}
-              </h2>
-            </div>
-
-            {/* Modal Content */}
-            <div className="px-6 py-4">
-              {/* Current Badges */}
-              <div className="mb-6">
-                <h3 className="mb-3 text-sm font-semibold text-[var(--color-table-text-primary)]">
-                  Badges hiện tại ({selectedUser.badges.length})
-                </h3>
-                <div className="space-y-2">
-                  {selectedUser.badges.length === 0 ? (
-                    <p className="text-sm text-[var(--color-table-text-secondary)] italic">
-                      Người dùng chưa có badge nào
-                    </p>
-                  ) : (
-                    selectedUser.badges.map((badge) => (
-                      <div
-                        key={badge.badgeId}
-                        className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            src={badge.iconUrl}
-                            alt={badge.badgeName}
-                            className="h-10 w-10"
-                          />
-                          <div>
-                            <div className="font-medium text-[var(--color-table-text-primary)]">
-                              {badge.badgeName}
-                            </div>
-                            <div className="text-xs text-[var(--color-table-text-secondary)]">
-                              Nhận ngày: {badge.earnedDate}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() =>
-                            handleRemoveBadge(
-                              selectedUser.userId,
-                              badge.badgeId
-                            )
-                          }
-                          className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-red-600 transition-colors hover:bg-red-50"
-                        >
-                          <RemoveIcon fontSize="small" />
-                          <span className="text-sm font-medium">Thu hồi</span>
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Select Badge to Assign */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-[var(--color-table-text-primary)]">
-                  Thêm Badge mới
-                </h3>
-                <div className="space-y-2">
-                  {availableBadges
-                    .filter(
-                      (badge) =>
-                        !selectedUser.badges.some(
-                          (b) => b.badgeId === badge.badgeId
-                        )
-                    )
-                    .map((badge) => (
-                      <label
-                        key={badge.badgeId}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all ${
-                          selectedBadgeId === badge.badgeId
-                            ? 'border-[var(--color-primary-600)] bg-[var(--color-primary-100)]'
-                            : 'border-gray-200 bg-white hover:border-[var(--color-primary-400)]'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="badge"
-                          value={badge.badgeId}
-                          checked={selectedBadgeId === badge.badgeId}
-                          onChange={() => setSelectedBadgeId(badge.badgeId)}
-                          className="h-4 w-4 text-[var(--color-primary-600)]"
-                        />
-                        <Avatar
-                          src={badge.iconUrl}
-                          alt={badge.badgeName}
-                          className="h-10 w-10"
-                        />
-                        <span className="font-medium text-[var(--color-table-text-primary)]">
-                          {badge.badgeName}
-                        </span>
-                      </label>
-                    ))}
-                  {availableBadges.filter(
-                    (badge) =>
-                      !selectedUser.badges.some(
-                        (b) => b.badgeId === badge.badgeId
-                      )
-                  ).length === 0 && (
-                    <p className="text-sm text-[var(--color-table-text-secondary)] italic">
-                      Người dùng đã có tất cả badges có sẵn
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-              <button
-                onClick={handleCloseDialog}
-                className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
-              >
-                Đóng
-              </button>
-              <button
-                onClick={handleAssignBadge}
-                disabled={!selectedBadgeId}
-                className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                Thêm Badge
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UserBadgeFormModal
+        isOpen={openDialog}
+        user={selectedUser}
+        availableBadges={availableBadges}
+        onClose={handleCloseDialog}
+        onAssignBadge={handleAssignBadge}
+        onRemoveBadge={handleRemoveBadge}
+      />
     </div>
   );
 }
