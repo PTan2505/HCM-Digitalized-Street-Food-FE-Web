@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Chip } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
+import Pagination from '@features/admin/components/Pagination';
 import UserBadgeFormModal from '@features/admin/components/UserBadgeFormModal';
 import type { UserWithBadges, Badge } from '@features/admin/types/badge';
 import useBadge from '@features/admin/hooks/useBadge';
@@ -11,12 +12,14 @@ import {
   selectUsersWithBadges,
   selectBadges,
   selectBadgeStatus,
+  selectUsersWithBadgesPagination,
 } from '@slices/badge';
 
 export default function UserBadgeManagement(): JSX.Element {
   const usersWithBadges = useAppSelector(selectUsersWithBadges);
   const allBadges = useAppSelector(selectBadges);
   const status = useAppSelector(selectBadgeStatus);
+  const pagination = useAppSelector(selectUsersWithBadgesPagination);
   const {
     onGetUsersWithBadges,
     onGetAllBadges,
@@ -26,11 +29,22 @@ export default function UserBadgeManagement(): JSX.Element {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithBadges | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
-    void onGetUsersWithBadges();
+    void onGetUsersWithBadges({ pageNumber, pageSize });
     void onGetAllBadges();
-  }, [onGetUsersWithBadges, onGetAllBadges]);
+  }, [onGetUsersWithBadges, onGetAllBadges, pageNumber, pageSize]);
+
+  const handlePageChange = useCallback((page: number): void => {
+    setPageNumber(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number): void => {
+    setPageSize(newPageSize);
+    setPageNumber(1);
+  }, []);
 
   const availableBadges = allBadges.map((b) => ({
     badgeId: b.badgeId,
@@ -177,6 +191,18 @@ export default function UserBadgeManagement(): JSX.Element {
         actions={actions}
         loading={status === 'pending'}
         emptyMessage="Chưa có người dùng nào"
+      />
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={pagination.totalCount}
+        pageSize={pagination.pageSize}
+        hasPrevious={pagination.hasPrevious}
+        hasNext={pagination.hasNext}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
 
       {/* Modal Form */}

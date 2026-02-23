@@ -2,7 +2,7 @@ import type {
   Badge,
   CreateOrUpdateBadgeRequest,
   CreateOrUpdateBadgeResponse,
-  UserWithBadges,
+  GetUsersWithBadges,
   AwardOrRevokeBadgeRequest,
   AwardOrRevokeBadgeResponse,
 } from '@features/admin/types/badge';
@@ -61,10 +61,13 @@ export class BadgeApi {
     return res.data;
   }
 
-  async getUsersWithBadges(): Promise<UserWithBadges[]> {
-    let res = null;
-    res = await this.apiClient.get<UserWithBadges[]>({
+  async getUsersWithBadges(params: {
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<GetUsersWithBadges> {
+    const res = await this.apiClient.get<GetUsersWithBadges>({
       url: apiUrl.badge.getUsersWithBadges,
+      params,
     });
     return res.data;
   }

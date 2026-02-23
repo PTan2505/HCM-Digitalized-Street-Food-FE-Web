@@ -13,8 +13,6 @@ import {
   selectUsersWithDietaryPagination,
 } from '@slices/userPreferenceDietary';
 
-const DEFAULT_PAGE_SIZE = 5;
-
 export default function UsersWithDietaryPreferencesPage(): JSX.Element {
   const usersWithDietary = useAppSelector(selectUsersWithDietaryPreferences);
   const status = useAppSelector(selectUserDietaryPreferenceStatus);
@@ -22,7 +20,7 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
   const { onGetUsersWithDietaryPreferences } = useDietary();
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     void onGetUsersWithDietaryPreferences({ pageNumber, pageSize });

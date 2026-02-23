@@ -18,6 +18,16 @@ export interface UserWithBadges {
   badges: Badge[];
 }
 
+export interface GetUsersWithBadges {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: UserWithBadges[];
+}
+
 export interface CreateOrUpdateBadgeRequest {
   badgeName: string;
   pointToGet: number;

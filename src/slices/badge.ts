@@ -4,6 +4,7 @@ import type {
   CreateOrUpdateBadgeRequest,
   CreateOrUpdateBadgeResponse,
   UserWithBadges,
+  GetUsersWithBadges,
   AwardOrRevokeBadgeRequest,
   AwardOrRevokeBadgeResponse,
 } from '@features/admin/types/badge';
@@ -19,6 +20,14 @@ import {
 export interface BadgeState {
   badges: Badge[];
   usersWithBadges: UserWithBadges[];
+  usersWithBadgesPagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalCount: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+  };
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -26,6 +35,14 @@ export interface BadgeState {
 const initialState: BadgeState = {
   badges: [],
   usersWithBadges: [],
+  usersWithBadgesPagination: {
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalCount: 0,
+    hasPrevious: false,
+    hasNext: false,
+  },
   status: 'idle',
   error: null,
 };
@@ -85,10 +102,13 @@ export const deleteBadge = createAppAsyncThunk(
 
 export const getUsersWithBadges = createAppAsyncThunk(
   'badge/getUsersWithBadges',
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const response: UserWithBadges[] =
-        await axiosApi.badgeApi.getUsersWithBadges();
+      const response: GetUsersWithBadges =
+        await axiosApi.badgeApi.getUsersWithBadges(params);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -155,7 +175,15 @@ export const badgeSlice = createSlice({
         }
       })
       .addCase(getUsersWithBadges.fulfilled, (state, action) => {
-        state.usersWithBadges = action.payload;
+        state.usersWithBadges = action.payload.items;
+        state.usersWithBadgesPagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
       })
       .addCase(awardBadgeToUser.fulfilled, (state, action) => {
         if (action.payload) {
@@ -239,5 +267,10 @@ export const selectBadges = (state: RootState): Badge[] => state.badge.badges;
 
 export const selectUsersWithBadges = (state: RootState): UserWithBadges[] =>
   state.badge.usersWithBadges;
+
+export const selectUsersWithBadgesPagination = (
+  state: RootState
+): BadgeState['usersWithBadgesPagination'] =>
+  state.badge.usersWithBadgesPagination;
 
 export default badgeSlice.reducer;
