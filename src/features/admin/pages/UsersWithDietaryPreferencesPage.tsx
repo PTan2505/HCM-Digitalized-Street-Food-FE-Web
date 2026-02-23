@@ -1,24 +1,41 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
 import { Person as PersonIcon } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
+import Pagination from '@features/admin/components/Pagination';
 import type { UsersWithDietaryPreferences } from '@features/admin/types/userDietaryPreference';
 import useDietary from '@features/admin/hooks/useDietary';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectUsersWithDietaryPreferences,
   selectUserDietaryPreferenceStatus,
+  selectUsersWithDietaryPagination,
 } from '@slices/userPreferenceDietary';
+
+const DEFAULT_PAGE_SIZE = 5;
 
 export default function UsersWithDietaryPreferencesPage(): JSX.Element {
   const usersWithDietary = useAppSelector(selectUsersWithDietaryPreferences);
   const status = useAppSelector(selectUserDietaryPreferenceStatus);
+  const pagination = useAppSelector(selectUsersWithDietaryPagination);
   const { onGetUsersWithDietaryPreferences } = useDietary();
 
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
   useEffect(() => {
-    void onGetUsersWithDietaryPreferences();
-  }, [onGetUsersWithDietaryPreferences]);
+    void onGetUsersWithDietaryPreferences({ pageNumber, pageSize });
+  }, [onGetUsersWithDietaryPreferences, pageNumber, pageSize]);
+
+  const handlePageChange = useCallback((page: number): void => {
+    setPageNumber(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number): void => {
+    setPageSize(newPageSize);
+    setPageNumber(1);
+  }, []);
 
   const columns = [
     {
@@ -43,9 +60,13 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
       label: 'Chế độ ăn',
       render: (value: unknown): React.ReactNode => {
         const preferences = value as string[];
+        const maxDisplay = 3;
+        const displayPrefs = preferences.slice(0, maxDisplay);
+        const remaining = preferences.length - maxDisplay;
+
         return (
-          <Box className="flex flex-wrap gap-1">
-            {preferences.map((pref, index) => (
+          <Box className="flex items-center gap-1">
+            {displayPrefs.map((pref, index) => (
               <Chip
                 key={index}
                 label={pref}
@@ -54,6 +75,14 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
                 variant="outlined"
               />
             ))}
+            {remaining > 0 && (
+              <Chip
+                label={`+${remaining}`}
+                size="small"
+                color="default"
+                variant="filled"
+              />
+            )}
           </Box>
         );
       },
@@ -81,6 +110,18 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
         rowKey="userId"
         loading={status === 'pending'}
         emptyMessage="Chưa có người dùng nào có chế độ ăn"
+      />
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={pagination.totalCount}
+        pageSize={pagination.pageSize}
+        hasPrevious={pagination.hasPrevious}
+        hasNext={pagination.hasNext}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
     </div>
   );
