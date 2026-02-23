@@ -2,7 +2,7 @@ import type {
   UserDietaryPreference,
   CreateOrUpdateUserDietaryPreferenceRequest,
   CreateOrUpdateUserDietaryPreferenceResponse,
-  UsersWithDietaryPreferences,
+  GetUsersWithDietaryPreferencesResponse,
 } from '@features/admin/types/userDietaryPreference';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -65,13 +65,15 @@ export class userDietaryPreferenceApi {
     return res.data;
   }
 
-  async getUsersWithDietaryPreferences(): Promise<
-    UsersWithDietaryPreferences[]
-  > {
-    let res = null;
-    res = await this.apiClient.get<UsersWithDietaryPreferences[]>({
-      url: apiUrl.userDietaryPreference.getUsersWithDietaryPreferences,
-    });
+  async getUsersWithDietaryPreferences(params: {
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<GetUsersWithDietaryPreferencesResponse> {
+    const res =
+      await this.apiClient.get<GetUsersWithDietaryPreferencesResponse>({
+        url: apiUrl.userDietaryPreference.getUsersWithDietaryPreferences,
+        params,
+      });
     return res.data;
   }
 }

@@ -4,6 +4,7 @@ import type {
   CreateOrUpdateUserDietaryPreferenceRequest,
   CreateOrUpdateUserDietaryPreferenceResponse,
   UsersWithDietaryPreferences,
+  GetUsersWithDietaryPreferencesResponse,
 } from '@features/admin/types/userDietaryPreference';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -17,6 +18,14 @@ import {
 export interface UserDietaryPreferenceState {
   userDietaryPreferences: UserDietaryPreference[];
   usersWithDietaryPreferences: UsersWithDietaryPreferences[];
+  usersWithDietaryPagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalCount: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+  };
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -24,6 +33,14 @@ export interface UserDietaryPreferenceState {
 const initialState: UserDietaryPreferenceState = {
   userDietaryPreferences: [],
   usersWithDietaryPreferences: [],
+  usersWithDietaryPagination: {
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalCount: 0,
+    hasPrevious: false,
+    hasNext: false,
+  },
   status: 'idle',
   error: null,
 };
@@ -92,10 +109,15 @@ export const deleteUserDietaryPreference = createAppAsyncThunk(
 
 export const getUsersWithDietaryPreferences = createAppAsyncThunk(
   'userDietaryPreference/getUsersWithDietaryPreferences',
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const response: UsersWithDietaryPreferences[] =
-        await axiosApi.userDietaryPreferenceApi.getUsersWithDietaryPreferences();
+      const response: GetUsersWithDietaryPreferencesResponse =
+        await axiosApi.userDietaryPreferenceApi.getUsersWithDietaryPreferences(
+          params
+        );
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -142,7 +164,15 @@ export const userDietaryPreferenceSlice = createSlice({
         }
       })
       .addCase(getUsersWithDietaryPreferences.fulfilled, (state, action) => {
-        state.usersWithDietaryPreferences = action.payload;
+        state.usersWithDietaryPreferences = action.payload.items;
+        state.usersWithDietaryPagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
       })
       .addMatcher(
         isPending(
@@ -199,5 +229,10 @@ export const selectUsersWithDietaryPreferences = (
   state: RootState
 ): UsersWithDietaryPreferences[] =>
   state.userDietaryPreference.usersWithDietaryPreferences;
+
+export const selectUsersWithDietaryPagination = (
+  state: RootState
+): UserDietaryPreferenceState['usersWithDietaryPagination'] =>
+  state.userDietaryPreference.usersWithDietaryPagination;
 
 export default userDietaryPreferenceSlice.reducer;
