@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   HomeIcon,
+  RectangleStackIcon,
   ShoppingBagIcon,
   StarIcon,
   UserCircleIcon,
@@ -29,6 +30,11 @@ const navigation = [
     icon: HomeIcon,
   },
   { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
+  {
+    name: 'Quản lý danh mục',
+    href: '/admin/category',
+    icon: RectangleStackIcon,
+  },
   {
     name: 'Quản lý huy hiệu',
     href: '/admin/badge',

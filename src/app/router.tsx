@@ -2,6 +2,7 @@ import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
+import AdminCategoryPage from '@features/admin/pages/CategoryPage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
@@ -93,6 +94,7 @@ export const router = createBrowserRouter([
           },
           { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
+          { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
         ],
       },
     ],
