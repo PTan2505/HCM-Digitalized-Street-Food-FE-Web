@@ -2,6 +2,7 @@ import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
+import AdminCategoryPage from '@features/admin/pages/CategoryPage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
@@ -15,6 +16,7 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerification from '@features/moderator/pages/VendorVerification';
+import VendorRegistration from '@features/vendor/pages/VendorRegistration';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
 
@@ -27,6 +29,10 @@ export const router = createBrowserRouter([
     path: ROUTES.ROOT,
     element: <RootLayout />,
     children: [
+      {
+        path: ROUTES.VENDOR_REGISTRATION,
+        element: <VendorRegistration />,
+      },
       {
         path: ROUTES.MODERATOR.BASE,
         element: <ModeratorLayout />,
@@ -88,6 +94,7 @@ export const router = createBrowserRouter([
           },
           { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
+          { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
         ],
       },
     ],

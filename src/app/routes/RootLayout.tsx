@@ -45,6 +45,13 @@ const RootLayout = (): JSX.Element => {
         ) {
           navigate(ROUTES.MODERATOR.BASE, { replace: true });
         }
+      } else if (user.role === ROLES.USER) {
+        if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.VENDOR_REGISTRATION)
+        ) {
+          navigate(ROUTES.VENDOR_REGISTRATION, { replace: true });
+        }
       }
     }
   }, [user, userStatus, navigate, isDone, location]);
