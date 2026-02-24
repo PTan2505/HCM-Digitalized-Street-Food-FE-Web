@@ -42,4 +42,8 @@ export const apiUrl = {
     updateOrDeleteDietaryPreference: (id: number): string =>
       `/DietaryPreference/${id}`,
   },
+  category: {
+    getAllOrPostCategory: '/categories',
+    updateOrDeleteCategory: (id: number): string => `/categories/${id}`,
+  },
 };

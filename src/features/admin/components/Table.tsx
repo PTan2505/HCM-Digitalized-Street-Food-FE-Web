@@ -100,76 +100,78 @@ const Table = <T extends object>({
               </TableCell>
             </TableRow>
           ) : (
-            data.map((row, rowIndex) => {
-              const rowKeyValue = (row as Record<string, unknown>)[rowKey];
-              if (!rowKeyValue) return null;
+            data
+              .filter((row) => row != null)
+              .map((row, rowIndex) => {
+                const rowKeyValue = (row as Record<string, unknown>)[rowKey];
+                if (!rowKeyValue) return null;
 
-              return (
-                <TableRow
-                  key={String(rowKeyValue)}
-                  hover
-                  onClick={() => onRowClick?.(row)}
-                  className={`hover:bg-[var(--color-table-row-hover)] last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
-                  style={{ height: '60px' }}
-                >
-                  {columns.map((column) => {
-                    const value = column.key.split('.').reduce<unknown>(
-                      (obj, key) => {
-                        if (obj && typeof obj === 'object' && key in obj) {
-                          return (obj as Record<string, unknown>)[key];
-                        }
-                        return undefined;
-                      },
-                      row as Record<string, unknown>
-                    );
-                    return (
+                return (
+                  <TableRow
+                    key={String(rowKeyValue)}
+                    hover
+                    onClick={() => onRowClick?.(row)}
+                    className={`hover:bg-[var(--color-table-row-hover)] last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
+                    style={{ height: '60px' }}
+                  >
+                    {columns.map((column) => {
+                      const value = column.key.split('.').reduce<unknown>(
+                        (obj, key) => {
+                          if (obj && typeof obj === 'object' && key in obj) {
+                            return (obj as Record<string, unknown>)[key];
+                          }
+                          return undefined;
+                        },
+                        row as Record<string, unknown>
+                      );
+                      return (
+                        <TableCell
+                          key={column.key}
+                          className="border-b border-[var(--color-table-divider)] text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-primary)]"
+                          style={{
+                            ...column.style,
+                            paddingTop: '12px',
+                            paddingBottom: '12px',
+                            verticalAlign: 'middle',
+                          }}
+                        >
+                          {column.render
+                            ? column.render(value, row, rowIndex)
+                            : String(value ?? '-')}
+                        </TableCell>
+                      );
+                    })}
+                    {actions && actions.length > 0 && (
                       <TableCell
-                        key={column.key}
-                        className="border-b border-[var(--color-table-divider)] text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-primary)]"
+                        className="border-b border-[var(--color-table-divider)] whitespace-nowrap"
                         style={{
-                          ...column.style,
                           paddingTop: '12px',
                           paddingBottom: '12px',
                           verticalAlign: 'middle',
                         }}
                       >
-                        {column.render
-                          ? column.render(value, row, rowIndex)
-                          : String(value ?? '-')}
+                        <Box className="flex gap-2">
+                          {actions.map((action, index) => (
+                            <Button
+                              key={index}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                action.onClick(row);
+                              }}
+                              color={action.color ?? 'primary'}
+                              variant={action.variant ?? 'text'}
+                              size="small"
+                              className="font-[var(--font-nunito)]"
+                            >
+                              {action.label}
+                            </Button>
+                          ))}
+                        </Box>
                       </TableCell>
-                    );
-                  })}
-                  {actions && actions.length > 0 && (
-                    <TableCell
-                      className="border-b border-[var(--color-table-divider)] whitespace-nowrap"
-                      style={{
-                        paddingTop: '12px',
-                        paddingBottom: '12px',
-                        verticalAlign: 'middle',
-                      }}
-                    >
-                      <Box className="flex gap-2">
-                        {actions.map((action, index) => (
-                          <Button
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              action.onClick(row);
-                            }}
-                            color={action.color ?? 'primary'}
-                            variant={action.variant ?? 'text'}
-                            size="small"
-                            className="font-[var(--font-nunito)]"
-                          >
-                            {action.label}
-                          </Button>
-                        ))}
-                      </Box>
-                    </TableCell>
-                  )}
-                </TableRow>
-              );
-            })
+                    )}
+                  </TableRow>
+                );
+              })
           )}
         </TableBody>
       </MuiTable>
