@@ -122,6 +122,30 @@ export const loadUserFromStorage = createAppAsyncThunk(
   }
 );
 
+export const updateProfile = createAppAsyncThunk(
+  'user/updateProfile',
+  async (payload: Partial<User>, { rejectWithValue }) => {
+    try {
+      const user = await axiosApi.userProfileApi.updateUserProfile(payload);
+      return user;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const markUserInfoSetup = createAppAsyncThunk(
+  'user/markUserInfoSetup',
+  async (_, { rejectWithValue }) => {
+    try {
+      await axiosApi.userProfileApi.markUserInfoSetup();
+      return;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: 'user',
   initialState,
@@ -150,6 +174,12 @@ export const authSlice = createSlice({
       })
       .addCase(loadUserFromStorage.fulfilled, (state, action) => {
         state.value = action.payload;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.value = action.payload;
+      })
+      .addCase(markUserInfoSetup.fulfilled, (state) => {
+        if (state.value) state.value.userInfoSetup = true;
       })
       // Matcher: Gom tất cả các case đang chạy (pending)
       .addMatcher(isPending, (state) => {

@@ -17,6 +17,7 @@ import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPag
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerification from '@features/moderator/pages/VendorVerification';
 import VendorRegistration from '@features/vendor/pages/VendorRegistration';
+import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
 
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
+    path: ROUTES.USER_INFO_SETUP,
+    element: <EditUserProfilePage />,
+  },
+  {
     path: ROUTES.ROOT,
     element: <RootLayout />,
     children: [
@@ -33,6 +38,7 @@ export const router = createBrowserRouter([
         path: ROUTES.VENDOR_REGISTRATION,
         element: <VendorRegistration />,
       },
+
       {
         path: ROUTES.MODERATOR.BASE,
         element: <ModeratorLayout />,
