@@ -30,6 +30,7 @@ const RootLayout = (): JSX.Element => {
     }
 
     if (isDone && user) {
+      console.log('User loaded:', user);
       const currentPath = location.pathname;
       if (user.role === ROLES.ADMIN) {
         if (
@@ -46,7 +47,11 @@ const RootLayout = (): JSX.Element => {
           navigate(ROUTES.MODERATOR.BASE, { replace: true });
         }
       } else if (user.role === ROLES.USER) {
-        if (
+        if (!user.userInfoSetup) {
+          if (currentPath !== ROUTES.USER_INFO_SETUP) {
+            navigate(ROUTES.USER_INFO_SETUP, { replace: true });
+          }
+        } else if (
           currentPath === ROUTES.ROOT ||
           !currentPath.startsWith(ROUTES.VENDOR_REGISTRATION)
         ) {

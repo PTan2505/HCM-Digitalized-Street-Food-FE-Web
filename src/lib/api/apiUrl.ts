@@ -46,4 +46,10 @@ export const apiUrl = {
     getAllOrPostCategory: '/categories',
     updateOrDeleteCategory: (id: number): string => `/categories/${id}`,
   },
+  user: {
+    userSetup: {
+      userinfo: '/UserSetup/userinfo-setup',
+      dietary: '/UserSetup/dietary-setup',
+    },
+  },
 };

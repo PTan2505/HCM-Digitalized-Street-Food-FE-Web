@@ -3,6 +3,7 @@ export const ROUTES = {
   ROOT: '/',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
   VENDOR_REGISTRATION: '/vendor-registration',
+  USER_INFO_SETUP: '/user-info-setup',
 
   // Moderator routes
   MODERATOR: {
