@@ -1,18 +1,36 @@
 import { useState, useMemo, useEffect, type JSX } from 'react';
 import OwnerInfoSection from '../components/OwnerInfoSection';
-import StoreInfoSection from '../components/StoreInfoSection';
-import BranchSection from '../components/BranchSection';
+import StoreSection from '../components/StoreSection';
 import TermsDialog from '../components/TermsDialog';
-import type { Branch } from '../types/branch';
-import { createEmptyBranch } from '../types/branch';
 import useLogin from '@features/auth/hooks/useLogin';
+import useVendor from '@features/vendor/hooks/useVendor';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
+import { loadUserFromStorage, selectUser } from '@slices/auth';
+import { selectVendorStatus } from '@slices/vendor';
+import { Snackbar, Alert, type AlertColor } from '@mui/material';
 
 export default function VendorRegistration(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
-  const [branches, setBranches] = useState<Branch[]>([createEmptyBranch()]);
-  const [currentPage, setCurrentPage] = useState(1);
   const { onLogout } = useLogin();
+  const { onRegisterVendor, onSubmitLicense } = useVendor();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
+  const vendorStatus = useAppSelector(selectVendorStatus);
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: AlertColor;
+  }>({ open: false, message: '', severity: 'info' });
+
+  const showAlert = (message: string, severity: AlertColor = 'info'): void => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = (): void => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const [formData, setFormData] = useState({
     // Thông tin chủ quán
@@ -21,108 +39,164 @@ export default function VendorRegistration(): JSX.Element {
     email: '',
 
     // Thông tin cửa hàng
-    storeName: '',
-    storeType: '',
-    storePhone: '',
+    buildingName: '',
+    detailAddress: '',
+    ward: '',
+    city: 'TP. Hồ Chí Minh',
+    latitude: null as number | null,
+    longitude: null as number | null,
+    licenseImages: [] as File[],
 
     // Điều khoản
     agreeTerms: false,
   });
 
-  // Đảm bảo currentPage luôn hợp lệ khi số lượng branches thay đổi
+  // Fetch user profile on mount
   useEffect(() => {
-    if (currentPage > branches.length) {
-      setCurrentPage(branches.length);
+    void dispatch(loadUserFromStorage());
+  }, [dispatch]);
+
+  // Update owner info from user profile
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        ownerName: `${user.firstName} ${user.lastName}`.trim(),
+        ownerPhone: user.phoneNumber ?? '',
+        email: user.email ?? '',
+      }));
     }
-  }, [branches.length, currentPage]);
+  }, [user]);
 
   const isFormValid = useMemo(() => {
     const hasOwnerInfo =
       formData.ownerName.trim() !== '' &&
       formData.ownerPhone.trim() !== '' &&
-      formData.storeName.trim() !== '' &&
-      formData.storeType !== '' &&
       formData.agreeTerms;
 
-    const allBranchesValid = branches.every(
-      (branch) =>
-        branch.detailAddress.trim() !== '' &&
-        branch.latitude !== null &&
-        branch.longitude !== null
-    );
+    const hasStoreInfo =
+      formData.buildingName.trim() !== '' &&
+      formData.detailAddress.trim() !== '' &&
+      formData.ward.trim() !== '' &&
+      formData.latitude !== null &&
+      formData.longitude !== null &&
+      formData.licenseImages.length > 0;
 
-    return hasOwnerInfo && allBranchesValid;
-  }, [formData, branches]);
+    return hasOwnerInfo && hasStoreInfo;
+  }, [formData]);
 
   const handleInputChange = (field: string, value: unknown): void => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleBranchChange = (
-    branchId: string,
-    field: string,
-    value: unknown
-  ): void => {
-    setBranches((prev) =>
-      prev.map((branch) =>
-        branch.id === branchId ? { ...branch, [field]: value } : branch
-      )
-    );
+  const handleLocationChange = (lat: number, lng: number): void => {
+    setFormData({ ...formData, latitude: lat, longitude: lng });
   };
 
-  const handleAddBranch = (): void => {
-    setBranches((prev) => [...prev, createEmptyBranch()]);
-    // Chuyển đến trang mới sau khi thêm chi nhánh
-    setCurrentPage(branches.length + 1);
+  const handleFileChange = (files: FileList | null): void => {
+    if (files) {
+      setFormData({ ...formData, licenseImages: Array.from(files) });
+    }
   };
 
-  const handleRemoveBranch = (branchId: string): void => {
-    setBranches((prev) => prev.filter((branch) => branch.id !== branchId));
-  };
-
-  const handleWorkingDayToggle = (branchId: string, day: string): void => {
-    setBranches((prev) =>
-      prev.map((branch) => {
-        if (branch.id === branchId) {
-          const newDays = branch.workingDays.includes(day)
-            ? branch.workingDays.filter((d) => d !== day)
-            : [...branch.workingDays, day];
-          return { ...branch, workingDays: newDays };
-        }
-        return branch;
-      })
-    );
-  };
-
-  const handleServiceTypeToggle = (branchId: string, service: string): void => {
-    setBranches((prev) =>
-      prev.map((branch) => {
-        if (branch.id === branchId) {
-          const newServices = branch.serviceTypes.includes(service)
-            ? branch.serviceTypes.filter((s) => s !== service)
-            : [...branch.serviceTypes, service];
-          return { ...branch, serviceTypes: newServices };
-        }
-        return branch;
-      })
-    );
-  };
-
-  const handleFileChange = (
-    branchId: string,
-    field: string,
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const file = event.target.files?.[0] ?? null;
-    handleBranchChange(branchId, field, file);
-  };
-
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    console.log('Form submitted:', { ...formData, branches });
-    alert(
-      `Đăng ký thành công với ${branches.length} ${branches.length === 1 ? 'cửa hàng' : 'chi nhánh'}!`
-    );
+
+    try {
+      // Validate form data
+      if (!formData.ownerName || !formData.ownerPhone) {
+        showAlert(
+          'Vui lòng đảm bảo thông tin chủ quán đã được tải.',
+          'warning'
+        );
+        return;
+      }
+
+      if (!formData.buildingName) {
+        showAlert('Vui lòng nhập tên cửa hàng.', 'warning');
+        return;
+      }
+
+      if (!formData.ward) {
+        showAlert('Vui lòng nhập phường/xã.', 'warning');
+        return;
+      }
+
+      if (!formData.city) {
+        showAlert('Vui lòng chọn tỉnh/thành phố.', 'warning');
+        return;
+      }
+
+      if (!formData.latitude || !formData.longitude) {
+        showAlert('Vui lòng chọn vị trí trên bản đồ.', 'warning');
+        return;
+      }
+
+      // Prepare payload
+      const payload = {
+        name: formData.ownerName,
+        phoneNumber: formData.ownerPhone,
+        email: formData.email || '',
+        addressDetail: formData.detailAddress,
+        buildingName: formData.buildingName,
+        ward: formData.ward,
+        city: formData.city,
+        lat: formData.latitude,
+        long: formData.longitude,
+      };
+
+      // Step 1: Register vendor
+      const vendorResponse = await onRegisterVendor(payload);
+      console.log('Vendor Response:', vendorResponse);
+      console.log('Branch ID:', vendorResponse.branches[0].branchId);
+
+      // Step 2: Submit license images (only if branchId is available)
+      if (formData.licenseImages.length > 0) {
+        if (!vendorResponse.branches[0]?.branchId) {
+          console.error('Branch ID not found in response!');
+          showAlert(
+            'Đăng ký vendor thành công nhưng không tìm thấy branch ID để upload ảnh.',
+            'warning'
+          );
+          return;
+        }
+
+        console.log(
+          'Uploading license images for branch:',
+          vendorResponse.branches[0].branchId
+        );
+        await onSubmitLicense({
+          branchId: vendorResponse.branches[0].branchId,
+          licenseImages: formData.licenseImages,
+        });
+      }
+
+      showAlert(
+        'Đăng ký thành công! Vui lòng chờ quản trị viên xét duyệt.',
+        'success'
+      );
+    } catch (error) {
+      // Extract and display meaningful error message
+      let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.';
+
+      if (error && typeof error === 'object') {
+        const err = error as { message?: string; code?: string };
+
+        if (err.message) {
+          // Translate common error messages
+          if (err.message.includes('already has a vendor account')) {
+            errorMessage = 'Tài khoản của bạn đã đăng ký làm vendor rồi!';
+          } else if (err.message === 'Bad Request') {
+            errorMessage =
+              'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+      }
+
+      showAlert(errorMessage, 'error');
+    }
   };
 
   return (
@@ -145,103 +219,23 @@ export default function VendorRegistration(): JSX.Element {
               email: formData.email,
             }}
             onChange={handleInputChange}
+            readonly={true}
           />
 
-          <StoreInfoSection
+          <StoreSection
             formData={{
-              storeName: formData.storeName,
-              storeType: formData.storeType,
-              storePhone: formData.storePhone,
+              buildingName: formData.buildingName,
+              detailAddress: formData.detailAddress,
+              ward: formData.ward,
+              city: formData.city,
+              latitude: formData.latitude,
+              longitude: formData.longitude,
+              licenseImages: formData.licenseImages,
             }}
             onChange={handleInputChange}
+            onLocationChange={handleLocationChange}
+            onFileChange={handleFileChange}
           />
-
-          {/* Quản lý chi nhánh */}
-          <div className="mb-12">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Thông tin cửa hàng & Chi nhánh
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  {branches.length === 1
-                    ? 'Thêm chi nhánh nếu cửa hàng có nhiều địa điểm'
-                    : `Đang quản lý ${branches.length} địa điểm`}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleAddBranch}
-                className="flex items-center gap-2 rounded-lg bg-[#06AA4C] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#058f40] hover:shadow-lg active:scale-95"
-              >
-                <span className="text-lg">+</span>
-                Thêm chi nhánh
-              </button>
-            </div>
-
-            {/* Hiển thị chi nhánh hiện tại */}
-            <div className="mb-6">
-              {branches[currentPage - 1] && (
-                <BranchSection
-                  key={branches[currentPage - 1].id}
-                  branch={branches[currentPage - 1]}
-                  index={currentPage - 1}
-                  onBranchChange={handleBranchChange}
-                  onBranchRemove={handleRemoveBranch}
-                  showRemoveButton={branches.length > 1}
-                  onWorkingDayToggle={handleWorkingDayToggle}
-                  onServiceTypeToggle={handleServiceTypeToggle}
-                  onFileChange={handleFileChange}
-                />
-              )}
-            </div>
-
-            {/* Phân trang */}
-            {branches.length > 1 && (
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  ← Trước
-                </button>
-
-                <div className="flex gap-1">
-                  {branches.map((_, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`h-10 w-10 rounded-lg text-sm font-semibold transition-all ${
-                        currentPage === index + 1
-                          ? 'bg-[#06AA4C] text-white shadow-md'
-                          : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(branches.length, prev + 1)
-                    )
-                  }
-                  disabled={currentPage === branches.length}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Sau →
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* Điều khoản */}
           <div className="mt-10">
@@ -272,10 +266,12 @@ export default function VendorRegistration(): JSX.Element {
           <div className="mt-10">
             <button
               type="submit"
-              disabled={!isFormValid}
+              disabled={!isFormValid || vendorStatus === 'pending'}
               className="w-full rounded-xl bg-[#06AA4C] px-6 py-4 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#058f40] hover:shadow-xl active:translate-y-0 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
             >
-              Đăng ký cửa hàng
+              {vendorStatus === 'pending'
+                ? 'Đang xử lý...'
+                : 'Đăng ký cửa hàng'}
             </button>
 
             {/* Logout button */}
@@ -294,6 +290,22 @@ export default function VendorRegistration(): JSX.Element {
       </div>
 
       <TermsDialog open={openTerms} onClose={() => setOpenTerms(false)} />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

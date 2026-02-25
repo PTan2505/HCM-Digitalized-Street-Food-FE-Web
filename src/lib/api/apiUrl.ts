@@ -52,4 +52,9 @@ export const apiUrl = {
       dietary: '/UserSetup/dietary-setup',
     },
   },
+  vendor: {
+    register: '/Vendor',
+    submitLicense: (branchId: number): string =>
+      `/Branch/${branchId}/submit-license`,
+  },
 };
