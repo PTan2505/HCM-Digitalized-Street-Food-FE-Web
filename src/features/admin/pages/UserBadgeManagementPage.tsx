@@ -175,7 +175,7 @@ export default function UserBadgeManagement(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý Badge của User
+            Quản lý huy hiệu của người dùng
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Gán và quản lý badges cho từng người dùng

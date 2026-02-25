@@ -188,7 +188,7 @@ export default function BadgePage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý Badge
+            Quản lý huy hiệu
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý danh hiệu và phần thưởng cho người dùng

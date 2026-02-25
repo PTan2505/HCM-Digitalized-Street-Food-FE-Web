@@ -69,13 +69,9 @@ export default function Pagination({
     <Box className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[var(--color-table-border)] bg-white px-4 py-3">
       {/* Left: Info & Page size */}
       <Box className="flex items-center gap-4">
-        <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
-          Hiển thị {startItem}–{endItem} / {totalCount} kết quả
-        </Typography>
-
         {onPageSizeChange && (
-          <Box className="flex items-center gap-2">
-            <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+          <Box className="flex items-center gap-4">
+            <Typography className="text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-secondary)]">
               Số dòng:
             </Typography>
             <Select
@@ -97,6 +93,10 @@ export default function Pagination({
             </Select>
           </Box>
         )}
+
+        <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+          {startItem}–{endItem} / {totalCount} kết quả
+        </Typography>
       </Box>
 
       {/* Right: Page navigation */}
