@@ -1,139 +1,525 @@
 import { useState, useMemo, useEffect, type JSX } from 'react';
 import OwnerInfoSection from '../components/OwnerInfoSection';
-import StoreInfoSection from '../components/StoreInfoSection';
-import BranchSection from '../components/BranchSection';
+import StoreSection from '../components/StoreSection';
+import OperatingInfoSection from '../components/OperatingInfoSection';
 import TermsDialog from '../components/TermsDialog';
-import type { Branch } from '../types/branch';
-import { createEmptyBranch } from '../types/branch';
 import useLogin from '@features/auth/hooks/useLogin';
-import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import useVendor from '@features/vendor/hooks/useVendor';
+import type { WorkSchedule, DayOff } from '@features/vendor/types/workSchedule';
+import {
+  ArrowRightOnRectangleIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
+import { loadUserFromStorage, selectUser } from '@slices/auth';
+import {
+  selectVendorStatus,
+  selectMyVendor,
+  selectLicenseStatus,
+  getMyVendor,
+  checkLicenseStatus,
+} from '@slices/vendor';
+import {
+  Snackbar,
+  Alert,
+  type AlertColor,
+  CircularProgress,
+} from '@mui/material';
+
+type PageMode = 'loading' | 'register' | 'uploadLicense' | 'viewStatus';
+
+function getLicenseStatusInfo(status: string): {
+  label: string;
+  color: string;
+  bgColor: string;
+  icon: JSX.Element;
+} {
+  switch (status.toLowerCase()) {
+    case 'Approved':
+      return {
+        label: 'Đã duyệt',
+        color: 'text-green-700',
+        bgColor: 'bg-green-50 border-green-200',
+        icon: <CheckCircleIcon className="h-6 w-6 text-green-500" />,
+      };
+    case 'Rejected':
+      return {
+        label: 'Bị từ chối',
+        color: 'text-red-700',
+        bgColor: 'bg-red-50 border-red-200',
+        icon: <XCircleIcon className="h-6 w-6 text-red-500" />,
+      };
+    case 'Pending':
+    default:
+      return {
+        label: 'Đang chờ duyệt',
+        color: 'text-yellow-700',
+        bgColor: 'bg-yellow-50 border-yellow-200',
+        icon: <ClockIcon className="h-6 w-6 text-yellow-500" />,
+      };
+  }
+}
 
 export default function VendorRegistration(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
-  const [branches, setBranches] = useState<Branch[]>([createEmptyBranch()]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
   const { onLogout } = useLogin();
+  const {
+    onRegisterVendor,
+    onSubmitLicense,
+    onSubmitWorkSchedule,
+    onSubmitDayOff,
+  } = useVendor();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
+  const vendorStatus = useAppSelector(selectVendorStatus);
+  const myVendor = useAppSelector(selectMyVendor);
+  const licenseStatusData = useAppSelector(selectLicenseStatus);
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: AlertColor;
+  }>({ open: false, message: '', severity: 'info' });
+
+  const showAlert = (message: string, severity: AlertColor = 'info'): void => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = (): void => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const [formData, setFormData] = useState({
-    // Thông tin chủ quán
     ownerName: '',
     ownerPhone: '',
     email: '',
-
-    // Thông tin cửa hàng
-    storeName: '',
-    storeType: '',
-    storePhone: '',
-
-    // Điều khoản
+    buildingName: '',
+    detailAddress: '',
+    ward: '',
+    city: 'TP. Hồ Chí Minh',
+    latitude: null as number | null,
+    longitude: null as number | null,
+    licenseImages: [] as File[],
     agreeTerms: false,
   });
 
-  // Đảm bảo currentPage luôn hợp lệ khi số lượng branches thay đổi
+  // Operating info state
+  const [workSchedule, setWorkSchedule] = useState<WorkSchedule>({
+    weekdays: [],
+    openTime: '08:00',
+    closeTime: '22:00',
+  });
+
+  const [dayOff, setDayOff] = useState<DayOff>({
+    startDate: '',
+    endDate: '',
+    startTime: null,
+    endTime: null,
+  });
+
+  // Determine page mode based on vendor data and license status
+  const mode: PageMode = useMemo(() => {
+    if (initialLoading) return 'loading';
+    if (!myVendor) return 'register';
+
+    const branch = myVendor.branches?.[0];
+    if (!branch) return 'register';
+
+    // licenseStatusData is null → show upload form, otherwise show status
+    if (!licenseStatusData) return 'uploadLicense';
+
+    return 'viewStatus';
+  }, [initialLoading, myVendor, licenseStatusData]);
+
+  // Fetch user profile and vendor data on mount
   useEffect(() => {
-    if (currentPage > branches.length) {
-      setCurrentPage(branches.length);
+    const init = async (): Promise<void> => {
+      void dispatch(loadUserFromStorage());
+      try {
+        const vendor = await dispatch(getMyVendor()).unwrap();
+        const branch = vendor.branches?.[0];
+        if (branch) {
+          // Always check license status when branch exists
+          try {
+            await dispatch(checkLicenseStatus(branch.branchId)).unwrap();
+          } catch {
+            // License status not found → will show upload form
+          }
+        }
+      } catch {
+        // No vendor found → will show register form
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    void init();
+  }, [dispatch]);
+
+  // Update form data from user profile (register mode)
+  useEffect(() => {
+    if (user && mode === 'register') {
+      setFormData((prev) => ({
+        ...prev,
+        ownerName: `${user.firstName} ${user.lastName}`.trim(),
+        ownerPhone: user.phoneNumber ?? '',
+        email: user.email ?? '',
+      }));
     }
-  }, [branches.length, currentPage]);
+  }, [user, mode]);
+
+  // Update form data from vendor data (uploadLicense / viewStatus mode)
+  useEffect(() => {
+    if (myVendor && (mode === 'uploadLicense' || mode === 'viewStatus')) {
+      const branch = myVendor.branches?.[0];
+      if (branch) {
+        setFormData((prev) => ({
+          ...prev,
+          ownerName: myVendor.vendorOwnerName || myVendor.name,
+          ownerPhone: branch.phoneNumber || '',
+          email: branch.email || '',
+          buildingName: branch.buildingName || '',
+          detailAddress: branch.addressDetail || '',
+          ward: branch.ward || '',
+          city: branch.city || 'TP. Hồ Chí Minh',
+          latitude: branch.lat,
+          longitude: branch.long,
+        }));
+      }
+    }
+  }, [myVendor, mode]);
 
   const isFormValid = useMemo(() => {
+    if (mode === 'uploadLicense') {
+      return formData.licenseImages.length > 0;
+    }
+
     const hasOwnerInfo =
       formData.ownerName.trim() !== '' &&
       formData.ownerPhone.trim() !== '' &&
-      formData.storeName.trim() !== '' &&
-      formData.storeType !== '' &&
       formData.agreeTerms;
 
-    const allBranchesValid = branches.every(
-      (branch) =>
-        branch.detailAddress.trim() !== '' &&
-        branch.latitude !== null &&
-        branch.longitude !== null
-    );
+    const hasStoreInfo =
+      formData.buildingName.trim() !== '' &&
+      formData.detailAddress.trim() !== '' &&
+      formData.ward.trim() !== '' &&
+      formData.latitude !== null &&
+      formData.longitude !== null &&
+      formData.licenseImages.length > 0;
 
-    return hasOwnerInfo && allBranchesValid;
-  }, [formData, branches]);
+    return hasOwnerInfo && hasStoreInfo;
+  }, [formData, mode]);
 
   const handleInputChange = (field: string, value: unknown): void => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleBranchChange = (
-    branchId: string,
-    field: string,
-    value: unknown
-  ): void => {
-    setBranches((prev) =>
-      prev.map((branch) =>
-        branch.id === branchId ? { ...branch, [field]: value } : branch
-      )
-    );
+  const handleLocationChange = (lat: number, lng: number): void => {
+    setFormData({ ...formData, latitude: lat, longitude: lng });
   };
 
-  const handleAddBranch = (): void => {
-    setBranches((prev) => [...prev, createEmptyBranch()]);
-    // Chuyển đến trang mới sau khi thêm chi nhánh
-    setCurrentPage(branches.length + 1);
+  const handleFileChange = (files: FileList | null): void => {
+    if (files) {
+      setFormData({ ...formData, licenseImages: Array.from(files) });
+    }
   };
 
-  const handleRemoveBranch = (branchId: string): void => {
-    setBranches((prev) => prev.filter((branch) => branch.id !== branchId));
+  // Format date from dd/mm/yyyy to yyyy-mm-dd for API
+  const formatDateForAPI = (dateStr: string): string => {
+    if (!dateStr || dateStr?.length !== 10) return dateStr;
+    const [day, month, year] = dateStr.split('/');
+    if (!day || !month || !year) return dateStr;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   };
 
-  const handleWorkingDayToggle = (branchId: string, day: string): void => {
-    setBranches((prev) =>
-      prev.map((branch) => {
-        if (branch.id === branchId) {
-          const newDays = branch.workingDays.includes(day)
-            ? branch.workingDays.filter((d) => d !== day)
-            : [...branch.workingDays, day];
-          return { ...branch, workingDays: newDays };
-        }
-        return branch;
-      })
-    );
-  };
-
-  const handleServiceTypeToggle = (branchId: string, service: string): void => {
-    setBranches((prev) =>
-      prev.map((branch) => {
-        if (branch.id === branchId) {
-          const newServices = branch.serviceTypes.includes(service)
-            ? branch.serviceTypes.filter((s) => s !== service)
-            : [...branch.serviceTypes, service];
-          return { ...branch, serviceTypes: newServices };
-        }
-        return branch;
-      })
-    );
-  };
-
-  const handleFileChange = (
-    branchId: string,
-    field: string,
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const file = event.target.files?.[0] ?? null;
-    handleBranchChange(branchId, field, file);
-  };
-
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    console.log('Form submitted:', { ...formData, branches });
-    alert(
-      `Đăng ký thành công với ${branches.length} ${branches.length === 1 ? 'cửa hàng' : 'chi nhánh'}!`
-    );
+
+    try {
+      // Upload license only mode
+      if (mode === 'uploadLicense') {
+        const branch = myVendor?.branches?.[0];
+        if (!branch) {
+          showAlert('Không tìm thấy thông tin chi nhánh.', 'error');
+          return;
+        }
+
+        if (formData.licenseImages.length === 0) {
+          showAlert('Vui lòng chọn ảnh giấy phép kinh doanh.', 'warning');
+          return;
+        }
+
+        await onSubmitLicense({
+          branchId: branch.branchId,
+          licenseImages: formData.licenseImages,
+        });
+
+        showAlert(
+          'Cập nhật giấy phép thành công! Vui lòng chờ quản trị viên xét duyệt.',
+          'success'
+        );
+        return;
+      }
+
+      // Full registration mode
+      if (!formData.ownerName || !formData.ownerPhone) {
+        showAlert(
+          'Vui lòng đảm bảo thông tin chủ quán đã được tải.',
+          'warning'
+        );
+        return;
+      }
+
+      if (!formData.buildingName) {
+        showAlert('Vui lòng nhập tên cửa hàng.', 'warning');
+        return;
+      }
+
+      if (!formData.ward) {
+        showAlert('Vui lòng nhập phường/xã.', 'warning');
+        return;
+      }
+
+      if (!formData.city) {
+        showAlert('Vui lòng chọn tỉnh/thành phố.', 'warning');
+        return;
+      }
+
+      if (!formData.latitude || !formData.longitude) {
+        showAlert('Vui lòng chọn vị trí trên bản đồ.', 'warning');
+        return;
+      }
+
+      const payload = {
+        name: formData.ownerName,
+        phoneNumber: formData.ownerPhone,
+        email: formData.email || '',
+        addressDetail: formData.detailAddress,
+        buildingName: formData.buildingName,
+        ward: formData.ward,
+        city: formData.city,
+        lat: formData.latitude,
+        long: formData.longitude,
+      };
+
+      const vendorResponse = await onRegisterVendor(payload);
+
+      const newBranchId = vendorResponse.branches[0]?.branchId;
+      if (!newBranchId) {
+        showAlert(
+          'Đăng ký vendor thành công nhưng không tìm thấy branch ID.',
+          'warning'
+        );
+        return;
+      }
+
+      // Submit license if provided
+      if (formData.licenseImages.length > 0) {
+        await onSubmitLicense({
+          branchId: newBranchId,
+          licenseImages: formData.licenseImages,
+        });
+      }
+
+      // Auto-submit work schedule if configured
+      if (workSchedule.weekdays.length > 0) {
+        try {
+          await onSubmitWorkSchedule({
+            branchId: newBranchId,
+            data: workSchedule,
+          });
+        } catch (error) {
+          console.error('Failed to submit work schedule:', error);
+        }
+      }
+
+      // Auto-submit day off if configured
+      if (dayOff.startDate && dayOff.endDate) {
+        try {
+          // Validate and convert date format from dd/mm/yyyy to yyyy-mm-dd
+          const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+          if (
+            dateRegex.test(dayOff.startDate) &&
+            dateRegex.test(dayOff.endDate)
+          ) {
+            const apiData = {
+              startDate: formatDateForAPI(dayOff.startDate),
+              endDate: formatDateForAPI(dayOff.endDate),
+              startTime: dayOff.startTime,
+              endTime: dayOff.endTime,
+            };
+            await onSubmitDayOff({
+              branchId: newBranchId,
+              data: apiData,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to submit day off:', error);
+        }
+      }
+
+      showAlert(
+        'Đăng ký thành công! Vui lòng chờ quản trị viên xét duyệt.',
+        'success'
+      );
+    } catch (error) {
+      let errorMessage = 'Thao tác thất bại. Vui lòng thử lại.';
+
+      if (error && typeof error === 'object') {
+        const err = error as { message?: string; code?: string };
+
+        if (err.message) {
+          if (err.message.includes('already has a vendor account')) {
+            errorMessage = 'Tài khoản của bạn đã đăng ký làm vendor rồi!';
+          } else if (err.message === 'Bad Request') {
+            errorMessage =
+              'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+      }
+
+      showAlert(errorMessage, 'error');
+    }
   };
 
+  // --- Loading state ---
+  if (mode === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] via-white to-[#f0fdf4]">
+        <div className="text-center">
+          <CircularProgress sx={{ color: '#06AA4C' }} size={48} />
+          <p className="mt-4 text-gray-600">Đang tải thông tin...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- View license status mode ---
+  if (mode === 'viewStatus') {
+    const branch = myVendor!.branches[0];
+    const statusInfo = getLicenseStatusInfo(licenseStatusData!.status);
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f0fdf4] py-8">
+        <div className="mx-auto max-w-4xl px-4">
+          <div className="mb-8 text-center">
+            <h1 className="mb-2 text-4xl font-bold text-gray-900">
+              Thông tin Vendor
+            </h1>
+            <p className="text-lg text-gray-600">
+              Thông tin đăng ký cửa hàng của bạn
+            </p>
+          </div>
+
+          {/* License Status */}
+          <div
+            className={`mb-8 rounded-2xl border-2 p-6 ${statusInfo.bgColor}`}
+          >
+            <div className="flex items-center gap-3">
+              {statusInfo.icon}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Trạng thái giấy phép
+                </h3>
+                <p className={`text-sm font-medium ${statusInfo.color}`}>
+                  {statusInfo.label}
+                </p>
+              </div>
+            </div>
+            {branch.licenseRejectReason && (
+              <div className="mt-3 rounded-lg bg-white/60 p-3">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Lý do từ chối:</span>{' '}
+                  {branch.licenseRejectReason}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Owner Info */}
+          <OwnerInfoSection
+            formData={{
+              ownerName: formData.ownerName,
+              ownerPhone: formData.ownerPhone,
+              email: formData.email,
+            }}
+            onChange={handleInputChange}
+            readonly={true}
+          />
+
+          {/* Store Info (readonly, no license upload) */}
+          <StoreSection
+            formData={{
+              buildingName: formData.buildingName,
+              detailAddress: formData.detailAddress,
+              ward: formData.ward,
+              city: formData.city,
+              latitude: formData.latitude,
+              longitude: formData.longitude,
+              licenseImages: formData.licenseImages,
+            }}
+            onChange={handleInputChange}
+            onLocationChange={handleLocationChange}
+            onFileChange={handleFileChange}
+            readonly={true}
+            hideLicenseUpload={true}
+          />
+
+          {/* Operating Info Section */}
+          <div className="mb-8">
+            <OperatingInfoSection branchId={branch.branchId} />
+          </div>
+
+          {/* Logout button */}
+          <div className="mt-10">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-white px-6 py-4 text-base font-semibold text-red-500 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-50 hover:shadow-xl active:translate-y-0"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+              Đăng xuất
+            </button>
+          </div>
+        </div>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
+    );
+  }
+
+  // --- Register mode / Upload License mode ---
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f0fdf4] py-8">
       <div className="mx-auto max-w-4xl px-4">
         <div className="mb-8 text-center">
           <h1 className="mb-2 text-4xl font-bold text-gray-900">
-            Đăng ký trở thành Vendor
+            {mode === 'uploadLicense'
+              ? 'Cập nhật giấy phép kinh doanh'
+              : 'Đăng ký trở thành Vendor'}
           </h1>
           <p className="text-lg text-gray-600">
-            Hoàn thành các bước dưới đây để bắt đầu kinh doanh
+            {mode === 'uploadLicense'
+              ? 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký'
+              : 'Hoàn thành các bước dưới đây để bắt đầu kinh doanh'}
           </p>
         </div>
 
@@ -145,137 +531,74 @@ export default function VendorRegistration(): JSX.Element {
               email: formData.email,
             }}
             onChange={handleInputChange}
+            readonly={true}
           />
 
-          <StoreInfoSection
+          <StoreSection
             formData={{
-              storeName: formData.storeName,
-              storeType: formData.storeType,
-              storePhone: formData.storePhone,
+              buildingName: formData.buildingName,
+              detailAddress: formData.detailAddress,
+              ward: formData.ward,
+              city: formData.city,
+              latitude: formData.latitude,
+              longitude: formData.longitude,
+              licenseImages: formData.licenseImages,
             }}
             onChange={handleInputChange}
+            onLocationChange={handleLocationChange}
+            onFileChange={handleFileChange}
+            readonly={mode === 'uploadLicense'}
           />
 
-          {/* Quản lý chi nhánh */}
-          <div className="mb-12">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Thông tin cửa hàng & Chi nhánh
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  {branches.length === 1
-                    ? 'Thêm chi nhánh nếu cửa hàng có nhiều địa điểm'
-                    : `Đang quản lý ${branches.length} địa điểm`}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleAddBranch}
-                className="flex items-center gap-2 rounded-lg bg-[#06AA4C] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#058f40] hover:shadow-lg active:scale-95"
-              >
-                <span className="text-lg">+</span>
-                Thêm chi nhánh
-              </button>
-            </div>
+          {/* Operating Info Section */}
+          <OperatingInfoSection
+            branchId={null}
+            formMode={true}
+            workScheduleData={workSchedule}
+            dayOffData={dayOff}
+            onWorkScheduleChange={setWorkSchedule}
+            onDayOffChange={setDayOff}
+          />
 
-            {/* Hiển thị chi nhánh hiện tại */}
-            <div className="mb-6">
-              {branches[currentPage - 1] && (
-                <BranchSection
-                  key={branches[currentPage - 1].id}
-                  branch={branches[currentPage - 1]}
-                  index={currentPage - 1}
-                  onBranchChange={handleBranchChange}
-                  onBranchRemove={handleRemoveBranch}
-                  showRemoveButton={branches.length > 1}
-                  onWorkingDayToggle={handleWorkingDayToggle}
-                  onServiceTypeToggle={handleServiceTypeToggle}
-                  onFileChange={handleFileChange}
+          {/* Điều khoản - chỉ hiện ở chế độ đăng ký mới */}
+          {mode === 'register' && (
+            <div className="mt-10">
+              <label className="flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  required
+                  checked={formData.agreeTerms}
+                  onChange={(e) =>
+                    handleInputChange('agreeTerms', e.target.checked)
+                  }
+                  className="h-4 w-4 rounded border-gray-300 accent-[#06AA4C] outline-none focus:ring-0"
                 />
-              )}
+                <span className="ml-2 text-sm text-gray-600">
+                  Tôi đồng ý với{' '}
+                  <button
+                    type="button"
+                    onClick={() => setOpenTerms(true)}
+                    className="text-[#06AA4C] underline-offset-2 hover:underline"
+                  >
+                    Điều khoản sử dụng
+                  </button>
+                </span>
+              </label>
             </div>
-
-            {/* Phân trang */}
-            {branches.length > 1 && (
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  ← Trước
-                </button>
-
-                <div className="flex gap-1">
-                  {branches.map((_, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`h-10 w-10 rounded-lg text-sm font-semibold transition-all ${
-                        currentPage === index + 1
-                          ? 'bg-[#06AA4C] text-white shadow-md'
-                          : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(branches.length, prev + 1)
-                    )
-                  }
-                  disabled={currentPage === branches.length}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Sau →
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Điều khoản */}
-          <div className="mt-10">
-            <label className="flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                required
-                checked={formData.agreeTerms}
-                onChange={(e) =>
-                  handleInputChange('agreeTerms', e.target.checked)
-                }
-                className="h-4 w-4 rounded border-gray-300 accent-[#06AA4C] outline-none focus:ring-0"
-              />
-              <span className="ml-2 text-sm text-gray-600">
-                Tôi đồng ý với{' '}
-                <button
-                  type="button"
-                  onClick={() => setOpenTerms(true)}
-                  className="text-[#06AA4C] underline-offset-2 hover:underline"
-                >
-                  Điều khoản sử dụng
-                </button>
-              </span>
-            </label>
-          </div>
+          )}
 
           {/* Submit button */}
           <div className="mt-10">
             <button
               type="submit"
-              disabled={!isFormValid}
+              disabled={!isFormValid || vendorStatus === 'pending'}
               className="w-full rounded-xl bg-[#06AA4C] px-6 py-4 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#058f40] hover:shadow-xl active:translate-y-0 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
             >
-              Đăng ký cửa hàng
+              {vendorStatus === 'pending'
+                ? 'Đang xử lý...'
+                : mode === 'uploadLicense'
+                  ? 'Cập nhật giấy phép'
+                  : 'Đăng ký cửa hàng'}
             </button>
 
             {/* Logout button */}
@@ -294,6 +617,22 @@ export default function VendorRegistration(): JSX.Element {
       </div>
 
       <TermsDialog open={openTerms} onClose={() => setOpenTerms(false)} />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

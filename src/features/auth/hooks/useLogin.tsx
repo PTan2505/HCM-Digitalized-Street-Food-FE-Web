@@ -13,6 +13,7 @@ import {
   userLoginWithPhoneNumber,
   verifyPhoneNumber,
 } from '@slices/auth';
+import { resetVendorState } from '@slices/vendor';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -63,8 +64,8 @@ export default function useLogin(): {
 
   function onLogout(): void {
     dispatch(logout());
+    dispatch(resetVendorState());
     navigate(ROUTES.LOGIN);
-    // Implementation for logout if needed
   }
   return {
     onGoogleLoginSubmit,

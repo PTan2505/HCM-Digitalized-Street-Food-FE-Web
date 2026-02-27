@@ -3,6 +3,7 @@ import authReducer from '@slices/auth';
 import badgeReducer from '@slices/badge';
 import userDietaryPreferenceReducer from '@slices/userPreferenceDietary';
 import categoryReducer from '@slices/category';
+import vendorReducer from '@slices/vendor';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     badge: badgeReducer,
     userDietaryPreference: userDietaryPreferenceReducer,
     category: categoryReducer,
+    vendor: vendorReducer,
   },
 });
 
