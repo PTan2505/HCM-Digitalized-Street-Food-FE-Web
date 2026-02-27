@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect, type JSX } from 'react';
 import OwnerInfoSection from '../components/OwnerInfoSection';
 import StoreSection from '../components/StoreSection';
+import OperatingInfoSection from '../components/OperatingInfoSection';
 import TermsDialog from '../components/TermsDialog';
 import useLogin from '@features/auth/hooks/useLogin';
 import useVendor from '@features/vendor/hooks/useVendor';
+import type { WorkSchedule, DayOff } from '@features/vendor/types/workSchedule';
 import {
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
@@ -64,7 +66,12 @@ export default function VendorRegistration(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const { onLogout } = useLogin();
-  const { onRegisterVendor, onSubmitLicense } = useVendor();
+  const {
+    onRegisterVendor,
+    onSubmitLicense,
+    onSubmitWorkSchedule,
+    onSubmitDayOff,
+  } = useVendor();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
   const vendorStatus = useAppSelector(selectVendorStatus);
@@ -97,6 +104,20 @@ export default function VendorRegistration(): JSX.Element {
     longitude: null as number | null,
     licenseImages: [] as File[],
     agreeTerms: false,
+  });
+
+  // Operating info state
+  const [workSchedule, setWorkSchedule] = useState<WorkSchedule>({
+    weekdays: [],
+    openTime: '08:00',
+    closeTime: '22:00',
+  });
+
+  const [dayOff, setDayOff] = useState<DayOff>({
+    startDate: '',
+    endDate: '',
+    startTime: null,
+    endTime: null,
   });
 
   // Determine page mode based on vendor data and license status
@@ -205,6 +226,14 @@ export default function VendorRegistration(): JSX.Element {
     }
   };
 
+  // Format date from dd/mm/yyyy to yyyy-mm-dd for API
+  const formatDateForAPI = (dateStr: string): string => {
+    if (!dateStr || dateStr?.length !== 10) return dateStr;
+    const [day, month, year] = dateStr.split('/');
+    if (!day || !month || !year) return dateStr;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
@@ -277,19 +306,58 @@ export default function VendorRegistration(): JSX.Element {
 
       const vendorResponse = await onRegisterVendor(payload);
 
-      if (formData.licenseImages.length > 0) {
-        if (!vendorResponse.branches[0]?.branchId) {
-          showAlert(
-            'Đăng ký vendor thành công nhưng không tìm thấy branch ID để upload ảnh.',
-            'warning'
-          );
-          return;
-        }
+      const newBranchId = vendorResponse.branches[0]?.branchId;
+      if (!newBranchId) {
+        showAlert(
+          'Đăng ký vendor thành công nhưng không tìm thấy branch ID.',
+          'warning'
+        );
+        return;
+      }
 
+      // Submit license if provided
+      if (formData.licenseImages.length > 0) {
         await onSubmitLicense({
-          branchId: vendorResponse.branches[0].branchId,
+          branchId: newBranchId,
           licenseImages: formData.licenseImages,
         });
+      }
+
+      // Auto-submit work schedule if configured
+      if (workSchedule.weekdays.length > 0) {
+        try {
+          await onSubmitWorkSchedule({
+            branchId: newBranchId,
+            data: workSchedule,
+          });
+        } catch (error) {
+          console.error('Failed to submit work schedule:', error);
+        }
+      }
+
+      // Auto-submit day off if configured
+      if (dayOff.startDate && dayOff.endDate) {
+        try {
+          // Validate and convert date format from dd/mm/yyyy to yyyy-mm-dd
+          const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+          if (
+            dateRegex.test(dayOff.startDate) &&
+            dateRegex.test(dayOff.endDate)
+          ) {
+            const apiData = {
+              startDate: formatDateForAPI(dayOff.startDate),
+              endDate: formatDateForAPI(dayOff.endDate),
+              startTime: dayOff.startTime,
+              endTime: dayOff.endTime,
+            };
+            await onSubmitDayOff({
+              branchId: newBranchId,
+              data: apiData,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to submit day off:', error);
+        }
       }
 
       showAlert(
@@ -333,9 +401,7 @@ export default function VendorRegistration(): JSX.Element {
   // --- View license status mode ---
   if (mode === 'viewStatus') {
     const branch = myVendor!.branches[0];
-    const statusInfo = getLicenseStatusInfo(
-      licenseStatusData!.status
-    );
+    const statusInfo = getLicenseStatusInfo(licenseStatusData!.status);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f0fdf4] py-8">
@@ -402,6 +468,11 @@ export default function VendorRegistration(): JSX.Element {
             readonly={true}
             hideLicenseUpload={true}
           />
+
+          {/* Operating Info Section */}
+          <div className="mb-8">
+            <OperatingInfoSection branchId={branch.branchId} />
+          </div>
 
           {/* Logout button */}
           <div className="mt-10">
@@ -477,6 +548,16 @@ export default function VendorRegistration(): JSX.Element {
             onLocationChange={handleLocationChange}
             onFileChange={handleFileChange}
             readonly={mode === 'uploadLicense'}
+          />
+
+          {/* Operating Info Section */}
+          <OperatingInfoSection
+            branchId={null}
+            formMode={true}
+            workScheduleData={workSchedule}
+            dayOffData={dayOff}
+            onWorkScheduleChange={setWorkSchedule}
+            onDayOffChange={setDayOff}
           />
 
           {/* Điều khoản - chỉ hiện ở chế độ đăng ký mới */}

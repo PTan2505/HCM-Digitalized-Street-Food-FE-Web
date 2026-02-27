@@ -5,6 +5,12 @@ import type {
   SubmitLicenseResponse,
   GetMyVendorResponse,
 } from '@features/vendor/types/vendor';
+import type {
+  WorkSchedule,
+  WorkScheduleResponse,
+  DayOff,
+  DayOffResponse,
+} from '@features/vendor/types/workSchedule';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -84,6 +90,40 @@ export const checkLicenseStatus = createAppAsyncThunk(
     try {
       const response: CheckLicenseStatusResponse =
         await axiosApi.vendorApi.checkLicenseStatus(branchId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const submitWorkSchedule = createAppAsyncThunk(
+  'vendor/submitWorkSchedule',
+  async (
+    payload: { branchId: number; data: WorkSchedule },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: WorkScheduleResponse =
+        await axiosApi.vendorApi.submitWorkSchedule(
+          payload.branchId,
+          payload.data
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const submitDayOff = createAppAsyncThunk(
+  'vendor/submitDayOff',
+  async (payload: { branchId: number; data: DayOff }, { rejectWithValue }) => {
+    try {
+      const response: DayOffResponse = await axiosApi.vendorApi.submitDayOff(
+        payload.branchId,
+        payload.data
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error);

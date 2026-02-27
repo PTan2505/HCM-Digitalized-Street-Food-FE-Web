@@ -5,12 +5,20 @@ import type {
   CheckLicenseStatusResponse,
   GetMyVendorResponse,
 } from '@features/vendor/types/vendor';
+import type {
+  WorkSchedule,
+  WorkScheduleResponse,
+  DayOff,
+  DayOffResponse,
+} from '@features/vendor/types/workSchedule';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
   registerVendor,
   submitLicense,
   checkLicenseStatus,
   getMyVendor,
+  submitWorkSchedule,
+  submitDayOff,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -26,6 +34,14 @@ export default function useVendor(): {
     branchId: number
   ) => Promise<CheckLicenseStatusResponse>;
   onGetMyVendor: () => Promise<GetMyVendorResponse>;
+  onSubmitWorkSchedule: (payload: {
+    branchId: number;
+    data: WorkSchedule;
+  }) => Promise<WorkScheduleResponse>;
+  onSubmitDayOff: (payload: {
+    branchId: number;
+    data: DayOff;
+  }) => Promise<DayOffResponse>;
 } {
   const dispatch = useAppDispatch();
 
@@ -63,10 +79,34 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onSubmitWorkSchedule = useCallback(
+    async (payload: {
+      branchId: number;
+      data: WorkSchedule;
+    }): Promise<WorkScheduleResponse> => {
+      const response = await dispatch(submitWorkSchedule(payload)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
+  const onSubmitDayOff = useCallback(
+    async (payload: {
+      branchId: number;
+      data: DayOff;
+    }): Promise<DayOffResponse> => {
+      const response = await dispatch(submitDayOff(payload)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
     onCheckLicenseStatus,
     onGetMyVendor,
+    onSubmitWorkSchedule,
+    onSubmitDayOff,
   };
 }

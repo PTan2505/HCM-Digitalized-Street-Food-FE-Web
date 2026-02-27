@@ -59,5 +59,8 @@ export const apiUrl = {
       `/Branch/${branchId}/submit-license`,
     checkLicenseStatus: (branchId: number): string =>
       `/Branch/${branchId}/license-status`,
+    workSchedules: (branchId: number): string =>
+      `/Branch/${branchId}/work-schedules`,
+    dayOffs: (branchId: number): string => `/Branch/${branchId}/day-offs`,
   },
 };

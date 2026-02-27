@@ -5,6 +5,12 @@ import type {
   CheckLicenseStatusResponse,
   GetMyVendorResponse,
 } from '@features/vendor/types/vendor';
+import type {
+  WorkSchedule,
+  WorkScheduleResponse,
+  DayOff,
+  DayOffResponse,
+} from '@features/vendor/types/workSchedule';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
@@ -59,6 +65,25 @@ export class VendorApi {
   ): Promise<CheckLicenseStatusResponse> {
     const res = await this.apiClient.get<CheckLicenseStatusResponse>({
       url: apiUrl.vendor.checkLicenseStatus(branchId),
+    });
+    return res.data;
+  }
+
+  async submitWorkSchedule(
+    branchId: number,
+    data: WorkSchedule
+  ): Promise<WorkScheduleResponse> {
+    const res = await this.apiClient.post<WorkScheduleResponse, WorkSchedule>({
+      url: apiUrl.vendor.workSchedules(branchId),
+      data,
+    });
+    return res.data;
+  }
+
+  async submitDayOff(branchId: number, data: DayOff): Promise<DayOffResponse> {
+    const res = await this.apiClient.post<DayOffResponse, DayOff>({
+      url: apiUrl.vendor.dayOffs(branchId),
+      data,
     });
     return res.data;
   }

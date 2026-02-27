@@ -97,10 +97,11 @@ export default function StoreSection({
           value={formData.buildingName}
           onChange={(e) => onChange('buildingName', e.target.value)}
           disabled={readonly}
-          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${readonly
+          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
+            readonly
               ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
               : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
-            }`}
+          }`}
         />
       </div>
 
@@ -129,10 +130,11 @@ export default function StoreSection({
           value={formData.detailAddress}
           onChange={(e) => onChange('detailAddress', e.target.value)}
           disabled={readonly}
-          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${readonly
+          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
+            readonly
               ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
               : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
-            }`}
+          }`}
         />
         <p className="mt-2 text-xs text-gray-500">
           Bao gồm số nhà, đường, phường/xã, quận/huyện
@@ -151,10 +153,11 @@ export default function StoreSection({
           value={formData.ward}
           onChange={(e) => onChange('ward', e.target.value)}
           disabled={readonly}
-          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${readonly
+          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
+            readonly
               ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
               : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
-            }`}
+          }`}
         />
       </div>
 
@@ -171,7 +174,7 @@ export default function StoreSection({
                 address={fullAddress}
                 latitude={formData.latitude}
                 longitude={formData.longitude}
-                onLocationChange={() => { }}
+                onLocationChange={() => {}}
               />
               <p className="mt-2 text-xs text-green-600">
                 ✓ Vị trí: {formData.latitude.toFixed(6)},{' '}
@@ -203,7 +206,8 @@ export default function StoreSection({
       {!hideLicenseUpload && (
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
-            Hình ảnh giấy phép kinh doanh <span className="text-red-500">*</span>
+            Hình ảnh giấy phép kinh doanh{' '}
+            <span className="text-red-500">*</span>
           </label>
 
           {/* Upload Button */}
@@ -222,8 +226,8 @@ export default function StoreSection({
               />
             </label>
             <p className="mt-2 text-xs text-gray-500">
-              Chọn một hoặc nhiều hình ảnh giấy phép kinh doanh/chứng nhận đăng ký
-              kinh doanh
+              Chọn một hoặc nhiều hình ảnh giấy phép kinh doanh/chứng nhận đăng
+              ký kinh doanh
             </p>
           </div>
 
