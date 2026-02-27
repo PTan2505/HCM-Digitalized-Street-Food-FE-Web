@@ -141,7 +141,7 @@ export default function StoreSection({
         </p>
       </div>
 
-      {/* Ward */}
+      {/* Ward Phường */}
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Phường / Xã <span className="text-red-500">*</span>
