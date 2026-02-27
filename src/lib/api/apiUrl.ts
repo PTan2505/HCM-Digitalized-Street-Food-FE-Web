@@ -54,7 +54,10 @@ export const apiUrl = {
   },
   vendor: {
     register: '/Vendor',
+    getMyVendor: '/Vendor/my-vendor',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,
+    checkLicenseStatus: (branchId: number): string =>
+      `/Branch/${branchId}/license-status`,
   },
 };

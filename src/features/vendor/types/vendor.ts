@@ -36,6 +36,18 @@ export interface Branch {
 }
 
 export interface VendorRegistrationResponse {
+  branchId: number;
+  vendorId: number;
+  userId: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string | null;
+  isActive: boolean;
+  vendorOwnerName: string;
+  branches: Branch[];
+}
+
+export interface GetMyVendorResponse {
   vendorId: number;
   userId: number;
   name: string;
@@ -54,4 +66,10 @@ export interface SubmitLicenseRequest {
 export interface SubmitLicenseResponse {
   message: string;
   success: boolean;
+}
+
+export interface CheckLicenseStatusResponse {
+  branchId: number;
+  status: string;
+  licenseUrls: string[] | null;
 }

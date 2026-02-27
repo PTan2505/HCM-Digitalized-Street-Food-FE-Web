@@ -2,6 +2,8 @@ import type {
   VendorRegistrationRequest,
   VendorRegistrationResponse,
   SubmitLicenseResponse,
+  CheckLicenseStatusResponse,
+  GetMyVendorResponse,
 } from '@features/vendor/types/vendor';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -41,6 +43,22 @@ export class VendorApi {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    });
+    return res.data;
+  }
+
+  async getMyVendor(): Promise<GetMyVendorResponse> {
+    const res = await this.apiClient.get<GetMyVendorResponse>({
+      url: apiUrl.vendor.getMyVendor,
+    });
+    return res.data;
+  }
+
+  async checkLicenseStatus(
+    branchId: number
+  ): Promise<CheckLicenseStatusResponse> {
+    const res = await this.apiClient.get<CheckLicenseStatusResponse>({
+      url: apiUrl.vendor.checkLicenseStatus(branchId),
     });
     return res.data;
   }

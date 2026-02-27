@@ -3,6 +3,7 @@ import type {
   VendorRegistrationRequest,
   VendorRegistrationResponse,
   SubmitLicenseResponse,
+  GetMyVendorResponse,
 } from '@features/vendor/types/vendor';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -12,12 +13,15 @@ import {
   isPending,
   isRejected,
 } from '@reduxjs/toolkit';
+import type { CheckLicenseStatusResponse } from '@features/vendor/types/vendor';
 
 export interface VendorState {
   vendorId: number | null;
   branchId: number | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
+  myVendor: GetMyVendorResponse | null;
+  licenseStatus: CheckLicenseStatusResponse | null;
 }
 
 const initialState: VendorState = {
@@ -25,6 +29,8 @@ const initialState: VendorState = {
   branchId: null,
   status: 'idle',
   error: null,
+  myVendor: null,
+  licenseStatus: null,
 };
 
 export const registerVendor = createAppAsyncThunk(
@@ -59,6 +65,32 @@ export const submitLicense = createAppAsyncThunk(
   }
 );
 
+export const getMyVendor = createAppAsyncThunk(
+  'vendor/getMyVendor',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: GetMyVendorResponse =
+        await axiosApi.vendorApi.getMyVendor();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const checkLicenseStatus = createAppAsyncThunk(
+  'vendor/checkLicenseStatus',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      const response: CheckLicenseStatusResponse =
+        await axiosApi.vendorApi.checkLicenseStatus(branchId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const vendorSlice = createSlice({
   name: 'vendor',
   initialState,
@@ -74,6 +106,12 @@ export const vendorSlice = createSlice({
       .addCase(submitLicense.fulfilled, (state) => {
         // License submitted successfully
         state.status = 'succeeded';
+      })
+      .addCase(getMyVendor.fulfilled, (state, action) => {
+        state.myVendor = action.payload;
+      })
+      .addCase(checkLicenseStatus.fulfilled, (state, action) => {
+        state.licenseStatus = action.payload;
       })
       // Matcher: Handle all pending cases
       .addMatcher(isPending, (state) => {
@@ -109,3 +147,10 @@ export const selectVendorStatus = (
 
 export const selectVendorError = (state: RootState): unknown =>
   state.vendor.error;
+
+export const selectLicenseStatus = (
+  state: RootState
+): CheckLicenseStatusResponse | null => state.vendor.licenseStatus;
+
+export const selectMyVendor = (state: RootState): GetMyVendorResponse | null =>
+  state.vendor.myVendor;

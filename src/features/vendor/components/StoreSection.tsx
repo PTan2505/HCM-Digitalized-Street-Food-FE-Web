@@ -16,6 +16,8 @@ interface StoreSectionProps {
   onChange: (field: string, value: unknown) => void;
   onLocationChange: (lat: number, lng: number) => void;
   onFileChange: (files: FileList | null) => void;
+  readonly?: boolean;
+  hideLicenseUpload?: boolean;
 }
 
 export default function StoreSection({
@@ -23,6 +25,8 @@ export default function StoreSection({
   onChange,
   onLocationChange,
   onFileChange,
+  readonly = false,
+  hideLicenseUpload = false,
 }: StoreSectionProps): JSX.Element {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
@@ -92,7 +96,11 @@ export default function StoreSection({
           placeholder="Quán Phở Hà Nội"
           value={formData.buildingName}
           onChange={(e) => onChange('buildingName', e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
+          disabled={readonly}
+          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${readonly
+              ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
+              : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+            }`}
         />
       </div>
 
@@ -120,7 +128,11 @@ export default function StoreSection({
           placeholder="Nhập địa chỉ đầy đủ (VD: 256B Đường Nguyễn Duy Trinh, Phường Bình Trưng Tây, Quận Thủ Đức)"
           value={formData.detailAddress}
           onChange={(e) => onChange('detailAddress', e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
+          disabled={readonly}
+          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${readonly
+              ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
+              : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+            }`}
         />
         <p className="mt-2 text-xs text-gray-500">
           Bao gồm số nhà, đường, phường/xã, quận/huyện
@@ -138,113 +150,141 @@ export default function StoreSection({
           placeholder="Phường Bình Trưng Tây"
           value={formData.ward}
           onChange={(e) => onChange('ward', e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
+          disabled={readonly}
+          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${readonly
+              ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
+              : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+            }`}
         />
       </div>
 
       {/* Google Maps */}
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Chọn vị trí trên bản đồ <span className="text-red-500">*</span>
+          Vị trí trên bản đồ{' '}
+          {!readonly && <span className="text-red-500">*</span>}
         </label>
-        <MapLocationPicker
-          address={fullAddress}
-          latitude={formData.latitude}
-          longitude={formData.longitude}
-          onLocationChange={onLocationChange}
-        />
-        {formData.latitude !== null && formData.longitude !== null && (
-          <p className="mt-2 text-xs text-green-600">
-            ✓ Vị trí đã chọn: {formData.latitude.toFixed(6)},{' '}
-            {formData.longitude.toFixed(6)}
-          </p>
+        {readonly ? (
+          formData.latitude !== null && formData.longitude !== null ? (
+            <div className="pointer-events-none">
+              <MapLocationPicker
+                address={fullAddress}
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={() => { }}
+              />
+              <p className="mt-2 text-xs text-green-600">
+                ✓ Vị trí: {formData.latitude.toFixed(6)},{' '}
+                {formData.longitude.toFixed(6)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Chưa có vị trí</p>
+          )
+        ) : (
+          <>
+            <MapLocationPicker
+              address={fullAddress}
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={onLocationChange}
+            />
+            {formData.latitude !== null && formData.longitude !== null && (
+              <p className="mt-2 text-xs text-green-600">
+                ✓ Vị trí đã chọn: {formData.latitude.toFixed(6)},{' '}
+                {formData.longitude.toFixed(6)}
+              </p>
+            )}
+          </>
         )}
       </div>
 
       {/* Hình ảnh giấy tờ */}
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Hình ảnh giấy phép kinh doanh <span className="text-red-500">*</span>
-        </label>
-
-        {/* Upload Button */}
-        <div className="mb-4">
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-4 transition-all duration-200 hover:border-[#06AA4C] hover:bg-green-50">
-            <PhotoIcon className="h-6 w-6 text-gray-400" />
-            <span className="text-sm font-medium text-gray-600">
-              Thêm hình ảnh
-            </span>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleAddImages}
-              className="hidden"
-            />
+      {!hideLicenseUpload && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Hình ảnh giấy phép kinh doanh <span className="text-red-500">*</span>
           </label>
-          <p className="mt-2 text-xs text-gray-500">
-            Chọn một hoặc nhiều hình ảnh giấy phép kinh doanh/chứng nhận đăng ký
-            kinh doanh
-          </p>
-        </div>
 
-        {/* Image Previews */}
-        {formData.licenseImages.length > 0 && (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {formData.licenseImages.map((file, index) => (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-[#06AA4C] hover:shadow-md"
-              >
-                {/* Image */}
-                <div className="aspect-square w-full overflow-hidden bg-gray-100">
-                  <img
-                    src={previewUrls[index]}
-                    alt={`Preview ${index + 1}`}
-                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                  />
-                </div>
+          {/* Upload Button */}
+          <div className="mb-4">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-4 transition-all duration-200 hover:border-[#06AA4C] hover:bg-green-50">
+              <PhotoIcon className="h-6 w-6 text-gray-400" />
+              <span className="text-sm font-medium text-gray-600">
+                Thêm hình ảnh
+              </span>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleAddImages}
+                className="hidden"
+              />
+            </label>
+            <p className="mt-2 text-xs text-gray-500">
+              Chọn một hoặc nhiều hình ảnh giấy phép kinh doanh/chứng nhận đăng ký
+              kinh doanh
+            </p>
+          </div>
 
-                {/* File Name */}
-                <div className="p-2">
-                  <p
-                    className="truncate text-xs text-gray-600"
-                    title={file.name}
-                  >
-                    {file.name}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {(file.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-
-                {/* Remove Button */}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 hover:bg-red-600"
-                  title="Xóa ảnh"
+          {/* Image Previews */}
+          {formData.licenseImages.length > 0 && (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {formData.licenseImages.map((file, index) => (
+                <div
+                  key={index}
+                  className="group relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-[#06AA4C] hover:shadow-md"
                 >
-                  <XMarkIcon className="h-4 w-4" />
-                </button>
+                  {/* Image */}
+                  <div className="aspect-square w-full overflow-hidden bg-gray-100">
+                    <img
+                      src={previewUrls[index]}
+                      alt={`Preview ${index + 1}`}
+                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    />
+                  </div>
 
-                {/* Image Number Badge */}
-                <div className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-1 text-xs font-semibold text-white">
-                  {index + 1}
+                  {/* File Name */}
+                  <div className="p-2">
+                    <p
+                      className="truncate text-xs text-gray-600"
+                      title={file.name}
+                    >
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 hover:bg-red-600"
+                    title="Xóa ảnh"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+
+                  {/* Image Number Badge */}
+                  <div className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-1 text-xs font-semibold text-white">
+                    {index + 1}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {/* Empty State */}
-        {formData.licenseImages.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-12">
-            <PhotoIcon className="mb-3 h-12 w-12 text-gray-300" />
-            <p className="text-sm text-gray-500">Chưa có ảnh nào được chọn</p>
-          </div>
-        )}
-      </div>
+          {/* Empty State */}
+          {formData.licenseImages.length === 0 && (
+            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-12">
+              <PhotoIcon className="mb-3 h-12 w-12 text-gray-300" />
+              <p className="text-sm text-gray-500">Chưa có ảnh nào được chọn</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
