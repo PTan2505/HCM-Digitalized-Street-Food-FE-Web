@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, type JSX } from 'react';
 import OwnerInfoSection from '../components/OwnerInfoSection';
 import StoreSection from '../components/StoreSection';
-import OperatingInfoSection from '../components/OperatingInfoSection';
+// import OperatingInfoSection from '../components/OperatingInfoSection';
 import TermsDialog from '../components/TermsDialog';
 import useLogin from '@features/auth/hooks/useLogin';
 import useVendor from '@features/vendor/hooks/useVendor';
-import type { WorkSchedule, DayOff } from '@features/vendor/types/workSchedule';
+// import type { WorkSchedule, DayOff } from '@features/vendor/types/workSchedule';
 import {
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
@@ -69,8 +69,8 @@ export default function VendorRegistration(): JSX.Element {
   const {
     onRegisterVendor,
     onSubmitLicense,
-    onSubmitWorkSchedule,
-    onSubmitDayOff,
+    // onSubmitWorkSchedule,
+    // onSubmitDayOff,
   } = useVendor();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
@@ -107,18 +107,18 @@ export default function VendorRegistration(): JSX.Element {
   });
 
   // Operating info state
-  const [workSchedule, setWorkSchedule] = useState<WorkSchedule>({
-    weekdays: [],
-    openTime: '08:00',
-    closeTime: '22:00',
-  });
+  // const [workSchedule, setWorkSchedule] = useState<WorkSchedule>({
+  //   weekdays: [],
+  //   openTime: '08:00',
+  //   closeTime: '22:00',
+  // });
 
-  const [dayOff, setDayOff] = useState<DayOff>({
-    startDate: '',
-    endDate: '',
-    startTime: null,
-    endTime: null,
-  });
+  // const [dayOff, setDayOff] = useState<DayOff>({
+  //   startDate: '',
+  //   endDate: '',
+  //   startTime: null,
+  //   endTime: null,
+  // });
 
   // Determine page mode based on vendor data and license status
   const mode: PageMode = useMemo(() => {
@@ -227,12 +227,12 @@ export default function VendorRegistration(): JSX.Element {
   };
 
   // Format date from dd/mm/yyyy to yyyy-mm-dd for API
-  const formatDateForAPI = (dateStr: string): string => {
-    if (!dateStr || dateStr?.length !== 10) return dateStr;
-    const [day, month, year] = dateStr.split('/');
-    if (!day || !month || !year) return dateStr;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  };
+  // const formatDateForAPI = (dateStr: string): string => {
+  //   if (!dateStr || dateStr?.length !== 10) return dateStr;
+  //   const [day, month, year] = dateStr.split('/');
+  //   if (!day || !month || !year) return dateStr;
+  //   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  // };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -324,41 +324,41 @@ export default function VendorRegistration(): JSX.Element {
       }
 
       // Auto-submit work schedule if configured
-      if (workSchedule.weekdays.length > 0) {
-        try {
-          await onSubmitWorkSchedule({
-            branchId: newBranchId,
-            data: workSchedule,
-          });
-        } catch (error) {
-          console.error('Failed to submit work schedule:', error);
-        }
-      }
+      // if (workSchedule.weekdays.length > 0) {
+      //   try {
+      //     await onSubmitWorkSchedule({
+      //       branchId: newBranchId,
+      //       data: workSchedule,
+      //     });
+      //   } catch (error) {
+      //     console.error('Failed to submit work schedule:', error);
+      //   }
+      // }
 
       // Auto-submit day off if configured
-      if (dayOff.startDate && dayOff.endDate) {
-        try {
-          // Validate and convert date format from dd/mm/yyyy to yyyy-mm-dd
-          const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-          if (
-            dateRegex.test(dayOff.startDate) &&
-            dateRegex.test(dayOff.endDate)
-          ) {
-            const apiData = {
-              startDate: formatDateForAPI(dayOff.startDate),
-              endDate: formatDateForAPI(dayOff.endDate),
-              startTime: dayOff.startTime,
-              endTime: dayOff.endTime,
-            };
-            await onSubmitDayOff({
-              branchId: newBranchId,
-              data: apiData,
-            });
-          }
-        } catch (error) {
-          console.error('Failed to submit day off:', error);
-        }
-      }
+      // if (dayOff.startDate && dayOff.endDate) {
+      //   try {
+      //     // Validate and convert date format from dd/mm/yyyy to yyyy-mm-dd
+      //     const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+      //     if (
+      //       dateRegex.test(dayOff.startDate) &&
+      //       dateRegex.test(dayOff.endDate)
+      //     ) {
+      //       const apiData = {
+      //         startDate: formatDateForAPI(dayOff.startDate),
+      //         endDate: formatDateForAPI(dayOff.endDate),
+      //         startTime: dayOff.startTime,
+      //         endTime: dayOff.endTime,
+      //       };
+      //       await onSubmitDayOff({
+      //         branchId: newBranchId,
+      //         data: apiData,
+      //       });
+      //     }
+      //   } catch (error) {
+      //     console.error('Failed to submit day off:', error);
+      //   }
+      // }
 
       showAlert(
         'Đăng ký thành công! Vui lòng chờ quản trị viên xét duyệt.',
@@ -470,9 +470,9 @@ export default function VendorRegistration(): JSX.Element {
           />
 
           {/* Operating Info Section */}
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <OperatingInfoSection branchId={branch.branchId} />
-          </div>
+          </div> */}
 
           {/* Logout button */}
           <div className="mt-10">
@@ -551,14 +551,14 @@ export default function VendorRegistration(): JSX.Element {
           />
 
           {/* Operating Info Section */}
-          <OperatingInfoSection
+          {/* <OperatingInfoSection
             branchId={null}
             formMode={true}
             workScheduleData={workSchedule}
             dayOffData={dayOff}
             onWorkScheduleChange={setWorkSchedule}
             onDayOffChange={setDayOff}
-          />
+          /> */}
 
           {/* Điều khoản - chỉ hiện ở chế độ đăng ký mới */}
           {mode === 'register' && (
