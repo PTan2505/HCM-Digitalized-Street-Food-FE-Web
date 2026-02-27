@@ -96,7 +96,7 @@ export default function BranchSection({
         branchId={null}
         formMode={true}
         workScheduleData={{
-          weekdays: branch.workingDays.map(day => parseInt(day, 10)),
+          weekdays: branch.workingDays.map((day) => parseInt(day, 10)),
           openTime: branch.openTime,
           closeTime: branch.closeTime,
         }}
@@ -107,7 +107,10 @@ export default function BranchSection({
           endTime: null,
         }}
         onWorkScheduleChange={(data: WorkSchedule) => {
-          handleFieldChange('workingDays', data.weekdays.map(day => day.toString()));
+          handleFieldChange(
+            'workingDays',
+            data.weekdays.map((day) => day.toString())
+          );
           handleFieldChange('openTime', data.openTime);
           handleFieldChange('closeTime', data.closeTime);
         }}
