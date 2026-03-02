@@ -66,19 +66,18 @@ export default function Pagination({
   const visiblePages = getVisiblePages();
 
   return (
-    <Box className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[var(--color-table-border)] bg-white px-4 py-3">
+    <Box className="border-table-border mt-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-white px-4 py-3">
       {/* Left: Info & Page size */}
       <Box className="flex items-center gap-4">
         {onPageSizeChange && (
           <Box className="flex items-center gap-4">
-            <Typography className="text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-secondary)]">
+            <Typography className="text-table-text-secondary text-sm whitespace-nowrap">
               Số dòng:
             </Typography>
             <Select
               size="small"
               value={pageSize}
               onChange={handlePageSizeChange}
-              className="font-[var(--font-nunito)]"
               sx={{
                 minWidth: 70,
                 height: 32,
@@ -94,7 +93,7 @@ export default function Pagination({
           </Box>
         )}
 
-        <Typography className="text-sm font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+        <Typography className="text-table-text-secondary text-sm">
           {startItem}–{endItem} / {totalCount} kết quả
         </Typography>
       </Box>
@@ -122,7 +121,7 @@ export default function Pagination({
         </Button>
 
         {visiblePages[0] > 1 && (
-          <Typography className="px-1 text-sm text-[var(--color-table-text-secondary)]">
+          <Typography className="text-table-text-secondary px-1 text-sm">
             ...
           </Typography>
         )}
@@ -138,7 +137,6 @@ export default function Pagination({
               height: 36,
               padding: 0,
               fontWeight: page === currentPage ? 700 : 400,
-              fontFamily: 'var(--font-nunito)',
             }}
           >
             {page}
@@ -146,7 +144,7 @@ export default function Pagination({
         ))}
 
         {visiblePages[visiblePages.length - 1] < totalPages && (
-          <Typography className="px-1 text-sm text-[var(--color-table-text-secondary)]">
+          <Typography className="text-table-text-secondary px-1 text-sm">
             ...
           </Typography>
         )}
