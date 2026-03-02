@@ -29,6 +29,7 @@ export const ROUTES = {
       BADGE_USERS: 'badge-users',
       USER_DIETARY: 'user-dietary',
       USERS: 'users',
+      VENDORS: 'vendors',
       BADGE: 'badge',
       USER_WITH_DIETARY: 'users-with-dietary',
       CATEGORY: 'category',
