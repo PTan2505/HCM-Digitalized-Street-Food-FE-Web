@@ -28,7 +28,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-type PageMode = 'loading' | 'register' | 'uploadLicense' | 'viewStatus';
+type PageMode =
+  | 'loading'
+  | 'register'
+  | 'uploadLicense'
+  | 'viewStatus'
+  | 'resubmit';
 
 function getLicenseStatusInfo(status: string): {
   label: string;
@@ -46,7 +51,8 @@ function getLicenseStatusInfo(status: string): {
       };
     case 'Reject':
       return {
-        label: 'Bị từ chối',
+        label:
+          'Bị từ chối (VUI LÒNG CẬP NHẬT LẠI THÔNG TIN (HOẶC) VÀ GIẤY PHÉP BÊN DƯỚI THEO YÊU CẦU)',
         color: 'text-red-700',
         bgColor: 'bg-red-50 border-red-200',
         icon: <XCircleIcon className="h-6 w-6 text-red-500" />,
@@ -62,7 +68,7 @@ function getLicenseStatusInfo(status: string): {
   }
 }
 
-export default function VendorRegistration(): JSX.Element {
+export default function VendorRegistrationPage(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const { onLogout } = useLogin();
@@ -131,6 +137,9 @@ export default function VendorRegistration(): JSX.Element {
     // licenseStatusData is null → show upload form, otherwise show status
     if (!licenseStatusData) return 'uploadLicense';
 
+    // Reject → allow full re-edit
+    if (licenseStatusData.status === 'Reject') return 'resubmit';
+
     return 'viewStatus';
   }, [initialLoading, myVendor, licenseStatusData]);
 
@@ -170,9 +179,12 @@ export default function VendorRegistration(): JSX.Element {
     }
   }, [user, mode]);
 
-  // Update form data from vendor data (uploadLicense / viewStatus mode)
+  // Update form data from vendor data (uploadLicense / viewStatus / resubmit mode)
   useEffect(() => {
-    if (myVendor && (mode === 'uploadLicense' || mode === 'viewStatus')) {
+    if (
+      myVendor &&
+      (mode === 'uploadLicense' || mode === 'viewStatus' || mode === 'resubmit')
+    ) {
       const branch = myVendor.branches?.[0];
       if (branch) {
         setFormData((prev) => ({
@@ -192,7 +204,7 @@ export default function VendorRegistration(): JSX.Element {
   }, [myVendor, mode]);
 
   const isFormValid = useMemo(() => {
-    if (mode === 'uploadLicense') {
+    if (mode === 'uploadLicense' || mode === 'resubmit') {
       return formData.licenseImages.length > 0;
     }
 
@@ -238,8 +250,8 @@ export default function VendorRegistration(): JSX.Element {
     e.preventDefault();
 
     try {
-      // Upload license only mode
-      if (mode === 'uploadLicense') {
+      // Upload license only mode (or resubmit after reject)
+      if (mode === 'uploadLicense' || mode === 'resubmit') {
         const branch = myVendor?.branches?.[0];
         if (!branch) {
           showAlert('Không tìm thấy thông tin chi nhánh.', 'error');
@@ -257,7 +269,9 @@ export default function VendorRegistration(): JSX.Element {
         });
 
         showAlert(
-          'Cập nhật giấy phép thành công! Vui lòng chờ quản trị viên xét duyệt.',
+          mode === 'resubmit'
+            ? 'Gửi lại hồ sơ thành công! Vui lòng chờ quản trị viên xét duyệt.'
+            : 'Cập nhật giấy phép thành công! Vui lòng chờ quản trị viên xét duyệt.',
           'success'
         );
         return;
@@ -401,14 +415,22 @@ export default function VendorRegistration(): JSX.Element {
   // --- View license status mode ---
   if (mode === 'viewStatus') {
     const branch = myVendor!.branches[0];
+    const rejectReason = licenseStatusData?.rejectReason;
     const statusInfo = getLicenseStatusInfo(licenseStatusData!.status);
+    const submittedDate = new Date(
+      licenseStatusData!.submittedAt
+    ).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f0fdf4] py-8">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-8 text-center">
             <h1 className="mb-2 text-4xl font-bold text-gray-900">
-              Thông tin Vendor
+              Thông tin người bán
             </h1>
             <p className="text-lg text-gray-600">
               Thông tin đăng ký cửa hàng của bạn
@@ -428,16 +450,60 @@ export default function VendorRegistration(): JSX.Element {
                 <p className={`text-sm font-medium ${statusInfo.color}`}>
                   {statusInfo.label}
                 </p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Ngày nộp: {submittedDate}
+                </p>
               </div>
             </div>
-            {branch.licenseRejectReason && (
-              <div className="mt-3 rounded-lg bg-white/60 p-3">
+            {rejectReason && (
+              <div className="mt-3 pl-9">
                 <p className="text-sm text-gray-700">
-                  <span className="font-medium">Lý do từ chối:</span>{' '}
-                  {branch.licenseRejectReason}
+                  <span className="text-sm font-medium text-gray-700">
+                    Lý do từ chối:
+                  </span>{' '}
+                  <span className="text-sm font-semibold text-red-700">
+                    {rejectReason}
+                  </span>
                 </p>
               </div>
             )}
+            {licenseStatusData?.licenseUrls &&
+              licenseStatusData.licenseUrls.length > 0 && (
+                <div className="mt-3 pl-9">
+                  <p className="mb-2 text-sm font-medium text-gray-700">
+                    Ảnh giấy phép đã nộp:
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {licenseStatusData.licenseUrls.map((url, index) => {
+                      const apiBase = import.meta.env.VITE_API_URL as string;
+                      const origin = apiBase.replace(/\/api$/, '');
+                      const fullUrl = url.startsWith('http')
+                        ? url
+                        : `${origin}${url}`;
+                      return (
+                        <figure key={index} className="group mx-auto my-2">
+                          <div className="overflow-hidden rounded-lg shadow-md">
+                            <a
+                              href={fullUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <img
+                                src={fullUrl}
+                                alt={`Ảnh ${index + 1}`}
+                                className="block h-auto max-h-64 w-full max-w-xs transition-transform duration-700 group-hover:scale-105"
+                              />
+                            </a>
+                          </div>
+                          <figcaption className="border-t border-gray-200 bg-transparent px-4 py-3 text-center text-sm text-gray-500 italic">
+                            Ảnh {index + 1}
+                          </figcaption>
+                        </figure>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
           </div>
 
           {/* Owner Info */}
@@ -512,16 +578,91 @@ export default function VendorRegistration(): JSX.Element {
       <div className="mx-auto max-w-4xl px-4">
         <div className="mb-8 text-center">
           <h1 className="mb-2 text-4xl font-bold text-gray-900">
-            {mode === 'uploadLicense'
-              ? 'Cập nhật giấy phép kinh doanh'
-              : 'Đăng ký trở thành Vendor'}
+            {mode === 'resubmit'
+              ? 'Cập nhật hồ sơ đăng ký'
+              : mode === 'uploadLicense'
+                ? 'Cập nhật giấy phép kinh doanh'
+                : 'Đăng ký trở thành Vendor'}
           </h1>
           <p className="text-lg text-gray-600">
-            {mode === 'uploadLicense'
-              ? 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký'
-              : 'Hoàn thành các bước dưới đây để bắt đầu kinh doanh'}
+            {mode === 'resubmit'
+              ? 'Vui lòng cập nhật lại thông tin và giấy phép theo yêu cầu từ quản trị viên'
+              : mode === 'uploadLicense'
+                ? 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký'
+                : 'Hoàn thành các bước dưới đây để bắt đầu kinh doanh'}
           </p>
         </div>
+
+        {/* Rejection info banner - only for resubmit mode */}
+        {mode === 'resubmit' && licenseStatusData && (
+          <div className="mb-8 rounded-2xl border-2 border-red-200 bg-red-50 p-6">
+            <div className="flex items-center gap-3">
+              <XCircleIcon className="h-6 w-6 text-red-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Trạng thái giấy phép
+                </h3>
+                <p className="text-sm font-medium text-red-700">
+                  {getLicenseStatusInfo(licenseStatusData.status).label}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Ngày nộp:{' '}
+                  {new Date(licenseStatusData.submittedAt).toLocaleDateString(
+                    'vi-VN',
+                    { day: '2-digit', month: '2-digit', year: 'numeric' }
+                  )}
+                </p>
+              </div>
+            </div>
+            {licenseStatusData.rejectReason && (
+              <div className="mt-3 pl-9">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Lý do từ chối:</span>{' '}
+                  <span className="font-semibold text-red-700">
+                    {licenseStatusData.rejectReason}
+                  </span>
+                </p>
+              </div>
+            )}
+            {licenseStatusData.licenseUrls &&
+              licenseStatusData.licenseUrls.length > 0 && (
+                <div className="mt-3 pl-9">
+                  <p className="mb-2 text-sm font-medium text-gray-700">
+                    Ảnh giấy phép đã nộp:
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {licenseStatusData.licenseUrls.map((url, index) => {
+                      const apiBase = import.meta.env.VITE_API_URL as string;
+                      const origin = apiBase.replace(/\/api$/, '');
+                      const fullUrl = url.startsWith('http')
+                        ? url
+                        : `${origin}${url}`;
+                      return (
+                        <figure key={index} className="group mx-auto my-2">
+                          <div className="overflow-hidden rounded-lg shadow-md">
+                            <a
+                              href={fullUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <img
+                                src={fullUrl}
+                                alt={`Ảnh ${index + 1}`}
+                                className="block h-auto max-h-64 w-full max-w-xs transition-transform duration-700 group-hover:scale-105"
+                              />
+                            </a>
+                          </div>
+                          <figcaption className="border-t border-gray-200 bg-transparent px-4 py-3 text-center text-sm text-gray-500 italic">
+                            Ảnh {index + 1}
+                          </figcaption>
+                        </figure>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <OwnerInfoSection
@@ -596,9 +737,11 @@ export default function VendorRegistration(): JSX.Element {
             >
               {vendorStatus === 'pending'
                 ? 'Đang xử lý...'
-                : mode === 'uploadLicense'
-                  ? 'Cập nhật giấy phép'
-                  : 'Đăng ký cửa hàng'}
+                : mode === 'resubmit'
+                  ? 'Gửi lại hồ sơ'
+                  : mode === 'uploadLicense'
+                    ? 'Cập nhật giấy phép'
+                    : 'Đăng ký cửa hàng'}
             </button>
 
             {/* Logout button */}
