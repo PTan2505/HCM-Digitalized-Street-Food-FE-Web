@@ -79,4 +79,8 @@ export const apiUrl = {
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
   },
+  taste: {
+    getAllOrPostTaste: '/taste',
+    updateOrDeleteTaste: (id: number): string => `/taste/${id}`,
+  },
 };
