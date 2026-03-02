@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import useLogin from '@features/auth/hooks/useLogin';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
@@ -11,6 +11,10 @@ import {
   checkLicenseStatus,
 } from '@slices/vendor';
 import type { AlertColor } from '@mui/material';
+import type {
+  GetMyVendorResponse,
+  CheckLicenseStatusResponse,
+} from '@features/vendor/types/vendor';
 
 // ─── Types ───────────────────────────────────────────────────────────
 export type PageMode =
@@ -40,6 +44,23 @@ export interface SnackbarState {
   severity: AlertColor;
 }
 
+interface UseVendorRegistrationReturn {
+  readonly mode: PageMode;
+  readonly formData: VendorFormData;
+  readonly snackbar: SnackbarState;
+  readonly vendorStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+  readonly myVendor: GetMyVendorResponse | null;
+  readonly licenseStatusData: CheckLicenseStatusResponse | null;
+  readonly isFormValid: boolean;
+  readonly showAlert: (message: string, severity?: AlertColor) => void;
+  readonly closeSnackbar: () => void;
+  readonly handleInputChange: (field: string, value: unknown) => void;
+  readonly handleLocationChange: (lat: number, lng: number) => void;
+  readonly handleFileChange: (files: FileList | null) => void;
+  readonly handleSubmit: (e: React.FormEvent) => Promise<void>;
+  readonly onLogout: () => void;
+}
+
 const INITIAL_FORM_DATA: VendorFormData = {
   ownerName: '',
   ownerPhone: '',
@@ -55,7 +76,7 @@ const INITIAL_FORM_DATA: VendorFormData = {
 };
 
 // ─── Hook ────────────────────────────────────────────────────────────
-export default function useVendorRegistration() {
+export default function useVendorRegistration(): UseVendorRegistrationReturn {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
   const vendorStatus = useAppSelector(selectVendorStatus);

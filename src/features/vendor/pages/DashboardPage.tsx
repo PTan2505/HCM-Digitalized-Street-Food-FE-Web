@@ -1,6 +1,7 @@
 import React from 'react';
+import type { JSX } from 'react';
 
-function DashboardPage() {
+function DashboardPage(): JSX.Element {
   return <div>DashboardPage</div>;
 }
 

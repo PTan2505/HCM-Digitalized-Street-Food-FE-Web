@@ -170,7 +170,7 @@ export default function VendorRegistrationPage(): JSX.Element {
   }
 
   // ── Register / Upload License / Resubmit mode ─────────────────────
-  const formMode = mode as 'register' | 'uploadLicense' | 'resubmit';
+  const formMode = mode;
 
   return (
     <PageShell title={TITLE_MAP[formMode]} subtitle={SUBTITLE_MAP[formMode]}>

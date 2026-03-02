@@ -1,6 +1,7 @@
 import React from 'react';
+import type { JSX } from 'react';
 
-function BranchPage() {
+function BranchPage(): JSX.Element {
   return <div>BranchPage</div>;
 }
 

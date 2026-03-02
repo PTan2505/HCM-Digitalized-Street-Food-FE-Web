@@ -24,7 +24,7 @@ export default function VendorLicenseDetails({
       ? url
       : `${origin}${url}`;
 
-  const urls: string[] = (() => {
+  const urls: string[] = ((): string[] => {
     const { licenseUrl } = registration;
     if (Array.isArray(licenseUrl)) return licenseUrl as unknown as string[];
     if (typeof licenseUrl === 'string') {

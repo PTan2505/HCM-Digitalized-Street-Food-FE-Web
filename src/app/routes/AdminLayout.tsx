@@ -16,7 +16,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@hooks/reduxHooks';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -84,9 +84,8 @@ function AdminLayout(): JSX.Element {
     <Box className="min-h-screen bg-white text-gray-900">
       {/* Mobile sidebar */}
       <div
-        className={`fixed inset-0 z-40 md:hidden ${
-          sidebarOpen ? '' : 'hidden'
-        }`}
+        className={`fixed inset-0 z-40 md:hidden ${sidebarOpen ? '' : 'hidden'
+          }`}
       >
         <div
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
@@ -115,9 +114,8 @@ function AdminLayout(): JSX.Element {
 
       {/* Desktop sidebar */}
       <div
-        className={`hidden transition-all duration-300 ease-in-out md:fixed md:inset-y-0 md:flex md:flex-col ${
-          sidebarCollapsed ? 'md:w-16' : 'md:w-64'
-        }`}
+        className={`hidden transition-all duration-300 ease-in-out md:fixed md:inset-y-0 md:flex md:flex-col ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'
+          }`}
       >
         <SidebarContent
           collapsed={sidebarCollapsed}
@@ -131,9 +129,8 @@ function AdminLayout(): JSX.Element {
 
       {/* Main content */}
       <Box
-        className={`pl-0 transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
-        }`}
+        className={`pl-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
+          }`}
       >
         {/* Top navigation */}
         <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
