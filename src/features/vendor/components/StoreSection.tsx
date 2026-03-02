@@ -82,7 +82,7 @@ export default function StoreSection({
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">
-        2. Thông tin cửa hàng
+        2. Thông tin cửa hàng chính
       </h2>
 
       {/* Tên cửa hàng */}

@@ -63,6 +63,7 @@ export const apiUrl = {
     workSchedules: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
     dayOffs: (branchId: number): string => `/Branch/${branchId}/day-offs`,
+    uploadImages: (branchId: number): string => `/Branch/${branchId}/images`,
     //For moderator
     getPendingRegistrations: '/Branch/pending-registrations',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,

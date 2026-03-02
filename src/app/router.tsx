@@ -1,5 +1,6 @@
 import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
+import VendorLayout from '@app/routes/VendorLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
@@ -17,6 +18,8 @@ import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPag
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import VendorRegistration from '@features/vendor/pages/VendorRegistrationPage';
+import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
+import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -70,6 +73,24 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.MODERATOR.PATHS.CASHOUT,
             element: <ModeratorCashoutPage />,
+          },
+        ],
+      },
+      {
+        path: ROUTES.VENDOR.BASE,
+        element: <VendorLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.VENDOR.PATHS.DASHBOARD} replace />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.DASHBOARD,
+            element: <VendorDashboardPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.BRANCH,
+            element: <VendorBranchPage />,
           },
         ],
       },
