@@ -36,15 +36,15 @@ function getLicenseStatusInfo(status: string): {
   bgColor: string;
   icon: JSX.Element;
 } {
-  switch (status.toLowerCase()) {
-    case 'Approved':
+  switch (status) {
+    case 'Accept':
       return {
         label: 'Đã duyệt',
         color: 'text-green-700',
         bgColor: 'bg-green-50 border-green-200',
         icon: <CheckCircleIcon className="h-6 w-6 text-green-500" />,
       };
-    case 'Rejected':
+    case 'Reject':
       return {
         label: 'Bị từ chối',
         color: 'text-red-700',

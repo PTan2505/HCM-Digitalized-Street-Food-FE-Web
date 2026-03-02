@@ -53,6 +53,7 @@ export const apiUrl = {
     },
   },
   vendor: {
+    //For vendor
     register: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
     submitLicense: (branchId: number): string =>
@@ -62,5 +63,9 @@ export const apiUrl = {
     workSchedules: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
     dayOffs: (branchId: number): string => `/Branch/${branchId}/day-offs`,
+    //For moderator
+    getPendingRegistrations: '/Branch/pending-registrations',
+    verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
+    rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
   },
 };
