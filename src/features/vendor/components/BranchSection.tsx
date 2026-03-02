@@ -19,8 +19,6 @@ interface BranchSectionProps {
   onBranchChange: (branchId: string, field: string, value: unknown) => void;
   onBranchRemove: (branchId: string) => void;
   showRemoveButton: boolean;
-  onWorkingDayToggle: (branchId: string, day: string) => void;
-  onServiceTypeToggle: (branchId: string, service: string) => void;
   onFileChange: (
     branchId: string,
     field: string,
@@ -34,8 +32,6 @@ export default function BranchSection({
   onBranchChange,
   onBranchRemove,
   showRemoveButton,
-  onWorkingDayToggle,
-  onServiceTypeToggle,
   onFileChange,
 }: BranchSectionProps): JSX.Element {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);

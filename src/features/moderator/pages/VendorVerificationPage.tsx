@@ -106,39 +106,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
     }
   };
 
-  const getStatusBadge = (statusValue: number): React.JSX.Element => {
-    const statusConfig: Record<
-      number,
-      { bg: string; text: string; label: string }
-    > = {
-      0: {
-        bg: 'bg-yellow-100',
-        text: 'text-yellow-800',
-        label: 'Chờ duyệt',
-      },
-      1: {
-        bg: 'bg-green-100',
-        text: 'text-green-800',
-        label: 'Đã xác minh',
-      },
-      2: { bg: 'bg-red-100', text: 'text-red-800', label: 'Từ chối' },
-    };
-
-    const config = statusConfig[statusValue] ?? {
-      bg: 'bg-gray-100',
-      text: 'text-gray-800',
-      label: String(statusValue),
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.bg} ${config.text}`}
-      >
-        {config.label}
-      </span>
-    );
-  };
-
   const columns = [
     {
       key: 'branchRegisterRequestId',
