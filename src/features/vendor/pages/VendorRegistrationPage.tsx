@@ -177,7 +177,7 @@ export default function VendorRegistrationPage(): JSX.Element {
         email: user.email ?? '',
       }));
     }
-    console.log('User into form', user)
+    console.log('User into form', user);
   }, [user, mode]);
 
   // Update form data from vendor data (uploadLicense / viewStatus / resubmit mode)
