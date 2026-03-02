@@ -72,4 +72,6 @@ export interface CheckLicenseStatusResponse {
   branchId: number;
   status: string;
   licenseUrls: string[] | null;
+  rejectReason: string | null;
+  submittedAt: string;
 }

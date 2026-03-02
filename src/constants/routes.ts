@@ -34,4 +34,14 @@ export const ROUTES = {
       CATEGORY: 'category',
     },
   },
+
+  // Vendor routes
+  VENDOR: {
+    BASE: '/vendor',
+    // Child paths
+    PATHS: {
+      DASHBOARD: 'dashboard',
+      BRANCH: 'branch',
+    },
+  },
 };
