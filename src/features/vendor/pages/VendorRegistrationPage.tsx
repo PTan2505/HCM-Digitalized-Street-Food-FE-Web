@@ -146,7 +146,7 @@ export default function VendorRegistrationPage(): JSX.Element {
   // Fetch user profile and vendor data on mount
   useEffect(() => {
     const init = async (): Promise<void> => {
-      void dispatch(loadUserFromStorage());
+      await dispatch(loadUserFromStorage());
       try {
         const vendor = await dispatch(getMyVendor()).unwrap();
         const branch = vendor.branches?.[0];
@@ -177,6 +177,7 @@ export default function VendorRegistrationPage(): JSX.Element {
         email: user.email ?? '',
       }));
     }
+    console.log('User into form', user);
   }, [user, mode]);
 
   // Update form data from vendor data (uploadLicense / viewStatus / resubmit mode)
@@ -225,16 +226,16 @@ export default function VendorRegistrationPage(): JSX.Element {
   }, [formData, mode]);
 
   const handleInputChange = (field: string, value: unknown): void => {
-    setFormData({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleLocationChange = (lat: number, lng: number): void => {
-    setFormData({ ...formData, latitude: lat, longitude: lng });
+    setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
   };
 
   const handleFileChange = (files: FileList | null): void => {
     if (files) {
-      setFormData({ ...formData, licenseImages: Array.from(files) });
+      setFormData((prev) => ({ ...prev, licenseImages: Array.from(files) }));
     }
   };
 
@@ -455,7 +456,7 @@ export default function VendorRegistrationPage(): JSX.Element {
                 </p>
               </div>
             </div>
-            {rejectReason && (
+            {rejectReason && licenseStatusData?.status === 'Reject' && (
               <div className="mt-3 pl-9">
                 <p className="text-sm text-gray-700">
                   <span className="text-sm font-medium text-gray-700">
