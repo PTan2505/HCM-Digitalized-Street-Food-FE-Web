@@ -15,7 +15,7 @@ import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
 import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
-import ModeratorVendorVerification from '@features/moderator/pages/VendorVerification';
+import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import VendorRegistration from '@features/vendor/pages/VendorRegistration';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION,
-            element: <ModeratorVendorVerification />,
+            element: <ModeratorVendorVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.POSTS,
