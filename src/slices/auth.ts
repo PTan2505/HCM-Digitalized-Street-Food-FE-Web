@@ -127,6 +127,7 @@ export const updateProfile = createAppAsyncThunk(
   async (payload: Partial<User>, { rejectWithValue }) => {
     try {
       const user = await axiosApi.userProfileApi.updateUserProfile(payload);
+      await axiosApi.userProfileApi.markUserInfoSetup();
       return user;
     } catch (error) {
       return rejectWithValue(error);

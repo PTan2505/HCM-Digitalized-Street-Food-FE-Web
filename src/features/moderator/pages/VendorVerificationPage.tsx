@@ -3,6 +3,8 @@ import React from 'react';
 import Table from '@features/moderator/components/Table';
 import Pagination from '@features/moderator/components/Pagination';
 import RejectModal from '@features/moderator/components/RejectModal';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
 import useBranch from '@features/moderator/hooks/useBranch';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
@@ -14,6 +16,7 @@ import type { BranchRegisterRequest } from '@features/moderator/types/branch';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -30,6 +33,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
 
@@ -56,6 +61,26 @@ export default function VendorVerificationPage(): React.JSX.Element {
     } catch (error) {
       console.error('Failed to verify:', error);
     }
+  };
+
+  const handleOpenDetailsModal = (row: Record<string, unknown>): void => {
+    setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = (): void => {
+    setDetailsModalOpen(false);
+    setSelectedRegistration(null);
+  };
+
+  const handleOpenLicenseModal = (row: Record<string, unknown>): void => {
+    setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setLicenseModalOpen(true);
+  };
+
+  const handleCloseLicenseModal = (): void => {
+    setLicenseModalOpen(false);
+    setSelectedRegistration(null);
   };
 
   const handleOpenRejectModal = (row: Record<string, unknown>): void => {
@@ -137,57 +162,57 @@ export default function VendorVerificationPage(): React.JSX.Element {
       key: 'branch.phoneNumber',
       label: 'Số điện thoại',
     },
-    {
-      key: 'status',
-      label: 'Trạng thái',
-      render: (value: unknown): React.JSX.Element =>
-        getStatusBadge(value as number),
-    },
-    {
-      key: 'licenseUrl',
-      label: 'Giấy phép',
-      render: (value: unknown): React.JSX.Element => {
-        const apiBase = import.meta.env.VITE_API_URL as string;
-        const origin = apiBase.replace(/\/api$/, '');
+    // {
+    //   key: 'status',
+    //   label: 'Trạng thái',
+    //   render: (value: unknown): React.JSX.Element =>
+    //     getStatusBadge(value as number),
+    // },
+    // {
+    //   key: 'licenseUrl',
+    //   label: 'Giấy phép',
+    //   render: (value: unknown): React.JSX.Element => {
+    //     const apiBase = import.meta.env.VITE_API_URL as string;
+    //     const origin = apiBase.replace(/\/api$/, '');
 
-        const toFullUrl = (url: string): string =>
-          url.startsWith('http://') || url.startsWith('https://')
-            ? url
-            : `${origin}${url}`;
+    //     const toFullUrl = (url: string): string =>
+    //       url.startsWith('http://') || url.startsWith('https://')
+    //         ? url
+    //         : `${origin}${url}`;
 
-        const urls: string[] = (() => {
-          if (Array.isArray(value)) return value as string[];
-          if (typeof value === 'string') {
-            try {
-              const parsed: unknown = JSON.parse(value);
-              if (Array.isArray(parsed)) return parsed as string[];
-            } catch {
-              // plain string url
-            }
-            return [value];
-          }
-          return [];
-        })();
+    //     const urls: string[] = (() => {
+    //       if (Array.isArray(value)) return value as string[];
+    //       if (typeof value === 'string') {
+    //         try {
+    //           const parsed: unknown = JSON.parse(value);
+    //           if (Array.isArray(parsed)) return parsed as string[];
+    //         } catch {
+    //           // plain string url
+    //         }
+    //         return [value];
+    //       }
+    //       return [];
+    //     })();
 
-        if (urls.length === 0) return <span className="text-gray-400">-</span>;
+    //     if (urls.length === 0) return <span className="text-gray-400">-</span>;
 
-        return (
-          <div className="flex flex-col gap-1">
-            {urls.map((url, i) => (
-              <a
-                key={i}
-                href={toFullUrl(url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                Xem file {urls.length > 1 ? i + 1 : ''}
-              </a>
-            ))}
-          </div>
-        );
-      },
-    },
+    //     return (
+    //       <div className="flex flex-col gap-1">
+    //         {urls.map((url, i) => (
+    //           <a
+    //             key={i}
+    //             href={toFullUrl(url)}
+    //             target="_blank"
+    //             rel="noopener noreferrer"
+    //             className="text-blue-600 hover:text-blue-800 hover:underline"
+    //           >
+    //             Xem file {urls.length > 1 ? i + 1 : ''}
+    //           </a>
+    //         ))}
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
@@ -211,8 +236,21 @@ export default function VendorVerificationPage(): React.JSX.Element {
           </IconButton>
         </Tooltip>
       ),
-      onClick: (row: Record<string, unknown>): void =>
-        console.log('View:', row),
+      onClick: (row: Record<string, unknown>): void => {
+        handleOpenDetailsModal(row);
+      },
+    },
+    {
+      label: (
+        <Tooltip title="Xem giấy phép">
+          <IconButton size="small" color="primary">
+            <AssignmentIndIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      ),
+      onClick: (row: Record<string, unknown>): void => {
+        handleOpenLicenseModal(row);
+      },
     },
     {
       label: (
@@ -275,6 +313,20 @@ export default function VendorVerificationPage(): React.JSX.Element {
         hasNext={pagination.hasNext}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+      />
+
+      {/* Details Modal */}
+      <VendorRegistrationDetails
+        isOpen={detailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        registration={selectedRegistration}
+      />
+
+      {/* License Modal */}
+      <VendorLicenseDetails
+        isOpen={licenseModalOpen}
+        onClose={handleCloseLicenseModal}
+        registration={selectedRegistration}
       />
 
       {/* Reject Modal */}
