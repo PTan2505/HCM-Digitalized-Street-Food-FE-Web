@@ -56,8 +56,7 @@ const TITLE_MAP = {
 const SUBTITLE_MAP = {
   resubmit:
     'Vui lòng cập nhật lại thông tin và giấy phép theo yêu cầu từ quản trị viên',
-  uploadLicense:
-    'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký',
+  uploadLicense: 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký',
   register: 'Hoàn thành các bước dưới đây để bắt đầu kinh doanh',
 } as const;
 
@@ -145,9 +144,7 @@ export default function VendorRegistrationPage(): JSX.Element {
         title="Thông tin người bán"
         subtitle="Thông tin đăng ký cửa hàng của bạn"
       >
-        {licenseStatusData && (
-          <LicenseStatusBanner data={licenseStatusData} />
-        )}
+        {licenseStatusData && <LicenseStatusBanner data={licenseStatusData} />}
 
         <OwnerInfoSection {...ownerProps} />
 

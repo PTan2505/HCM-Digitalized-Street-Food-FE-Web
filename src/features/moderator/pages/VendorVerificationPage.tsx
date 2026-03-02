@@ -106,8 +106,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
     }
   };
 
-
-
   const columns = [
     {
       key: 'branchRegisterRequestId',
