@@ -62,7 +62,7 @@ function getLicenseStatusInfo(status: string): {
   }
 }
 
-export default function VendorRegistration(): JSX.Element {
+export default function VendorRegistrationPage(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const { onLogout } = useLogin();
