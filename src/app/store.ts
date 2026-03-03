@@ -6,6 +6,7 @@ import categoryReducer from '@slices/category';
 import vendorReducer from '@slices/vendor';
 import vendorAdminReducer from '@slices/vendorAdmin';
 import branchReducer from '@slices/branch';
+import tasteReducer from '@slices/taste';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     vendor: vendorReducer,
     vendorAdmin: vendorAdminReducer,
     branch: branchReducer,
+    taste: tasteReducer,
   },
 });
 

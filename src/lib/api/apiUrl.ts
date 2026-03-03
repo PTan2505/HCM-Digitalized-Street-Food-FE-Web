@@ -80,7 +80,7 @@ export const apiUrl = {
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
   },
   taste: {
-    getAllOrPostTaste: '/taste',
-    updateOrDeleteTaste: (id: number): string => `/taste/${id}`,
+    getAllOrPostTaste: '/tastes',
+    updateOrDeleteTaste: (id: number): string => `/tastes/${id}`,
   },
 };

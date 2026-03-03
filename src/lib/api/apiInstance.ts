@@ -7,6 +7,7 @@ import { CategoryApi } from '@features/admin/api/categoryApi';
 import { VendorAdminApi } from '@features/admin/api/vendorApi';
 import { VendorApi } from '@features/vendor/api/vendorApi';
 import { BranchApi } from '@features/moderator/api/branchApi';
+import { TasteApi } from '@features/admin/api/tasteApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -21,4 +22,5 @@ export const axiosApi = {
   vendorAdminApi: new VendorAdminApi(axiosClient),
   vendorApi: new VendorApi(axiosClient),
   branchApi: new BranchApi(axiosClient),
+  tasteApi: new TasteApi(axiosClient),
 };

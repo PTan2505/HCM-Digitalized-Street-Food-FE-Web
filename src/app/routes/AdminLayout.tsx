@@ -10,6 +10,7 @@ import {
   HomeIcon,
   RectangleStackIcon,
   ShoppingBagIcon,
+  SparklesIcon,
   StarIcon,
   UserCircleIcon,
   UserGroupIcon,
@@ -52,6 +53,11 @@ const navigation = [
     icon: ShoppingBagIcon,
   },
   {
+    name: 'Quản lý khẩu vị',
+    href: '/admin/taste',
+    icon: SparklesIcon,
+  },
+  {
     name: 'Quản lý chế độ ăn',
     href: '/admin/user-dietary',
     icon: UserGroupIcon,
@@ -90,9 +96,8 @@ function AdminLayout(): JSX.Element {
     <Box className="min-h-screen bg-white text-gray-900">
       {/* Mobile sidebar */}
       <div
-        className={`fixed inset-0 z-40 md:hidden ${
-          sidebarOpen ? '' : 'hidden'
-        }`}
+        className={`fixed inset-0 z-40 md:hidden ${sidebarOpen ? '' : 'hidden'
+          }`}
       >
         <div
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
@@ -121,9 +126,8 @@ function AdminLayout(): JSX.Element {
 
       {/* Desktop sidebar */}
       <div
-        className={`hidden transition-all duration-300 ease-in-out md:fixed md:inset-y-0 md:flex md:flex-col ${
-          sidebarCollapsed ? 'md:w-16' : 'md:w-64'
-        }`}
+        className={`hidden transition-all duration-300 ease-in-out md:fixed md:inset-y-0 md:flex md:flex-col ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'
+          }`}
       >
         <SidebarContent
           collapsed={sidebarCollapsed}
@@ -137,9 +141,8 @@ function AdminLayout(): JSX.Element {
 
       {/* Main content */}
       <Box
-        className={`pl-0 transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
-        }`}
+        className={`pl-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
+          }`}
       >
         {/* Top navigation */}
         <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
