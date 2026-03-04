@@ -3,7 +3,7 @@ export interface VendorRegistrationRequest {
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  buildingName: string;
+  branchName: string;
   ward: string;
   city: string;
   lat: number;
@@ -18,7 +18,7 @@ export interface Branch {
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  buildingName: string;
+  branchName: string;
   ward: string;
   city: string;
   lat: number;

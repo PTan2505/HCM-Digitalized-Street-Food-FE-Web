@@ -18,12 +18,12 @@ export default function OwnerInfoSection({
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">
-        1. Thông tin chủ quán
+        1. Thông tin cửa hàng
       </h2>
 
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Họ và tên <span className="text-red-500">*</span>
+          Tên cửa hàng <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -42,7 +42,8 @@ export default function OwnerInfoSection({
 
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Số điện thoại liên hệ <span className="text-red-500">*</span>
+          Số điện thoại liên hệ của cửa hàng{' '}
+          <span className="text-red-500">*</span>
         </label>
         <input
           type="tel"
@@ -66,7 +67,7 @@ export default function OwnerInfoSection({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Email
+          Email liên hệ của cửa hàng <span className="text-red-500">*</span>
         </label>
         <input
           type="email"

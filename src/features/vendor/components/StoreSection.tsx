@@ -5,7 +5,7 @@ import type { JSX } from 'react';
 
 interface StoreSectionProps {
   formData: {
-    buildingName: string;
+    branchName: string;
     detailAddress: string;
     ward: string;
     city: string;
@@ -82,20 +82,20 @@ export default function StoreSection({
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">
-        2. Thông tin cửa hàng chính
+        2. Thông tin chi nhánh chính
       </h2>
 
-      {/* Tên cửa hàng */}
+      {/* Tên cơ sở */}
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Tên cửa hàng <span className="text-red-500">*</span>
+          Tên chi nhánh <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           required
           placeholder="Quán Phở Hà Nội"
-          value={formData.buildingName}
-          onChange={(e) => onChange('buildingName', e.target.value)}
+          value={formData.branchName}
+          onChange={(e) => onChange('branchName', e.target.value)}
           disabled={readonly}
           className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
             readonly
@@ -103,6 +103,17 @@ export default function StoreSection({
               : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
           }`}
         />
+        <div className="mt-2 space-y-1 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
+          <p>
+            Có thể để trống — nếu không điền, hệ thống sẽ tự động lấy tên cửa
+            hàng ở trên làm tên chi nhánh chính khi gửi đơn.
+          </p>
+          <p>
+            <span className="font-semibold">Nếu có nhiều chi nhánh:</span> Hãy
+            tạo chi nhánh chính trước. Sau khi được duyệt, bạn mới có thể tiếp
+            tục đăng ký các chi nhánh còn lại.
+          </p>
+        </div>
       </div>
 
       {/* Tỉnh/Thành phố - Cố định TP.HCM */}

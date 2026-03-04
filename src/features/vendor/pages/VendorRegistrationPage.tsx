@@ -128,7 +128,7 @@ export default function VendorRegistrationPage(): JSX.Element {
   } as const;
 
   const storeFormData = {
-    buildingName: formData.buildingName,
+    branchName: formData.branchName,
     detailAddress: formData.detailAddress,
     ward: formData.ward,
     city: formData.city,

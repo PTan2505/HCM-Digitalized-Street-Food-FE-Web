@@ -28,7 +28,7 @@ export interface VendorFormData {
   ownerName: string;
   ownerPhone: string;
   email: string;
-  buildingName: string;
+  branchName: string;
   detailAddress: string;
   ward: string;
   city: string;
@@ -65,7 +65,7 @@ const INITIAL_FORM_DATA: VendorFormData = {
   ownerName: '',
   ownerPhone: '',
   email: '',
-  buildingName: '',
+  branchName: '',
   detailAddress: '',
   ward: '',
   city: 'TP. Hồ Chí Minh',
@@ -119,7 +119,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
       formData.agreeTerms;
 
     const hasStoreInfo =
-      formData.buildingName.trim() !== '' &&
+      formData.branchName.trim() !== '' &&
       formData.detailAddress.trim() !== '' &&
       formData.ward.trim() !== '' &&
       formData.latitude !== null &&
@@ -205,7 +205,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           ownerName: myVendor.vendorOwnerName || myVendor.name,
           ownerPhone: branch.phoneNumber || '',
           email: branch.email || '',
-          buildingName: branch.buildingName || '',
+          branchName: branch.branchName || '',
           detailAddress: branch.addressDetail || '',
           ward: branch.ward || '',
           city: branch.city || 'TP. Hồ Chí Minh',
@@ -256,7 +256,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           );
           return;
         }
-        if (!formData.buildingName) {
+        if (!formData.branchName) {
           showAlert('Vui lòng nhập tên cửa hàng.', 'warning');
           return;
         }
@@ -278,7 +278,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           phoneNumber: formData.ownerPhone,
           email: formData.email || '',
           addressDetail: formData.detailAddress,
-          buildingName: formData.buildingName,
+          branchName: formData.branchName,
           ward: formData.ward,
           city: formData.city,
           lat: formData.latitude,
