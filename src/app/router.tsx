@@ -25,8 +25,13 @@ import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
+import HomePage from '@features/home/pages/HomePage';
 
 export const router = createBrowserRouter([
+  {
+    path: ROUTES.HOME,
+    element: <HomePage />,
+  },
   {
     path: ROUTES.LOGIN,
     element: <LoginPage />,
