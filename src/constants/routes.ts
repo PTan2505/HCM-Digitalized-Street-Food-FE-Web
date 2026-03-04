@@ -33,6 +33,7 @@ export const ROUTES = {
       BADGE: 'badge',
       USER_WITH_DIETARY: 'users-with-dietary',
       CATEGORY: 'category',
+      TASTE: 'taste',
     },
   },
 

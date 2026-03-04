@@ -10,6 +10,7 @@ import {
   HomeIcon,
   RectangleStackIcon,
   ShoppingBagIcon,
+  SparklesIcon,
   StarIcon,
   UserCircleIcon,
   UserGroupIcon,
@@ -50,6 +51,11 @@ const navigation = [
     name: 'Huy hiệu của người dùng',
     href: '/admin/badge-users',
     icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý khẩu vị',
+    href: '/admin/taste',
+    icon: SparklesIcon,
   },
   {
     name: 'Quản lý chế độ ăn',
