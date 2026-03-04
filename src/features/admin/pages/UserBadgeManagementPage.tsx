@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Chip } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import UserBadgeFormModal from '@features/admin/components/UserBadgeFormModal';

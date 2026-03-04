@@ -4,12 +4,14 @@ import VendorLayout from '@app/routes/VendorLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
+import AdminTastePage from '@features/admin/pages/TastePage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
 import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
+import AdminVendorsPage from '@features/admin/pages/VendorsPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -120,8 +122,10 @@ export const router = createBrowserRouter([
             element: <UsersWithDietaryPreferencesPage />,
           },
           { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
+          { path: ROUTES.ADMIN.PATHS.VENDORS, element: <AdminVendorsPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
+          { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },
         ],
       },
     ],

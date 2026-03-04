@@ -3,12 +3,14 @@ import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
   Bars3Icon,
+  BuildingStorefrontIcon,
   ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   HomeIcon,
   RectangleStackIcon,
   ShoppingBagIcon,
+  SparklesIcon,
   StarIcon,
   UserCircleIcon,
   UserGroupIcon,
@@ -16,7 +18,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@hooks/reduxHooks';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -31,6 +33,11 @@ const navigation = [
   },
   { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
+    name: 'Quản lý cửa hàng',
+    href: '/admin/vendors',
+    icon: BuildingStorefrontIcon,
+  },
+  {
     name: 'Quản lý danh mục',
     href: '/admin/category',
     icon: RectangleStackIcon,
@@ -44,6 +51,11 @@ const navigation = [
     name: 'Huy hiệu của người dùng',
     href: '/admin/badge-users',
     icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý khẩu vị',
+    href: '/admin/taste',
+    icon: SparklesIcon,
   },
   {
     name: 'Quản lý chế độ ăn',
