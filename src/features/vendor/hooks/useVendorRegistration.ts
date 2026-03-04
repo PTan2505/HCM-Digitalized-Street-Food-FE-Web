@@ -28,7 +28,7 @@ export interface VendorFormData {
   ownerName: string;
   ownerPhone: string;
   email: string;
-  buildingName: string;
+  branchName: string;
   detailAddress: string;
   ward: string;
   city: string;
@@ -65,7 +65,7 @@ const INITIAL_FORM_DATA: VendorFormData = {
   ownerName: '',
   ownerPhone: '',
   email: '',
-  buildingName: '',
+  branchName: '',
   detailAddress: '',
   ward: '',
   city: 'TP. Hồ Chí Minh',
@@ -116,10 +116,11 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     const hasOwnerInfo =
       formData.ownerName.trim() !== '' &&
       formData.ownerPhone.trim() !== '' &&
+      formData.email.trim() !== '' &&
       formData.agreeTerms;
 
     const hasStoreInfo =
-      formData.buildingName.trim() !== '' &&
+      // branchName is optional, không cần check
       formData.detailAddress.trim() !== '' &&
       formData.ward.trim() !== '' &&
       formData.latitude !== null &&
@@ -151,9 +152,10 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
   }, []);
 
   const handleFileChange = useCallback((files: FileList | null) => {
-    if (files) {
-      setFormData((prev) => ({ ...prev, licenseImages: Array.from(files) }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      licenseImages: files ? Array.from(files) : [],
+    }));
   }, []);
 
   // ── Side effects ──────────────────────────────────────────────────
@@ -185,7 +187,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     if (user && mode === 'register') {
       setFormData((prev) => ({
         ...prev,
-        ownerName: `${user.firstName} ${user.lastName}`.trim(),
+        // ownerName để trống cho người dùng tự điền
         ownerPhone: user.phoneNumber ?? '',
         email: user.email ?? '',
       }));
@@ -202,10 +204,10 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
       if (branch) {
         setFormData((prev) => ({
           ...prev,
-          ownerName: myVendor.vendorOwnerName || myVendor.name,
+          ownerName: myVendor.name || '',
           ownerPhone: branch.phoneNumber || '',
           email: branch.email || '',
-          buildingName: branch.buildingName || '',
+          branchName: branch.branchName || '',
           detailAddress: branch.addressDetail || '',
           ward: branch.ward || '',
           city: branch.city || 'TP. Hồ Chí Minh',
@@ -249,17 +251,14 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
         }
 
         // Full registration
-        if (!formData.ownerName || !formData.ownerPhone) {
+        if (!formData.ownerName || !formData.ownerPhone || !formData.email) {
           showAlert(
-            'Vui lòng đảm bảo thông tin chủ quán đã được tải.',
+            'Vui lòng đảm bảo thông tin cửa hàng đã được điền đầy đủ.',
             'warning'
           );
           return;
         }
-        if (!formData.buildingName) {
-          showAlert('Vui lòng nhập tên cửa hàng.', 'warning');
-          return;
-        }
+        // branchName is optional, không cần check
         if (!formData.ward) {
           showAlert('Vui lòng nhập phường/xã.', 'warning');
           return;
@@ -278,7 +277,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           phoneNumber: formData.ownerPhone,
           email: formData.email || '',
           addressDetail: formData.detailAddress,
-          buildingName: formData.buildingName,
+          branchName: formData.branchName || formData.ownerName, // Nếu không có branchName, dùng ownerName
           ward: formData.ward,
           city: formData.city,
           lat: formData.latitude,
