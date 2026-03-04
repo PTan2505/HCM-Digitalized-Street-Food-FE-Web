@@ -89,14 +89,13 @@ export const tasteSlice = createSlice({
       })
       .addCase(createTaste.fulfilled, (state, action) => {
         if (action.payload) {
-          const responseData = action.payload as CreateOrUpdateTasteResponse;
-          state.tastes.push(responseData.data);
+          state.tastes.push(action.payload as unknown as Taste);
         }
       })
       .addCase(updateTaste.fulfilled, (state, action) => {
         if (action.payload) {
-          const responseData = action.payload as CreateOrUpdateTasteResponse;
-          const taste = responseData.data;
+          const responseData = action.payload as unknown as { taste: Taste };
+          const taste = responseData.taste;
           const index = state.tastes.findIndex(
             (t) => t.tasteId === taste.tasteId
           );
