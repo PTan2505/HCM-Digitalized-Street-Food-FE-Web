@@ -8,12 +8,18 @@ interface OwnerInfoSectionProps {
   };
   onChange: (field: string, value: string) => void;
   readonly?: boolean;
+  errors?: {
+    ownerName?: string;
+    ownerPhone?: string;
+    email?: string;
+  };
 }
 
 export default function OwnerInfoSection({
   formData,
   onChange,
   readonly = false,
+  errors,
 }: OwnerInfoSectionProps): JSX.Element {
   return (
     <div className="mb-12">
@@ -28,16 +34,21 @@ export default function OwnerInfoSection({
         <input
           type="text"
           required
-          placeholder="Nguyễn Văn A"
+          placeholder="Nhập tên cửa hàng (VD: Quán Phở Hà Nội)"
           value={formData.ownerName}
           onChange={(e) => onChange('ownerName', e.target.value)}
           disabled={readonly}
           className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
             readonly
               ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
-              : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+              : errors?.ownerName
+                ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
           }`}
         />
+        {errors?.ownerName && (
+          <p className="mt-1 text-xs text-red-500">{errors.ownerName}</p>
+        )}
       </div>
 
       <div className="mb-6">
@@ -55,13 +66,19 @@ export default function OwnerInfoSection({
           className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
             readonly
               ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
-              : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+              : errors?.ownerPhone
+                ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
           }`}
         />
-        {!readonly && (
-          <p className="mt-2 text-xs text-gray-500">
-            Số điện thoại này sẽ được sử dụng để liên hệ
-          </p>
+        {errors?.ownerPhone ? (
+          <p className="mt-1 text-xs text-red-500">{errors.ownerPhone}</p>
+        ) : (
+          !readonly && (
+            <p className="mt-2 text-xs text-gray-500">
+              Số điện thoại này sẽ được sử dụng để liên hệ
+            </p>
+          )
         )}
       </div>
 
@@ -78,9 +95,14 @@ export default function OwnerInfoSection({
           className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
             readonly
               ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
-              : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+              : errors?.email
+                ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
           }`}
         />
+        {errors?.email && (
+          <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+        )}
       </div>
     </div>
   );
