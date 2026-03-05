@@ -73,7 +73,7 @@ export default function HomePage(): JSX.Element {
               Xem tất cả →
             </Button>
           </Box>
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {CATEGORIES.map((cat, i) => (
               <Grid
                 key={cat.name}
@@ -81,23 +81,53 @@ export default function HomePage(): JSX.Element {
                 data-aos="fade-up"
                 data-aos-delay={i * 70}
               >
-                <Box className="group flex cursor-pointer flex-col items-center text-center">
+                <Box
+                  className="group relative cursor-pointer overflow-hidden rounded-2xl shadow-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-2xl"
+                  sx={{ aspectRatio: '3/4' }}
+                >
+                  {/* Background image */}
+                  <img
+                    src={cat.img}
+                    alt={cat.name}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                      transition:
+                        'transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)',
+                    }}
+                    className="group-hover:scale-110"
+                  />
+                  {/* Gradient overlay */}
                   <Box
-                    className="mb-3 overflow-hidden rounded-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
-                    sx={{ width: '80%', aspectRatio: '1/1' }}
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      background:
+                        'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)',
+                      transition: 'opacity 0.3s',
+                    }}
+                  />
+                  {/* Category label */}
+                  <Typography
+                    variant="body1"
+                    fontWeight={700}
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      left: 0,
+                      right: 0,
+                      textAlign: 'center',
+                      color: '#fff',
+                      px: 1.5,
+                      lineHeight: 1.3,
+                      textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                      letterSpacing: 0.3,
+                    }}
                   >
-                    <img
-                      src={cat.img}
-                      alt={cat.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                    />
-                  </Box>
-                  <Typography variant="body2" fontWeight={700}>
                     {cat.name}
                   </Typography>
                 </Box>

@@ -11,6 +11,7 @@ export interface RecipeCardProps {
   rating: number;
   author: string;
   date: string;
+  stretch?: boolean;
 }
 
 export default function RecipeCard({
@@ -21,13 +22,14 @@ export default function RecipeCard({
   rating,
   author,
   date,
+  stretch,
 }: RecipeCardProps): JSX.Element {
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        height: stretch ? '100%' : undefined,
         overflow: 'hidden',
         borderRadius: 3,
         bgcolor: '#fff',
