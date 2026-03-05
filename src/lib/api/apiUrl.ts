@@ -1,3 +1,5 @@
+import { Delete } from '@mui/icons-material';
+
 export const apiUrl = {
   auth: {
     facebookLogin: '/Auth/facebook-login',
@@ -70,10 +72,25 @@ export const apiUrl = {
       `/Branch/${branchId}/submit-license`,
     checkLicenseStatus: (branchId: number): string =>
       `/Branch/${branchId}/license-status`,
-    workSchedules: (branchId: number): string =>
+    //Branches
+    createOrGetBranchesOfAVendor: (vendorId: number): string =>
+      `/Branch/vendor/${vendorId}`,
+    updateOrDeleteBranch: (branchId: number): string => `/Branch/${branchId}`,
+    //WorkSchedules
+    createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
-    dayOffs: (branchId: number): string => `/Branch/${branchId}/day-offs`,
-    uploadImages: (branchId: number): string => `/Branch/${branchId}/images`,
+    deleteWorkScheduleOfABranch: (workScheduleId: number): string =>
+      `/Branch/work-schedules/${workScheduleId}`,
+    //Day-offs
+    createOrGetDayOffsOfABranch: (branchId: number): string =>
+      `/Branch/${branchId}/day-offs`,
+    deleteDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
+    //Images
+    createOrGetImagesOfABranch: (branchId: number): string =>
+      `/Branch/${branchId}/images`,
+    deleteImagesOfABranch: (imageId: number): string =>
+      `/Branch/images/${imageId}`,
     //For moderator
     getPendingRegistrations: '/Branch/pending-registrations',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
