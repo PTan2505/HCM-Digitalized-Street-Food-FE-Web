@@ -1,390 +1,427 @@
-import { type JSX } from 'react';
-import Navbar from '@components/Navbar';
-import Footer from '@components/Footer';
+import type { JSX } from 'react';
+import { useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Container,
+  Grid,
+  Rating,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { Favorite as FavoriteIcon } from '@mui/icons-material';
+import lightLogo from '../../../assets/ios-light.png';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
-// ── Asset URLs from Figma ──
-
-// Hero
-const imgShapes =
-  'https://www.figma.com/api/mcp/asset/ba9a1955-0ee8-4409-9ff7-935d48fe3962';
-const imgHeroFood1 =
-  'https://www.figma.com/api/mcp/asset/190dfb1f-b244-4f3f-967b-9b3205d80643';
-const imgHeroFood2 =
-  'https://www.figma.com/api/mcp/asset/67edf46a-871d-41fe-9887-9b091ab2b13f';
-const imgHeroFood3 =
-  'https://www.figma.com/api/mcp/asset/a8be35db-438b-4323-afeb-26b3084b45d5';
-const imgEllipse1 =
-  'https://www.figma.com/api/mcp/asset/d646d8a3-f3a9-4410-84f3-d3c5e182ab8c';
-const imgEllipse2 =
-  'https://www.figma.com/api/mcp/asset/fa5b8df7-86f3-41c2-bd43-ac8435edd30c';
-const imgEllipse3 =
-  'https://www.figma.com/api/mcp/asset/33155d63-e68e-4be5-a8b3-670b22cc2dd0';
-
-// Services
-const imgOrder =
-  'https://www.figma.com/api/mcp/asset/1c2a635f-374a-42e1-b969-10e3806ea95a';
-const imgDelivery =
-  'https://www.figma.com/api/mcp/asset/c6bf1890-bba6-4bf1-9fdb-a104e60d9f47';
-const imgCourier =
-  'https://www.figma.com/api/mcp/asset/b579978b-4fb2-46c7-a3cc-ac1200b4a29e';
-
-// Menu
-const imgMieRamen =
-  'https://www.figma.com/api/mcp/asset/275528fb-045d-44ff-97d8-1ae9b81ff812';
-const imgSaladTahu =
-  'https://www.figma.com/api/mcp/asset/fd2cbb09-0d6f-4a3b-82f9-092baa95f25a';
-const imgRotibakar =
-  'https://www.figma.com/api/mcp/asset/a7f564bd-76be-4873-b9fa-44f648f74fce';
-const imgSpaghetti =
-  'https://www.figma.com/api/mcp/asset/bd410b13-5d93-4e86-8506-0f028c2893fd';
-
-// Testimonial
-const imgTestiPhoto1 =
-  'https://www.figma.com/api/mcp/asset/96fe6173-912a-44dc-8216-617ea82e114e';
-const imgTestiPhoto2 =
-  'https://www.figma.com/api/mcp/asset/048d5fac-3850-455e-bfdc-9cb25655fbf2';
-const imgTestiFoodTop =
-  'https://www.figma.com/api/mcp/asset/44d92fab-34d5-4b15-8f16-775421809498';
-const imgTestiFoodBL =
-  'https://www.figma.com/api/mcp/asset/c7ce1133-4c11-48ac-88e4-e74db8405fce';
-const imgTestiFoodBR =
-  'https://www.figma.com/api/mcp/asset/3a08b682-59af-438d-bdff-1f27663fde41';
-
-// CTA
-const imgCtaBg =
-  'https://www.figma.com/api/mcp/asset/c045f58f-3e88-456c-8564-e39055cdd97c';
-const imgStarIcon =
-  'https://www.figma.com/api/mcp/asset/7a8485e3-e3c7-4fd2-a295-6bab03343b6a';
-const imgStarHalfIcon =
-  'https://www.figma.com/api/mcp/asset/170916df-1752-48bc-b2ec-47505132651a';
-const imgHeartIcon =
-  'https://www.figma.com/api/mcp/asset/b949d53a-7cbe-4e33-9892-69e7907f0c27';
-
-// ── Data ──
-
-const menuItems = [
-  { name: 'Mie Ramen', desc: 'lorem ipsum', price: '$ 20.2', img: imgMieRamen },
-  {
-    name: 'Salad Tahu',
-    desc: 'lorem ipsum',
-    price: '$ 20.2',
-    img: imgSaladTahu,
-  },
-  {
-    name: 'Roti Bakar',
-    desc: 'lorem ipsum',
-    price: '$ 20.2',
-    img: imgRotibakar,
-  },
-  {
-    name: 'Spaghetti',
-    desc: 'lorem ipsum',
-    price: '$ 20.2',
-    img: imgSpaghetti,
-  },
-];
-
-const services = [
-  {
-    img: imgOrder,
-    title: 'Easy To Order',
-    desc: 'You only order through the app',
-  },
-  {
-    img: imgDelivery,
-    title: 'Fastest Delivery',
-    desc: 'Delivery will be on time',
-  },
-  {
-    img: imgCourier,
-    title: 'Best Quality',
-    desc: 'The best quality of food for you',
-  },
-];
-
-const testimonials = [
-  {
-    name: 'Naura Silvana',
-    rating: 4.5,
-    photo: imgTestiPhoto1,
-    text: '\u201CLorem ipsum dolor sit amet, consectetur adipiscing elit ut aliquam, purus sit amet luctus venenatis.\u201D',
-  },
-  {
-    name: 'Azura',
-    rating: 4.5,
-    photo: imgTestiPhoto2,
-    text: '\u201CLorem ipsum dolor sit amet, consectetur adipiscing elit ut aliquam, purus sit amet luctus venenatis.\u201D',
-  },
-];
-
-// ── Sub-components ──
-
-function StarRating({ rating }: { rating: number }): JSX.Element {
-  const full = Math.floor(rating);
-  const hasHalf = rating % 1 >= 0.5;
-  return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: full }).map((_, i) => (
-        <img key={i} src={imgStarIcon} alt="star" className="h-5 w-5" />
-      ))}
-      {hasHalf && (
-        <img src={imgStarHalfIcon} alt="half star" className="h-5 w-5" />
-      )}
-    </div>
-  );
-}
-
-// ── Main Component ──
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import HeroCarousel from '../components/HeroCarousel';
+import RecipeCard from '../components/RecipeCard';
+import LatestRecipeCard from '../components/LatestRecipeCard';
+import CollectionCard from '../components/CollectionCard';
+import RecipeMeta from '../components/RecipeMeta';
+import {
+  CATEGORIES,
+  RECIPES,
+  COLLECTIONS,
+  LATEST_RECIPES,
+  LOREM,
+} from '../data/homeData';
 
 export default function HomePage(): JSX.Element {
+  useEffect(() => {
+    AOS.init({
+      duration: 700,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 60,
+    });
+  }, []);
+
   return (
-    <div
-      className="min-h-screen bg-white text-[#1d1d1d]"
-      style={{ fontFamily: "'Readex Pro', sans-serif" }}
-    >
-      {/* ═══════════ NAVBAR ═══════════ */}
+    <Box className="flex min-h-screen flex-col bg-white">
       <Navbar />
 
-      {/* ═══════════ HERO ═══════════ */}
-      <section id="home" className="relative overflow-hidden bg-[#fff9ea]">
-        <img
-          src={imgShapes}
-          alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-        />
+      {/* ── Hero Carousel (images only) ── */}
+      <Box data-aos="fade-in" data-aos-duration="1000">
+        <HeroCarousel />
+      </Box>
 
-        <div className="relative mx-auto flex max-w-[1440px] items-center px-[130px] py-[80px]">
-          {/* Text */}
-          <div className="flex max-w-[480px] flex-col gap-6">
-            <h1 className="text-[48px] leading-tight font-semibold">
-              Be The Fastest In Delivery Your{' '}
-              <span className="text-[#FFCB45]">Food</span>
-            </h1>
-            <p className="max-w-[370px] text-[18px] leading-relaxed font-normal text-[rgba(29,29,29,0.7)]">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit ut
-              aliquam, purus sit amet
-            </p>
-            <button className="w-fit rounded-full bg-[#FFCB45] px-6 py-3 text-sm font-bold transition hover:bg-[#f5c03a]">
-              Get Started
-            </button>
-          </div>
-
-          {/* Hero images */}
-          <div className="relative ml-auto h-[500px] w-[550px]">
-            <img
-              src={imgEllipse1}
-              alt=""
-              className="pointer-events-none absolute top-[50px] right-[50px] h-[275px] w-[286px]"
-            />
-            <img
-              src={imgEllipse2}
-              alt=""
-              className="pointer-events-none absolute right-0 bottom-[10px] h-[224px] w-[229px]"
-            />
-            <img
-              src={imgEllipse3}
-              alt=""
-              className="pointer-events-none absolute bottom-[70px] left-0 h-[168px] w-[167px]"
-            />
-
-            <img
-              src={imgHeroFood1}
-              alt="Salad bowl"
-              className="absolute top-[10px] right-[30px] h-[338px] w-[343px] rounded-full object-cover"
-            />
-            <img
-              src={imgHeroFood2}
-              alt="Food bowl"
-              className="absolute right-0 bottom-0 h-[262px] w-[275px] rounded-full object-cover"
-            />
-            <img
-              src={imgHeroFood3}
-              alt="Food bowl"
-              className="absolute bottom-[30px] left-0 h-[200px] w-[202px] rounded-full object-cover"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ WHAT WE SERVE ═══════════ */}
-      <section id="how-it-works" className="bg-white px-[130px] py-[80px]">
-        <div className="mx-auto max-w-[1440px]">
-          <div className="mb-14 text-center">
-            <p className="text-[22px] font-medium text-[#FFCB45]">
-              How it works
-            </p>
-            <h2 className="mt-2 text-[32px] font-bold">What We Serve</h2>
-            <p className="mx-auto mt-4 max-w-[611px] text-[22px] font-medium text-[rgba(29,29,29,0.7)]">
-              Product Quality Is Our Priority, And Always Guarantees Halal And
-              Safety Until It Is In Your Hands.
-            </p>
-          </div>
-
-          <div className="flex justify-center gap-16">
-            {services.map((s) => (
-              <div
-                key={s.title}
-                className="flex w-[240px] flex-col items-center gap-4 text-center"
+      {/* ── Popular Categories ── */}
+      <Box
+        component="section"
+        className="mt-20"
+        aria-labelledby="categories-heading"
+      >
+        <Container maxWidth="xl">
+          <Box
+            className="mb-10 flex items-center justify-between"
+            data-aos="fade-up"
+          >
+            <Typography id="categories-heading" variant="h4" fontWeight={700}>
+              Danh mục phổ biến
+            </Typography>
+            <Button
+              variant="text"
+              color="primary"
+              sx={{
+                fontWeight: 700,
+                '&:hover': { bgcolor: 'var(--color-primary-50)' },
+              }}
+            >
+              Xem tất cả →
+            </Button>
+          </Box>
+          <Grid container spacing={2}>
+            {CATEGORIES.map((cat, i) => (
+              <Grid
+                key={cat.name}
+                size={{ xs: 6, sm: 4, md: 2 }}
+                data-aos="fade-up"
+                data-aos-delay={i * 70}
               >
-                <img
-                  src={s.img}
-                  alt={s.title}
-                  className="h-[180px] w-[180px] object-contain"
-                />
-                <h3 className="text-[28px] font-semibold">{s.title}</h3>
-                <p className="text-[20px] font-medium text-[rgba(29,29,29,0.7)]">
-                  {s.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ POPULAR MENU ═══════════ */}
-      <section id="menu" className="bg-white px-[130px] py-[60px]">
-        <div className="mx-auto max-w-[1440px]">
-          <div className="mb-12 text-center">
-            <p className="text-[22px] font-medium text-[#FFCB45]">Our menu</p>
-            <h2 className="mt-2 text-[32px] font-bold">Our Popular Menu</h2>
-            <p className="mx-auto mt-4 max-w-[518px] text-[22px] font-medium text-[rgba(29,29,29,0.7)]">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit ut aliquam
-            </p>
-          </div>
-
-          <div className="flex justify-center gap-6">
-            {menuItems.map((item) => (
-              <div
-                key={item.name}
-                className="w-[280px] overflow-hidden rounded-[10px] bg-[#f1f1f1]"
-              >
-                <div className="flex justify-center px-[25px] pt-[13px]">
-                  <div className="h-[230px] w-[230px] overflow-hidden rounded-[10px]">
-                    <img
-                      src={item.img}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                </div>
-                <div className="mt-3 rounded-b-[10px] bg-white px-5 pt-3 pb-4">
-                  <h4 className="text-center text-[20px] font-medium">
-                    {item.name}
-                  </h4>
-                  <p className="mt-1 text-center text-[18px] font-normal text-[rgba(29,29,29,0.7)]">
-                    {item.desc}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[22px] font-medium">
-                      {item.price}
-                    </span>
-                    <button aria-label="Like">
-                      <img
-                        src={imgHeartIcon}
-                        alt=""
-                        className="h-6 w-6 opacity-60"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 flex justify-center">
-            <button className="rounded-full bg-[#FFCB45] px-6 py-3 text-sm font-bold transition hover:bg-[#f5c03a]">
-              More Menu
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ TESTIMONIALS ═══════════ */}
-      <section className="bg-white px-[130px] py-[80px]">
-        <div className="mx-auto flex max-w-[1440px] items-start gap-16">
-          {/* Food collage */}
-          <div className="grid w-[431px] shrink-0 grid-cols-2 gap-0 overflow-hidden rounded-[10px] shadow-[4px_4px_20px_0px_rgba(0,0,0,0.25)]">
-            <img
-              src={imgTestiFoodTop}
-              alt="food"
-              className="col-span-2 h-[187px] w-full object-cover"
-            />
-            <img
-              src={imgTestiFoodBL}
-              alt="food"
-              className="h-[208px] w-full object-cover"
-            />
-            <img
-              src={imgTestiFoodBR}
-              alt="food"
-              className="h-[208px] w-full object-cover"
-            />
-          </div>
-
-          {/* Reviews */}
-          <div className="flex flex-col pt-2">
-            <p className="text-[22px] font-medium text-[#FFCB45]">
-              What the say
-            </p>
-            <h2 className="mt-2 max-w-[481px] text-[32px] leading-tight font-bold">
-              What Our Customers Say About Us
-            </h2>
-
-            <div className="mt-8 flex gap-6 overflow-x-auto">
-              {testimonials.map((t) => (
-                <div
-                  key={t.name}
-                  className="w-[452px] shrink-0 rounded-[10px] bg-[#f1f1f1] p-5"
+                <Box
+                  className="group relative cursor-pointer overflow-hidden rounded-2xl shadow-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-2xl"
+                  sx={{ aspectRatio: '3/4' }}
                 >
-                  <div className="flex items-center gap-4">
+                  {/* Background image */}
+                  <img
+                    src={cat.img}
+                    alt={cat.name}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                      transition:
+                        'transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)',
+                    }}
+                    className="group-hover:scale-110"
+                  />
+                  {/* Gradient overlay */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      background:
+                        'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)',
+                      transition: 'opacity 0.3s',
+                    }}
+                  />
+                  {/* Category label */}
+                  <Typography
+                    variant="body1"
+                    fontWeight={700}
+                    sx={{
+                      position: 'absolute',
+                      bottom: 16,
+                      left: 0,
+                      right: 0,
+                      textAlign: 'center',
+                      color: '#fff',
+                      px: 1.5,
+                      lineHeight: 1.3,
+                      textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                      letterSpacing: 0.3,
+                    }}
+                  >
+                    {cat.name}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* ── Super Delicious ── */}
+      <Box
+        component="section"
+        className="mt-20"
+        aria-labelledby="super-delicious-heading"
+      >
+        <Container maxWidth="xl">
+          <Box className="mb-12 text-center" data-aos="fade-up">
+            <Typography
+              id="super-delicious-heading"
+              variant="h4"
+              fontWeight={700}
+              className="mb-4!"
+            >
+              Những Quán Ăn Ngon Nhất Thành Phố
+            </Typography>
+            <Typography color="text.secondary" className="mx-auto max-w-xl">
+              {LOREM}
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            {/* Large featured card */}
+            <Grid size={{ xs: 12, md: 8 }} data-aos="fade-right">
+              <Box className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Box
+                  className="relative overflow-hidden"
+                  style={{ aspectRatio: '16/9' }}
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=80"
+                    alt="Burger Bữa Sáng Wagyu"
+                    className="h-full w-full object-cover"
+                  />
+                  <Box
+                    component="button"
+                    className="absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-white transition hover:bg-gray-100"
+                    aria-label="Yêu thích"
+                  >
+                    <FavoriteIcon sx={{ fontSize: 18, color: '#ccc' }} />
+                  </Box>
+                </Box>
+                <Box className="p-6">
+                  <Rating
+                    value={5}
+                    readOnly
+                    size="small"
+                    sx={{
+                      mb: 1,
+                      '& .MuiRating-iconFilled': { color: '#f5a623' },
+                    }}
+                  />
+                  <Typography variant="h6" fontWeight={600}>
+                    Burger Wagyu Bữa Sáng Phô Mai Đậm Đà
+                  </Typography>
+                  <RecipeMeta time="30 phút" type="Món Tây" />
+                  <Box className="mt-3 flex items-center gap-2">
                     <img
-                      src={t.photo}
-                      alt={t.name}
-                      className="h-[60px] w-[59px] rounded-full object-cover"
+                      src={`https://i.pravatar.cc/40?u=john`}
+                      alt="John Smith"
+                      className="h-7 w-7 rounded-full object-cover"
                     />
-                    <div>
-                      <p className="text-[20px] font-medium">{t.name}</p>
-                      <StarRating rating={t.rating} />
-                    </div>
-                  </div>
-                  <p className="mt-4 text-[18px] leading-relaxed font-normal text-[rgba(29,29,29,0.7)]">
-                    {t.text}
-                  </p>
-                </div>
-              ))}
-            </div>
+                    <Typography variant="caption" color="text.secondary">
+                      John Smith · 15 tháng 3, 2022
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Grid>
 
-            <div className="mt-6 flex gap-3">
-              <span className="h-2 w-2 rounded-full bg-[#FFCB45]" />
-              <span className="h-2 w-2 rounded-full bg-gray-300" />
-              <span className="h-2 w-2 rounded-full bg-gray-300" />
-            </div>
-          </div>
-        </div>
-      </section>
+            {RECIPES.slice(0, 4).map((r, i) => (
+              <Grid
+                key={r.title}
+                size={{ xs: 12, sm: 6, md: 4 }}
+                data-aos="fade-up"
+                data-aos-delay={i * 80}
+              >
+                <RecipeCard {...r} stretch />
+              </Grid>
+            ))}
 
-      {/* ═══════════ CTA BANNER ═══════════ */}
-      <section className="px-[130px] py-[40px]">
-        <div className="relative mx-auto max-w-[1180px] overflow-hidden rounded-[10px]">
-          <img
-            src={imgCtaBg}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 rounded-[10px] bg-[rgba(0,0,0,0.71)]" />
-          <div className="relative flex flex-col items-center gap-6 py-[60px] text-center text-white">
-            <h2 className="max-w-[524px] text-[32px] leading-tight font-bold">
-              Join our member and get discount up to 50%
-            </h2>
-            <button className="rounded-full bg-[#FFCB45] px-6 py-3 text-sm font-bold text-[#1d1d1d] transition hover:bg-[#f5c03a]">
-              Sign Up
-            </button>
-          </div>
-        </div>
-      </section>
+            {/* Ad card */}
+            <Grid
+              size={{ xs: 12, sm: 6, md: 4 }}
+              data-aos="zoom-in"
+              data-aos-delay="100"
+            >
+              <Box
+                className="from-primary-50 to-primary-100 relative flex h-full items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br p-10"
+                style={{ minHeight: 200 }}
+              >
+                <Box className="relative z-10 text-center">
+                  <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    className="mb-3!"
+                    color="text.primary"
+                  >
+                    Đừng quên ăn đủ chất dinh dưỡng mỗi ngày!
+                  </Typography>
+                  <Typography color="text.secondary" variant="body2">
+                    www.lowca.vn
+                  </Typography>
+                </Box>
+                <img
+                  src={lightLogo}
+                  alt="light logo"
+                  aria-hidden={true}
+                  className="absolute right-2.5 bottom-2.5 h-18 w-18 object-contain"
+                />
+              </Box>
+            </Grid>
 
-      {/* ═══════════ FOOTER ═══════════ */}
+            {RECIPES.slice(4).map((r, i) => (
+              <Grid
+                key={r.title}
+                size={{ xs: 12, sm: 6, md: 4 }}
+                data-aos="fade-up"
+                data-aos-delay={i * 80}
+              >
+                <RecipeCard {...r} />
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* ── Curated Collections ── */}
+      <Box
+        component="section"
+        className="mt-20"
+        aria-labelledby="collections-heading"
+      >
+        <Container maxWidth="xl">
+          <Box className="mb-12 text-center" data-aos="fade-up">
+            <Typography
+              id="collections-heading"
+              variant="h4"
+              fontWeight={700}
+              className="mb-4!"
+            >
+              Bộ Sưu Tập Công Thức
+            </Typography>
+            <Typography color="text.secondary" className="mx-auto max-w-xl">
+              {LOREM}
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            {COLLECTIONS.map((col, i) => (
+              <Grid
+                key={col.title}
+                size={{ xs: 12, sm: 6, md: 4 }}
+                data-aos="flip-left"
+                data-aos-delay={i * 120}
+              >
+                <CollectionCard {...col} />
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* ── Latest Recipes ── */}
+      <Box
+        component="section"
+        className="mt-20"
+        aria-labelledby="latest-recipes-heading"
+      >
+        <Container maxWidth="xl">
+          <Box
+            className="mb-10 flex items-center justify-between"
+            data-aos="fade-up"
+          >
+            <Typography
+              id="latest-recipes-heading"
+              variant="h4"
+              fontWeight={700}
+            >
+              Công Thức Mới Nhất
+            </Typography>
+            <Button
+              variant="text"
+              color="primary"
+              sx={{
+                fontWeight: 700,
+                '&:hover': { bgcolor: 'var(--color-primary-50)' },
+              }}
+            >
+              Xem tất cả →
+            </Button>
+          </Box>
+          <Grid container spacing={3}>
+            {LATEST_RECIPES.map((r, i) => (
+              <Grid
+                key={r.title}
+                size={{ xs: 12, sm: 6, md: 3 }}
+                data-aos="fade-up"
+                data-aos-delay={i * 80}
+              >
+                <LatestRecipeCard {...r} />
+              </Grid>
+            ))}
+          </Grid>
+          <Box
+            className="mt-10 flex justify-center"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <Button
+              variant="outlined"
+              color="primary"
+              sx={{
+                borderRadius: 3,
+                px: 5,
+                py: 1.5,
+                fontWeight: 700,
+                '&:hover': { bgcolor: 'var(--color-primary-50)' },
+              }}
+            >
+              Tải thêm
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* ── Newsletter ── */}
+      <Box
+        component="section"
+        className="bg-primary-50 relative mt-24 flex w-full items-center justify-center overflow-hidden py-20"
+        aria-labelledby="newsletter-heading"
+      >
+        <Box
+          className="relative z-10 max-w-lg px-4 text-center"
+          data-aos="fade-up"
+        >
+          <Typography
+            id="newsletter-heading"
+            variant="h3"
+            fontWeight={700}
+            className="mb-4!"
+            color="text.primary"
+          >
+            Ưu Đãi Đến Tận Hộp Thư!
+          </Typography>
+          <Typography color="text.secondary" className="mb-10!">
+            {LOREM}
+          </Typography>
+          <Box className="mx-auto flex max-w-md gap-3">
+            <TextField
+              type="email"
+              placeholder="Địa chỉ email của bạn..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              required
+              sx={{
+                bgcolor: '#fff',
+                '& .MuiOutlinedInput-root': { borderRadius: 2 },
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                px: 3,
+              }}
+            >
+              Đăng ký
+            </Button>
+          </Box>
+        </Box>
+        <img
+          src="img/newsletter-image.png"
+          alt=""
+          aria-hidden={true}
+          className="absolute right-[8%] bottom-0 z-0 h-auto w-72 object-contain"
+          data-aos="fade-left"
+          data-aos-delay="300"
+        />
+      </Box>
+
       <Footer />
-    </div>
+    </Box>
   );
 }
