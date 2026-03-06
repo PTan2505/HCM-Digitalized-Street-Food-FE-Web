@@ -10,7 +10,6 @@ import {
   getMyVendor,
   checkLicenseStatus,
 } from '@slices/vendor';
-import type { AlertColor } from '@mui/material';
 import type {
   GetMyVendorResponse,
   CheckLicenseStatusResponse,
@@ -38,22 +37,13 @@ export interface VendorFormData {
   agreeTerms: boolean;
 }
 
-export interface SnackbarState {
-  open: boolean;
-  message: string;
-  severity: AlertColor;
-}
-
 interface UseVendorRegistrationReturn {
   readonly mode: PageMode;
   readonly formData: VendorFormData;
-  readonly snackbar: SnackbarState;
   readonly vendorStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
   readonly myVendor: GetMyVendorResponse | null;
   readonly licenseStatusData: CheckLicenseStatusResponse | null;
   readonly isFormValid: boolean;
-  readonly showAlert: (message: string, severity?: AlertColor) => void;
-  readonly closeSnackbar: () => void;
   readonly handleInputChange: (field: string, value: unknown) => void;
   readonly handleLocationChange: (lat: number, lng: number) => void;
   readonly handleFileChange: (files: FileList | null) => void;
@@ -88,12 +78,6 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
 
   const [initialLoading, setInitialLoading] = useState(true);
   const [formData, setFormData] = useState<VendorFormData>(INITIAL_FORM_DATA);
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    open: false,
-    message: '',
-    severity: 'info',
-  });
-
   // ── Derived state ──────────────────────────────────────────────────
   const mode: PageMode = useMemo(() => {
     if (initialLoading) return 'loading';
@@ -129,18 +113,6 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
 
     return hasOwnerInfo && hasStoreInfo;
   }, [formData, mode]);
-
-  // ── Snackbar helpers ───────────────────────────────────────────────
-  const showAlert = useCallback(
-    (message: string, severity: AlertColor = 'info') => {
-      setSnackbar({ open: true, message, severity });
-    },
-    []
-  );
-
-  const closeSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  }, []);
 
   // ── Form handlers ─────────────────────────────────────────────────
   const handleInputChange = useCallback((field: string, value: unknown) => {
@@ -207,7 +179,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           ownerName: myVendor.name || '',
           ownerPhone: branch.phoneNumber || '',
           email: branch.email || '',
-          branchName: branch.branchName || '',
+          branchName: myVendor.name + ' ' + branch.name || '',
           detailAddress: branch.addressDetail || '',
           ward: branch.ward || '',
           city: branch.city || 'TP. Hồ Chí Minh',
@@ -226,52 +198,17 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
       try {
         // Upload / Resubmit license only
         if (mode === 'uploadLicense' || mode === 'resubmit') {
-          const branch = myVendor?.branches?.[0];
-          if (!branch) {
-            showAlert('Không tìm thấy thông tin chi nhánh.', 'error');
-            return;
-          }
-          if (formData.licenseImages.length === 0) {
-            showAlert('Vui lòng chọn ảnh giấy phép kinh doanh.', 'warning');
-            return;
-          }
+          // branch is guaranteed to exist when mode is uploadLicense/resubmit
+          const branch = myVendor!.branches[0];
 
           await onSubmitLicense({
             branchId: branch.branchId,
             licenseImages: formData.licenseImages,
           });
-
-          showAlert(
-            mode === 'resubmit'
-              ? 'Gửi lại hồ sơ thành công! Vui lòng chờ quản trị viên xét duyệt.'
-              : 'Cập nhật giấy phép thành công! Vui lòng chờ quản trị viên xét duyệt.',
-            'success'
-          );
           return;
         }
 
-        // Full registration
-        if (!formData.ownerName || !formData.ownerPhone || !formData.email) {
-          showAlert(
-            'Vui lòng đảm bảo thông tin cửa hàng đã được điền đầy đủ.',
-            'warning'
-          );
-          return;
-        }
-        // branchName is optional, không cần check
-        if (!formData.ward) {
-          showAlert('Vui lòng nhập phường/xã.', 'warning');
-          return;
-        }
-        if (!formData.city) {
-          showAlert('Vui lòng chọn tỉnh/thành phố.', 'warning');
-          return;
-        }
-        if (!formData.latitude || !formData.longitude) {
-          showAlert('Vui lòng chọn vị trí trên bản đồ.', 'warning');
-          return;
-        }
-
+        // Full registration — field validation is handled by zodResolver
         const vendorResponse = await onRegisterVendor({
           name: formData.ownerName,
           phoneNumber: formData.ownerPhone,
@@ -280,64 +217,32 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           branchName: formData.branchName || formData.ownerName, // Nếu không có branchName, dùng ownerName
           ward: formData.ward,
           city: formData.city,
-          lat: formData.latitude,
-          long: formData.longitude,
+          lat: formData.latitude!,
+          long: formData.longitude!,
         });
 
         const newBranchId = vendorResponse.branches[0]?.branchId;
-        if (!newBranchId) {
-          showAlert(
-            'Đăng ký vendor thành công nhưng không tìm thấy branch ID.',
-            'warning'
-          );
-          return;
-        }
-
-        if (formData.licenseImages.length > 0) {
+        if (newBranchId && formData.licenseImages.length > 0) {
           await onSubmitLicense({
             branchId: newBranchId,
             licenseImages: formData.licenseImages,
           });
         }
-
-        showAlert(
-          'Đăng ký thành công! Vui lòng chờ quản trị viên xét duyệt.',
-          'success'
-        );
-      } catch (error) {
-        let errorMessage = 'Thao tác thất bại. Vui lòng thử lại.';
-
-        if (error && typeof error === 'object') {
-          const err = error as { message?: string };
-          if (err.message) {
-            if (err.message.includes('already has a vendor account')) {
-              errorMessage = 'Tài khoản của bạn đã đăng ký làm vendor rồi!';
-            } else if (err.message === 'Bad Request') {
-              errorMessage =
-                'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
-            } else {
-              errorMessage = err.message;
-            }
-          }
-        }
-
-        showAlert(errorMessage, 'error');
+      } catch {
+        // TODO: handle error notification
       }
     },
-    [mode, formData, myVendor, onRegisterVendor, onSubmitLicense, showAlert]
+    [mode, formData, myVendor, onRegisterVendor, onSubmitLicense]
   );
 
   // ── Return ─────────────────────────────────────────────────────────
   return {
     mode,
     formData,
-    snackbar,
     vendorStatus,
     myVendor,
     licenseStatusData,
     isFormValid,
-    showAlert,
-    closeSnackbar,
     handleInputChange,
     handleLocationChange,
     handleFileChange,

@@ -72,7 +72,7 @@ export default function VendorRegistrationDetails({
     { label: 'Email', value: branch.email },
     { label: 'Số điện thoại', value: branch.phoneNumber },
     { label: 'Địa chỉ chi tiết', value: branch.addressDetail },
-    { label: 'Tòa nhà', value: branch.branchName },
+    // { label: 'Tên chi nhánh chính', value: branch.branchName },
     { label: 'Phường/Xã', value: branch.ward },
     { label: 'Thành phố', value: branch.city },
     { label: 'Vĩ độ', value: String(branch.lat) },
