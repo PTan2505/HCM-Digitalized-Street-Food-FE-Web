@@ -1,6 +1,3 @@
-import { Delete } from '@mui/icons-material';
-import { get } from 'http';
-
 export const apiUrl = {
   auth: {
     facebookLogin: '/Auth/facebook-login',
