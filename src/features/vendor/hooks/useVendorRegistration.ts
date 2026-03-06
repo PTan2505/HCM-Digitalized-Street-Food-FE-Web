@@ -179,7 +179,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           ownerName: myVendor.name || '',
           ownerPhone: branch.phoneNumber || '',
           email: branch.email || '',
-          branchName: branch.branchName || '',
+          branchName: myVendor.name + ' ' + branch.name || '',
           detailAddress: branch.addressDetail || '',
           ward: branch.ward || '',
           city: branch.city || 'TP. Hồ Chí Minh',

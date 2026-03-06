@@ -68,11 +68,11 @@ export default function VendorRegistrationDetails({
   ];
 
   const branchRows: { label: string; value: string }[] = [
-    { label: 'Tên cửa hàng', value: branch.name },
+    { label: 'Tên chi nhánh', value: branch.name },
     { label: 'Email', value: branch.email },
     { label: 'Số điện thoại', value: branch.phoneNumber },
     { label: 'Địa chỉ chi tiết', value: branch.addressDetail },
-    { label: 'Tên chi nhánh chính', value: branch.branchName },
+    // { label: 'Tên chi nhánh chính', value: branch.branchName },
     { label: 'Phường/Xã', value: branch.ward },
     { label: 'Thành phố', value: branch.city },
     { label: 'Vĩ độ', value: String(branch.lat) },
