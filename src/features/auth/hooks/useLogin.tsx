@@ -14,6 +14,7 @@ import {
   verifyPhoneNumber,
 } from '@slices/auth';
 import { resetVendorState } from '@slices/vendor';
+import { resetPaymentState } from '@slices/payment';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -65,6 +66,7 @@ export default function useLogin(): {
   function onLogout(): void {
     dispatch(logout());
     dispatch(resetVendorState());
+    dispatch(resetPaymentState());
     navigate(ROUTES.LOGIN);
   }
   return {

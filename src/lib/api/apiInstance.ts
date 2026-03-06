@@ -8,6 +8,7 @@ import { VendorAdminApi } from '@features/admin/api/vendorApi';
 import { VendorApi } from '@features/vendor/api/vendorApi';
 import { BranchApi } from '@features/moderator/api/branchApi';
 import { TasteApi } from '@features/admin/api/tasteApi';
+import { PaymentApi } from '@features/vendor/api/paymentApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -23,4 +24,5 @@ export const axiosApi = {
   vendorApi: new VendorApi(axiosClient),
   branchApi: new BranchApi(axiosClient),
   tasteApi: new TasteApi(axiosClient),
+  paymentApi: new PaymentApi(axiosClient),
 };

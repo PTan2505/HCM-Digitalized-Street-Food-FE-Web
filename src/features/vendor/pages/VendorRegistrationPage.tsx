@@ -11,7 +11,7 @@ import {
   type VendorRegistrationFormData,
 } from '../utils/vendorRegistrationSchema';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
-import { Snackbar, Alert, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 
 // ─── Shared UI fragments ─────────────────────────────────────────────
 const PAGE_BG =
@@ -36,6 +36,18 @@ function PageShell({
         {children}
       </div>
     </div>
+  );
+}
+
+function PaymentButton({ onClick }: { onClick: () => void }): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#06AA4C] px-6 py-4 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#058f40] hover:shadow-xl active:translate-y-0"
+    >
+      Thanh toán
+    </button>
   );
 }
 
@@ -75,15 +87,14 @@ const SUBMIT_LABEL_MAP = {
 // ─── Main component ──────────────────────────────────────────────────
 export default function VendorRegistrationPage(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
 
   const {
     mode,
     formData,
-    snackbar,
     vendorStatus,
     licenseStatusData,
     isFormValid,
-    closeSnackbar,
     handleInputChange,
     handleLocationChange,
     handleFileChange,
@@ -150,25 +161,6 @@ export default function VendorRegistrationPage(): JSX.Element {
       void trigger(['latitude', 'longitude']);
     }
   };
-
-  // ── Shared snackbar element ────────────────────────────────────────
-  const snackbarEl = (
-    <Snackbar
-      open={snackbar.open}
-      autoHideDuration={6000}
-      onClose={closeSnackbar}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-    >
-      <Alert
-        onClose={closeSnackbar}
-        severity={snackbar.severity}
-        variant="filled"
-        sx={{ width: '100%' }}
-      >
-        {snackbar.message}
-      </Alert>
-    </Snackbar>
-  );
 
   // ── Loading state ──────────────────────────────────────────────────
   if (mode === 'loading') {
@@ -252,11 +244,12 @@ export default function VendorRegistrationPage(): JSX.Element {
           hideLicenseUpload={true}
         />
 
-        <div className="mt-10">
+        <div className="mt-10 space-y-4">
+          {licenseStatusData?.status === 'Accept' && (
+            <PaymentButton onClick={() => {}} />
+          )}
           <LogoutButton onClick={onLogout} />
         </div>
-
-        {snackbarEl}
       </PageShell>
     );
   }
@@ -266,11 +259,15 @@ export default function VendorRegistrationPage(): JSX.Element {
 
   return (
     <PageShell title={TITLE_MAP[formMode]} subtitle={SUBTITLE_MAP[formMode]}>
-      {mode === 'resubmit' && licenseStatusData && (
+      {mode === 'resubmit' && licenseStatusData && showBanner && (
         <LicenseStatusBanner data={licenseStatusData} />
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form
+        onSubmit={handleSubmit}
+        onFocus={() => setShowBanner(false)}
+        className="space-y-8"
+      >
         <OwnerInfoSection {...ownerProps} />
 
         <StoreSection
@@ -343,7 +340,6 @@ export default function VendorRegistrationPage(): JSX.Element {
       </form>
 
       <TermsDialog open={openTerms} onClose={() => setOpenTerms(false)} />
-      {snackbarEl}
     </PageShell>
   );
 }

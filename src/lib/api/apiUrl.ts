@@ -1,5 +1,3 @@
-import { Delete } from '@mui/icons-material';
-
 export const apiUrl = {
   auth: {
     facebookLogin: '/Auth/facebook-login',
@@ -99,5 +97,14 @@ export const apiUrl = {
   taste: {
     getAllOrPostTaste: '/tastes',
     updateOrDeleteTaste: (id: number): string => `/tastes/${id}`,
+  },
+  payment: {
+    createPaymentLink: '/Payment/create-link',
+    getPaymentStatus: (orderCode: string): string =>
+      `/Payment/status/${orderCode}`,
+    getPaymentHistory: '/Payment/history',
+    getPaymentSuccess: '/Payment/success',
+    getPaymentCancel: '/Payment/cancel',
+    confirmPayment: '/Payment/confirm/',
   },
 };
