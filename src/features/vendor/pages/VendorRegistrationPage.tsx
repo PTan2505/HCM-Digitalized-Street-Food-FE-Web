@@ -186,14 +186,14 @@ export default function VendorRegistrationPage(): JSX.Element {
     errors:
       mode === 'register'
         ? {
-          ownerName: dirtyFields.ownerName
-            ? errors.ownerName?.message
-            : undefined,
-          ownerPhone: dirtyFields.ownerPhone
-            ? errors.ownerPhone?.message
-            : undefined,
-          email: dirtyFields.email ? errors.email?.message : undefined,
-        }
+            ownerName: dirtyFields.ownerName
+              ? errors.ownerName?.message
+              : undefined,
+            ownerPhone: dirtyFields.ownerPhone
+              ? errors.ownerPhone?.message
+              : undefined,
+            email: dirtyFields.email ? errors.email?.message : undefined,
+          }
         : undefined,
   } as const;
 
@@ -210,18 +210,18 @@ export default function VendorRegistrationPage(): JSX.Element {
   const storeErrors =
     mode === 'register'
       ? {
-        branchName: dirtyFields.branchName
-          ? errors.branchName?.message
-          : undefined,
-        detailAddress: dirtyFields.detailAddress
-          ? errors.detailAddress?.message
-          : undefined,
-        ward: dirtyFields.ward ? errors.ward?.message : undefined,
-        latitude: dirtyFields.latitude ? errors.latitude?.message : undefined,
-        longitude: dirtyFields.longitude
-          ? errors.longitude?.message
-          : undefined,
-      }
+          branchName: dirtyFields.branchName
+            ? errors.branchName?.message
+            : undefined,
+          detailAddress: dirtyFields.detailAddress
+            ? errors.detailAddress?.message
+            : undefined,
+          ward: dirtyFields.ward ? errors.ward?.message : undefined,
+          latitude: dirtyFields.latitude ? errors.latitude?.message : undefined,
+          longitude: dirtyFields.longitude
+            ? errors.longitude?.message
+            : undefined,
+        }
       : undefined;
 
   // ── View status mode ──────────────────────────────────────────────
@@ -246,7 +246,7 @@ export default function VendorRegistrationPage(): JSX.Element {
 
         <div className="mt-10 space-y-4">
           {licenseStatusData?.status === 'Accept' && (
-            <PaymentButton onClick={() => { }} />
+            <PaymentButton onClick={() => {}} />
           )}
           <LogoutButton onClick={onLogout} />
         </div>
@@ -263,7 +263,11 @@ export default function VendorRegistrationPage(): JSX.Element {
         <LicenseStatusBanner data={licenseStatusData} />
       )}
 
-      <form onSubmit={handleSubmit} onFocus={() => setShowBanner(false)} className="space-y-8">
+      <form
+        onSubmit={handleSubmit}
+        onFocus={() => setShowBanner(false)}
+        className="space-y-8"
+      >
         <OwnerInfoSection {...ownerProps} />
 
         <StoreSection
