@@ -40,8 +40,14 @@ export interface ConfirmPaymentResponse {
   message?: string;
 }
 
-export interface GetPaymentHistoryResponse {}
+export interface GetPaymentHistoryResponse {
+  message?: string;
+}
 
-export interface GetPaymentSuccessResponse {}
+export interface GetPaymentSuccessResponse {
+  message?: string;
+}
 
-export interface GetPaymentCancelResponse {}
+export interface GetPaymentCancelResponse {
+  message?: string;
+}
