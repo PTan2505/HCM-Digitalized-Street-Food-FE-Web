@@ -24,10 +24,6 @@ export const VendorRegistrationSchema = z.object({
 
   // Thông tin chi nhánh
   branchName: z.string().optional(), // Optional - có thể để trống
-  ward: z
-    .string()
-    .nonempty('Vui lòng nhập phường/xã!')
-    .min(3, 'Phường/xã phải có ít nhất 3 ký tự!'),
   detailAddress: z
     .string()
     .nonempty('Vui lòng nhập địa chỉ cửa hàng!')
