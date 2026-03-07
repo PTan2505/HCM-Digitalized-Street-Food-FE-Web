@@ -84,6 +84,18 @@ export interface SubmitImagesRequest {
 }
 
 export interface SubmitImagesResponse {
-  message: string;
-  success: boolean;
+  branchImageId: number;
+  branchId: number;
+  imageUrl: string;
+  // branch?: Branch;
+}
+
+export interface GetImagesResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: SubmitImagesResponse[];
 }
