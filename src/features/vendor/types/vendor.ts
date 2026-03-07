@@ -29,6 +29,7 @@ export interface Branch {
   avgRating: number;
   isActive: boolean;
   isSubscribed: boolean;
+  daysRemaining: number | null;
   licenseUrl: string | null;
   licenseUrls: string[] | null;
   licenseStatus: string | null;
