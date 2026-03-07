@@ -3,11 +3,12 @@ export interface VendorRegistrationRequest {
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  buildingName: string;
+  branchName: string;
   ward: string;
   city: string;
   lat: number;
   long: number;
+  isActive?: boolean;
 }
 
 export interface Branch {
@@ -18,7 +19,7 @@ export interface Branch {
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  buildingName: string;
+  branchName: string;
   ward: string;
   city: string;
   lat: number;
@@ -29,6 +30,7 @@ export interface Branch {
   avgRating: number;
   isActive: boolean;
   isSubscribed: boolean;
+  daysRemaining: number | null;
   licenseUrl: string | null;
   licenseUrls: string[] | null;
   licenseStatus: string | null;
@@ -74,4 +76,14 @@ export interface CheckLicenseStatusResponse {
   licenseUrls: string[] | null;
   rejectReason: string | null;
   submittedAt: string;
+}
+
+export interface SubmitImagesRequest {
+  branchId: number;
+  image: File;
+}
+
+export interface SubmitImagesResponse {
+  message: string;
+  success: boolean;
 }

@@ -166,7 +166,7 @@ export default function VendorDetailModal({
                       <Box className="flex items-start gap-2">
                         <LocationOnIcon fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {branch.addressDetail}, {branch.buildingName},{' '}
+                          {branch.addressDetail}, {branch.branchName},{' '}
                           {branch.ward}, {branch.city}
                         </Typography>
                       </Box>

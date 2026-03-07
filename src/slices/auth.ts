@@ -190,7 +190,9 @@ export const authSlice = createSlice({
       // Matcher: Gom tất cả các case thất bại (rejected)
       .addMatcher(isRejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload ?? { message: 'An error occurred' };
+        state.error = (action as { payload?: unknown }).payload ?? {
+          message: 'An error occurred',
+        };
       })
       // Matcher: Gom các case thành công (ngoại trừ logout) để set status succeeded
       .addMatcher(

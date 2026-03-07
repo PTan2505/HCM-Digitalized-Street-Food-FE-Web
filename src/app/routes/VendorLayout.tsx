@@ -6,6 +6,7 @@ import {
   ChevronRightIcon,
   HomeIcon,
   BuildingStorefrontIcon,
+  ClipboardDocumentListIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -18,6 +19,11 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const navigation = [
   { name: 'Dashboard', href: '/vendor/dashboard', icon: HomeIcon },
   { name: 'Chi nhánh', href: '/vendor/branch', icon: BuildingStorefrontIcon },
+  {
+    name: 'Lịch sử thanh toán',
+    href: '/vendor/payment-history',
+    icon: ClipboardDocumentListIcon,
+  },
 ];
 
 function VendorLayout(): JSX.Element {

@@ -1,9 +1,12 @@
 export const ROUTES = {
   LOGIN: '/login',
   ROOT: '/',
+  HOME: '/home',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
   VENDOR_REGISTRATION: '/vendor-registration',
   USER_INFO_SETUP: '/user-info-setup',
+  PAYMENT_SUCCESS: '/Payment/success',
+  PAYMENT_CANCEL: '/Payment/cancel',
 
   // Moderator routes
   MODERATOR: {
@@ -44,6 +47,13 @@ export const ROUTES = {
     PATHS: {
       DASHBOARD: 'dashboard',
       BRANCH: 'branch',
+      PAYMENT_HISTORY: 'payment-history',
     },
+  },
+
+  // Payment routes (standalone, outside vendor layout)
+  PAYMENT: {
+    SUCCESS: '/Payment/success',
+    CANCEL: '/Payment/cancel',
   },
 };
