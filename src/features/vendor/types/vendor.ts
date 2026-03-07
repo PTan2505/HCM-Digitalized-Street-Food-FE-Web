@@ -75,3 +75,13 @@ export interface CheckLicenseStatusResponse {
   rejectReason: string | null;
   submittedAt: string;
 }
+
+export interface SubmitImagesRequest {
+  branchId: number;
+  image: File;
+}
+
+export interface SubmitImagesResponse {
+  message: string;
+  success: boolean;
+}
