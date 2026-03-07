@@ -40,9 +40,24 @@ export interface ConfirmPaymentResponse {
   message?: string;
 }
 
-export interface GetPaymentHistoryResponse {
-  message?: string;
+export interface PaymentHistoryItem {
+  id: number;
+  userId: number;
+  branchId: number;
+  orderCode: number;
+  amount: number;
+  description: string;
+  status: string;
+  createdAt: string;
+  paidAt: string | null;
+  paymentLinkId: string | null;
+  transactionCode: string | null;
+  paymentMethod: string | null;
+  checkoutUrl: string | null;
+  user: unknown | null;
 }
+
+export type GetPaymentHistoryResponse = PaymentHistoryItem[];
 
 export interface GetPaymentSuccessResponse {
   message?: string;
