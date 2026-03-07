@@ -161,7 +161,9 @@ export const vendorSlice = createSlice({
       // Matcher: Handle all rejected cases
       .addMatcher(isRejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload ?? { message: 'An error occurred' };
+        state.error = (action as { payload?: unknown }).payload ?? {
+          message: 'An error occurred',
+        };
       })
       // Matcher: Handle all fulfilled cases
       .addMatcher(isFulfilled, (state) => {

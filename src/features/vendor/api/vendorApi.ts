@@ -4,7 +4,6 @@ import type {
   SubmitLicenseResponse,
   CheckLicenseStatusResponse,
   GetMyVendorResponse,
-  SubmitImagesRequest,
   SubmitImagesResponse,
 } from '@features/vendor/types/vendor';
 import type {

@@ -115,7 +115,6 @@ export default function VendorRegistrationPage(): JSX.Element {
       ownerPhone: '',
       email: '',
       branchName: '',
-      ward: '',
       detailAddress: '',
       latitude: null,
       longitude: null,
@@ -130,7 +129,6 @@ export default function VendorRegistrationPage(): JSX.Element {
       setValue('ownerPhone', formData.ownerPhone, { shouldDirty: false });
       setValue('email', formData.email, { shouldDirty: false });
       setValue('branchName', formData.branchName, { shouldDirty: false });
-      setValue('ward', formData.ward, { shouldDirty: false });
       setValue('detailAddress', formData.detailAddress, { shouldDirty: false });
       if (formData.latitude !== null)
         setValue('latitude', formData.latitude, { shouldDirty: false });
@@ -216,7 +214,6 @@ export default function VendorRegistrationPage(): JSX.Element {
           detailAddress: dirtyFields.detailAddress
             ? errors.detailAddress?.message
             : undefined,
-          ward: dirtyFields.ward ? errors.ward?.message : undefined,
           latitude: dirtyFields.latitude ? errors.latitude?.message : undefined,
           longitude: dirtyFields.longitude
             ? errors.longitude?.message

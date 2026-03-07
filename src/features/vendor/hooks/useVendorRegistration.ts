@@ -106,7 +106,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     const hasStoreInfo =
       // branchName is optional, không cần check
       formData.detailAddress.trim() !== '' &&
-      formData.ward.trim() !== '' &&
+      // ward/city are auto-filled by AddressAutocomplete, not required for basic validity
       formData.latitude !== null &&
       formData.longitude !== null &&
       formData.licenseImages.length > 0;
@@ -199,7 +199,8 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
         // Upload / Resubmit license only
         if (mode === 'uploadLicense' || mode === 'resubmit') {
           // branch is guaranteed to exist when mode is uploadLicense/resubmit
-          const branch = myVendor!.branches[0];
+          const branch = myVendor?.branches[0];
+          if (!branch) return;
 
           await onSubmitLicense({
             branchId: branch.branchId,
@@ -217,8 +218,8 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           branchName: formData.branchName || formData.ownerName, // Nếu không có branchName, dùng ownerName
           ward: formData.ward,
           city: formData.city,
-          lat: formData.latitude!,
-          long: formData.longitude!,
+          lat: formData.latitude ?? 0,
+          long: formData.longitude ?? 0,
         });
 
         const newBranchId = vendorResponse.branches[0]?.branchId;

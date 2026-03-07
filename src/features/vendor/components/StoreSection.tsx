@@ -1,5 +1,8 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapLocationPicker from './MapLocationPicker';
+import AddressAutocomplete, {
+  type AddressSelectData,
+} from './AddressAutocomplete';
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import type { JSX } from 'react';
 
@@ -21,7 +24,6 @@ interface StoreSectionProps {
   errors?: {
     branchName?: string;
     detailAddress?: string;
-    ward?: string;
     latitude?: string;
     longitude?: string;
   };
@@ -39,13 +41,15 @@ export default function StoreSection({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [fullViewImage, setFullViewImage] = useState<string | null>(null);
 
-  // Ghép địa chỉ đầy đủ để hiển thị trên map
-  const fullAddress = useMemo(() => {
-    if (!formData.detailAddress || formData.detailAddress.trim() === '') {
-      return '';
+  // Handle address autocomplete selection — syncs all address fields at once
+  const handleAddressSelect = (data: AddressSelectData): void => {
+    onChange('detailAddress', data.addressDetail);
+    onChange('ward', data.ward);
+    onChange('city', data.city || 'Thành phố Hồ Chí Minh');
+    if (data.latitude !== null && data.longitude !== null) {
+      onLocationChange(data.latitude, data.longitude);
     }
-    return `${formData.detailAddress}, ${formData.city}`;
-  }, [formData.detailAddress, formData.city]);
+  };
 
   // Tạo preview URLs khi licenseImages thay đổi
   useEffect(() => {
@@ -146,74 +150,45 @@ export default function StoreSection({
         )}
       </div>
 
-      {/* Tỉnh/Thành phố - Cố định TP.HCM */}
-      <div className="mb-6">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Tỉnh / Thành phố <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={formData.city}
-          disabled
-          className="w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-gray-600"
-        />
-      </div>
-
-      {/* Ward Phường */}
-      <div className="mb-6">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Phường / Xã <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          required
-          placeholder="Phường Bình Trưng Tây"
-          value={formData.ward}
-          onChange={(e) => onChange('ward', e.target.value)}
-          disabled={readonly}
-          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
-            readonly
-              ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
-              : errors?.ward
-                ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
-          }`}
-        />
-        {errors?.ward && (
-          <p className="mt-1 text-xs text-red-500">{errors.ward}</p>
-        )}
-      </div>
-
-      {/* Địa chỉ đầy đủ */}
+      {/* Địa chỉ cửa hàng — autocomplete */}
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Địa chỉ cửa hàng <span className="text-red-500">*</span>
         </label>
-        <textarea
-          required
-          rows={3}
-          placeholder="Nhập địa chỉ đầy đủ (VD: 256B Đường Nguyễn Duy Trinh, Phường Bình Trưng Tây, Quận Thủ Đức)"
-          value={formData.detailAddress}
-          onChange={(e) => onChange('detailAddress', e.target.value)}
-          disabled={readonly}
-          className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
-            readonly
-              ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600'
-              : errors?.detailAddress
-                ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
-          }`}
-        />
-        {errors?.detailAddress ? (
-          <p className="mt-1 text-xs text-red-500">{errors.detailAddress}</p>
+
+        {readonly ? (
+          <>
+            <input
+              type="text"
+              value={formData.detailAddress}
+              disabled
+              className="w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-600"
+            />
+            {(formData.ward || formData.city) && (
+              <p className="mt-2 text-xs text-gray-500">
+                {[formData.ward, formData.city].filter(Boolean).join(', ')}
+              </p>
+            )}
+          </>
         ) : (
-          <p className="mt-2 text-xs text-gray-500">
-            Bao gồm số nhà, đường, phường/xã, quận/huyện
-          </p>
+          <>
+            <AddressAutocomplete
+              value={formData.detailAddress}
+              onSelect={handleAddressSelect}
+              onChange={(val) => onChange('detailAddress', val)}
+              error={errors?.detailAddress}
+              placeholder="Tìm kiếm địa chỉ cửa hàng..."
+            />
+            {!errors?.detailAddress && !formData.detailAddress && (
+              <p className="mt-2 text-xs text-gray-500">
+                Nhập địa chỉ và chọn từ gợi ý để tự động điền phường/tỉnh
+              </p>
+            )}
+          </>
         )}
       </div>
 
-      {/* Google Maps */}
+      {/* Bản đồ */}
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Vị trí trên bản đồ{' '}
@@ -223,13 +198,15 @@ export default function StoreSection({
           formData.latitude !== null && formData.longitude !== null ? (
             <div className="pointer-events-none">
               <MapLocationPicker
-                address={fullAddress}
+                address={[formData.detailAddress, formData.ward, formData.city]
+                  .filter(Boolean)
+                  .join(', ')}
                 latitude={formData.latitude}
                 longitude={formData.longitude}
                 onLocationChange={() => {}}
               />
               <p className="mt-2 text-xs text-green-600">
-                ✓ Vị trí: {formData.latitude.toFixed(6)},{' '}
+                Vị trí: {formData.latitude.toFixed(6)},{' '}
                 {formData.longitude.toFixed(6)}
               </p>
             </div>
@@ -239,24 +216,25 @@ export default function StoreSection({
         ) : (
           <>
             <MapLocationPicker
-              address={fullAddress}
+              address={[formData.detailAddress, formData.ward, formData.city]
+                .filter(Boolean)
+                .join(', ')}
               latitude={formData.latitude}
               longitude={formData.longitude}
               onLocationChange={onLocationChange}
             />
-            {formData.latitude !== null && formData.longitude !== null ? (
+            {/* {formData.latitude !== null && formData.longitude !== null ? (
               <p className="mt-2 text-xs text-green-600">
                 ✓ Vị trí đã chọn: {formData.latitude.toFixed(6)},{' '}
                 {formData.longitude.toFixed(6)}
               </p>
             ) : (
-              errors?.latitude &&
-              errors?.longitude && (
+              (errors?.latitude ?? errors?.longitude) && (
                 <p className="mt-2 text-xs text-red-500">
-                  {errors.latitude || errors.longitude}
+                  {errors?.latitude ?? errors?.longitude}
                 </p>
               )
-            )}
+            )} */}
           </>
         )}
       </div>
