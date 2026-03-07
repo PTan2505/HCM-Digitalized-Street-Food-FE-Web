@@ -8,6 +8,7 @@ export interface VendorRegistrationRequest {
   city: string;
   lat: number;
   long: number;
+  isActive?: boolean;
 }
 
 export interface Branch {

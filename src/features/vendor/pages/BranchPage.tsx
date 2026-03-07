@@ -3,12 +3,18 @@ import type { JSX } from 'react';
 import { Box, Tooltip as MuiTooltip } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import ImageIcon from '@mui/icons-material/Image';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const StatusBadge = ({
   label,
@@ -132,16 +138,68 @@ function BranchPage(): JSX.Element {
 
   const actions = [
     {
-      label: (
-        <MuiTooltip title="Xem chi tiết">
-          <VisibilityIcon fontSize="small" />
-        </MuiTooltip>
-      ),
+      label: <VisibilityIcon fontSize="small" />,
+      menuLabel: 'Xem chi tiết',
       onClick: (branch: Branch): void => {
         setSelectedBranch(branch);
       },
       color: 'primary' as const,
-      variant: 'outlined' as const,
+    },
+    {
+      label: <EditIcon fontSize="small" />,
+      menuLabel: 'Chỉnh sửa chi nhánh',
+      onClick: (): void => {
+        // Handle editing the selected branch
+        // API PUT BRANCH DÙNG CHUNG MODAL VỚI API POST BRANCH, CHỈ KHÁC Ở 2 CHỖ:
+        // 1. API POST CÓ THÊM 1 SECTION ĐỂ SUBMIT LICENSE VÀ 1 SECTION ĐỂ UPLOAD HÌNH ẢNH CỦA QUÁN
+        // 2. API PUT CHỈ CÓ 1 SECTION ĐỂ CHỈNH SỬA THÔNG TIN CHI NHÁNH, KHÔNG CÓ 2 SECTION NHƯ API POST VÀ SẼ CÓ THÊM FIELD isActive
+      },
+      color: 'primary' as const,
+    },
+    {
+      label: <DeleteIcon fontSize="small" />,
+      menuLabel: 'Xóa chi nhánh',
+      onClick: (): void => {
+        // Handle deleting the selected branch
+        // PHẢI HỎI XÁC NHẬN TRƯỚC KHI XÓA
+      },
+      color: 'error' as const,
+    },
+    {
+      label: <RestaurantMenuIcon fontSize="small" />,
+      menuLabel: 'Quản lý menu',
+      onClick: (): void => {
+        // Handle menu management for the selected branch
+        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ CRUD MENU
+      },
+      color: 'primary' as const,
+    },
+    {
+      label: <ImageIcon fontSize="small" />,
+      menuLabel: 'Xem ảnh',
+      onClick: (): void => {
+        // Handle image management for the selected branch
+        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ POST, GET, DELETE ẢNH CỦA CHI NHÁNH
+      },
+      color: 'primary' as const,
+    },
+    {
+      label: <ScheduleIcon fontSize="small" />,
+      menuLabel: 'Quản lý lịch làm việc',
+      onClick: (): void => {
+        // Handle schedule management for the selected branch
+        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ CRUD LỊCH LÀM VIỆC CỦA CHI NHÁNH
+      },
+      color: 'primary' as const,
+    },
+    {
+      label: <ScheduleIcon fontSize="small" />,
+      menuLabel: 'Quản lý ngày nghỉ',
+      onClick: (): void => {
+        // Handle schedule management for the selected branch
+        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ POST, GET, DELETE NGÀY NGHỈ CỦA CHI NHÁNH
+      },
+      color: 'error' as const,
     },
   ];
 
@@ -157,6 +215,13 @@ function BranchPage(): JSX.Element {
             Danh sách các chi nhánh của cửa hàng
           </p>
         </div>
+        <button
+          // onClick={() => handleOpenDialog()}
+          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+        >
+          <AddIcon fontSize="small" />
+          Thêm chi nhánh
+        </button>
       </div>
 
       {/* Table */}
