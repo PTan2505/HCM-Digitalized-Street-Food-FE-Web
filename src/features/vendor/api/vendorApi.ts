@@ -5,6 +5,7 @@ import type {
   CheckLicenseStatusResponse,
   GetMyVendorResponse,
   SubmitImagesResponse,
+  GetImagesResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -168,12 +169,16 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getImages(branchId: number): Promise<string[]> {
-  //   const res = await this.apiClient.get<string[]>({
-  //     url: apiUrl.vendor.createOrGetImagesOfABranch(branchId),
-  //   });
-  //   return res.data;
-  // }
+  async getImages(
+    branchId: number,
+    params: { pageNumber: number; pageSize: number }
+  ): Promise<GetImagesResponse> {
+    const res = await this.apiClient.get<GetImagesResponse>({
+      url: apiUrl.vendor.createOrGetImagesOfABranch(branchId),
+      params,
+    });
+    return res.data;
+  }
 
   async deleteImage(imageId: number): Promise<void> {
     await this.apiClient.delete({
