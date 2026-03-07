@@ -28,22 +28,21 @@ export default function HeroCarousel(): JSX.Element {
         width: '100%',
         overflow: 'hidden',
         bgcolor: '#111',
+        aspectRatio: { xs: '4/3', sm: '16/9', md: '16/7' },
       }}
     >
       {/* Slides */}
       <Box
         sx={{
           display: 'flex',
+          height: '100%',
           transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           transform: `translateX(-${current * 100}%)`,
           willChange: 'transform',
         }}
       >
         {HERO_SLIDES.map((slide, i) => (
-          <Box
-            key={i}
-            sx={{ minWidth: '100%', aspectRatio: '16/7', flexShrink: 0 }}
-          >
+          <Box key={i} sx={{ minWidth: '100%', height: '100%', flexShrink: 0 }}>
             <img
               src={slide.src}
               alt={slide.alt}

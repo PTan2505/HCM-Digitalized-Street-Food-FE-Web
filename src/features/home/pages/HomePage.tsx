@@ -5,11 +5,9 @@ import {
   Button,
   Container,
   Grid,
-  Rating,
   TextField,
   Typography,
 } from '@mui/material';
-import { Favorite as FavoriteIcon } from '@mui/icons-material';
 import lightLogo from '../../../assets/ios-light.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -20,7 +18,6 @@ import HeroCarousel from '../components/HeroCarousel';
 import RecipeCard from '../components/RecipeCard';
 import LatestRecipeCard from '../components/LatestRecipeCard';
 import CollectionCard from '../components/CollectionCard';
-import RecipeMeta from '../components/RecipeMeta';
 import {
   CATEGORIES,
   RECIPES,
@@ -57,7 +54,7 @@ export default function HomePage(): JSX.Element {
         <Container maxWidth="xl">
           <Box
             className="mb-10 flex items-center justify-between"
-            data-aos="fade-up"
+            data-aos="fade-right"
           >
             <Typography id="categories-heading" variant="h4" fontWeight={700}>
               Danh mục phổ biến
@@ -73,13 +70,12 @@ export default function HomePage(): JSX.Element {
               Xem tất cả →
             </Button>
           </Box>
-          <Grid container spacing={2}>
-            {CATEGORIES.map((cat, i) => (
+          <Grid container spacing={3}>
+            {CATEGORIES.map((cat) => (
               <Grid
                 key={cat.name}
                 size={{ xs: 6, sm: 4, md: 2 }}
-                data-aos="fade-up"
-                data-aos-delay={i * 70}
+                data-aos="zoom-in"
               >
                 <Box
                   className="group relative cursor-pointer overflow-hidden rounded-2xl shadow-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-2xl"
@@ -144,7 +140,7 @@ export default function HomePage(): JSX.Element {
         aria-labelledby="super-delicious-heading"
       >
         <Container maxWidth="xl">
-          <Box className="mb-12 text-center" data-aos="fade-up">
+          <Box className="mb-12 text-center" data-aos="fade-left">
             <Typography
               id="super-delicious-heading"
               variant="h4"
@@ -158,71 +154,30 @@ export default function HomePage(): JSX.Element {
             </Typography>
           </Box>
           <Grid container spacing={3}>
-            {/* Large featured card */}
-            <Grid size={{ xs: 12, md: 8 }} data-aos="fade-right">
-              <Box className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                <Box
-                  className="relative overflow-hidden"
-                  style={{ aspectRatio: '16/9' }}
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=80"
-                    alt="Burger Bữa Sáng Wagyu"
-                    className="h-full w-full object-cover"
-                  />
-                  <Box
-                    component="button"
-                    className="absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-white transition hover:bg-gray-100"
-                    aria-label="Yêu thích"
-                  >
-                    <FavoriteIcon sx={{ fontSize: 18, color: '#ccc' }} />
-                  </Box>
-                </Box>
-                <Box className="p-6">
-                  <Rating
-                    value={5}
-                    readOnly
-                    size="small"
-                    sx={{
-                      mb: 1,
-                      '& .MuiRating-iconFilled': { color: '#f5a623' },
-                    }}
-                  />
-                  <Typography variant="h6" fontWeight={600}>
-                    Burger Wagyu Bữa Sáng Phô Mai Đậm Đà
-                  </Typography>
-                  <RecipeMeta time="30 phút" type="Món Tây" />
-                  <Box className="mt-3 flex items-center gap-2">
-                    <img
-                      src={`https://i.pravatar.cc/40?u=john`}
-                      alt="John Smith"
-                      className="h-7 w-7 rounded-full object-cover"
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      John Smith · 15 tháng 3, 2022
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} data-aos="fade-right">
+              <RecipeCard
+                img="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=80"
+                title="Burger Wagyu Bữa Sáng Phô Mai Đậm Đà"
+                time="30 phút"
+                type="Món Tây"
+                rating={5}
+                author="John Smith"
+                date="15 March 2022"
+              />
             </Grid>
 
-            {RECIPES.slice(0, 4).map((r, i) => (
+            {RECIPES.slice(0, 4).map((r) => (
               <Grid
                 key={r.title}
                 size={{ xs: 12, sm: 6, md: 4 }}
                 data-aos="fade-up"
-                data-aos-delay={i * 80}
               >
-                <RecipeCard {...r} stretch />
+                <RecipeCard {...r} />
               </Grid>
             ))}
 
             {/* Ad card */}
-            <Grid
-              size={{ xs: 12, sm: 6, md: 4 }}
-              data-aos="zoom-in"
-              data-aos-delay="100"
-            >
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} data-aos="zoom-in">
               <Box
                 className="from-primary-50 to-primary-100 relative flex h-full items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br p-10"
                 style={{ minHeight: 200 }}
@@ -249,12 +204,11 @@ export default function HomePage(): JSX.Element {
               </Box>
             </Grid>
 
-            {RECIPES.slice(4).map((r, i) => (
+            {RECIPES.slice(4).map((r) => (
               <Grid
                 key={r.title}
                 size={{ xs: 12, sm: 6, md: 4 }}
                 data-aos="fade-up"
-                data-aos-delay={i * 80}
               >
                 <RecipeCard {...r} />
               </Grid>
@@ -270,7 +224,7 @@ export default function HomePage(): JSX.Element {
         aria-labelledby="collections-heading"
       >
         <Container maxWidth="xl">
-          <Box className="mb-12 text-center" data-aos="fade-up">
+          <Box className="mb-12 text-center" data-aos="fade-right">
             <Typography
               id="collections-heading"
               variant="h4"
@@ -284,12 +238,11 @@ export default function HomePage(): JSX.Element {
             </Typography>
           </Box>
           <Grid container spacing={3}>
-            {COLLECTIONS.map((col, i) => (
+            {COLLECTIONS.map((col) => (
               <Grid
                 key={col.title}
                 size={{ xs: 12, sm: 6, md: 4 }}
                 data-aos="flip-left"
-                data-aos-delay={i * 120}
               >
                 <CollectionCard {...col} />
               </Grid>
@@ -307,7 +260,7 @@ export default function HomePage(): JSX.Element {
         <Container maxWidth="xl">
           <Box
             className="mb-10 flex items-center justify-between"
-            data-aos="fade-up"
+            data-aos="fade-left"
           >
             <Typography
               id="latest-recipes-heading"
@@ -328,22 +281,17 @@ export default function HomePage(): JSX.Element {
             </Button>
           </Box>
           <Grid container spacing={3}>
-            {LATEST_RECIPES.map((r, i) => (
+            {LATEST_RECIPES.map((r) => (
               <Grid
                 key={r.title}
                 size={{ xs: 12, sm: 6, md: 3 }}
-                data-aos="fade-up"
-                data-aos-delay={i * 80}
+                data-aos="zoom-in"
               >
                 <LatestRecipeCard {...r} />
               </Grid>
             ))}
           </Grid>
-          <Box
-            className="mt-10 flex justify-center"
-            data-aos="fade-up"
-            data-aos-delay="200"
-          >
+          <Box className="mt-10 flex justify-center" data-aos="fade-up">
             <Button
               variant="outlined"
               color="primary"
@@ -417,7 +365,6 @@ export default function HomePage(): JSX.Element {
           aria-hidden={true}
           className="absolute right-[8%] bottom-0 z-0 h-auto w-72 object-contain"
           data-aos="fade-left"
-          data-aos-delay="300"
         />
       </Box>
 
