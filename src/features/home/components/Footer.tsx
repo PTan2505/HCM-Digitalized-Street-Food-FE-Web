@@ -153,7 +153,7 @@ export default function Footer(): JSX.Element {
       <Box
         sx={{
           display: { xs: 'none', md: 'block' },
-          bgcolor: '#1a1a1a',
+          bgcolor: '#ffffff',
           py: 10,
         }}
       >
@@ -163,7 +163,7 @@ export default function Footer(): JSX.Element {
               <img
                 src={lowcaLogo}
                 alt="Lowca"
-                className="mb-6 h-auto w-36 brightness-0 invert"
+                className="mb-6 h-auto w-36 object-contain"
               />
               <Typography
                 variant="body2"
