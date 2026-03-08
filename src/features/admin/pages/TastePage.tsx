@@ -163,7 +163,7 @@ export default function TastePage(): JSX.Element {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm Khẩu vị
+          Thêm khẩu vị
         </button>
       </div>
 
