@@ -40,7 +40,8 @@ function getStatusMeta(status: string): StatusMeta {
     case 'Pending':
     default:
       return {
-        label: 'Đang chờ duyệt',
+        label:
+          'Đang chờ duyệt (NẾU BẠN MUỐN TẠO THÊM CHI NHÁNH, VUI LÒNG CHỜ ĐẾN KHI ĐƠN ĐĂNG KÝ NÀY ĐƯỢC HỆ THỐNG DUYỆT)',
         color: 'text-yellow-700',
         bgColor: 'bg-yellow-50 border-yellow-200',
         icon: <ClockIcon className="h-6 w-6 text-yellow-500" />,
@@ -101,7 +102,7 @@ export default function LicenseStatusBanner({
         {statusInfo.icon}
         <div>
           <h3 className="text-lg font-semibold text-gray-800">
-            Trạng thái giấy phép
+            Trạng thái đơn đăng ký
           </h3>
           <p className={`text-sm font-medium ${statusInfo.color}`}>
             {statusInfo.label}

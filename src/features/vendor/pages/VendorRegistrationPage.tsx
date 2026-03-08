@@ -5,6 +5,9 @@ import OwnerInfoSection from '../components/OwnerInfoSection';
 import StoreSection from '../components/StoreSection';
 import TermsDialog from '../components/TermsDialog';
 import LicenseStatusBanner from '../components/LicenseStatusBanner';
+import ImageStatusBanner from '../components/ImageStatusBanner';
+import ImagesUploadSection from '../components/ImagesUploadSection';
+import LicenseUploadSection from '../components/LicenseUploadSection';
 import useVendorRegistration from '../hooks/useVendorRegistration';
 import {
   VendorRegistrationSchema,
@@ -68,6 +71,8 @@ function LogoutButton({ onClick }: { onClick: () => void }): JSX.Element {
 const TITLE_MAP = {
   resubmit: 'Cập nhật hồ sơ đăng ký',
   uploadLicense: 'Cập nhật giấy phép kinh doanh',
+  uploadImages: 'Cập nhật hình ảnh cửa hàng',
+  uploadLicenseAndImages: 'Cập nhật giấy phép và hình ảnh',
   register: 'Đăng ký trở thành Vendor',
 } as const;
 
@@ -75,12 +80,17 @@ const SUBTITLE_MAP = {
   resubmit:
     'Vui lòng cập nhật lại thông tin và giấy phép theo yêu cầu từ quản trị viên',
   uploadLicense: 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký',
+  uploadImages: 'Vui lòng tải lên hình ảnh cửa hàng để hoàn tất đăng ký',
+  uploadLicenseAndImages:
+    'Vui lòng tải lên giấy phép kinh doanh và hình ảnh cửa hàng',
   register: 'Hoàn thành các bước dưới đây để bắt đầu kinh doanh',
 } as const;
 
 const SUBMIT_LABEL_MAP = {
   resubmit: 'Gửi lại hồ sơ',
   uploadLicense: 'Cập nhật giấy phép',
+  uploadImages: 'Cập nhật hình ảnh',
+  uploadLicenseAndImages: 'Cập nhật giấy phép và hình ảnh',
   register: 'Đăng ký cửa hàng',
 } as const;
 
@@ -94,13 +104,20 @@ export default function VendorRegistrationPage(): JSX.Element {
     formData,
     vendorStatus,
     licenseStatusData,
+    branchImagesData,
     isFormValid,
     handleInputChange,
     handleLocationChange,
     handleFileChange,
+    handleImageFileChange,
     handleSubmit,
     onLogout,
   } = useVendorRegistration();
+
+  // Re-show banners when mode changes (e.g. after successful submit)
+  useEffect(() => {
+    setShowBanner(true);
+  }, [mode]);
 
   // Setup react-hook-form cho register mode
   const {
@@ -180,7 +197,7 @@ export default function VendorRegistrationPage(): JSX.Element {
       email: formData.email,
     },
     onChange: mode === 'register' ? handleFormInputChange : handleInputChange,
-    readonly: mode === 'viewStatus',
+    readonly: mode === 'viewStatus' || mode === 'resubmit',
     errors:
       mode === 'register'
         ? {
@@ -202,7 +219,6 @@ export default function VendorRegistrationPage(): JSX.Element {
     city: formData.city,
     latitude: formData.latitude,
     longitude: formData.longitude,
-    licenseImages: formData.licenseImages,
   };
 
   const storeErrors =
@@ -229,6 +245,9 @@ export default function VendorRegistrationPage(): JSX.Element {
         subtitle="Thông tin đăng ký cửa hàng của bạn"
       >
         {licenseStatusData && <LicenseStatusBanner data={licenseStatusData} />}
+        {branchImagesData && branchImagesData.items.length > 0 && (
+          <ImageStatusBanner data={branchImagesData} />
+        )}
 
         <OwnerInfoSection {...ownerProps} />
 
@@ -236,9 +255,7 @@ export default function VendorRegistrationPage(): JSX.Element {
           formData={storeFormData}
           onChange={handleInputChange}
           onLocationChange={handleLocationChange}
-          onFileChange={handleFileChange}
           readonly={true}
-          hideLicenseUpload={true}
         />
 
         <div className="mt-10 space-y-4">
@@ -252,12 +269,20 @@ export default function VendorRegistrationPage(): JSX.Element {
   }
 
   // ── Register / Upload License / Resubmit mode ─────────────────────
-  const formMode = mode;
+  const formMode = mode as
+    | 'register'
+    | 'uploadLicense'
+    | 'uploadImages'
+    | 'uploadLicenseAndImages'
+    | 'resubmit';
 
   return (
     <PageShell title={TITLE_MAP[formMode]} subtitle={SUBTITLE_MAP[formMode]}>
-      {mode === 'resubmit' && licenseStatusData && showBanner && (
+      {licenseStatusData && showBanner && (
         <LicenseStatusBanner data={licenseStatusData} />
+      )}
+      {branchImagesData && branchImagesData.items.length > 0 && showBanner && (
+        <ImageStatusBanner data={branchImagesData} />
       )}
 
       <form
@@ -277,10 +302,30 @@ export default function VendorRegistrationPage(): JSX.Element {
               ? handleFormLocationChange
               : handleLocationChange
           }
-          onFileChange={handleFileChange}
-          readonly={mode === 'uploadLicense'}
+          readonly={
+            mode === 'uploadLicense' ||
+            mode === 'uploadImages' ||
+            mode === 'uploadLicenseAndImages' ||
+            mode === 'resubmit'
+          }
           errors={storeErrors}
         />
+
+        {/* Section 3: Images upload — shown when images not yet uploaded */}
+        {mode !== 'uploadLicense' && (
+          <ImagesUploadSection
+            storeImages={formData.storeImages}
+            onFileChange={handleImageFileChange}
+          />
+        )}
+
+        {/* Section 4: License upload — shown when license not yet uploaded */}
+        {mode !== 'uploadImages' && (
+          <LicenseUploadSection
+            licenseImages={formData.licenseImages}
+            onFileChange={handleFileChange}
+          />
+        )}
 
         {/* Terms checkbox – register mode only */}
         {mode === 'register' && (
