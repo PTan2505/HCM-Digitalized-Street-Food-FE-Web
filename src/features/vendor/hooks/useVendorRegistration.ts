@@ -25,8 +25,7 @@ export type PageMode =
   | 'uploadLicense'
   | 'uploadImages'
   | 'uploadLicenseAndImages'
-  | 'viewStatus'
-  | 'resubmit';
+  | 'viewStatus';
 
 export interface VendorFormData {
   ownerName: string;
@@ -96,7 +95,11 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     const branch = myVendor.branches?.[0];
     if (!branch) return 'register';
 
-    if (licenseStatusData?.status === 'Reject') return 'resubmit';
+    if (
+      licenseStatusData?.status === 'Reject' ||
+      licenseStatusData?.status === 'Pending'
+    )
+      return 'viewStatus';
 
     const hasLicense = !!licenseStatusData;
     const hasImages =
@@ -121,12 +124,6 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
         formData.licenseImages.length > 0 && formData.storeImages.length > 0
       );
     }
-    if (mode === 'resubmit') {
-      return (
-        formData.licenseImages.length > 0 || formData.storeImages.length > 0
-      );
-    }
-
     const hasOwnerInfo =
       formData.ownerName.trim() !== '' &&
       formData.ownerPhone.trim() !== '' &&
@@ -219,8 +216,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
       (mode === 'uploadLicense' ||
         mode === 'uploadImages' ||
         mode === 'uploadLicenseAndImages' ||
-        mode === 'viewStatus' ||
-        mode === 'resubmit')
+        mode === 'viewStatus')
     ) {
       const branch = myVendor.branches?.[0];
       if (branch) {
@@ -250,8 +246,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
         if (
           mode === 'uploadLicense' ||
           mode === 'uploadImages' ||
-          mode === 'uploadLicenseAndImages' ||
-          mode === 'resubmit'
+          mode === 'uploadLicenseAndImages'
         ) {
           const branch = myVendor?.branches[0];
           if (!branch) return;

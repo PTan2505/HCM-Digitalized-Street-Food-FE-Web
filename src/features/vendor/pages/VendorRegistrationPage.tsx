@@ -69,7 +69,6 @@ function LogoutButton({ onClick }: { onClick: () => void }): JSX.Element {
 
 // ─── Title / subtitle / button label maps ────────────────────────────
 const TITLE_MAP = {
-  resubmit: 'Cập nhật hồ sơ đăng ký',
   uploadLicense: 'Cập nhật giấy phép kinh doanh',
   uploadImages: 'Cập nhật hình ảnh cửa hàng',
   uploadLicenseAndImages: 'Cập nhật giấy phép và hình ảnh',
@@ -77,8 +76,6 @@ const TITLE_MAP = {
 } as const;
 
 const SUBTITLE_MAP = {
-  resubmit:
-    'Vui lòng cập nhật lại thông tin và giấy phép theo yêu cầu từ quản trị viên',
   uploadLicense: 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký',
   uploadImages: 'Vui lòng tải lên hình ảnh cửa hàng để hoàn tất đăng ký',
   uploadLicenseAndImages:
@@ -87,7 +84,6 @@ const SUBTITLE_MAP = {
 } as const;
 
 const SUBMIT_LABEL_MAP = {
-  resubmit: 'Gửi lại hồ sơ',
   uploadLicense: 'Cập nhật giấy phép',
   uploadImages: 'Cập nhật hình ảnh',
   uploadLicenseAndImages: 'Cập nhật giấy phép và hình ảnh',
@@ -197,7 +193,7 @@ export default function VendorRegistrationPage(): JSX.Element {
       email: formData.email,
     },
     onChange: mode === 'register' ? handleFormInputChange : handleInputChange,
-    readonly: mode === 'viewStatus' || mode === 'resubmit',
+    readonly: mode === 'viewStatus',
     errors:
       mode === 'register'
         ? {
@@ -268,13 +264,12 @@ export default function VendorRegistrationPage(): JSX.Element {
     );
   }
 
-  // ── Register / Upload License / Resubmit mode ─────────────────────
+  // ── Register / Upload License mode ─────────────────────
   const formMode = mode as
     | 'register'
     | 'uploadLicense'
     | 'uploadImages'
-    | 'uploadLicenseAndImages'
-    | 'resubmit';
+    | 'uploadLicenseAndImages';
 
   return (
     <PageShell title={TITLE_MAP[formMode]} subtitle={SUBTITLE_MAP[formMode]}>
@@ -305,8 +300,7 @@ export default function VendorRegistrationPage(): JSX.Element {
           readonly={
             mode === 'uploadLicense' ||
             mode === 'uploadImages' ||
-            mode === 'uploadLicenseAndImages' ||
-            mode === 'resubmit'
+            mode === 'uploadLicenseAndImages'
           }
           errors={storeErrors}
         />

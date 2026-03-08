@@ -31,8 +31,7 @@ function getStatusMeta(status: string): StatusMeta {
       };
     case 'Reject':
       return {
-        label:
-          'Bị từ chối (VUI LÒNG CẬP NHẬT LẠI THÔNG TIN (HOẶC) VÀ GIẤY PHÉP BÊN DƯỚI THEO YÊU CẦU)',
+        label: 'Bị từ chối',
         color: 'text-red-700',
         bgColor: 'bg-red-50 border-red-200',
         icon: <XCircleIcon className="h-6 w-6 text-red-500" />,
