@@ -14,6 +14,7 @@ import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
+import TabsContainer from '@features/vendor/components/Tab';
 import { Add as AddIcon } from '@mui/icons-material';
 
 const StatusBadge = ({
@@ -49,6 +50,10 @@ function BranchPage(): JSX.Element {
   }, [onGetMyVendor]);
 
   const branches: Branch[] = myVendor?.branches ?? [];
+  const verifiedBranches: Branch[] = branches.filter(
+    (b) => b.licenseStatus === 'Accept'
+  );
+  const vendorId: number | undefined = myVendor?.vendorId;
 
   const columns = [
     {
@@ -152,7 +157,7 @@ function BranchPage(): JSX.Element {
         // Handle editing the selected branch
         // API PUT BRANCH DÙNG CHUNG MODAL VỚI API POST BRANCH, CHỈ KHÁC Ở 2 CHỖ:
         // 1. API POST CÓ THÊM 1 SECTION ĐỂ SUBMIT LICENSE VÀ 1 SECTION ĐỂ UPLOAD HÌNH ẢNH CỦA QUÁN
-        // 2. API PUT CHỈ CÓ 1 SECTION ĐỂ CHỈNH SỬA THÔNG TIN CHI NHÁNH, KHÔNG CÓ 2 SECTION NHƯ API POST VÀ SẼ CÓ THÊM FIELD isActive
+        // 2. API PUT CHỈ CÓ 1 SECTION ĐỂ CHỈNH SỬA THÔNG TIN CHI NHÁNH, KHÔNG CÓ 2 SECTION LICENSE VÀ UPLOAD HÌNH ẢNH NHƯ API POST VÀ SẼ CÓ THÊM FIELD isActive
       },
       color: 'primary' as const,
     },
@@ -224,14 +229,36 @@ function BranchPage(): JSX.Element {
         </button>
       </div>
 
-      {/* Table */}
-      <Table
-        columns={columns}
-        data={branches}
-        rowKey="branchId"
-        loading={status === 'pending'}
-        emptyMessage="Chưa có chi nhánh nào"
-        actions={actions}
+      {/* Tabs */}
+      <TabsContainer
+        tabs={[
+          {
+            label: 'Lịch sử đăng ký',
+            content: (
+              <Table
+                columns={columns}
+                data={branches}
+                rowKey="branchId"
+                loading={status === 'pending'}
+                emptyMessage="Chưa có chi nhánh nào"
+                actions={actions}
+              />
+            ),
+          },
+          {
+            label: 'Chi nhánh đã xác thực',
+            content: (
+              <Table
+                columns={columns}
+                data={verifiedBranches}
+                rowKey="branchId"
+                loading={status === 'pending'}
+                emptyMessage="Chưa có chi nhánh đã xác thực"
+                actions={actions}
+              />
+            ),
+          },
+        ]}
       />
 
       {/* Branch Details Modal */}

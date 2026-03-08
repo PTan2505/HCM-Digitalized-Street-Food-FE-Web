@@ -4,6 +4,8 @@ import type {
   SubmitLicenseResponse,
   CheckLicenseStatusResponse,
   GetMyVendorResponse,
+  SubmitImagesResponse,
+  GetImagesResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -19,6 +21,8 @@ import {
   getMyVendor,
   submitWorkSchedule,
   submitDayOff,
+  submitImages,
+  getImages,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -42,6 +46,14 @@ export default function useVendor(): {
     branchId: number;
     data: DayOff;
   }) => Promise<DayOffResponse>;
+  onSubmitImages: (payload: {
+    branchId: number;
+    images: File[];
+  }) => Promise<SubmitImagesResponse[]>;
+  onGetImages: (payload: {
+    branchId: number;
+    params: { pageNumber: number; pageSize: number };
+  }) => Promise<GetImagesResponse>;
 } {
   const dispatch = useAppDispatch();
 
@@ -101,6 +113,28 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onSubmitImages = useCallback(
+    async (payload: {
+      branchId: number;
+      images: File[];
+    }): Promise<SubmitImagesResponse[]> => {
+      const response = await dispatch(submitImages(payload)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
+  const onGetImages = useCallback(
+    async (payload: {
+      branchId: number;
+      params: { pageNumber: number; pageSize: number };
+    }): Promise<GetImagesResponse> => {
+      const response = await dispatch(getImages(payload)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
@@ -108,5 +142,7 @@ export default function useVendor(): {
     onGetMyVendor,
     onSubmitWorkSchedule,
     onSubmitDayOff,
+    onSubmitImages,
+    onGetImages,
   };
 }

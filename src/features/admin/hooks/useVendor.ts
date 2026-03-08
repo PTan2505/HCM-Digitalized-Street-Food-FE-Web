@@ -11,7 +11,7 @@ import {
   suspendVendor,
   reactivateVendor,
   getVendorDetail,
-} from '@slices/vendorAdmin';
+} from '@slices/vendor';
 import { useCallback } from 'react';
 
 export default function useVendor(): {

@@ -85,7 +85,8 @@ export interface SubmitImagesRequest {
 
 export interface SubmitImagesResponse {
   branchImageId: number;
-  branchId: number;
+  // branchId is optional because the GetImagesResponse doesn't include branchId in its items
+  branchId?: number;
   imageUrl: string;
   // branch?: Branch;
 }
