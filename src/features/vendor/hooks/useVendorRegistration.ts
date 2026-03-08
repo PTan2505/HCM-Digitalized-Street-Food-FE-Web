@@ -7,12 +7,15 @@ import {
   selectVendorStatus,
   selectMyVendor,
   selectLicenseStatus,
+  selectImages,
   getMyVendor,
   checkLicenseStatus,
+  getImages,
 } from '@slices/vendor';
 import type {
   GetMyVendorResponse,
   CheckLicenseStatusResponse,
+  GetImagesResponse,
 } from '@features/vendor/types/vendor';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -20,8 +23,9 @@ export type PageMode =
   | 'loading'
   | 'register'
   | 'uploadLicense'
-  | 'viewStatus'
-  | 'resubmit';
+  | 'uploadImages'
+  | 'uploadLicenseAndImages'
+  | 'viewStatus';
 
 export interface VendorFormData {
   ownerName: string;
@@ -34,6 +38,7 @@ export interface VendorFormData {
   latitude: number | null;
   longitude: number | null;
   licenseImages: File[];
+  storeImages: File[];
   agreeTerms: boolean;
 }
 
@@ -43,10 +48,12 @@ interface UseVendorRegistrationReturn {
   readonly vendorStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
   readonly myVendor: GetMyVendorResponse | null;
   readonly licenseStatusData: CheckLicenseStatusResponse | null;
+  readonly branchImagesData: GetImagesResponse | null;
   readonly isFormValid: boolean;
   readonly handleInputChange: (field: string, value: unknown) => void;
   readonly handleLocationChange: (lat: number, lng: number) => void;
   readonly handleFileChange: (files: FileList | null) => void;
+  readonly handleImageFileChange: (files: FileList | null) => void;
   readonly handleSubmit: (e: React.FormEvent) => Promise<void>;
   readonly onLogout: () => void;
 }
@@ -62,6 +69,7 @@ const INITIAL_FORM_DATA: VendorFormData = {
   latitude: null,
   longitude: null,
   licenseImages: [],
+  storeImages: [],
   agreeTerms: false,
 };
 
@@ -72,9 +80,10 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
   const vendorStatus = useAppSelector(selectVendorStatus);
   const myVendor = useAppSelector(selectMyVendor);
   const licenseStatusData = useAppSelector(selectLicenseStatus);
+  const branchImagesData = useAppSelector(selectImages);
 
   const { onLogout } = useLogin();
-  const { onRegisterVendor, onSubmitLicense } = useVendor();
+  const { onRegisterVendor, onSubmitLicense, onSubmitImages } = useVendor();
 
   const [initialLoading, setInitialLoading] = useState(true);
   const [formData, setFormData] = useState<VendorFormData>(INITIAL_FORM_DATA);
@@ -86,17 +95,35 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     const branch = myVendor.branches?.[0];
     if (!branch) return 'register';
 
-    if (!licenseStatusData) return 'uploadLicense';
-    if (licenseStatusData.status === 'Reject') return 'resubmit';
+    if (
+      licenseStatusData?.status === 'Reject' ||
+      licenseStatusData?.status === 'Pending'
+    )
+      return 'viewStatus';
+
+    const hasLicense = !!licenseStatusData;
+    const hasImages =
+      branchImagesData !== null && branchImagesData.items.length > 0;
+
+    if (!hasLicense && !hasImages) return 'uploadLicenseAndImages';
+    if (!hasLicense) return 'uploadLicense';
+    if (!hasImages) return 'uploadImages';
 
     return 'viewStatus';
-  }, [initialLoading, myVendor, licenseStatusData]);
+  }, [initialLoading, myVendor, licenseStatusData, branchImagesData]);
 
   const isFormValid = useMemo(() => {
-    if (mode === 'uploadLicense' || mode === 'resubmit') {
+    if (mode === 'uploadLicense') {
       return formData.licenseImages.length > 0;
     }
-
+    if (mode === 'uploadImages') {
+      return formData.storeImages.length > 0;
+    }
+    if (mode === 'uploadLicenseAndImages') {
+      return (
+        formData.licenseImages.length > 0 && formData.storeImages.length > 0
+      );
+    }
     const hasOwnerInfo =
       formData.ownerName.trim() !== '' &&
       formData.ownerPhone.trim() !== '' &&
@@ -104,12 +131,11 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
       formData.agreeTerms;
 
     const hasStoreInfo =
-      // branchName is optional, không cần check
       formData.detailAddress.trim() !== '' &&
-      // ward/city are auto-filled by AddressAutocomplete, not required for basic validity
       formData.latitude !== null &&
       formData.longitude !== null &&
-      formData.licenseImages.length > 0;
+      formData.licenseImages.length > 0 &&
+      formData.storeImages.length > 0;
 
     return hasOwnerInfo && hasStoreInfo;
   }, [formData, mode]);
@@ -130,6 +156,13 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     }));
   }, []);
 
+  const handleImageFileChange = useCallback((files: FileList | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      storeImages: files ? Array.from(files) : [],
+    }));
+  }, []);
+
   // ── Side effects ──────────────────────────────────────────────────
   // Load user + vendor data on mount
   useEffect(() => {
@@ -143,6 +176,16 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
             await dispatch(checkLicenseStatus(branch.branchId)).unwrap();
           } catch {
             // License status not found → will show upload form
+          }
+          try {
+            await dispatch(
+              getImages({
+                branchId: branch.branchId,
+                params: { pageNumber: 1, pageSize: 100 },
+              })
+            ).unwrap();
+          } catch {
+            // Images not found → will show upload form
           }
         }
       } catch {
@@ -170,7 +213,10 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
   useEffect(() => {
     if (
       myVendor &&
-      (mode === 'uploadLicense' || mode === 'viewStatus' || mode === 'resubmit')
+      (mode === 'uploadLicense' ||
+        mode === 'uploadImages' ||
+        mode === 'uploadLicenseAndImages' ||
+        mode === 'viewStatus')
     ) {
       const branch = myVendor.branches?.[0];
       if (branch) {
@@ -196,16 +242,46 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
       e.preventDefault();
 
       try {
-        // Upload / Resubmit license only
-        if (mode === 'uploadLicense' || mode === 'resubmit') {
-          // branch is guaranteed to exist when mode is uploadLicense/resubmit
+        // Upload / Resubmit license and/or images only
+        if (
+          mode === 'uploadLicense' ||
+          mode === 'uploadImages' ||
+          mode === 'uploadLicenseAndImages'
+        ) {
           const branch = myVendor?.branches[0];
           if (!branch) return;
 
-          await onSubmitLicense({
-            branchId: branch.branchId,
-            licenseImages: formData.licenseImages,
-          });
+          if (formData.licenseImages.length > 0 && mode !== 'uploadImages') {
+            await onSubmitLicense({
+              branchId: branch.branchId,
+              licenseImages: formData.licenseImages,
+            });
+          }
+
+          if (formData.storeImages.length > 0 && mode !== 'uploadLicense') {
+            await onSubmitImages({
+              branchId: branch.branchId,
+              images: formData.storeImages,
+            });
+          }
+
+          // Re-fetch data to update banners / mode immediately
+          await dispatch(getMyVendor()).unwrap();
+          try {
+            await dispatch(checkLicenseStatus(branch.branchId)).unwrap();
+          } catch {
+            // not yet available
+          }
+          try {
+            await dispatch(
+              getImages({
+                branchId: branch.branchId,
+                params: { pageNumber: 1, pageSize: 100 },
+              })
+            ).unwrap();
+          } catch {
+            // not yet available
+          }
           return;
         }
 
@@ -215,7 +291,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           phoneNumber: formData.ownerPhone,
           email: formData.email || '',
           addressDetail: formData.detailAddress,
-          branchName: formData.branchName || formData.ownerName, // Nếu không có branchName, dùng ownerName
+          branchName: formData.branchName,
           ward: formData.ward,
           city: formData.city,
           lat: formData.latitude ?? 0,
@@ -223,17 +299,50 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
         });
 
         const newBranchId = vendorResponse.branches[0]?.branchId;
-        if (newBranchId && formData.licenseImages.length > 0) {
-          await onSubmitLicense({
-            branchId: newBranchId,
-            licenseImages: formData.licenseImages,
-          });
+        if (newBranchId) {
+          if (formData.licenseImages.length > 0) {
+            await onSubmitLicense({
+              branchId: newBranchId,
+              licenseImages: formData.licenseImages,
+            });
+          }
+          if (formData.storeImages.length > 0) {
+            await onSubmitImages({
+              branchId: newBranchId,
+              images: formData.storeImages,
+            });
+          }
+
+          // Re-fetch data to update banners / mode immediately
+          await dispatch(getMyVendor()).unwrap();
+          try {
+            await dispatch(checkLicenseStatus(newBranchId)).unwrap();
+          } catch {
+            // not yet available
+          }
+          try {
+            await dispatch(
+              getImages({
+                branchId: newBranchId,
+                params: { pageNumber: 1, pageSize: 100 },
+              })
+            ).unwrap();
+          } catch {
+            // not yet available
+          }
         }
       } catch {
         // TODO: handle error notification
       }
     },
-    [mode, formData, myVendor, onRegisterVendor, onSubmitLicense]
+    [
+      mode,
+      formData,
+      myVendor,
+      onRegisterVendor,
+      onSubmitLicense,
+      onSubmitImages,
+    ]
   );
 
   // ── Return ─────────────────────────────────────────────────────────
@@ -243,10 +352,12 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
     vendorStatus,
     myVendor,
     licenseStatusData,
+    branchImagesData,
     isFormValid,
     handleInputChange,
     handleLocationChange,
     handleFileChange,
+    handleImageFileChange,
     handleSubmit,
     onLogout,
   } as const;

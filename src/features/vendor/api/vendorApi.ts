@@ -152,14 +152,16 @@ export class VendorApi {
     return res.data;
   }
 
-  async submitImage(
+  async submitImages(
     branchId: number,
-    image: File
-  ): Promise<SubmitImagesResponse> {
+    images: File[]
+  ): Promise<SubmitImagesResponse[]> {
     const formData = new FormData();
-    formData.append('image', image);
+    images.forEach((file) => {
+      formData.append('images', file);
+    });
 
-    const res = await this.apiClient.post<SubmitImagesResponse, FormData>({
+    const res = await this.apiClient.post<SubmitImagesResponse[], FormData>({
       url: apiUrl.vendor.createOrGetImagesOfABranch(branchId),
       data: formData,
       headers: {

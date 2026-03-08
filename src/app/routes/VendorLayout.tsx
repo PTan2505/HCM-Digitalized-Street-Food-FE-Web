@@ -23,6 +23,7 @@ const navigation = [
     name: 'Lịch sử thanh toán',
     href: '/vendor/payment-history',
     icon: ClipboardDocumentListIcon,
+    // isForVendor: true,
   },
 ];
 
