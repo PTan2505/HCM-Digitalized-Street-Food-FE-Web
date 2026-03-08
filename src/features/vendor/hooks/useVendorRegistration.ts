@@ -291,7 +291,7 @@ export default function useVendorRegistration(): UseVendorRegistrationReturn {
           phoneNumber: formData.ownerPhone,
           email: formData.email || '',
           addressDetail: formData.detailAddress,
-          branchName: formData.branchName || formData.ownerName,
+          branchName: formData.branchName,
           ward: formData.ward,
           city: formData.city,
           lat: formData.latitude ?? 0,
