@@ -6,6 +6,8 @@ import type {
   GetMyVendorResponse,
   SubmitImagesResponse,
   GetImagesResponse,
+  CreateOrUpdateBranchResponse,
+  Branch,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -204,6 +206,50 @@ export const getImages = createAppAsyncThunk(
   }
 );
 
+export const createBranch = createAppAsyncThunk(
+  'vendor/createBranch',
+  async (
+    payload: { vendorId: number; data: VendorRegistrationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: CreateOrUpdateBranchResponse =
+        await axiosApi.vendorApi.createBranch(payload.vendorId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateBranch = createAppAsyncThunk(
+  'vendor/updateBranch',
+  async (
+    payload: { branchId: number; data: VendorRegistrationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: CreateOrUpdateBranchResponse =
+        await axiosApi.vendorApi.updateBranch(payload.branchId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteBranch = createAppAsyncThunk(
+  'vendor/deleteBranch',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteBranch(branchId);
+      return branchId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Admin Thunks ─────────────────────────────────────────
 
 export const getAllVendors = createAppAsyncThunk(
@@ -292,7 +338,8 @@ export const vendorSlice = createSlice({
       // ─── Vendor Cases ────────────────────────────────────
       .addCase(registerVendor.fulfilled, (state, action) => {
         state.vendorId = action.payload.vendorId;
-        state.branchId = action.payload.branchId;
+        state.branchId = action.payload.branches[0]?.branchId;
+        state.myVendor = action.payload;
       })
       .addCase(submitLicense.fulfilled, (state) => {
         state.status = 'succeeded';
@@ -308,6 +355,29 @@ export const vendorSlice = createSlice({
       })
       .addCase(getImages.fulfilled, (state, action) => {
         state.images = action.payload;
+      })
+      .addCase(deleteBranch.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.branches = state.myVendor.branches.filter(
+            (b) => b.branchId !== action.payload
+          );
+        }
+      })
+      .addCase(createBranch.fulfilled, (state, action) => {
+        if (state.myVendor && action.payload) {
+          state.myVendor.branches.push(action.payload as unknown as Branch);
+        }
+      })
+      .addCase(updateBranch.fulfilled, (state, action) => {
+        if (state.myVendor && action.payload) {
+          const branchIndex = state.myVendor.branches.findIndex(
+            (b) => b.branchId === action.payload.branchId
+          );
+          if (branchIndex > -1) {
+            state.myVendor.branches[branchIndex] =
+              action.payload as unknown as Branch;
+          }
+        }
       })
       // ─── Admin Cases ─────────────────────────────────────
       .addCase(getAllVendors.fulfilled, (state, action) => {
@@ -366,7 +436,10 @@ export const vendorSlice = createSlice({
           submitWorkSchedule,
           submitDayOff,
           submitImages,
-          getImages
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch
         ),
         (state) => {
           state.status = 'pending';
@@ -382,7 +455,10 @@ export const vendorSlice = createSlice({
           submitWorkSchedule,
           submitDayOff,
           submitImages,
-          getImages
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch
         ),
         (state, action) => {
           state.status = 'failed';
@@ -400,7 +476,10 @@ export const vendorSlice = createSlice({
           submitWorkSchedule,
           submitDayOff,
           submitImages,
-          getImages
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch
         ),
         (state) => {
           state.status = 'succeeded';

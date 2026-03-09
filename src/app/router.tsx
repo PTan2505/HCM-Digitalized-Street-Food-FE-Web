@@ -22,6 +22,7 @@ import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVer
 import VendorRegistration from '@features/vendor/pages/VendorRegistrationPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
+import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
 import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
@@ -117,6 +118,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.BRANCH,
             element: <VendorBranchPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY,
+            element: <VendorRegistrationHistoryPage />,
           },
           {
             path: ROUTES.VENDOR.PATHS.PAYMENT_HISTORY,

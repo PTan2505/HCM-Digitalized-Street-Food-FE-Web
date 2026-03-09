@@ -6,6 +6,7 @@ import type {
   GetMyVendorResponse,
   SubmitImagesResponse,
   GetImagesResponse,
+  CreateOrUpdateBranchResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -74,11 +75,15 @@ export class VendorApi {
   async createBranch(
     vendorId: number,
     data: VendorRegistrationRequest
-  ): Promise<void> {
-    await this.apiClient.post({
+  ): Promise<CreateOrUpdateBranchResponse> {
+    const res = await this.apiClient.post<
+      CreateOrUpdateBranchResponse,
+      VendorRegistrationRequest
+    >({
       url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
       data,
     });
+    return res.data;
   }
 
   // async getBranches(vendorId: number): Promise<void> {
@@ -90,11 +95,15 @@ export class VendorApi {
   async updateBranch(
     branchId: number,
     data: VendorRegistrationRequest
-  ): Promise<void> {
-    await this.apiClient.put({
+  ): Promise<CreateOrUpdateBranchResponse> {
+    const res = await this.apiClient.put<
+      CreateOrUpdateBranchResponse,
+      VendorRegistrationRequest
+    >({
       url: apiUrl.vendor.updateOrDeleteBranch(branchId),
       data,
     });
+    return res.data;
   }
 
   async deleteBranch(branchId: number): Promise<void> {

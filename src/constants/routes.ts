@@ -47,6 +47,7 @@ export const ROUTES = {
     PATHS: {
       DASHBOARD: 'dashboard',
       BRANCH: 'branch',
+      REGISTRATION_HISTORY: 'registration-history',
       PAYMENT_HISTORY: 'payment-history',
     },
   },
