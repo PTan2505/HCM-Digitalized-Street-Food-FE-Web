@@ -5,6 +5,7 @@ import Pagination from '@features/moderator/components/Pagination';
 import RejectModal from '@features/moderator/components/RejectModal';
 import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
 import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
 import useBranch from '@features/moderator/hooks/useBranch';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
@@ -17,6 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import ImageIcon from '@mui/icons-material/Image';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -35,6 +37,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [imagesModalOpen, setImagesModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
 
@@ -80,6 +83,16 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const handleCloseLicenseModal = (): void => {
     setLicenseModalOpen(false);
+    setSelectedRegistration(null);
+  };
+
+  const handleOpenImagesModal = (row: Record<string, unknown>): void => {
+    setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setImagesModalOpen(true);
+  };
+
+  const handleCloseImagesModal = (): void => {
+    setImagesModalOpen(false);
     setSelectedRegistration(null);
   };
 
@@ -218,6 +231,32 @@ export default function VendorVerificationPage(): React.JSX.Element {
       onClick: (row: Record<string, unknown>): void => {
         handleOpenLicenseModal(row);
       },
+      show: (row: Record<string, unknown>): boolean => {
+        const licenseUrl = row.licenseUrl;
+        if (!licenseUrl) return false;
+        if (typeof licenseUrl === 'string') return licenseUrl.length > 0;
+        if (Array.isArray(licenseUrl)) return licenseUrl.length > 0;
+        return false;
+      },
+    },
+    {
+      label: (
+        <Tooltip title="Xem hình ảnh">
+          <IconButton size="small" color="primary">
+            <ImageIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      ),
+      onClick: (row: Record<string, unknown>): void => {
+        handleOpenImagesModal(row);
+      },
+      show: (row: Record<string, unknown>): boolean => {
+        const branchImages = row?.branch as Record<string, unknown> | undefined;
+        return (
+          Array.isArray(branchImages?.branchImages) &&
+          branchImages.branchImages.length > 0
+        );
+      },
     },
     {
       label: (
@@ -293,6 +332,13 @@ export default function VendorVerificationPage(): React.JSX.Element {
       <VendorLicenseDetails
         isOpen={licenseModalOpen}
         onClose={handleCloseLicenseModal}
+        registration={selectedRegistration}
+      />
+
+      {/* Images Modal */}
+      <BranchImagesDetails
+        isOpen={imagesModalOpen}
+        onClose={handleCloseImagesModal}
         registration={selectedRegistration}
       />
 
