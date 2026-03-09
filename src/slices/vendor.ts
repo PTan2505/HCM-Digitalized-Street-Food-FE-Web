@@ -8,6 +8,8 @@ import type {
   GetImagesResponse,
   CreateOrUpdateBranchResponse,
   Branch,
+  UpdateVendorNameRequest,
+  UpdateVendorNameResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -250,6 +252,19 @@ export const deleteBranch = createAppAsyncThunk(
   }
 );
 
+export const updateVendorName = createAppAsyncThunk(
+  'vendor/updateVendorName',
+  async (payload: UpdateVendorNameRequest, { rejectWithValue }) => {
+    try {
+      const response: UpdateVendorNameResponse =
+        await axiosApi.vendorApi.updateVendorName(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Admin Thunks ─────────────────────────────────────────
 
 export const getAllVendors = createAppAsyncThunk(
@@ -379,6 +394,11 @@ export const vendorSlice = createSlice({
           }
         }
       })
+      .addCase(updateVendorName.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.name = action.payload.name;
+        }
+      })
       // ─── Admin Cases ─────────────────────────────────────
       .addCase(getAllVendors.fulfilled, (state, action) => {
         state.adminVendors = action.payload.items;
@@ -439,7 +459,8 @@ export const vendorSlice = createSlice({
           getImages,
           createBranch,
           updateBranch,
-          deleteBranch
+          deleteBranch,
+          updateVendorName
         ),
         (state) => {
           state.status = 'pending';
@@ -458,7 +479,8 @@ export const vendorSlice = createSlice({
           getImages,
           createBranch,
           updateBranch,
-          deleteBranch
+          deleteBranch,
+          updateVendorName
         ),
         (state, action) => {
           state.status = 'failed';
@@ -479,7 +501,8 @@ export const vendorSlice = createSlice({
           getImages,
           createBranch,
           updateBranch,
-          deleteBranch
+          deleteBranch,
+          updateVendorName
         ),
         (state) => {
           state.status = 'succeeded';

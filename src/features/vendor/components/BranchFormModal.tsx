@@ -1,4 +1,4 @@
-import { useState, type JSX } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,14 +7,20 @@ import {
   IconButton,
   Button,
   CircularProgress,
-  Switch,
-  FormControlLabel,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import type {
   Branch,
   VendorRegistrationRequest,
 } from '@features/vendor/types/vendor';
+import {
+  CreateVendorSchema,
+  AddBranchSchema,
+  EditBranchSchema,
+} from '@features/vendor/utils/vendorRegistrationSchema';
+import type { BranchFormData } from '@features/vendor/utils/vendorRegistrationSchema';
 import StoreSection from './StoreSection';
 import OwnerInfoSection from './OwnerInfoSection';
 import LicenseUploadSection from './LicenseUploadSection';
@@ -31,29 +37,30 @@ interface BranchFormModalProps {
   onClose: () => void;
   mode: BranchFormMode;
   onSuccess: () => void;
-  showActivationToggle?: boolean;
 }
 
-interface FormState {
-  ownerName: string;
-  ownerPhone: string;
-  email: string;
-  branchName: string;
-  detailAddress: string;
-  ward: string;
-  city: string;
-  latitude: number | null;
-  longitude: number | null;
-  isActive: boolean;
-  licenseImages: File[];
-  storeImages: File[];
+function getSchema(
+  mode: BranchFormMode
+):
+  | typeof CreateVendorSchema
+  | typeof AddBranchSchema
+  | typeof EditBranchSchema {
+  switch (mode.type) {
+    case 'createVendor':
+      return CreateVendorSchema;
+    case 'addBranch':
+      return AddBranchSchema;
+    case 'editBranch':
+      return EditBranchSchema;
+    default:
+      return EditBranchSchema;
+  }
 }
 
-function getInitialState(mode: BranchFormMode): FormState {
+function getDefaultValues(mode: BranchFormMode): BranchFormData {
   if (mode.type === 'editBranch') {
     const b = mode.branch;
     return {
-      ownerName: b.name ?? '',
       ownerPhone: b.phoneNumber ?? '',
       email: b.email ?? '',
       branchName: b.name ?? '',
@@ -62,13 +69,23 @@ function getInitialState(mode: BranchFormMode): FormState {
       city: b.city ?? '',
       latitude: b.lat ?? null,
       longitude: b.long ?? null,
-      isActive: b.isActive,
-      licenseImages: [],
-      storeImages: [],
     };
   }
+  if (mode.type === 'createVendor') {
+    return {
+      ownerName: '',
+      ownerPhone: '',
+      email: '',
+      branchName: '',
+      detailAddress: '',
+      ward: '',
+      city: '',
+      latitude: null,
+      longitude: null,
+    };
+  }
+  // addBranch
   return {
-    ownerName: '',
     ownerPhone: '',
     email: '',
     branchName: '',
@@ -77,9 +94,6 @@ function getInitialState(mode: BranchFormMode): FormState {
     city: '',
     latitude: null,
     longitude: null,
-    isActive: true,
-    licenseImages: [],
-    storeImages: [],
   };
 }
 
@@ -101,10 +115,10 @@ export default function BranchFormModal({
   onClose,
   mode,
   onSuccess,
-  showActivationToggle = true,
 }: BranchFormModalProps): JSX.Element {
-  const [form, setForm] = useState<FormState>(getInitialState(mode));
   const [submitting, setSubmitting] = useState(false);
+  const [licenseImages, setLicenseImages] = useState<File[]>([]);
+  const [storeImages, setStoreImages] = useState<File[]>([]);
 
   const {
     onRegisterVendor,
@@ -114,79 +128,77 @@ export default function BranchFormModal({
     onSubmitImages,
   } = useVendor();
 
+  const {
+    watch,
+    setValue,
+    reset,
+    trigger,
+    formState: { errors, isValid },
+  } = useForm<BranchFormData>({
+    resolver: zodResolver(getSchema(mode)),
+    mode: 'onChange',
+    defaultValues: getDefaultValues(mode),
+  });
+
+  const form = watch();
+
   // Reset form when modal opens with new mode
-  const handleEnter = (): void => {
-    setForm(getInitialState(mode));
-  };
+  useEffect(() => {
+    if (isOpen) {
+      reset(getDefaultValues(mode));
+      setLicenseImages([]);
+      setStoreImages([]);
+    }
+  }, [isOpen, mode, reset]);
 
   const handleChange = (field: string, value: unknown): void => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setValue(field as keyof BranchFormData, value as never, {
+      shouldValidate: true,
+    });
   };
 
   const handleLocationChange = (lat: number, lng: number): void => {
-    setForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+    setValue('latitude' as keyof BranchFormData, lat as never, {
+      shouldValidate: true,
+    });
+    setValue('longitude' as keyof BranchFormData, lng as never, {
+      shouldValidate: true,
+    });
   };
 
   const handleLicenseFileChange = (files: FileList | null): void => {
-    setForm((prev) => ({
-      ...prev,
-      licenseImages: files ? Array.from(files) : [],
-    }));
+    setLicenseImages(files ? Array.from(files) : []);
   };
 
   const handleImageFileChange = (files: FileList | null): void => {
-    setForm((prev) => ({
-      ...prev,
-      storeImages: files ? Array.from(files) : [],
-    }));
-  };
-
-  const isFormValid = (): boolean => {
-    if (
-      !form.ownerPhone ||
-      !form.email ||
-      !form.detailAddress ||
-      form.latitude === null ||
-      form.longitude === null
-    ) {
-      return false;
-    }
-    if (mode.type === 'createVendor' && !form.ownerName) {
-      return false;
-    }
-    if (mode.type === 'addBranch' && !form.branchName) {
-      return false;
-    }
-    return true;
+    setStoreImages(files ? Array.from(files) : []);
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (!isFormValid()) return;
+    const valid = await trigger();
+    if (!valid) return;
     setSubmitting(true);
     try {
       if (mode.type === 'createVendor') {
         const payload: VendorRegistrationRequest = {
-          name: form.ownerName,
+          name: (form as { ownerName?: string }).ownerName ?? '',
           phoneNumber: form.ownerPhone,
           email: form.email,
           branchName: form.branchName,
           addressDetail: form.detailAddress,
-          ward: form.ward || 'Thành phố Hồ Chí Minh',
-          city: form.city || 'Thành phố Hồ Chí Minh',
+          ward: form.ward ?? 'Thành phố Hồ Chí Minh',
+          city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
           long: form.longitude ?? 0,
         };
         const res = await onRegisterVendor(payload);
         const branchId = res.branches[0]?.branchId;
 
-        if (form.licenseImages.length > 0) {
-          await onSubmitLicense({
-            branchId,
-            licenseImages: form.licenseImages,
-          });
+        if (licenseImages.length > 0) {
+          await onSubmitLicense({ branchId, licenseImages });
         }
-        if (form.storeImages.length > 0) {
-          await onSubmitImages({ branchId, images: form.storeImages });
+        if (storeImages.length > 0) {
+          await onSubmitImages({ branchId, images: storeImages });
         }
       } else if (mode.type === 'addBranch') {
         const payload: VendorRegistrationRequest = {
@@ -194,8 +206,8 @@ export default function BranchFormModal({
           phoneNumber: form.ownerPhone,
           email: form.email,
           addressDetail: form.detailAddress,
-          ward: form.ward || 'Thành phố Hồ Chí Minh',
-          city: form.city || 'Thành phố Hồ Chí Minh',
+          ward: form.ward ?? 'Thành phố Hồ Chí Minh',
+          city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
           long: form.longitude ?? 0,
         };
@@ -205,14 +217,11 @@ export default function BranchFormModal({
         });
         const branchId = res.branchId;
 
-        if (form.licenseImages.length > 0) {
-          await onSubmitLicense({
-            branchId,
-            licenseImages: form.licenseImages,
-          });
+        if (licenseImages.length > 0) {
+          await onSubmitLicense({ branchId, licenseImages });
         }
-        if (form.storeImages.length > 0) {
-          await onSubmitImages({ branchId, images: form.storeImages });
+        if (storeImages.length > 0) {
+          await onSubmitImages({ branchId, images: storeImages });
         }
       } else if (mode.type === 'editBranch') {
         const payload: VendorRegistrationRequest = {
@@ -220,11 +229,10 @@ export default function BranchFormModal({
           email: form.email,
           name: form.branchName,
           addressDetail: form.detailAddress,
-          ward: form.ward || 'Thành phố Hồ Chí Minh',
-          city: form.city || 'Thành phố Hồ Chí Minh',
+          ward: form.ward ?? 'Thành phố Hồ Chí Minh',
+          city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
           long: form.longitude ?? 0,
-          isActive: form.isActive,
         };
         await onUpdateBranch({ branchId: mode.branch.branchId, data: payload });
       }
@@ -240,6 +248,20 @@ export default function BranchFormModal({
 
   const isCreate = mode.type === 'createVendor' || mode.type === 'addBranch';
 
+  // Map zod errors to section error props
+  const ownerErrors = {
+    ownerName: (errors as Record<string, { message?: string }>).ownerName
+      ?.message,
+    ownerPhone: errors.ownerPhone?.message,
+    email: errors.email?.message,
+  };
+  const storeErrors = {
+    branchName: errors.branchName?.message,
+    detailAddress: errors.detailAddress?.message,
+    latitude: errors.latitude?.message,
+    longitude: errors.longitude?.message,
+  };
+
   return (
     <>
       <Dialog
@@ -247,7 +269,6 @@ export default function BranchFormModal({
         onClose={onClose}
         maxWidth="md"
         fullWidth
-        TransitionProps={{ onEnter: handleEnter }}
         PaperProps={{
           sx: { borderRadius: 3, maxHeight: '90vh' },
         }}
@@ -269,17 +290,18 @@ export default function BranchFormModal({
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 3, pb: 1 }}>
+        <DialogContent sx={{ pt: 3, pb: 1, mt: 3 }}>
           <div className="space-y-2">
             {/* Section 1: Owner/Store info — only for createVendor */}
             {mode.type === 'createVendor' && (
               <OwnerInfoSection
                 formData={{
-                  ownerName: form.ownerName,
+                  ownerName: (form as { ownerName?: string }).ownerName ?? '',
                   ownerPhone: form.ownerPhone,
                   email: form.email,
                 }}
                 onChange={handleChange}
+                errors={ownerErrors}
               />
             )}
 
@@ -295,12 +317,20 @@ export default function BranchFormModal({
                   </label>
                   <input
                     type="tel"
-                    required
                     placeholder="0901234567"
                     value={form.ownerPhone}
                     onChange={(e) => handleChange('ownerPhone', e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
+                    className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
+                      errors.ownerPhone
+                        ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                        : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+                    }`}
                   />
+                  {errors.ownerPhone && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.ownerPhone.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -308,12 +338,20 @@ export default function BranchFormModal({
                   </label>
                   <input
                     type="email"
-                    required
                     placeholder="email@example.com"
                     value={form.email}
                     onChange={(e) => handleChange('email', e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
+                    className={`w-full rounded-xl border px-4 py-3 transition-all duration-200 outline-none ${
+                      errors.email
+                        ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                        : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
+                    }`}
                   />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -321,15 +359,16 @@ export default function BranchFormModal({
             {/* Section 2: Store / Branch info */}
             <StoreSection
               formData={{
-                branchName: form.branchName,
+                branchName: form.branchName ?? '',
                 detailAddress: form.detailAddress,
-                ward: form.ward,
-                city: form.city,
+                ward: form.ward ?? '',
+                city: form.city ?? '',
                 latitude: form.latitude,
                 longitude: form.longitude,
               }}
               onChange={handleChange}
               onLocationChange={handleLocationChange}
+              errors={storeErrors}
               {...(mode.type === 'addBranch'
                 ? {
                     sectionTitle: '2. Thông tin chi nhánh',
@@ -338,28 +377,10 @@ export default function BranchFormModal({
                 : {})}
             />
 
-            {/* isActive toggle — editBranch only */}
-            {mode.type === 'editBranch' && showActivationToggle && (
-              <div className="mb-6">
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={form.isActive}
-                      onChange={(e) =>
-                        handleChange('isActive', e.target.checked)
-                      }
-                      color="success"
-                    />
-                  }
-                  label={form.isActive ? 'Đang hoạt động' : 'Ngưng hoạt động'}
-                />
-              </div>
-            )}
-
             {/* Section 3: Images upload — create modes only */}
             {isCreate && (
               <ImagesUploadSection
-                storeImages={form.storeImages}
+                storeImages={storeImages}
                 onFileChange={handleImageFileChange}
               />
             )}
@@ -367,7 +388,7 @@ export default function BranchFormModal({
             {/* Section 4: License upload — create modes only */}
             {isCreate && (
               <LicenseUploadSection
-                licenseImages={form.licenseImages}
+                licenseImages={licenseImages}
                 onFileChange={handleLicenseFileChange}
               />
             )}
@@ -386,7 +407,7 @@ export default function BranchFormModal({
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={submitting || !isFormValid()}
+            disabled={submitting || !isValid}
             sx={{
               bgcolor: '#06AA4C',
               '&:hover': { bgcolor: '#058f40' },

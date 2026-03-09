@@ -126,3 +126,18 @@ export interface GetImagesResponse {
   hasNext: boolean;
   items: SubmitImagesResponse[];
 }
+
+export interface UpdateVendorNameRequest {
+  name: string;
+}
+
+export interface UpdateVendorNameResponse {
+  vendorId: number;
+  userId: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string | null;
+  isActive: boolean;
+  vendorOwnerName: string;
+  branches: Branch[];
+}

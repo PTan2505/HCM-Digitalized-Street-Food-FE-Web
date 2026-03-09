@@ -65,6 +65,7 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,

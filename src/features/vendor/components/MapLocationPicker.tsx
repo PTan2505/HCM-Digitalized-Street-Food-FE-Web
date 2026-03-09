@@ -296,7 +296,8 @@ export default function MapLocationPicker({
       />
 
       {/* Tọa độ GPS - Chỉnh sửa thủ công */}
-      <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+      {/* GPS coordinate input — hidden from UI but lat/lng still captured via map click/drag */}
+      {/* <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="mb-3 text-sm font-semibold text-blue-900">Tọa độ GPS</p>
         <div className="flex gap-3">
           <div className="flex-1">
@@ -339,7 +340,7 @@ export default function MapLocationPicker({
           Bạn có thể nhập tọa độ chính xác nếu biết hoặc chỉnh sửa để điều chỉnh
           vị trí marker
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }

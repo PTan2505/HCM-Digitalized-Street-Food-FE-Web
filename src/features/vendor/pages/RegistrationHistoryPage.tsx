@@ -56,14 +56,14 @@ function RegistrationHistoryPage(): JSX.Element {
   const branches: Branch[] = myVendor?.branches ?? [];
   const vendorId: number | undefined = myVendor?.vendorId;
 
-  // const handleOpenCreateModal = (): void => {
-  //   if (branches.length === 0) {
-  //     setFormMode({ type: 'createVendor' });
-  //   } else if (vendorId !== undefined) {
-  //     setFormMode({ type: 'addBranch', vendorId });
-  //   }
-  //   setFormModalOpen(true);
-  // };
+  const handleOpenCreateModal = (): void => {
+    if (branches.length === 0) {
+      setFormMode({ type: 'createVendor' });
+    } else if (vendorId !== undefined) {
+      setFormMode({ type: 'addBranch', vendorId });
+    }
+    setFormModalOpen(true);
+  };
 
   const handleOpenEditModal = (branch: Branch): void => {
     setFormMode({ type: 'editBranch', branch });
@@ -212,13 +212,13 @@ function RegistrationHistoryPage(): JSX.Element {
             Danh sách tất cả chi nhánh đã đăng ký
           </p>
         </div>
-        {/* <button
+        <button
           onClick={handleOpenCreateModal}
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
           {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
-        </button> */}
+        </button>
       </div>
 
       <Table
@@ -241,7 +241,6 @@ function RegistrationHistoryPage(): JSX.Element {
         onClose={() => setFormModalOpen(false)}
         mode={formMode}
         onSuccess={handleFormSuccess}
-        showActivationToggle={false}
       />
     </div>
   );
