@@ -7,6 +7,8 @@ import type {
   SubmitImagesResponse,
   GetImagesResponse,
   CreateOrUpdateBranchResponse,
+  UpdateVendorNameRequest,
+  UpdateVendorNameResponse,
 } from '@features/vendor/types/vendor';
 
 import type {
@@ -28,6 +30,7 @@ import {
   createBranch,
   updateBranch,
   deleteBranch,
+  updateVendorName,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -68,6 +71,9 @@ export default function useVendor(): {
     data: VendorRegistrationRequest;
   }) => Promise<CreateOrUpdateBranchResponse>;
   onDeleteBranch: (branchId: number) => Promise<number>;
+  onUpdateVendorName: (
+    payload: UpdateVendorNameRequest
+  ) => Promise<UpdateVendorNameResponse>;
 } {
   const dispatch = useAppDispatch();
 
@@ -177,6 +183,15 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onUpdateVendorName = useCallback(
+    async (
+      payload: UpdateVendorNameRequest
+    ): Promise<UpdateVendorNameResponse> => {
+      return await dispatch(updateVendorName(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
@@ -189,5 +204,6 @@ export default function useVendor(): {
     onCreateBranch,
     onUpdateBranch,
     onDeleteBranch,
+    onUpdateVendorName,
   };
 }

@@ -7,6 +7,8 @@ import type {
   SubmitImagesResponse,
   GetImagesResponse,
   CreateOrUpdateBranchResponse,
+  UpdateVendorNameRequest,
+  UpdateVendorNameResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -195,5 +197,18 @@ export class VendorApi {
     await this.apiClient.delete({
       url: apiUrl.vendor.deleteImagesOfABranch(imageId),
     });
+  }
+
+  async updateVendorName(
+    data: UpdateVendorNameRequest
+  ): Promise<UpdateVendorNameResponse> {
+    const res = await this.apiClient.put<
+      UpdateVendorNameResponse,
+      UpdateVendorNameRequest
+    >({
+      url: apiUrl.vendor.updateVendorName,
+      data,
+    });
+    return res.data;
   }
 }

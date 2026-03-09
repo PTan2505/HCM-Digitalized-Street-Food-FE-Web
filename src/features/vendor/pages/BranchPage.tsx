@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  Tooltip as MuiTooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
@@ -18,7 +28,6 @@ import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
-import { Add as AddIcon } from '@mui/icons-material';
 
 const StatusBadge = ({
   label,
@@ -45,7 +54,7 @@ const StatusBadge = ({
 function BranchPage(): JSX.Element {
   const myVendor = useAppSelector(selectMyVendor);
   const status = useAppSelector(selectVendorStatus);
-  const { onGetMyVendor } = useVendor();
+  const { onGetMyVendor, onUpdateVendorName, onDeleteBranch } = useVendor();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<BranchFormMode>({
@@ -54,6 +63,8 @@ function BranchPage(): JSX.Element {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -62,12 +73,33 @@ function BranchPage(): JSX.Element {
   };
 
   const handleSaveName = (): void => {
-    // TODO: gọi API cập nhật tên
+    const trimmed = editedName.trim();
+    if (trimmed && trimmed !== myVendor?.name) {
+      void onUpdateVendorName({ name: trimmed });
+    }
     setIsEditingName(false);
   };
 
   const handleCancelEditName = (): void => {
     setIsEditingName(false);
+  };
+
+  const handleDeleteBranch = (branch: Branch): void => {
+    setDeletingBranch(branch);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (deletingBranch) {
+      await onDeleteBranch(deletingBranch.branchId);
+      setOpenDeleteDialog(false);
+      setDeletingBranch(null);
+    }
+  };
+
+  const handleCancelDelete = (): void => {
+    setOpenDeleteDialog(false);
+    setDeletingBranch(null);
   };
 
   useEffect(() => {
@@ -80,16 +112,16 @@ function BranchPage(): JSX.Element {
   );
   // const pendingBranches = branches.filter((b) => b.licenseStatus === 'Pending');
   // const hasSinglePending = pendingBranches.length === 1;
-  const vendorId: number | undefined = myVendor?.vendorId;
+  // const vendorId: number | undefined = myVendor?.vendorId;
 
-  const handleOpenCreateModal = (): void => {
-    if (branches.length === 0) {
-      setFormMode({ type: 'createVendor' });
-    } else if (vendorId !== undefined) {
-      setFormMode({ type: 'addBranch', vendorId });
-    }
-    setFormModalOpen(true);
-  };
+  // const handleOpenCreateModal = (): void => {
+  //   if (branches.length === 0) {
+  //     setFormMode({ type: 'createVendor' });
+  //   } else if (vendorId !== undefined) {
+  //     setFormMode({ type: 'addBranch', vendorId });
+  //   }
+  //   setFormModalOpen(true);
+  // };
 
   const handleOpenEditModal = (branch: Branch): void => {
     setFormMode({ type: 'editBranch', branch });
@@ -151,7 +183,7 @@ function BranchPage(): JSX.Element {
       style: { width: '120px' },
       render: (value: unknown): React.ReactNode => (
         <StatusBadge
-          label={value ? 'Đang hoạt động' : 'Ngưng hoạt động'}
+          label={value ? 'Đang hoạt động' : 'Không hoạt động'}
           type={value ? 'success' : 'error'}
         />
       ),
@@ -206,9 +238,8 @@ function BranchPage(): JSX.Element {
     {
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
-      onClick: (): void => {
-        // Handle deleting the selected branch
-        // PHẢI HỎI XÁC NHẬN TRƯỚC KHI XÓA
+      onClick: (branch: Branch): void => {
+        handleDeleteBranch(branch);
       },
       color: 'error' as const,
     },
@@ -317,13 +348,6 @@ function BranchPage(): JSX.Element {
               : 'Thêm chi nhánh'}
           </button>
         )} */}
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-        >
-          <AddIcon fontSize="small" />
-          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
-        </button>
       </div>
 
       <Table
@@ -347,6 +371,36 @@ function BranchPage(): JSX.Element {
         mode={formMode}
         onSuccess={handleFormSuccess}
       />
+
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-branch-dialog-title"
+        aria-describedby="delete-branch-dialog-description"
+      >
+        <DialogTitle id="delete-branch-dialog-title">
+          Xác nhận xóa chi nhánh
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-branch-dialog-description">
+            Bạn có chắc chắn muốn xóa chi nhánh &quot;
+            {deletingBranch?.name}&quot;? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Hủy
+          </Button>
+          <Button
+            onClick={() => void handleConfirmDelete()}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
