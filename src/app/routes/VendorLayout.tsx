@@ -6,8 +6,11 @@ import {
   ChevronRightIcon,
   HomeIcon,
   BuildingStorefrontIcon,
+  ClipboardDocumentListIcon,
+  DocumentTextIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -16,8 +19,30 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Dashboard', href: '/vendor/dashboard', icon: HomeIcon },
-  { name: 'Chi nhánh', href: '/vendor/branch', icon: BuildingStorefrontIcon },
+  {
+    name: 'Dashboard',
+    href: '/vendor/dashboard',
+    icon: HomeIcon,
+    isForVendor: true,
+  },
+  {
+    name: 'Chi nhánh',
+    href: '/vendor/branch',
+    icon: BuildingStorefrontIcon,
+    isForVendor: false,
+  },
+  {
+    name: 'Lịch sử đăng ký',
+    href: '/vendor/registration-history',
+    icon: DocumentTextIcon,
+    isForVendor: false,
+  },
+  {
+    name: 'Lịch sử thanh toán',
+    href: '/vendor/payment-history',
+    icon: ClipboardDocumentListIcon,
+    isForVendor: true,
+  },
 ];
 
 function VendorLayout(): JSX.Element {
@@ -27,18 +52,28 @@ function VendorLayout(): JSX.Element {
   const navigate = useNavigate();
   const { onLogout } = useLogin();
   const user = useAppSelector(selectUser);
+  const isVendor = user?.role === ROLES.VENDOR;
+  const filteredNavigation = navigation.filter(
+    (item) => !item.isForVendor || isVendor
+  );
 
   const handleLogoClick = (): void => {
     navigate('/vendor');
   };
 
+  const roleKey =
+    Object.entries(ROLES).find(([, value]) => value === user?.role)?.[0] ??
+    'Vendor';
+  const roleLabel =
+    roleKey.charAt(0).toUpperCase() + roleKey.slice(1).toLowerCase();
+
   const sidebarUserInfo = {
     name:
       user?.firstName && user?.lastName
         ? `${user.firstName} ${user.lastName}`
-        : 'Vendor',
+        : roleLabel,
     email: user?.email ?? '',
-    role: 'Vendor',
+    role: roleLabel,
     avatarUrl: user?.avatarUrl ?? null,
   };
 
@@ -66,7 +101,7 @@ function VendorLayout(): JSX.Element {
           </div>
           <SidebarContent
             collapsed={false}
-            navigation={navigation}
+            navigation={filteredNavigation}
             userInfo={sidebarUserInfo}
             settingsPath="/vendor/settings"
             onLogout={onLogout}
@@ -83,7 +118,7 @@ function VendorLayout(): JSX.Element {
       >
         <SidebarContent
           collapsed={sidebarCollapsed}
-          navigation={navigation}
+          navigation={filteredNavigation}
           userInfo={sidebarUserInfo}
           settingsPath="/vendor/settings"
           onLogout={onLogout}
@@ -126,8 +161,9 @@ function VendorLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {navigation.find((item) => item.href === location.pathname)
-                    ?.name ?? 'Dashboard'}
+                  {filteredNavigation.find(
+                    (item) => item.href === location.pathname
+                  )?.name ?? 'Dashboard'}
                 </Typography>
               </Box>
             </Box>

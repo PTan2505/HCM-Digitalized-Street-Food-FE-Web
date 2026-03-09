@@ -5,6 +5,8 @@ import userDietaryPreferenceReducer from '@slices/userPreferenceDietary';
 import categoryReducer from '@slices/category';
 import vendorReducer from '@slices/vendor';
 import branchReducer from '@slices/branch';
+import tasteReducer from '@slices/taste';
+import paymentReducer from '@slices/payment';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ export const store = configureStore({
     category: categoryReducer,
     vendor: vendorReducer,
     branch: branchReducer,
+    taste: tasteReducer,
+    payment: paymentReducer,
   },
 });
 

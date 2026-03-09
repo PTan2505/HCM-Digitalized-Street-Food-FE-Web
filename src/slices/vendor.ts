@@ -4,6 +4,10 @@ import type {
   VendorRegistrationResponse,
   SubmitLicenseResponse,
   GetMyVendorResponse,
+  SubmitImagesResponse,
+  GetImagesResponse,
+  CreateOrUpdateBranchResponse,
+  Branch,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -11,6 +15,12 @@ import type {
   DayOff,
   DayOffResponse,
 } from '@features/vendor/types/workSchedule';
+import type {
+  AdminVendor,
+  GetAllVendorsResponse,
+  GetAllVendorsParams,
+  VendorDetail,
+} from '@features/admin/types/vendor';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -28,6 +38,20 @@ export interface VendorState {
   error: unknown;
   myVendor: GetMyVendorResponse | null;
   licenseStatus: CheckLicenseStatusResponse | null;
+  images: GetImagesResponse | null;
+  // Admin
+  adminVendors: AdminVendor[];
+  selectedVendorDetail: VendorDetail | null;
+  adminPagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalCount: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+  };
+  adminStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+  adminError: unknown;
 }
 
 const initialState: VendorState = {
@@ -37,6 +61,20 @@ const initialState: VendorState = {
   error: null,
   myVendor: null,
   licenseStatus: null,
+  images: null,
+  // Admin
+  adminVendors: [],
+  selectedVendorDetail: null,
+  adminPagination: {
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalCount: 0,
+    hasPrevious: false,
+    hasNext: false,
+  },
+  adminStatus: 'idle',
+  adminError: null,
 };
 
 export const registerVendor = createAppAsyncThunk(
@@ -131,6 +169,164 @@ export const submitDayOff = createAppAsyncThunk(
   }
 );
 
+export const submitImages = createAppAsyncThunk(
+  'vendor/submitImages',
+  async (
+    payload: { branchId: number; images: File[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: SubmitImagesResponse[] =
+        await axiosApi.vendorApi.submitImages(payload.branchId, payload.images);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getImages = createAppAsyncThunk(
+  'vendor/getImages',
+  async (
+    payload: {
+      branchId: number;
+      params: { pageNumber: number; pageSize: number };
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: GetImagesResponse = await axiosApi.vendorApi.getImages(
+        payload.branchId,
+        payload.params
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const createBranch = createAppAsyncThunk(
+  'vendor/createBranch',
+  async (
+    payload: { vendorId: number; data: VendorRegistrationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: CreateOrUpdateBranchResponse =
+        await axiosApi.vendorApi.createBranch(payload.vendorId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateBranch = createAppAsyncThunk(
+  'vendor/updateBranch',
+  async (
+    payload: { branchId: number; data: VendorRegistrationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: CreateOrUpdateBranchResponse =
+        await axiosApi.vendorApi.updateBranch(payload.branchId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteBranch = createAppAsyncThunk(
+  'vendor/deleteBranch',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteBranch(branchId);
+      return branchId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+// ─── Admin Thunks ─────────────────────────────────────────
+
+export const getAllVendors = createAppAsyncThunk(
+  'vendorAdmin/getAllVendors',
+  async (params: GetAllVendorsParams, { rejectWithValue }) => {
+    try {
+      const response: GetAllVendorsResponse =
+        await axiosApi.vendorAdminApi.getAllVendors(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getActiveVendors = createAppAsyncThunk(
+  'vendorAdmin/getActiveVendors',
+  async (params: GetAllVendorsParams, { rejectWithValue }) => {
+    try {
+      const response: GetAllVendorsResponse =
+        await axiosApi.vendorAdminApi.getActiveVendors(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteVendor = createAppAsyncThunk(
+  'vendorAdmin/deleteVendor',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorAdminApi.deleteVendor(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const suspendVendor = createAppAsyncThunk(
+  'vendorAdmin/suspendVendor',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorAdminApi.suspendVendor(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const reactivateVendor = createAppAsyncThunk(
+  'vendorAdmin/reactivateVendor',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorAdminApi.reactivateVendor(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getVendorDetail = createAppAsyncThunk(
+  'vendorAdmin/getVendorDetail',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response: VendorDetail =
+        await axiosApi.vendorAdminApi.getVendorDetail(id);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const vendorSlice = createSlice({
   name: 'vendor',
   initialState,
@@ -139,12 +335,13 @@ export const vendorSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ─── Vendor Cases ────────────────────────────────────
       .addCase(registerVendor.fulfilled, (state, action) => {
         state.vendorId = action.payload.vendorId;
-        state.branchId = action.payload.branchId;
+        state.branchId = action.payload.branches[0]?.branchId;
+        state.myVendor = action.payload;
       })
       .addCase(submitLicense.fulfilled, (state) => {
-        // License submitted successfully
         state.status = 'succeeded';
       })
       .addCase(getMyVendor.fulfilled, (state, action) => {
@@ -153,20 +350,183 @@ export const vendorSlice = createSlice({
       .addCase(checkLicenseStatus.fulfilled, (state, action) => {
         state.licenseStatus = action.payload;
       })
-      // Matcher: Handle all pending cases
-      .addMatcher(isPending, (state) => {
-        state.status = 'pending';
-        state.error = null;
-      })
-      // Matcher: Handle all rejected cases
-      .addMatcher(isRejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload ?? { message: 'An error occurred' };
-      })
-      // Matcher: Handle all fulfilled cases
-      .addMatcher(isFulfilled, (state) => {
+      .addCase(submitImages.fulfilled, (state) => {
         state.status = 'succeeded';
-      });
+      })
+      .addCase(getImages.fulfilled, (state, action) => {
+        state.images = action.payload;
+      })
+      .addCase(deleteBranch.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.branches = state.myVendor.branches.filter(
+            (b) => b.branchId !== action.payload
+          );
+        }
+      })
+      .addCase(createBranch.fulfilled, (state, action) => {
+        if (state.myVendor && action.payload) {
+          state.myVendor.branches.push(action.payload as unknown as Branch);
+        }
+      })
+      .addCase(updateBranch.fulfilled, (state, action) => {
+        if (state.myVendor && action.payload) {
+          const branchIndex = state.myVendor.branches.findIndex(
+            (b) => b.branchId === action.payload.branchId
+          );
+          if (branchIndex > -1) {
+            state.myVendor.branches[branchIndex] =
+              action.payload as unknown as Branch;
+          }
+        }
+      })
+      // ─── Admin Cases ─────────────────────────────────────
+      .addCase(getAllVendors.fulfilled, (state, action) => {
+        state.adminVendors = action.payload.items;
+        state.adminPagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
+      .addCase(getActiveVendors.fulfilled, (state, action) => {
+        state.adminVendors = action.payload.items;
+        state.adminPagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
+      .addCase(deleteVendor.fulfilled, (state, action) => {
+        state.adminVendors = state.adminVendors.filter(
+          (vendor) => vendor.vendorId !== action.payload
+        );
+      })
+      .addCase(suspendVendor.fulfilled, (state, action) => {
+        const vendor = state.adminVendors.find(
+          (v) => v.vendorId === action.payload
+        );
+        if (vendor) {
+          vendor.isActive = false;
+        }
+      })
+      .addCase(reactivateVendor.fulfilled, (state, action) => {
+        const vendor = state.adminVendors.find(
+          (v) => v.vendorId === action.payload
+        );
+        if (vendor) {
+          vendor.isActive = true;
+        }
+      })
+      .addCase(getVendorDetail.fulfilled, (state, action) => {
+        state.selectedVendorDetail = action.payload;
+      })
+      // ─── Vendor Matchers ─────────────────────────────────
+      .addMatcher(
+        isPending(
+          registerVendor,
+          submitLicense,
+          getMyVendor,
+          checkLicenseStatus,
+          submitWorkSchedule,
+          submitDayOff,
+          submitImages,
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch
+        ),
+        (state) => {
+          state.status = 'pending';
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        isRejected(
+          registerVendor,
+          submitLicense,
+          getMyVendor,
+          checkLicenseStatus,
+          submitWorkSchedule,
+          submitDayOff,
+          submitImages,
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch
+        ),
+        (state, action) => {
+          state.status = 'failed';
+          state.error = (action as { payload?: unknown }).payload ?? {
+            message: 'An error occurred',
+          };
+        }
+      )
+      .addMatcher(
+        isFulfilled(
+          registerVendor,
+          submitLicense,
+          getMyVendor,
+          checkLicenseStatus,
+          submitWorkSchedule,
+          submitDayOff,
+          submitImages,
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch
+        ),
+        (state) => {
+          state.status = 'succeeded';
+        }
+      )
+      // ─── Admin Matchers ──────────────────────────────────
+      .addMatcher(
+        isPending(
+          getAllVendors,
+          getActiveVendors,
+          deleteVendor,
+          suspendVendor,
+          reactivateVendor,
+          getVendorDetail
+        ),
+        (state) => {
+          state.adminStatus = 'pending';
+          state.adminError = null;
+        }
+      )
+      .addMatcher(
+        isFulfilled(
+          getAllVendors,
+          getActiveVendors,
+          deleteVendor,
+          suspendVendor,
+          reactivateVendor,
+          getVendorDetail
+        ),
+        (state) => {
+          state.adminStatus = 'succeeded';
+        }
+      )
+      .addMatcher(
+        isRejected(
+          getAllVendors,
+          getActiveVendors,
+          deleteVendor,
+          suspendVendor,
+          reactivateVendor,
+          getVendorDetail
+        ),
+        (state, action) => {
+          state.adminStatus = 'failed';
+          state.adminError = action.payload;
+        }
+      );
   },
 });
 
@@ -194,3 +554,26 @@ export const selectLicenseStatus = (
 
 export const selectMyVendor = (state: RootState): GetMyVendorResponse | null =>
   state.vendor.myVendor;
+
+export const selectImages = (state: RootState): GetImagesResponse | null =>
+  state.vendor.images;
+
+// ─── Admin Selectors ──────────────────────────────────────
+
+export const selectAdminVendors = (state: RootState): AdminVendor[] =>
+  state.vendor.adminVendors;
+
+export const selectAdminVendorsPagination = (
+  state: RootState
+): VendorState['adminPagination'] => state.vendor.adminPagination;
+
+export const selectAdminVendorStatus = (
+  state: RootState
+): VendorState['adminStatus'] => state.vendor.adminStatus;
+
+export const selectAdminVendorError = (state: RootState): unknown =>
+  state.vendor.adminError;
+
+export const selectAdminVendorDetail = (
+  state: RootState
+): VendorDetail | null => state.vendor.selectedVendorDetail;

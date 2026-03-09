@@ -5,4 +5,13 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), tsconfigPaths()],
+  server: {
+    proxy: {
+      '/openmap': {
+        target: 'https://mapapis.openmap.vn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/openmap/, ''),
+      },
+    },
+  },
 });

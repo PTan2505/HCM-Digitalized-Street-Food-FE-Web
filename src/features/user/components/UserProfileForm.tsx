@@ -40,7 +40,7 @@ export default function UserProfileForm(): JSX.Element {
   const onSubmit = async (data: UpdateProfileFormData): Promise<void> => {
     try {
       await updateUserProfile(data as Partial<User>);
-      navigate(ROUTES.VENDOR_REGISTRATION);
+      navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`);
     } catch (error) {
       const err = error as APIErrorResponse;
       if (err.fieldErrors) {
@@ -125,9 +125,9 @@ export default function UserProfileForm(): JSX.Element {
               disabled={!!user?.email}
               className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-gray-500 transition-all duration-200 outline-none disabled:cursor-not-allowed"
             />
-            <p className="mt-2 text-xs text-gray-500">
+            {/* <p className="mt-2 text-xs text-gray-500">
               Email không thể thay đổi
-            </p>
+            </p> */}
           </div>
 
           {/* First Name */}

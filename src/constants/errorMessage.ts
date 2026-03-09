@@ -49,4 +49,11 @@ export const VALIDATE_ERROR_MESSAGES: Record<string, string> = {
   MIN_DIETARY_DESCRIPTION_LENGTH: 'Mô tả chế độ ăn phải có ít nhất 10 ký tự!',
   MAX_DIETARY_DESCRIPTION_LENGTH:
     'Mô tả chế độ ăn không được vượt quá 500 ký tự!',
+  // Taste validation
+  EMPTY_TASTE_NAME: 'Vui lòng nhập tên khẩu vị!',
+  MIN_TASTE_NAME_LENGTH: 'Tên khẩu vị phải có ít nhất 3 ký tự!',
+  MAX_TASTE_NAME_LENGTH: 'Tên khẩu vị không được vượt quá 100 ký tự!',
+  EMPTY_TASTE_DESCRIPTION: 'Vui lòng nhập mô tả khẩu vị!',
+  MIN_TASTE_DESCRIPTION_LENGTH: 'Mô tả khẩu vị phải có ít nhất 10 ký tự!',
+  MAX_TASTE_DESCRIPTION_LENGTH: 'Mô tả khẩu vị không được vượt quá 500 ký tự!',
 };

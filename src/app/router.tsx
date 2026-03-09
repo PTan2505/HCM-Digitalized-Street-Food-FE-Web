@@ -4,12 +4,14 @@ import VendorLayout from '@app/routes/VendorLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
+import AdminTastePage from '@features/admin/pages/TastePage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
 import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
+import AdminVendorsPage from '@features/admin/pages/VendorsPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -20,18 +22,43 @@ import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVer
 import VendorRegistration from '@features/vendor/pages/VendorRegistrationPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
+import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
+import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
+import HomePage from '@features/home/pages/HomePage';
+import PaymentSuccess from '@features/vendor/pages/PaymentSuccess';
+import PaymentCancel from '@features/vendor/pages/PaymentCancel';
 
 export const router = createBrowserRouter([
+  {
+    path: ROUTES.HOME,
+    element: <HomePage />,
+  },
   {
     path: ROUTES.LOGIN,
     element: <LoginPage />,
   },
   {
+    path: ROUTES.PAYMENT.SUCCESS,
+    element: <PaymentSuccess />,
+  },
+  {
+    path: ROUTES.PAYMENT.CANCEL,
+    element: <PaymentCancel />,
+  },
+  {
     path: ROUTES.USER_INFO_SETUP,
     element: <EditUserProfilePage />,
+  },
+  {
+    path: ROUTES.PAYMENT_SUCCESS,
+    element: <PaymentSuccess />,
+  },
+  {
+    path: ROUTES.PAYMENT_CANCEL,
+    element: <PaymentCancel />,
   },
   {
     path: ROUTES.ROOT,
@@ -92,6 +119,14 @@ export const router = createBrowserRouter([
             path: ROUTES.VENDOR.PATHS.BRANCH,
             element: <VendorBranchPage />,
           },
+          {
+            path: ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY,
+            element: <VendorRegistrationHistoryPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.PAYMENT_HISTORY,
+            element: <VendorPaymentHistoryPage />,
+          },
         ],
       },
       {
@@ -120,8 +155,10 @@ export const router = createBrowserRouter([
             element: <UsersWithDietaryPreferencesPage />,
           },
           { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
+          { path: ROUTES.ADMIN.PATHS.VENDORS, element: <AdminVendorsPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
+          { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },
         ],
       },
     ],

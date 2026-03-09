@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
+
+* {
+  font-family: 'Nunito', sans-serif;
+}
 
 @theme {
   /* Màu chính - Xanh lá cây (khớp với mobile) */
@@ -113,7 +118,7 @@
 @utility title-xs {
   @apply text-[16px] leading-[22px] font-semibold;
 }
-Typography cũ (Legacy) */
+/* Typography cũ (Legacy) */
 
 /* Display - Hiển thị
 /* Display */

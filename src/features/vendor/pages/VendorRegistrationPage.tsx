@@ -1,11 +1,20 @@
-import { useState, type JSX } from 'react';
+import { useState, useEffect, type JSX } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import OwnerInfoSection from '../components/OwnerInfoSection';
 import StoreSection from '../components/StoreSection';
 import TermsDialog from '../components/TermsDialog';
 import LicenseStatusBanner from '../components/LicenseStatusBanner';
+import ImageStatusBanner from '../components/ImageStatusBanner';
+import ImagesUploadSection from '../components/ImagesUploadSection';
+import LicenseUploadSection from '../components/LicenseUploadSection';
 import useVendorRegistration from '../hooks/useVendorRegistration';
+import {
+  VendorRegistrationSchema,
+  type VendorRegistrationFormData,
+} from '../utils/vendorRegistrationSchema';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
-import { Snackbar, Alert, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 
 // ─── Shared UI fragments ─────────────────────────────────────────────
 const PAGE_BG =
@@ -33,6 +42,18 @@ function PageShell({
   );
 }
 
+function PaymentButton({ onClick }: { onClick: () => void }): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#06AA4C] px-6 py-4 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#058f40] hover:shadow-xl active:translate-y-0"
+    >
+      Thanh toán
+    </button>
+  );
+}
+
 function LogoutButton({ onClick }: { onClick: () => void }): JSX.Element {
   return (
     <button
@@ -48,61 +69,109 @@ function LogoutButton({ onClick }: { onClick: () => void }): JSX.Element {
 
 // ─── Title / subtitle / button label maps ────────────────────────────
 const TITLE_MAP = {
-  resubmit: 'Cập nhật hồ sơ đăng ký',
   uploadLicense: 'Cập nhật giấy phép kinh doanh',
+  uploadImages: 'Cập nhật hình ảnh cửa hàng',
+  uploadLicenseAndImages: 'Cập nhật giấy phép và hình ảnh',
   register: 'Đăng ký trở thành Vendor',
 } as const;
 
 const SUBTITLE_MAP = {
-  resubmit:
-    'Vui lòng cập nhật lại thông tin và giấy phép theo yêu cầu từ quản trị viên',
   uploadLicense: 'Vui lòng tải lên giấy phép kinh doanh để hoàn tất đăng ký',
+  uploadImages: 'Vui lòng tải lên hình ảnh cửa hàng để hoàn tất đăng ký',
+  uploadLicenseAndImages:
+    'Vui lòng tải lên giấy phép kinh doanh và hình ảnh cửa hàng',
   register: 'Hoàn thành các bước dưới đây để bắt đầu kinh doanh',
 } as const;
 
 const SUBMIT_LABEL_MAP = {
-  resubmit: 'Gửi lại hồ sơ',
   uploadLicense: 'Cập nhật giấy phép',
+  uploadImages: 'Cập nhật hình ảnh',
+  uploadLicenseAndImages: 'Cập nhật giấy phép và hình ảnh',
   register: 'Đăng ký cửa hàng',
 } as const;
 
 // ─── Main component ──────────────────────────────────────────────────
 export default function VendorRegistrationPage(): JSX.Element {
   const [openTerms, setOpenTerms] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
 
   const {
     mode,
     formData,
-    snackbar,
     vendorStatus,
     licenseStatusData,
+    branchImagesData,
     isFormValid,
-    closeSnackbar,
     handleInputChange,
     handleLocationChange,
     handleFileChange,
+    handleImageFileChange,
     handleSubmit,
     onLogout,
   } = useVendorRegistration();
 
-  // ── Shared snackbar element ────────────────────────────────────────
-  const snackbarEl = (
-    <Snackbar
-      open={snackbar.open}
-      autoHideDuration={6000}
-      onClose={closeSnackbar}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-    >
-      <Alert
-        onClose={closeSnackbar}
-        severity={snackbar.severity}
-        variant="filled"
-        sx={{ width: '100%' }}
-      >
-        {snackbar.message}
-      </Alert>
-    </Snackbar>
-  );
+  // Re-show banners when mode changes (e.g. after successful submit)
+  useEffect(() => {
+    setShowBanner(true);
+  }, [mode]);
+
+  // Setup react-hook-form cho register mode
+  const {
+    formState: { errors, isValid: formIsValid, dirtyFields },
+    setValue,
+    trigger,
+  } = useForm<VendorRegistrationFormData>({
+    resolver: zodResolver(VendorRegistrationSchema),
+    mode: 'all',
+    defaultValues: {
+      ownerName: '',
+      ownerPhone: '',
+      email: '',
+      branchName: '',
+      detailAddress: '',
+      latitude: null,
+      longitude: null,
+      agreeTerms: false,
+    },
+  });
+
+  // Sync formData từ hook vào react-hook-form
+  useEffect(() => {
+    if (mode === 'register') {
+      setValue('ownerName', formData.ownerName, { shouldDirty: false });
+      setValue('ownerPhone', formData.ownerPhone, { shouldDirty: false });
+      setValue('email', formData.email, { shouldDirty: false });
+      setValue('branchName', formData.branchName, { shouldDirty: false });
+      setValue('detailAddress', formData.detailAddress, { shouldDirty: false });
+      if (formData.latitude !== null)
+        setValue('latitude', formData.latitude, { shouldDirty: false });
+      if (formData.longitude !== null)
+        setValue('longitude', formData.longitude, { shouldDirty: false });
+      setValue('agreeTerms', formData.agreeTerms, { shouldDirty: false });
+      void trigger(); // Re-validate
+    }
+  }, [formData, mode, setValue, trigger]);
+
+  // Custom handleInputChange để sync với react-hook-form
+  const handleFormInputChange = (field: string, value: unknown): void => {
+    handleInputChange(field, value);
+    if (mode === 'register') {
+      setValue(field as keyof VendorRegistrationFormData, value as never, {
+        shouldDirty: true,
+      });
+      void trigger(field as keyof VendorRegistrationFormData);
+    }
+  };
+
+  // Custom handleLocationChange để sync với react-hook-form
+  const handleFormLocationChange = (lat: number, lng: number): void => {
+    handleLocationChange(lat, lng);
+    if (mode === 'register') {
+      setValue('latitude', lat, { shouldDirty: true });
+      setValue('longitude', lng, { shouldDirty: true });
+      void trigger(['latitude', 'longitude']);
+    }
+  };
 
   // ── Loading state ──────────────────────────────────────────────────
   if (mode === 'loading') {
@@ -123,19 +192,46 @@ export default function VendorRegistrationPage(): JSX.Element {
       ownerPhone: formData.ownerPhone,
       email: formData.email,
     },
-    onChange: handleInputChange,
-    readonly: true,
+    onChange: mode === 'register' ? handleFormInputChange : handleInputChange,
+    readonly: mode === 'viewStatus',
+    errors:
+      mode === 'register'
+        ? {
+            ownerName: dirtyFields.ownerName
+              ? errors.ownerName?.message
+              : undefined,
+            ownerPhone: dirtyFields.ownerPhone
+              ? errors.ownerPhone?.message
+              : undefined,
+            email: dirtyFields.email ? errors.email?.message : undefined,
+          }
+        : undefined,
   } as const;
 
   const storeFormData = {
-    buildingName: formData.buildingName,
+    branchName: formData.branchName,
     detailAddress: formData.detailAddress,
     ward: formData.ward,
     city: formData.city,
     latitude: formData.latitude,
     longitude: formData.longitude,
-    licenseImages: formData.licenseImages,
   };
+
+  const storeErrors =
+    mode === 'register'
+      ? {
+          branchName: dirtyFields.branchName
+            ? errors.branchName?.message
+            : undefined,
+          detailAddress: dirtyFields.detailAddress
+            ? errors.detailAddress?.message
+            : undefined,
+          latitude: dirtyFields.latitude ? errors.latitude?.message : undefined,
+          longitude: dirtyFields.longitude
+            ? errors.longitude?.message
+            : undefined,
+        }
+      : undefined;
 
   // ── View status mode ──────────────────────────────────────────────
   if (mode === 'viewStatus') {
@@ -145,6 +241,9 @@ export default function VendorRegistrationPage(): JSX.Element {
         subtitle="Thông tin đăng ký cửa hàng của bạn"
       >
         {licenseStatusData && <LicenseStatusBanner data={licenseStatusData} />}
+        {branchImagesData && branchImagesData.items.length > 0 && (
+          <ImageStatusBanner data={branchImagesData} />
+        )}
 
         <OwnerInfoSection {...ownerProps} />
 
@@ -152,39 +251,71 @@ export default function VendorRegistrationPage(): JSX.Element {
           formData={storeFormData}
           onChange={handleInputChange}
           onLocationChange={handleLocationChange}
-          onFileChange={handleFileChange}
           readonly={true}
-          hideLicenseUpload={true}
         />
 
-        <div className="mt-10">
+        <div className="mt-10 space-y-4">
+          {licenseStatusData?.status === 'Accept' && (
+            <PaymentButton onClick={() => {}} />
+          )}
           <LogoutButton onClick={onLogout} />
         </div>
-
-        {snackbarEl}
       </PageShell>
     );
   }
 
-  // ── Register / Upload License / Resubmit mode ─────────────────────
+  // ── Register / Upload License mode ─────────────────────
   const formMode = mode;
 
   return (
     <PageShell title={TITLE_MAP[formMode]} subtitle={SUBTITLE_MAP[formMode]}>
-      {mode === 'resubmit' && licenseStatusData && (
+      {licenseStatusData && showBanner && (
         <LicenseStatusBanner data={licenseStatusData} />
       )}
+      {branchImagesData && branchImagesData.items.length > 0 && showBanner && (
+        <ImageStatusBanner data={branchImagesData} />
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form
+        onSubmit={handleSubmit}
+        onFocus={() => setShowBanner(false)}
+        className="space-y-8"
+      >
         <OwnerInfoSection {...ownerProps} />
 
         <StoreSection
           formData={storeFormData}
-          onChange={handleInputChange}
-          onLocationChange={handleLocationChange}
-          onFileChange={handleFileChange}
-          readonly={mode === 'uploadLicense'}
+          onChange={
+            mode === 'register' ? handleFormInputChange : handleInputChange
+          }
+          onLocationChange={
+            mode === 'register'
+              ? handleFormLocationChange
+              : handleLocationChange
+          }
+          readonly={
+            mode === 'uploadLicense' ||
+            mode === 'uploadImages' ||
+            mode === 'uploadLicenseAndImages'
+          }
+          errors={storeErrors}
         />
+
+        {/* Section 3: Images upload — shown when images not yet uploaded */}
+        {mode !== 'uploadLicense' && (
+          <ImagesUploadSection
+            storeImages={formData.storeImages}
+            onFileChange={handleImageFileChange}
+          />
+        )}
+
+        {/* Section 4: License upload — shown when license not yet uploaded */}
+        {mode !== 'uploadImages' && (
+          <LicenseUploadSection
+            licenseImages={formData.licenseImages}
+            onFileChange={handleFileChange}
+          />
+        )}
 
         {/* Terms checkbox – register mode only */}
         {mode === 'register' && (
@@ -195,7 +326,7 @@ export default function VendorRegistrationPage(): JSX.Element {
                 required
                 checked={formData.agreeTerms}
                 onChange={(e) =>
-                  handleInputChange('agreeTerms', e.target.checked)
+                  handleFormInputChange('agreeTerms', e.target.checked)
                 }
                 className="h-4 w-4 rounded border-gray-300 accent-[#06AA4C] outline-none focus:ring-0"
               />
@@ -210,6 +341,11 @@ export default function VendorRegistrationPage(): JSX.Element {
                 </button>
               </span>
             </label>
+            {dirtyFields.agreeTerms && errors.agreeTerms && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.agreeTerms.message}
+              </p>
+            )}
           </div>
         )}
 
@@ -217,7 +353,11 @@ export default function VendorRegistrationPage(): JSX.Element {
         <div className="mt-10">
           <button
             type="submit"
-            disabled={!isFormValid || vendorStatus === 'pending'}
+            disabled={
+              (mode === 'register' && !formIsValid) ||
+              (mode !== 'register' && !isFormValid) ||
+              vendorStatus === 'pending'
+            }
             className="w-full rounded-xl bg-[#06AA4C] px-6 py-4 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#058f40] hover:shadow-xl active:translate-y-0 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
           >
             {vendorStatus === 'pending'
@@ -232,7 +372,6 @@ export default function VendorRegistrationPage(): JSX.Element {
       </form>
 
       <TermsDialog open={openTerms} onClose={() => setOpenTerms(false)} />
-      {snackbarEl}
     </PageShell>
   );
 }

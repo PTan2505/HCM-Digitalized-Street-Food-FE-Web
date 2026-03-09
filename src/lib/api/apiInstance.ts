@@ -4,8 +4,11 @@ import { UserProfileApi } from '@features/user/api/profileApi';
 import { BadgeApi } from '@features/admin/api/badgeApi';
 import { userDietaryPreferenceApi } from '@features/admin/api/userDietaryPreferenceApi';
 import { CategoryApi } from '@features/admin/api/categoryApi';
+import { VendorAdminApi } from '@features/admin/api/vendorApi';
 import { VendorApi } from '@features/vendor/api/vendorApi';
 import { BranchApi } from '@features/moderator/api/branchApi';
+import { TasteApi } from '@features/admin/api/tasteApi';
+import { PaymentApi } from '@features/vendor/api/paymentApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -17,6 +20,9 @@ export const axiosApi = {
   badgeApi: new BadgeApi(axiosClient),
   userDietaryPreferenceApi: new userDietaryPreferenceApi(axiosClient),
   categoryApi: new CategoryApi(axiosClient),
+  vendorAdminApi: new VendorAdminApi(axiosClient),
   vendorApi: new VendorApi(axiosClient),
   branchApi: new BranchApi(axiosClient),
+  tasteApi: new TasteApi(axiosClient),
+  paymentApi: new PaymentApi(axiosClient),
 };
