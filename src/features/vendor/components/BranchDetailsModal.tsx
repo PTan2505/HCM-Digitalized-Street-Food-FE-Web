@@ -308,7 +308,7 @@ export default function BranchDetailsModal({
         {/* Modal Actions */}
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-5">
           <div>
-            {!branch.isSubscribed && (
+            {!branch.isSubscribed && branch.isVerified && (
               <Button
                 onClick={() => {
                   void handlePayment();

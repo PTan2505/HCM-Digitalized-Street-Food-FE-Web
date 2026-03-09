@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, Tooltip as MuiTooltip } from '@mui/material';
+import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -14,6 +16,8 @@ import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
+import BranchFormModal from '@features/vendor/components/BranchFormModal';
+import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 import { Add as AddIcon } from '@mui/icons-material';
 
 const StatusBadge = ({
@@ -43,6 +47,28 @@ function BranchPage(): JSX.Element {
   const status = useAppSelector(selectVendorStatus);
   const { onGetMyVendor } = useVendor();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState<BranchFormMode>({
+    type: 'createVendor',
+  });
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleStartEditName = (): void => {
+    setEditedName(myVendor?.name ?? '');
+    setIsEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  };
+
+  const handleSaveName = (): void => {
+    // TODO: gọi API cập nhật tên
+    setIsEditingName(false);
+  };
+
+  const handleCancelEditName = (): void => {
+    setIsEditingName(false);
+  };
 
   useEffect(() => {
     void onGetMyVendor();
@@ -52,7 +78,27 @@ function BranchPage(): JSX.Element {
   const verifiedBranches: Branch[] = branches.filter(
     (b) => b.licenseStatus === 'Accept'
   );
+  // const pendingBranches = branches.filter((b) => b.licenseStatus === 'Pending');
+  // const hasSinglePending = pendingBranches.length === 1;
   const vendorId: number | undefined = myVendor?.vendorId;
+
+  const handleOpenCreateModal = (): void => {
+    if (branches.length === 0) {
+      setFormMode({ type: 'createVendor' });
+    } else if (vendorId !== undefined) {
+      setFormMode({ type: 'addBranch', vendorId });
+    }
+    setFormModalOpen(true);
+  };
+
+  const handleOpenEditModal = (branch: Branch): void => {
+    setFormMode({ type: 'editBranch', branch });
+    setFormModalOpen(true);
+  };
+
+  const handleFormSuccess = (): void => {
+    // Slice already handles branch update/create
+  };
 
   const columns = [
     {
@@ -152,11 +198,8 @@ function BranchPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       menuLabel: 'Chỉnh sửa chi nhánh',
-      onClick: (): void => {
-        // Handle editing the selected branch
-        // API PUT BRANCH DÙNG CHUNG MODAL VỚI API POST BRANCH, CHỈ KHÁC Ở 2 CHỖ:
-        // 1. API POST CÓ THÊM 1 SECTION ĐỂ SUBMIT LICENSE VÀ 1 SECTION ĐỂ UPLOAD HÌNH ẢNH CỦA QUÁN
-        // 2. API PUT CHỈ CÓ 1 SECTION ĐỂ CHỈNH SỬA THÔNG TIN CHI NHÁNH, KHÔNG CÓ 2 SECTION LICENSE VÀ UPLOAD HÌNH ẢNH NHƯ API POST VÀ SẼ CÓ THÊM FIELD isActive
+      onClick: (branch: Branch): void => {
+        handleOpenEditModal(branch);
       },
       color: 'primary' as const,
     },
@@ -216,15 +259,70 @@ function BranchPage(): JSX.Element {
             Quản lý chi nhánh
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
-            Danh sách các chi nhánh của cửa hàng
+            Tên cửa hàng:{' '}
+            {isEditingName ? (
+              <span className="inline-flex items-center gap-1">
+                <input
+                  ref={nameInputRef}
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') handleCancelEditName();
+                  }}
+                  className="rounded border border-[var(--color-primary-400)] px-1.5 py-0.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[var(--color-primary-300)]"
+                  autoFocus
+                />
+                <IconButton
+                  size="small"
+                  onClick={handleSaveName}
+                  color="success"
+                  title="Lưu"
+                >
+                  <CheckIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={handleCancelEditName}
+                  color="error"
+                  title="Hủy"
+                >
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 font-semibold">
+                {myVendor?.name ?? 'Chưa có tên cửa hàng'}
+                <EditIcon
+                  sx={{
+                    fontSize: 15,
+                    cursor: 'pointer',
+                    '&:hover': { color: 'var(--color-primary-600)' },
+                  }}
+                  onClick={handleStartEditName}
+                  titleAccess="Nhấn để chỉnh sửa tên cửa hàng"
+                />
+              </span>
+            )}
           </p>
         </div>
+        {/* {!hasSinglePending && (
+          <button
+            // onClick={() => handleOpenDialog()}
+            className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          >
+            <AddIcon fontSize="small" />
+            {verifiedBranches.length === 0
+              ? 'Tạo cửa hàng mới'
+              : 'Thêm chi nhánh'}
+          </button>
+        )} */}
         <button
-          // onClick={() => handleOpenDialog()}
+          onClick={handleOpenCreateModal}
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm chi nhánh
+          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
         </button>
       </div>
 
@@ -233,15 +331,21 @@ function BranchPage(): JSX.Element {
         data={verifiedBranches}
         rowKey="branchId"
         loading={status === 'pending'}
-        emptyMessage="Chưa có chi nhánh đã xác thực"
+        emptyMessage="Chưa có chi nhánh đã xác thực (Xem chi nhánh đang chờ xác thực ở tab Lịch sử đăng ký)"
         actions={actions}
       />
 
-      {/* Branch Details Modal */}
       <BranchDetailsModal
         isOpen={selectedBranch !== null}
         onClose={() => setSelectedBranch(null)}
         branch={selectedBranch}
+      />
+
+      <BranchFormModal
+        isOpen={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        mode={formMode}
+        onSuccess={handleFormSuccess}
       />
     </div>
   );

@@ -16,6 +16,8 @@ interface StoreSectionProps {
   onChange: (field: string, value: unknown) => void;
   onLocationChange: (lat: number, lng: number) => void;
   readonly?: boolean;
+  sectionTitle?: string;
+  branchNameRequired?: boolean;
   errors?: {
     branchName?: string;
     detailAddress?: string;
@@ -29,6 +31,8 @@ export default function StoreSection({
   onChange,
   onLocationChange,
   readonly = false,
+  sectionTitle = '2. Thông tin chi nhánh chính',
+  branchNameRequired = false,
   errors,
 }: StoreSectionProps): JSX.Element {
   // Handle address autocomplete selection — syncs all address fields at once
@@ -44,13 +48,18 @@ export default function StoreSection({
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-lg font-semibold text-gray-800">
-        2. Thông tin chi nhánh chính
+        {sectionTitle}
       </h2>
 
       {/* Tên cơ sở */}
       <div className="mb-6">
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Tên chi nhánh <span className="text-gray-400">(Không bắt buộc)</span>
+          Tên chi nhánh{' '}
+          {branchNameRequired ? (
+            <span className="text-red-500">*</span>
+          ) : (
+            <span className="text-gray-400">(Không bắt buộc)</span>
+          )}
         </label>
         <input
           type="text"

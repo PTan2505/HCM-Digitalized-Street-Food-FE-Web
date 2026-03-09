@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, Tooltip as MuiTooltip } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { Box } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
+import BranchFormModal from '@features/vendor/components/BranchFormModal';
+import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 
 const StatusBadge = ({
   label,
@@ -42,12 +44,35 @@ function RegistrationHistoryPage(): JSX.Element {
   const status = useAppSelector(selectVendorStatus);
   const { onGetMyVendor } = useVendor();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState<BranchFormMode>({
+    type: 'createVendor',
+  });
 
   useEffect(() => {
     void onGetMyVendor();
   }, [onGetMyVendor]);
 
   const branches: Branch[] = myVendor?.branches ?? [];
+  const vendorId: number | undefined = myVendor?.vendorId;
+
+  // const handleOpenCreateModal = (): void => {
+  //   if (branches.length === 0) {
+  //     setFormMode({ type: 'createVendor' });
+  //   } else if (vendorId !== undefined) {
+  //     setFormMode({ type: 'addBranch', vendorId });
+  //   }
+  //   setFormModalOpen(true);
+  // };
+
+  const handleOpenEditModal = (branch: Branch): void => {
+    setFormMode({ type: 'editBranch', branch });
+    setFormModalOpen(true);
+  };
+
+  const handleFormSuccess = (): void => {
+    // Slice already handles branch update/create
+  };
 
   const columns = [
     {
@@ -100,37 +125,23 @@ function RegistrationHistoryPage(): JSX.Element {
       style: { width: '120px' },
       render: (value: unknown): React.ReactNode => (
         <StatusBadge
-          label={value ? 'Đang hoạt động' : 'Ngưng hoạt động'}
+          label={value ? 'Đang hoạt động' : 'Không hoạt động'}
           type={value ? 'success' : 'error'}
         />
       ),
     },
     {
-      key: 'isSubscribed',
-      label: 'Tình trạng đăng ký',
-      style: { width: '120px' },
-      render: (value: unknown, row: Branch): React.ReactNode => {
-        const days = row.daysRemaining;
-        const isExpiringSoon =
-          value === true && days !== null && days !== undefined && days <= 7;
-        return (
-          <Box className="flex items-center gap-1">
-            <StatusBadge
-              label={value ? 'Đã thanh toán' : 'Chưa thanh toán'}
-              type={value ? 'success' : 'error'}
-            />
-            {isExpiringSoon && (
-              <MuiTooltip title={`Còn ${days} ngày hết hạn`} arrow>
-                <Box className="flex items-center">
-                  <WarningAmberIcon
-                    fontSize="small"
-                    sx={{ color: '#f59e0b' }}
-                  />
-                </Box>
-              </MuiTooltip>
-            )}
-          </Box>
-        );
+      key: 'licenseStatus',
+      label: 'Trạng thái kiểm duyệt',
+      style: { width: '160px' },
+      render: (value: unknown): React.ReactNode => {
+        if (value === 'Accept')
+          return <StatusBadge label="Chấp nhận" type="success" />;
+        if (value === 'Reject')
+          return <StatusBadge label="Từ chối" type="error" />;
+        if (value === 'Pending' || value === null)
+          return <StatusBadge label="Đang chờ" type="warning" />;
+        return <StatusBadge label="Chưa nộp" type="default" />;
       },
     },
   ];
@@ -147,50 +158,67 @@ function RegistrationHistoryPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       menuLabel: 'Chỉnh sửa chi nhánh',
-      onClick: (): void => {},
+      onClick: (branch: Branch): void => {
+        handleOpenEditModal(branch);
+      },
       color: 'primary' as const,
+      show: (branch: Branch): boolean => branch.licenseStatus === 'Pending',
     },
     {
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
       onClick: (): void => {},
       color: 'error' as const,
+      show: (): boolean => false,
     },
     {
       label: <RestaurantMenuIcon fontSize="small" />,
       menuLabel: 'Quản lý menu',
       onClick: (): void => {},
       color: 'primary' as const,
+      show: (): boolean => false,
     },
     {
       label: <ImageIcon fontSize="small" />,
       menuLabel: 'Xem ảnh',
       onClick: (): void => {},
       color: 'primary' as const,
+      show: (): boolean => false,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý lịch làm việc',
       onClick: (): void => {},
       color: 'primary' as const,
+      show: (): boolean => false,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý ngày nghỉ',
       onClick: (): void => {},
       color: 'error' as const,
+      show: (): boolean => false,
     },
   ];
 
   return (
     <div className="font-[var(--font-nunito)]">
-      <div className="mb-6">
-        <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-          Lịch sử đăng ký
-        </h1>
-        <p className="text-sm text-[var(--color-table-text-secondary)]">
-          Danh sách tất cả chi nhánh đã đăng ký
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+            Lịch sử đăng ký
+          </h1>
+          <p className="text-sm text-[var(--color-table-text-secondary)]">
+            Danh sách tất cả chi nhánh đã đăng ký
+          </p>
+        </div>
+        {/* <button
+          onClick={handleOpenCreateModal}
+          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+        >
+          <AddIcon fontSize="small" />
+          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
+        </button> */}
       </div>
 
       <Table
@@ -198,7 +226,7 @@ function RegistrationHistoryPage(): JSX.Element {
         data={branches}
         rowKey="branchId"
         loading={status === 'pending'}
-        emptyMessage="Chưa có chi nhánh nào"
+        emptyMessage="Chưa có lịch sử đăng ký nào"
         actions={actions}
       />
 
@@ -206,6 +234,14 @@ function RegistrationHistoryPage(): JSX.Element {
         isOpen={selectedBranch !== null}
         onClose={() => setSelectedBranch(null)}
         branch={selectedBranch}
+      />
+
+      <BranchFormModal
+        isOpen={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        mode={formMode}
+        onSuccess={handleFormSuccess}
+        showActivationToggle={false}
       />
     </div>
   );

@@ -1,9 +1,9 @@
 export interface VendorRegistrationRequest {
-  name: string;
+  name?: string;
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  branchName: string;
+  branchName?: string;
   ward: string;
   city: string;
   lat: number;
@@ -47,6 +47,32 @@ export interface VendorRegistrationResponse {
   isActive: boolean;
   vendorOwnerName: string;
   branches: Branch[];
+}
+
+export interface CreateOrUpdateBranchResponse {
+  branchId: number;
+  vendorId: number;
+  userId: number;
+  name: string;
+  phoneNumber: string;
+  email: string;
+  addressDetail: string;
+  ward: string;
+  city: string;
+  lat: number;
+  long: number;
+  createdAt: string;
+  updatedAt: string | null;
+  isVerified: boolean;
+  avgRating: number;
+  isActive: boolean;
+  isSubscribed: boolean;
+  subscriptionExpiresAt: string | null;
+  daysRemaining: number | null;
+  licenseUrl?: string | null;
+  licenseUrls: string[] | null;
+  licenseStatus: string | null;
+  licenseRejectReason: string | null;
 }
 
 export interface GetMyVendorResponse {

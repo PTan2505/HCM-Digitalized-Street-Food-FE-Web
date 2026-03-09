@@ -6,7 +6,9 @@ import type {
   GetMyVendorResponse,
   SubmitImagesResponse,
   GetImagesResponse,
+  CreateOrUpdateBranchResponse,
 } from '@features/vendor/types/vendor';
+
 import type {
   WorkSchedule,
   WorkScheduleResponse,
@@ -23,6 +25,9 @@ import {
   submitDayOff,
   submitImages,
   getImages,
+  createBranch,
+  updateBranch,
+  deleteBranch,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -54,6 +59,15 @@ export default function useVendor(): {
     branchId: number;
     params: { pageNumber: number; pageSize: number };
   }) => Promise<GetImagesResponse>;
+  onCreateBranch: (payload: {
+    vendorId: number;
+    data: VendorRegistrationRequest;
+  }) => Promise<CreateOrUpdateBranchResponse>;
+  onUpdateBranch: (payload: {
+    branchId: number;
+    data: VendorRegistrationRequest;
+  }) => Promise<CreateOrUpdateBranchResponse>;
+  onDeleteBranch: (branchId: number) => Promise<number>;
 } {
   const dispatch = useAppDispatch();
 
@@ -135,6 +149,34 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onCreateBranch = useCallback(
+    async (payload: {
+      vendorId: number;
+      data: VendorRegistrationRequest;
+    }): Promise<CreateOrUpdateBranchResponse> => {
+      return await dispatch(createBranch(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onUpdateBranch = useCallback(
+    async (payload: {
+      branchId: number;
+      data: VendorRegistrationRequest;
+    }): Promise<CreateOrUpdateBranchResponse> => {
+      return await dispatch(updateBranch(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onDeleteBranch = useCallback(
+    async (branchId: number): Promise<number> => {
+      const response = await dispatch(deleteBranch(branchId)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
@@ -144,5 +186,8 @@ export default function useVendor(): {
     onSubmitDayOff,
     onSubmitImages,
     onGetImages,
+    onCreateBranch,
+    onUpdateBranch,
+    onDeleteBranch,
   };
 }
