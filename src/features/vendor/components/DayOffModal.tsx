@@ -268,9 +268,9 @@ export default function DayOffModal({
                           setValue('endDate', val, { shouldValidate: true });
                         }
                         const end =
-                          val > (form.endDate || '')
+                          val > (form.endDate ?? '')
                             ? val
-                            : form.endDate || val;
+                            : (form.endDate ?? val);
                         if (hasRangeOverlap(val, end)) {
                           setError('startDate', {
                             message:
@@ -370,7 +370,7 @@ export default function DayOffModal({
                       </label>
                       <input
                         type="time"
-                        value={form.startTime || ''}
+                        value={form.startTime ?? ''}
                         onChange={(e) => {
                           const val = e.target.value;
                           setValue('startTime', val || null, {
@@ -404,8 +404,8 @@ export default function DayOffModal({
                       </label>
                       <input
                         type="time"
-                        value={form.endTime || ''}
-                        min={form.startTime || undefined}
+                        value={form.endTime ?? ''}
+                        min={form.startTime ?? undefined}
                         onChange={(e) =>
                           setValue('endTime', e.target.value || null, {
                             shouldValidate: true,
