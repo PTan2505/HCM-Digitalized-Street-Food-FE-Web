@@ -27,6 +27,7 @@ import {
   submitDayOff,
   submitImages,
   getImages,
+  deleteImage,
   createBranch,
   updateBranch,
   deleteBranch,
@@ -62,6 +63,7 @@ export default function useVendor(): {
     branchId: number;
     params: { pageNumber: number; pageSize: number };
   }) => Promise<GetImagesResponse>;
+  onDeleteImage: (imageId: number) => Promise<number>;
   onCreateBranch: (payload: {
     vendorId: number;
     data: VendorRegistrationRequest;
@@ -155,6 +157,13 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onDeleteImage = useCallback(
+    async (imageId: number): Promise<number> => {
+      return await dispatch(deleteImage(imageId)).unwrap();
+    },
+    [dispatch]
+  );
+
   const onCreateBranch = useCallback(
     async (payload: {
       vendorId: number;
@@ -201,6 +210,7 @@ export default function useVendor(): {
     onSubmitDayOff,
     onSubmitImages,
     onGetImages,
+    onDeleteImage,
     onCreateBranch,
     onUpdateBranch,
     onDeleteBranch,

@@ -208,6 +208,18 @@ export const getImages = createAppAsyncThunk(
   }
 );
 
+export const deleteImage = createAppAsyncThunk(
+  'vendor/deleteImage',
+  async (imageId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteImage(imageId);
+      return imageId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const createBranch = createAppAsyncThunk(
   'vendor/createBranch',
   async (
@@ -373,11 +385,22 @@ export const vendorSlice = createSlice({
       .addCase(checkLicenseStatus.fulfilled, (state, action) => {
         state.licenseStatus = action.payload;
       })
-      .addCase(submitImages.fulfilled, (state) => {
-        state.status = 'succeeded';
+      .addCase(submitImages.fulfilled, (state, action) => {
+        if (state.images) {
+          state.images.items.push(...action.payload);
+          state.images.totalCount += action.payload.length;
+        }
       })
       .addCase(getImages.fulfilled, (state, action) => {
         state.images = action.payload;
+      })
+      .addCase(deleteImage.fulfilled, (state, action) => {
+        if (state.images) {
+          state.images.items = state.images.items.filter(
+            (img) => img.branchImageId !== action.payload
+          );
+          state.images.totalCount -= 1;
+        }
       })
       .addCase(deleteBranch.fulfilled, (state, action) => {
         if (state.myVendor) {
