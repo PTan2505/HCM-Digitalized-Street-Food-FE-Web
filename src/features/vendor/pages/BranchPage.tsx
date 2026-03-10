@@ -324,15 +324,17 @@ function BranchPage(): JSX.Element {
             ) : (
               <span className="inline-flex items-center gap-1 font-semibold">
                 {myVendor?.name ?? 'Chưa có tên cửa hàng'}
-                <EditIcon
-                  sx={{
-                    fontSize: 15,
-                    cursor: 'pointer',
-                    '&:hover': { color: 'var(--color-primary-600)' },
-                  }}
-                  onClick={handleStartEditName}
-                  titleAccess="Nhấn để chỉnh sửa tên cửa hàng"
-                />
+                {myVendor?.name && (
+                  <EditIcon
+                    sx={{
+                      fontSize: 15,
+                      cursor: 'pointer',
+                      '&:hover': { color: 'var(--color-primary-600)' },
+                    }}
+                    onClick={handleStartEditName}
+                    titleAccess="Nhấn để chỉnh sửa tên cửa hàng"
+                  />
+                )}
               </span>
             )}
           </p>
@@ -355,7 +357,7 @@ function BranchPage(): JSX.Element {
         data={verifiedBranches}
         rowKey="branchId"
         loading={status === 'pending'}
-        emptyMessage="Chưa có chi nhánh đã xác thực (Xem chi nhánh đang chờ xác thực ở tab Lịch sử đăng ký)"
+        emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
         actions={actions}
       />
 
