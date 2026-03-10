@@ -28,6 +28,7 @@ import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
+import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
 
 const StatusBadge = ({
   label,
@@ -65,6 +66,7 @@ function BranchPage(): JSX.Element {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -229,7 +231,7 @@ function BranchPage(): JSX.Element {
     },
     {
       label: <EditIcon fontSize="small" />,
-      menuLabel: 'Chỉnh sửa chi nhánh',
+      menuLabel: 'Cập nhật chi nhánh',
       onClick: (branch: Branch): void => {
         handleOpenEditModal(branch);
       },
@@ -255,9 +257,8 @@ function BranchPage(): JSX.Element {
     {
       label: <ImageIcon fontSize="small" />,
       menuLabel: 'Xem ảnh',
-      onClick: (): void => {
-        // Handle image management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ POST, GET, DELETE ẢNH CỦA CHI NHÁNH
+      onClick: (branch: Branch): void => {
+        setImagesBranch(branch);
       },
       color: 'primary' as const,
     },
@@ -372,6 +373,12 @@ function BranchPage(): JSX.Element {
         onClose={() => setFormModalOpen(false)}
         mode={formMode}
         onSuccess={handleFormSuccess}
+      />
+
+      <ImagesDetailsModal
+        isOpen={imagesBranch !== null}
+        onClose={() => setImagesBranch(null)}
+        branch={imagesBranch}
       />
 
       <Dialog
