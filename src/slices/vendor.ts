@@ -356,8 +356,16 @@ export const vendorSlice = createSlice({
         state.branchId = action.payload.branches[0]?.branchId;
         state.myVendor = action.payload;
       })
-      .addCase(submitLicense.fulfilled, (state) => {
-        state.status = 'succeeded';
+      .addCase(submitLicense.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          const branch = state.myVendor.branches.find(
+            (b) => b.branchId === action.payload.branchId
+          );
+          if (branch) {
+            branch.licenseUrls = action.payload.licenseUrls;
+            branch.licenseStatus = action.payload.status;
+          }
+        }
       })
       .addCase(getMyVendor.fulfilled, (state, action) => {
         state.myVendor = action.payload;

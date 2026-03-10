@@ -92,8 +92,9 @@ export interface SubmitLicenseRequest {
 }
 
 export interface SubmitLicenseResponse {
-  message: string;
-  success: boolean;
+  branchId: number;
+  licenseUrls: string[];
+  status: string;
 }
 
 export interface CheckLicenseStatusResponse {

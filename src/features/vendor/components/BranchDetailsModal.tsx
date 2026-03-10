@@ -11,6 +11,7 @@ interface BranchDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   branch: Branch | null;
+  showPayment?: boolean;
 }
 
 interface InfoFieldProps {
@@ -60,6 +61,7 @@ export default function BranchDetailsModal({
   isOpen,
   onClose,
   branch,
+  showPayment = true,
 }: BranchDetailsModalProps): JSX.Element | null {
   const { onCreatePaymentLink } = usePayment();
   const [paying, setPaying] = useState(false);
@@ -308,7 +310,7 @@ export default function BranchDetailsModal({
         {/* Modal Actions */}
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-5">
           <div>
-            {!branch.isSubscribed && branch.isVerified && (
+            {showPayment && !branch.isSubscribed && branch.isVerified && (
               <Button
                 onClick={() => {
                   void handlePayment();

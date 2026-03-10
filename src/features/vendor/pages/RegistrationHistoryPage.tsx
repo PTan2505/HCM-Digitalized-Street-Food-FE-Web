@@ -234,6 +234,7 @@ function RegistrationHistoryPage(): JSX.Element {
         isOpen={selectedBranch !== null}
         onClose={() => setSelectedBranch(null)}
         branch={selectedBranch}
+        showPayment={false}
       />
 
       <BranchFormModal

@@ -40,7 +40,9 @@ export default function UserProfileForm(): JSX.Element {
   const onSubmit = async (data: UpdateProfileFormData): Promise<void> => {
     try {
       await updateUserProfile(data as Partial<User>);
-      navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`);
+      navigate(
+        `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY}`
+      );
     } catch (error) {
       const err = error as APIErrorResponse;
       if (err.fieldErrors) {

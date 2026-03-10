@@ -155,31 +155,6 @@ function ModeratorLayout(): JSX.Element {
                 </Typography>
               </Box>
             </Box>
-
-            <Box className="flex items-center gap-3">
-              {/* User menu */}
-              <Box className="flex items-center gap-3">
-                <Box className="hidden flex-col items-end sm:flex">
-                  <Typography variant="body2" className="text-sm font-medium">
-                    {user?.firstName && user?.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Moderator User')}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    className="text-xs text-gray-500"
-                  >
-                    {user?.email ?? 'moderator@example.com'}
-                  </Typography>
-                </Box>
-                <Avatar
-                  src={user?.avatarUrl ?? undefined}
-                  className="cursor-pointer hover:opacity-80"
-                >
-                  {!user?.avatarUrl && <UserCircleIcon className="h-6 w-6" />}
-                </Avatar>
-              </Box>
-            </Box>
           </Box>
         </Box>
 
