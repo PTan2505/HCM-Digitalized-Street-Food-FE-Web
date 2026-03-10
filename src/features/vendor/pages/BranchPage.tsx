@@ -29,6 +29,8 @@ import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
+import WorkScheduleModal from '@features/vendor/components/WorkScheduleModal';
+import DayOffModal from '@features/vendor/components/DayOffModal';
 
 const StatusBadge = ({
   label,
@@ -67,6 +69,8 @@ function BranchPage(): JSX.Element {
   const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
+  const [scheduleBranch, setScheduleBranch] = useState<Branch | null>(null);
+  const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -265,18 +269,16 @@ function BranchPage(): JSX.Element {
     {
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý lịch làm việc',
-      onClick: (): void => {
-        // Handle schedule management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ CRUD LỊCH LÀM VIỆC CỦA CHI NHÁNH
+      onClick: (branch: Branch): void => {
+        setScheduleBranch(branch);
       },
       color: 'primary' as const,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý ngày nghỉ',
-      onClick: (): void => {
-        // Handle schedule management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ POST, GET, DELETE NGÀY NGHỈ CỦA CHI NHÁNH
+      onClick: (branch: Branch): void => {
+        setDayOffBranch(branch);
       },
       color: 'error' as const,
     },
@@ -379,6 +381,18 @@ function BranchPage(): JSX.Element {
         isOpen={imagesBranch !== null}
         onClose={() => setImagesBranch(null)}
         branch={imagesBranch}
+      />
+
+      <WorkScheduleModal
+        isOpen={scheduleBranch !== null}
+        onClose={() => setScheduleBranch(null)}
+        branch={scheduleBranch}
+      />
+
+      <DayOffModal
+        isOpen={dayOffBranch !== null}
+        onClose={() => setDayOffBranch(null)}
+        branch={dayOffBranch}
       />
 
       <Dialog

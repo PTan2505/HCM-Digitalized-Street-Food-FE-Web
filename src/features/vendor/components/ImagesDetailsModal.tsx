@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { JSX } from 'react';
 import type { Branch } from '@features/vendor/types/vendor';
-import type { SubmitImagesResponse } from '@features/vendor/types/vendor';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
@@ -9,6 +8,8 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import IconButton from '@mui/material/IconButton';
 import { CircularProgress, Dialog, Tooltip } from '@mui/material';
 import useVendor from '@features/vendor/hooks/useVendor';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { selectImages, selectVendorStatus } from '@slices/vendor';
 import Pagination from '@features/vendor/components/Pagination';
 
 interface ImagesDetailsModalProps {
@@ -26,90 +27,62 @@ export default function ImagesDetailsModal({
 }: ImagesDetailsModalProps): JSX.Element | null {
   const { onGetImages, onSubmitImages, onDeleteImage } = useVendor();
 
-  const [images, setImages] = useState<SubmitImagesResponse[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasPrevious, setHasPrevious] = useState(false);
-  const [hasNext, setHasNext] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const imagesData = useAppSelector(selectImages);
+  const status = useAppSelector(selectVendorStatus);
+  const images = imagesData?.items ?? [];
+  const currentPage = imagesData?.currentPage ?? 1;
+  const totalPages = imagesData?.totalPages ?? 1;
+  const totalCount = imagesData?.totalCount ?? 0;
+  const hasPrevious = imagesData?.hasPrevious ?? false;
+  const hasNext = imagesData?.hasNext ?? false;
+
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchImages = useCallback(
-    async (page: number): Promise<void> => {
-      if (!branch) return;
-      setLoading(true);
-      try {
-        const res = await onGetImages({
-          branchId: branch.branchId,
-          params: { pageNumber: page, pageSize: PAGE_SIZE },
-        });
-        setImages(res.items);
-        setCurrentPage(res.currentPage);
-        setTotalPages(res.totalPages);
-        setTotalCount(res.totalCount);
-        setHasPrevious(res.hasPrevious);
-        setHasNext(res.hasNext);
-      } catch {
-        // Handle error silently
-      } finally {
-        setLoading(false);
-      }
-    },
-    [branch, onGetImages]
-  );
-
   useEffect(() => {
     if (isOpen && branch) {
-      void fetchImages(1);
+      void onGetImages({
+        branchId: branch.branchId,
+        params: { pageNumber: 1, pageSize: PAGE_SIZE },
+      });
     }
-  }, [isOpen, branch, fetchImages]);
+  }, [isOpen, branch, onGetImages]);
+
+  const handlePageChange = (page: number): void => {
+    if (!branch) return;
+    void onGetImages({
+      branchId: branch.branchId,
+      params: { pageNumber: page, pageSize: PAGE_SIZE },
+    });
+  };
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     const files = e.target.files;
     if (!files || files.length === 0 || !branch) return;
-
     const selectedFiles = Array.from(files);
-    setUploading(true);
     try {
       await onSubmitImages({
         branchId: branch.branchId,
         images: selectedFiles,
       });
-      // Refresh to last page or current page to show new images
-      const newTotal = totalCount + selectedFiles.length;
-      const newTotalPages = Math.ceil(newTotal / PAGE_SIZE);
-      await fetchImages(newTotalPages);
     } catch {
       // Handle error silently
     } finally {
-      setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const handleDeleteConfirm = async (): Promise<void> => {
     if (confirmDeleteId === null) return;
-    setDeletingId(confirmDeleteId);
     setConfirmDeleteId(null);
     try {
       await onDeleteImage(confirmDeleteId);
-      const newTotal = totalCount - 1;
-      const newTotalPages = Math.max(1, Math.ceil(newTotal / PAGE_SIZE));
-      const targetPage =
-        currentPage > newTotalPages ? newTotalPages : currentPage;
-      await fetchImages(targetPage);
     } catch {
       // Handle error silently
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -151,14 +124,14 @@ export default function ImagesDetailsModal({
                   <button
                     className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
+                    disabled={status === 'pending'}
                   >
-                    {uploading ? (
+                    {status === 'pending' ? (
                       <CircularProgress size={16} color="inherit" />
                     ) : (
                       <AddPhotoAlternateIcon fontSize="small" />
                     )}
-                    {uploading ? 'Đang tải...' : 'Thêm ảnh'}
+                    {status === 'pending' ? 'Đang tải...' : 'Thêm ảnh'}
                   </button>
                 </span>
               </Tooltip>
@@ -186,7 +159,7 @@ export default function ImagesDetailsModal({
 
           {/* Body */}
           <div className="flex flex-1 flex-col overflow-y-auto px-8 py-6">
-            {loading ? (
+            {status === 'pending' && images.length === 0 ? (
               <div className="flex flex-1 items-center justify-center py-20">
                 <CircularProgress />
               </div>
@@ -197,7 +170,7 @@ export default function ImagesDetailsModal({
                 <button
                   className="flex items-center gap-2 rounded-lg border-2 border-dashed border-blue-300 px-6 py-3 text-sm font-semibold text-blue-500 transition hover:border-blue-500 hover:text-blue-700"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
+                  disabled={status === 'pending'}
                 >
                   <AddPhotoAlternateIcon fontSize="small" />
                   Thêm ảnh đầu tiên
@@ -240,7 +213,7 @@ export default function ImagesDetailsModal({
                               onClick={() =>
                                 setConfirmDeleteId(img.branchImageId)
                               }
-                              disabled={deletingId === img.branchImageId}
+                              disabled={status === 'pending'}
                               sx={{
                                 bgcolor: 'rgba(255,255,255,0.9)',
                                 color: '#ef4444',
@@ -250,14 +223,7 @@ export default function ImagesDetailsModal({
                                 },
                               }}
                             >
-                              {deletingId === img.branchImageId ? (
-                                <CircularProgress
-                                  size={16}
-                                  sx={{ color: '#ef4444' }}
-                                />
-                              ) : (
-                                <DeleteIcon fontSize="small" />
-                              )}
+                              <DeleteIcon fontSize="small" />
                             </IconButton>
                           </span>
                         </Tooltip>
@@ -275,7 +241,7 @@ export default function ImagesDetailsModal({
                     pageSize={PAGE_SIZE}
                     hasPrevious={hasPrevious}
                     hasNext={hasNext}
-                    onPageChange={(page) => void fetchImages(page)}
+                    onPageChange={handlePageChange}
                   />
                 )}
               </>

@@ -15,6 +15,10 @@ import type {
   WorkScheduleResponse,
   DayOff,
   DayOffResponse,
+  GetWorkScheduleResponse,
+  GetDayOffResponse,
+  UpdateWorkSchedule,
+  WorkScheduleItem,
 } from '@features/vendor/types/workSchedule';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -125,20 +129,28 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getWorkSchedules(branchId: number): Promise<WorkScheduleResponse[]> {
-  //   const res = await this.apiClient.get<WorkScheduleResponse[]>({
-  //     url: apiUrl.vendor.createOrGetWorkSchedulesOfABranch(branchId),
-  //   });
-  //   return res.data;
-  // }
-
-  async deleteWorkSchedule(
-    workScheduleId: number
-  ): Promise<WorkScheduleResponse> {
-    const res = await this.apiClient.delete<WorkScheduleResponse>({
-      url: apiUrl.vendor.deleteWorkScheduleOfABranch(workScheduleId),
+  async updateWorkSchedule(
+    workScheduleId: number,
+    data: UpdateWorkSchedule
+  ): Promise<WorkScheduleItem> {
+    const res = await this.apiClient.put<WorkScheduleItem, UpdateWorkSchedule>({
+      url: apiUrl.vendor.deleteOrUpdateWorkScheduleOfABranch(workScheduleId),
+      data,
     });
     return res.data;
+  }
+
+  async getWorkSchedules(branchId: number): Promise<GetWorkScheduleResponse> {
+    const res = await this.apiClient.get<GetWorkScheduleResponse>({
+      url: apiUrl.vendor.createOrGetWorkSchedulesOfABranch(branchId),
+    });
+    return res.data;
+  }
+
+  async deleteWorkSchedule(workScheduleId: number): Promise<void> {
+    await this.apiClient.delete({
+      url: apiUrl.vendor.deleteOrUpdateWorkScheduleOfABranch(workScheduleId),
+    });
   }
 
   async submitDayOff(branchId: number, data: DayOff): Promise<DayOffResponse> {
@@ -149,18 +161,17 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getDayOffs(branchId: number): Promise<DayOffResponse[]> {
-  //   const res = await this.apiClient.get<DayOffResponse[]>({
-  //     url: apiUrl.vendor.createOrGetDayOffsOfABranch(branchId),
-  //   });
-  //   return res.data;
-  // }
-
-  async deleteDayOff(dayOffId: number): Promise<DayOffResponse> {
-    const res = await this.apiClient.delete<DayOffResponse>({
-      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+  async getDayOffs(branchId: number): Promise<GetDayOffResponse> {
+    const res = await this.apiClient.get<GetDayOffResponse>({
+      url: apiUrl.vendor.createOrGetDayOffsOfABranch(branchId),
     });
     return res.data;
+  }
+
+  async deleteDayOff(dayOffId: number): Promise<void> {
+    await this.apiClient.delete({
+      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+    });
   }
 
   async submitImages(
