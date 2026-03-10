@@ -16,6 +16,11 @@ import type {
   WorkScheduleResponse,
   DayOff,
   DayOffResponse,
+  GetWorkScheduleResponse,
+  GetDayOffResponse,
+  UpdateWorkSchedule,
+  WorkScheduleItem,
+  WeekdayName,
 } from '@features/vendor/types/workSchedule';
 import type {
   AdminVendor,
@@ -41,6 +46,8 @@ export interface VendorState {
   myVendor: GetMyVendorResponse | null;
   licenseStatus: CheckLicenseStatusResponse | null;
   images: GetImagesResponse | null;
+  workSchedules: GetWorkScheduleResponse;
+  dayOffs: GetDayOffResponse;
   // Admin
   adminVendors: AdminVendor[];
   selectedVendorDetail: VendorDetail | null;
@@ -64,6 +71,8 @@ const initialState: VendorState = {
   myVendor: null,
   licenseStatus: null,
   images: null,
+  workSchedules: [],
+  dayOffs: [],
   // Admin
   adminVendors: [],
   selectedVendorDetail: null,
@@ -156,6 +165,50 @@ export const submitWorkSchedule = createAppAsyncThunk(
   }
 );
 
+export const getWorkSchedules = createAppAsyncThunk(
+  'vendor/getWorkSchedules',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      const response: GetWorkScheduleResponse =
+        await axiosApi.vendorApi.getWorkSchedules(branchId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateWorkSchedule = createAppAsyncThunk(
+  'vendor/updateWorkSchedule',
+  async (
+    payload: { workScheduleId: number; data: UpdateWorkSchedule },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: WorkScheduleItem =
+        await axiosApi.vendorApi.updateWorkSchedule(
+          payload.workScheduleId,
+          payload.data
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteWorkSchedule = createAppAsyncThunk(
+  'vendor/deleteWorkSchedule',
+  async (workScheduleId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteWorkSchedule(workScheduleId);
+      return workScheduleId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const submitDayOff = createAppAsyncThunk(
   'vendor/submitDayOff',
   async (payload: { branchId: number; data: DayOff }, { rejectWithValue }) => {
@@ -165,6 +218,31 @@ export const submitDayOff = createAppAsyncThunk(
         payload.data
       );
       return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getDayOffs = createAppAsyncThunk(
+  'vendor/getDayOffs',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      const response: GetDayOffResponse =
+        await axiosApi.vendorApi.getDayOffs(branchId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteDayOff = createAppAsyncThunk(
+  'vendor/deleteDayOff',
+  async (dayOffId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteDayOff(dayOffId);
+      return dayOffId;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -430,6 +508,58 @@ export const vendorSlice = createSlice({
           state.myVendor.name = action.payload.name;
         }
       })
+      .addCase(getWorkSchedules.fulfilled, (state, action) => {
+        state.workSchedules = action.payload;
+      })
+      .addCase(submitWorkSchedule.fulfilled, (state, action) => {
+        const weekdayNameMap: Record<number, WeekdayName> = {
+          0: 'Sunday',
+          1: 'Monday',
+          2: 'Tuesday',
+          3: 'Wednesday',
+          4: 'Thursday',
+          5: 'Friday',
+          6: 'Saturday',
+        };
+        const mapped = action.payload.map((item) => ({
+          workScheduleId: item.workScheduleId,
+          branchId: item.branchId,
+          weekday: item.weekday,
+          weekdayName: weekdayNameMap[item.weekday] ?? 'Monday',
+          openTime: item.openTime,
+          closeTime: item.closeTime,
+        }));
+        state.workSchedules.push(...mapped);
+      })
+      .addCase(updateWorkSchedule.fulfilled, (state, action) => {
+        const idx = state.workSchedules.findIndex(
+          (ws) => ws.workScheduleId === action.payload.workScheduleId
+        );
+        if (idx > -1) {
+          state.workSchedules[idx] = {
+            ...state.workSchedules[idx],
+            weekday: action.payload.weekday,
+            openTime: action.payload.openTime,
+            closeTime: action.payload.closeTime,
+          };
+        }
+      })
+      .addCase(deleteWorkSchedule.fulfilled, (state, action) => {
+        state.workSchedules = state.workSchedules.filter(
+          (ws) => ws.workScheduleId !== action.payload
+        );
+      })
+      .addCase(getDayOffs.fulfilled, (state, action) => {
+        state.dayOffs = action.payload;
+      })
+      .addCase(submitDayOff.fulfilled, (state, action) => {
+        state.dayOffs.push(action.payload);
+      })
+      .addCase(deleteDayOff.fulfilled, (state, action) => {
+        state.dayOffs = state.dayOffs.filter(
+          (d) => d.dayOffId !== action.payload
+        );
+      })
       // ─── Admin Cases ─────────────────────────────────────
       .addCase(getAllVendors.fulfilled, (state, action) => {
         state.adminVendors = action.payload.items;
@@ -485,7 +615,12 @@ export const vendorSlice = createSlice({
           getMyVendor,
           checkLicenseStatus,
           submitWorkSchedule,
+          getWorkSchedules,
+          updateWorkSchedule,
+          deleteWorkSchedule,
           submitDayOff,
+          getDayOffs,
+          deleteDayOff,
           submitImages,
           getImages,
           createBranch,
@@ -505,7 +640,12 @@ export const vendorSlice = createSlice({
           getMyVendor,
           checkLicenseStatus,
           submitWorkSchedule,
+          getWorkSchedules,
+          updateWorkSchedule,
+          deleteWorkSchedule,
           submitDayOff,
+          getDayOffs,
+          deleteDayOff,
           submitImages,
           getImages,
           createBranch,
@@ -527,7 +667,12 @@ export const vendorSlice = createSlice({
           getMyVendor,
           checkLicenseStatus,
           submitWorkSchedule,
+          getWorkSchedules,
+          updateWorkSchedule,
+          deleteWorkSchedule,
           submitDayOff,
+          getDayOffs,
+          deleteDayOff,
           submitImages,
           getImages,
           createBranch,
@@ -611,6 +756,13 @@ export const selectMyVendor = (state: RootState): GetMyVendorResponse | null =>
 
 export const selectImages = (state: RootState): GetImagesResponse | null =>
   state.vendor.images;
+
+export const selectWorkSchedules = (
+  state: RootState
+): GetWorkScheduleResponse => state.vendor.workSchedules;
+
+export const selectDayOffs = (state: RootState): GetDayOffResponse =>
+  state.vendor.dayOffs;
 
 // ─── Admin Selectors ──────────────────────────────────────
 
