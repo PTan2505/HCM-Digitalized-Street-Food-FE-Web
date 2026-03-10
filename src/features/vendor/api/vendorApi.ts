@@ -133,10 +133,7 @@ export class VendorApi {
     workScheduleId: number,
     data: UpdateWorkSchedule
   ): Promise<WorkScheduleItem> {
-    const res = await this.apiClient.put<
-      WorkScheduleItem,
-      UpdateWorkSchedule
-    >({
+    const res = await this.apiClient.put<WorkScheduleItem, UpdateWorkSchedule>({
       url: apiUrl.vendor.deleteOrUpdateWorkScheduleOfABranch(workScheduleId),
       data,
     });
