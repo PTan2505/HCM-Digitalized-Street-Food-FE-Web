@@ -153,8 +153,8 @@ export default function DayOffModal({
         data: {
           startDate: toRFC3339(form.startDate),
           endDate: toRFC3339(form.endDate),
-          startTime: form.isAllDay ? null : form.startTime || null,
-          endTime: form.isAllDay ? null : form.endTime || null,
+          startTime: form.isAllDay ? null : (form.startTime ?? null),
+          endTime: form.isAllDay ? null : (form.endTime ?? null),
         },
       });
       setShowAddForm(false);
