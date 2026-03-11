@@ -268,7 +268,7 @@ function BranchPage(): JSX.Element {
     },
     {
       label: <ScheduleIcon fontSize="small" />,
-      menuLabel: 'Quản lý lịch làm việc',
+      menuLabel: 'Quản lý thời gian hoạt động',
       onClick: (branch: Branch): void => {
         setScheduleBranch(branch);
       },
