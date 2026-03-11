@@ -187,7 +187,7 @@ function RegistrationHistoryPage(): JSX.Element {
     },
     {
       label: <ScheduleIcon fontSize="small" />,
-      menuLabel: 'Quản lý lịch làm việc',
+      menuLabel: 'Quản lý thời gian hoạt động',
       onClick: (): void => {},
       color: 'primary' as const,
       show: (): boolean => false,

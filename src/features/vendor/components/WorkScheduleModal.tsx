@@ -230,7 +230,7 @@ export default function WorkScheduleModal({
           <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
             <div>
               <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Lịch làm việc
+                Thời gian hoạt động
               </h2>
               <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
                 <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
@@ -276,7 +276,7 @@ export default function WorkScheduleModal({
             {showAddForm && (
               <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/50 p-5">
                 <h3 className="mb-3 text-sm font-bold text-blue-800">
-                  Thêm lịch làm việc mới
+                  Thêm thời gian hoạt động mới
                 </h3>
 
                 {/* Weekday selection */}
@@ -420,13 +420,15 @@ export default function WorkScheduleModal({
             ) : sortedSchedules.length === 0 && !showAddForm ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20 text-gray-400">
                 <EventBusyIcon sx={{ fontSize: 64, opacity: 0.3 }} />
-                <p className="text-base font-medium">Chưa có lịch làm việc</p>
+                <p className="text-base font-medium">
+                  Chưa có thời gian hoạt động
+                </p>
                 <button
                   className="flex items-center gap-2 rounded-lg border-2 border-dashed border-blue-300 px-6 py-3 text-sm font-semibold text-blue-500 transition hover:border-blue-500 hover:text-blue-700"
                   onClick={() => setShowAddForm(true)}
                 >
                   <AddIcon fontSize="small" />
-                  Thêm lịch làm việc đầu tiên
+                  Thêm thời gian hoạt động đầu tiên
                 </button>
               </div>
             ) : (
@@ -593,11 +595,11 @@ export default function WorkScheduleModal({
         open={confirmDeleteId !== null}
         onClose={() => setConfirmDeleteId(null)}
       >
-        <DialogTitle>Xác nhận xóa lịch làm việc</DialogTitle>
+        <DialogTitle>Xác nhận xóa thời gian hoạt động</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Bạn có chắc chắn muốn xóa lịch làm việc này? Hành động này không thể
-            hoàn tác.
+            Bạn có chắc chắn muốn xóa thời gian hoạt động này? Hành động này
+            không thể hoàn tác.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
