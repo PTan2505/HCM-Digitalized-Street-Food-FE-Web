@@ -1,3 +1,13 @@
+export interface BranchUser {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string | null;
+  phoneNumber?: string | null;
+}
+
 export interface Branch {
   branchId: number;
   vendorId: number;
@@ -18,7 +28,7 @@ export interface Branch {
   isActive: boolean;
   isSubscribed: boolean;
   vendor: unknown | null;
-  user: unknown | null;
+  user: BranchUser | null;
   workSchedules: unknown[] | null;
   dayOffs: unknown[] | null;
   branchImages: unknown[] | null;
