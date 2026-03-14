@@ -6,6 +6,8 @@ import axios, {
   type AxiosRequestConfig,
   type AxiosResponse,
 } from 'axios';
+import type { ErrorResponse } from '@custom-types/apiResponse';
+import { toast } from 'react-toastify';
 
 // interface RefreshTokenResponse {
 //   config: AxiosRequestConfig & { _retry?: boolean };
@@ -15,7 +17,9 @@ import axios, {
 
 // let isRefreshing = false;
 // const refreshAndRetryQueue: RefreshTokenResponse[] = [];
+
 const skipAuthorizationPaths = [apiUrl.auth.phoneLogin];
+
 export interface ApiService {
   // TODO: Standardize the error response
   call<TResponse = unknown, TRequest = unknown>(
@@ -35,23 +39,34 @@ axiosInstance.interceptors.request.use(
     );
 
     const accessToken = tokenManagement.getAccessToken();
+
     if (config.headers && accessToken && !isSkipAuthorization)
       (config.headers as AxiosHeaders).set(
         'Authorization',
         `Bearer ${accessToken}`
       );
+
     return config;
   },
   (error) => {
     if (error instanceof Error) {
       return Promise.reject(error);
     }
+
     return Promise.reject(new Error(String(error)));
   }
 );
 
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const message = response.data?.message;
+
+    if (message && response.config.method !== 'get') {
+      toast.success(message);
+    }
+
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
@@ -61,6 +76,12 @@ axiosInstance.interceptors.response.use(
       originalRequest.url &&
       (originalRequest.url.includes(apiUrl.auth.phoneLogin) ||
         originalRequest.url.includes(apiUrl.auth.phoneVerify));
+    const responseData = error.response?.data as ErrorResponse | undefined;
+
+    const fieldErrors =
+      typeof responseData?.data === 'object'
+        ? (responseData.data as Record<string, string[]>)
+        : undefined;
 
     // if (error.response?.status === 401 && !isAuthenEndpoint) {
     //   if (!isRefreshing && !originalRequest._retry) {
@@ -91,6 +112,7 @@ axiosInstance.interceptors.response.use(
     //             Authorization: `Bearer ${newAccessToken}`,
     //           };
     //         }
+
     //         // Retry all requests in the queue with the new token
     //         refreshAndRetryQueue.forEach(({ config, resolve, reject }) => {
     //           axiosInstance
@@ -123,6 +145,14 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthEndpoint) {
       tokenManagement.clearTokens();
     }
+    if (!fieldErrors) {
+      const message =
+        responseData?.message ?? error.message ?? 'Something went wrong';
+
+      if (message) {
+        toast.error(message);
+      }
+    }
 
     return Promise.reject(error);
   }
@@ -142,6 +172,7 @@ export class AxiosApiService implements ApiService {
     if (error instanceof AxiosError) {
       return true;
     }
+
     return false;
   }
 }
