@@ -162,7 +162,7 @@ axiosInstance.interceptors.response.use(
             title: 'Có lỗi xảy ra!',
             content: message,
           },
-          theme: 'colored',
+          style: { backgroundColor: 'var(--color-error-hover-bg)' },
         });
       }
     }

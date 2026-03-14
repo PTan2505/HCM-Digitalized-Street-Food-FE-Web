@@ -24,6 +24,7 @@
   --color-secondary: #7fae9b; /* Màu phụ - Xanh ngọc */
   --color-success: #00b37466; /* Màu thành công - Xanh lá có độ trong suốt */
   --color-error: #f5342566; /* Màu lỗi - Đỏ có độ trong suốt */
+  --color-error-hover-bg: #f8caca; /* Nền lỗi nhạt - dùng cho toast error */
   --color-warning: #e394004d; /* Màu cảnh báo - Cam có độ trong suốt */
   --color-required: #f53425; /* Màu bắt buộc - Đỏ */
 
