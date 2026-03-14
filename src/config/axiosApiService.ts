@@ -8,6 +8,7 @@ import axios, {
 } from 'axios';
 import type { ErrorResponse } from '@custom-types/apiResponse';
 import { toast } from 'react-toastify';
+import CustomNotification from '@components/CustomNotification';
 
 // interface RefreshTokenResponse {
 //   config: AxiosRequestConfig & { _retry?: boolean };
@@ -62,7 +63,13 @@ axiosInstance.interceptors.response.use(
     const message = response.data?.message;
 
     if (message && response.config.method !== 'get') {
-      toast.success(message);
+      toast.success(CustomNotification, {
+        data: {
+          title: 'Thành công!',
+          content: message,
+        },
+        style: { backgroundColor: 'var(--color-moderator-hover-bg)' },
+      });
     }
 
     return response;
@@ -150,7 +157,13 @@ axiosInstance.interceptors.response.use(
         responseData?.message ?? error.message ?? 'Something went wrong';
 
       if (message) {
-        toast.error(message);
+        toast.error(CustomNotification, {
+          data: {
+            title: 'Có lỗi xảy ra!',
+            content: message,
+          },
+          theme: 'colored',
+        });
       }
     }
 
