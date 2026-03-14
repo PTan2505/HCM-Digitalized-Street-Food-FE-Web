@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
+  ArrowTopRightOnSquareIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { MapPinIcon } from '@heroicons/react/24/solid';
 import type { JSX } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // ??? OpenMap GeoJSON (OSM) response format ?????????????????????????????
 interface FeatureProperties {
@@ -120,6 +120,7 @@ export default function AddressAutocomplete({
           text: text.trim(),
           location: DEFAULT_LOCATION,
           radius: '50',
+          admin_v2: 'true',
         });
         if (apiKey) params.append('apikey', apiKey);
 
