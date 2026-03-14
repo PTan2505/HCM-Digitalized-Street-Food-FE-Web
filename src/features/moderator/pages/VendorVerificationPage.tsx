@@ -1,26 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
-import React from 'react';
-import Table from '@features/moderator/components/Table';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
 import Pagination from '@features/moderator/components/Pagination';
 import RejectModal from '@features/moderator/components/RejectModal';
-import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import Table from '@features/moderator/components/Table';
 import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
-import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
 import useBranch from '@features/moderator/hooks/useBranch';
-import { useAppSelector } from '@hooks/reduxHooks';
-import {
-  selectPendingRegistrations,
-  selectPendingRegistrationsPagination,
-  selectBranchStatus,
-} from '@slices/branch';
 import type { BranchRegisterRequest } from '@features/moderator/types/branch';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { axiosApi } from '@lib/api/apiInstance';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ImageIcon from '@mui/icons-material/Image';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import {
+  selectBranchStatus,
+  selectPendingRegistrations,
+  selectPendingRegistrationsPagination,
+} from '@slices/branch';
+import React, { useCallback, useEffect, useState } from 'react';
 
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
@@ -40,10 +40,62 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [imagesModalOpen, setImagesModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
+  const [vendorDetails, setVendorDetails] = useState<
+    Record<
+      number,
+      {
+        name: string;
+        vendorOwner: {
+          firstName: string;
+          lastName: string;
+          email: string;
+          phoneNumber: string;
+          avatarUrl: string | null;
+        };
+      }
+    >
+  >({});
 
   useEffect(() => {
     void onGetPendingRegistrations({ pageNumber, pageSize });
   }, [onGetPendingRegistrations, pageNumber, pageSize]);
+
+  useEffect(() => {
+    const uniqueVendorIds = [
+      ...new Set(pendingRegistrations.map((r) => r.branch.vendorId)),
+    ];
+    const missing = uniqueVendorIds.filter((id) => !(id in vendorDetails));
+    if (missing.length === 0) return;
+
+    void Promise.all(
+      missing.map(async (id) => {
+        try {
+          const vendor = await axiosApi.vendorAdminApi.getVendorDetail(id);
+          return { id, name: vendor.name, vendorOwner: vendor.vendorOwner };
+        } catch {
+          return {
+            id,
+            name: '-',
+            vendorOwner: {
+              firstName: '-',
+              lastName: '',
+              email: '-',
+              phoneNumber: '-',
+              avatarUrl: null,
+            },
+          };
+        }
+      })
+    ).then((results) => {
+      setVendorDetails((prev) => {
+        const next = { ...prev };
+        results.forEach(({ id, name, vendorOwner }) => {
+          next[id] = { name, vendorOwner };
+        });
+        return next;
+      });
+    });
+  }, [pendingRegistrations]);
 
   const handlePageChange = useCallback((page: number): void => {
     setPageNumber(page);
@@ -130,8 +182,28 @@ export default function VendorVerificationPage(): React.JSX.Element {
       ): number => (index ?? 0) + 1,
     },
     {
+      key: 'branch.vendorId',
+      label: 'Tên cửa hàng',
+      render: (_: unknown, row: Record<string, unknown>): string => {
+        const branch = row.branch as { vendorId: number } | undefined;
+        if (!branch) return '-';
+        return vendorDetails[branch.vendorId]?.name ?? '...';
+      },
+    },
+    {
+      key: 'branch.vendorOwnerName',
+      label: 'Tên người bán',
+      render: (_: unknown, row: Record<string, unknown>): string => {
+        const branch = row.branch as { vendorId: number } | undefined;
+        if (!branch) return '-';
+        const owner = vendorDetails[branch.vendorId]?.vendorOwner;
+        if (!owner) return '...';
+        return `${owner.firstName} ${owner.lastName}`.trim();
+      },
+    },
+    {
       key: 'branch.name',
-      label: 'Tên chủ cửa hàng',
+      label: 'Tên chi nhánh',
       className: 'font-medium',
     },
     {
@@ -199,12 +271,12 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-    {
-      key: 'updatedAt',
-      label: 'Ngày cập nhật',
-      render: (value: unknown): string =>
-        new Date(value as string).toLocaleString('vi-VN'),
-    },
+    // {
+    //   key: 'updatedAt',
+    //   label: 'Ngày cập nhật',
+    //   render: (value: unknown): string =>
+    //     new Date(value as string).toLocaleString('vi-VN'),
+    // },
   ];
 
   const actions = [
@@ -326,6 +398,11 @@ export default function VendorVerificationPage(): React.JSX.Element {
         isOpen={detailsModalOpen}
         onClose={handleCloseDetailsModal}
         registration={selectedRegistration}
+        vendorDetail={
+          selectedRegistration
+            ? (vendorDetails[selectedRegistration.branch.vendorId] ?? null)
+            : null
+        }
       />
 
       {/* License Modal */}
