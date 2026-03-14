@@ -41,7 +41,19 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
   const [vendorDetails, setVendorDetails] = useState<
-    Record<number, { name: string; vendorOwner: { firstName: string; lastName: string; email: string; phoneNumber: string; avatarUrl: string | null } }>
+    Record<
+      number,
+      {
+        name: string;
+        vendorOwner: {
+          firstName: string;
+          lastName: string;
+          email: string;
+          phoneNumber: string;
+          avatarUrl: string | null;
+        };
+      }
+    >
   >({});
 
   useEffect(() => {
@@ -64,7 +76,13 @@ export default function VendorVerificationPage(): React.JSX.Element {
           return {
             id,
             name: '-',
-            vendorOwner: { firstName: '-', lastName: '', email: '-', phoneNumber: '-', avatarUrl: null },
+            vendorOwner: {
+              firstName: '-',
+              lastName: '',
+              email: '-',
+              phoneNumber: '-',
+              avatarUrl: null,
+            },
           };
         }
       })

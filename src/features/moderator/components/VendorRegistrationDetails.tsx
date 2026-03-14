@@ -35,13 +35,19 @@ export default function VendorRegistrationDetails({
   };
 
   const infoRows: { label: string; value: string }[] = [
-    { label: 'Mã yêu cầu', value: String(registration.branchRegisterRequestId) },
+    {
+      label: 'Mã yêu cầu',
+      value: String(registration.branchRegisterRequestId),
+    },
     { label: 'Mã chi nhánh', value: String(registration.branchId) },
     ...(registration.rejectReason
       ? [{ label: 'Lý do từ chối', value: registration.rejectReason }]
       : []),
     { label: 'Ngày tạo yêu cầu', value: formatDate(registration.createdAt) },
-    { label: 'Ngày cập nhật yêu cầu', value: formatDate(registration.updatedAt) },
+    {
+      label: 'Ngày cập nhật yêu cầu',
+      value: formatDate(registration.updatedAt),
+    },
   ];
 
   const branchRows: { label: string; value: string }[] = [
@@ -59,12 +65,20 @@ export default function VendorRegistrationDetails({
     { label: 'Ngày tạo', value: formatDate(branch.createdAt) },
   ];
 
-  const renderTable = (rows: { label: string; value: string }[], className = ''): JSX.Element => (
-    <div className={`overflow-hidden rounded-lg border border-gray-200 ${className}`}>
+  const renderTable = (
+    rows: { label: string; value: string }[],
+    className = ''
+  ): JSX.Element => (
+    <div
+      className={`overflow-hidden rounded-lg border border-gray-200 ${className}`}
+    >
       <table className="w-full text-sm">
         <tbody>
           {rows.map((row, i) => (
-            <tr key={row.label} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+            <tr
+              key={row.label}
+              className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
+            >
               <td className="w-1/3 px-4 py-2.5 font-medium text-[var(--color-table-text-secondary)]">
                 {row.label}
               </td>
@@ -99,7 +113,6 @@ export default function VendorRegistrationDetails({
 
         {/* Content */}
         <div className="max-h-[70vh] overflow-y-auto px-6 py-4">
-
           {/* Vendor + Owner Info */}
           {vendorDetail && owner && (
             <>
@@ -121,7 +134,9 @@ export default function VendorRegistrationDetails({
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
-                          <span className="text-[var(--color-table-text-secondary)]">-</span>
+                          <span className="text-[var(--color-table-text-secondary)]">
+                            -
+                          </span>
                         )}
                       </td>
                     </tr>
