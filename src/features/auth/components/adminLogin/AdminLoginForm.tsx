@@ -16,7 +16,7 @@ const initialValues: AdminLoginRequest = { phoneNumber: '', password: '' };
 export const AdminLoginForm = (): JSX.Element => {
   const userStatus = useAppSelector(selectUserStatus);
 
-  const { control, handleSubmit, setError } = useForm<AdminLoginRequest>({
+  const { control } = useForm<AdminLoginRequest>({
     defaultValues: initialValues,
     resolver: zodResolver(LoginPasswordSchema),
   });
@@ -45,27 +45,13 @@ export const AdminLoginForm = (): JSX.Element => {
         <Box
           component="form"
           // onSubmit={handleSubmit(onSubmit)}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '400px',
-          }}
+          className="flex w-[400px] flex-col items-center justify-between"
         >
           <Typography className="display-small text-primary-900">
             Đăng nhập
           </Typography>
 
-          <Box
-            sx={{
-              gap: '8px',
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              my: '24px',
-            }}
-          >
+          <Box className="my-6 flex w-full flex-col gap-2">
             <CustomInput
               control={control}
               name="phoneNumber"
@@ -85,15 +71,10 @@ export const AdminLoginForm = (): JSX.Element => {
           <Button
             type="submit"
             fullWidth
-            sx={{
-              borderRadius: '20px',
-              height: '40px',
-              textTransform: 'none',
-            }}
+            className="body-large h-10 rounded-[20px] normal-case"
             variant="contained"
             color="primary"
             loadingPosition="start"
-            className="body-large"
           >
             Đăng nhập
           </Button>

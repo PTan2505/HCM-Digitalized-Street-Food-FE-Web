@@ -17,8 +17,7 @@ export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
       <Button
         variant="contained"
         fullWidth
-        className="relative flex flex-row items-center justify-center gap-2 rounded-full border border-gray-300 bg-white p-4 font-semibold text-black hover:opacity-50"
-        sx={{ boxShadow: 'none', textTransform: 'none' }}
+        className="relative flex flex-row items-center justify-center gap-2 rounded-full border border-gray-300 bg-white p-4 font-semibold text-black normal-case shadow-none hover:opacity-50"
         onClick={() => onGoogleLoginSubmit()}
       >
         <Icon className="absolute left-4">
@@ -29,8 +28,7 @@ export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
       <Button
         variant="contained"
         fullWidth
-        className="relative flex flex-row items-center justify-center gap-2 rounded-full bg-[#1877F2] p-4 font-semibold text-white hover:opacity-50"
-        sx={{ boxShadow: 'none', textTransform: 'none' }}
+        className="relative flex flex-row items-center justify-center gap-2 rounded-full bg-[#1877F2] p-4 font-semibold text-white normal-case shadow-none hover:opacity-50"
         onClick={() => onFacebookLoginSubmit()}
       >
         <Icon className="absolute left-4">
@@ -41,8 +39,7 @@ export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
       <Button
         variant="contained"
         fullWidth
-        className="relative flex flex-row items-center justify-center gap-2 rounded-full bg-black p-4 font-semibold text-white hover:opacity-50"
-        sx={{ boxShadow: 'none', textTransform: 'none' }}
+        className="relative flex flex-row items-center justify-center gap-2 rounded-full bg-black p-4 font-semibold text-white normal-case shadow-none hover:opacity-50"
         onClick={() => setLoginOption('phoneNumber')}
       >
         <PhoneIcon className="absolute left-4 h-6 w-6" />

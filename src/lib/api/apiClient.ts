@@ -32,14 +32,24 @@ class FormatAxiosResponse implements IFormatAxiosResponse {
   formatError(error: RawAPIError): APIErrorResponse {
     const errorData = error.response?.data;
 
+    // Handle different error response formats
+    let fieldErrors: Record<string, string[]> | undefined = undefined;
+    let errorMessage = errorData?.message ?? 'An error occurred';
+
+    // If data is an object, it might be field errors
+    if (errorData?.data && typeof errorData.data === 'object') {
+      fieldErrors = errorData.data as Record<string, string[]>;
+    }
+    // If data is a string, it's the error message
+    else if (errorData?.data && typeof errorData.data === 'string') {
+      errorMessage = errorData.data;
+    }
+
     return {
       code: errorData?.errorCode,
       status: errorData?.status ?? error.response?.status ?? 500,
-      message: errorData?.message,
-      fieldErrors:
-        errorData?.data && typeof errorData.data === 'object'
-          ? (errorData.data as Record<string, string[]>)
-          : undefined,
+      message: errorMessage,
+      fieldErrors,
     };
   }
 }

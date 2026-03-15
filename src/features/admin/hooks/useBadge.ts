@@ -2,6 +2,9 @@ import type {
   Badge,
   CreateOrUpdateBadgeRequest,
   CreateOrUpdateBadgeResponse,
+  GetUsersWithBadges,
+  AwardOrRevokeBadgeRequest,
+  AwardOrRevokeBadgeResponse,
 } from '@features/admin/types/badge';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -9,6 +12,9 @@ import {
   getAllBadges,
   updateBadge,
   deleteBadge,
+  getUsersWithBadges,
+  awardBadgeToUser,
+  revokeBadgeFromUser,
 } from '@slices/badge';
 import { useCallback } from 'react';
 
@@ -21,6 +27,14 @@ export default function useBadge(): {
     payload: { id: number } & CreateOrUpdateBadgeRequest
   ) => Promise<CreateOrUpdateBadgeResponse>;
   onDeleteBadge: (id: number) => Promise<void>;
+  onGetUsersWithBadges: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetUsersWithBadges>;
+  onAwardBadgeToUser: (
+    payload: AwardOrRevokeBadgeRequest
+  ) => Promise<AwardOrRevokeBadgeResponse>;
+  onRevokeBadgeFromUser: (payload: AwardOrRevokeBadgeRequest) => Promise<void>;
 } {
   const dispatch = useAppDispatch();
 
@@ -56,10 +70,41 @@ export default function useBadge(): {
     [dispatch]
   );
 
+  const onGetUsersWithBadges = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetUsersWithBadges> => {
+      const response = await dispatch(getUsersWithBadges(params)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
+  const onAwardBadgeToUser = useCallback(
+    async (
+      payload: AwardOrRevokeBadgeRequest
+    ): Promise<AwardOrRevokeBadgeResponse> => {
+      const response = await dispatch(awardBadgeToUser(payload)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
+  const onRevokeBadgeFromUser = useCallback(
+    async (payload: AwardOrRevokeBadgeRequest): Promise<void> => {
+      await dispatch(revokeBadgeFromUser(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onGetAllBadges,
     onCreateBadge,
     onUpdateBadge,
     onDeleteBadge,
+    onGetUsersWithBadges,
+    onAwardBadgeToUser,
+    onRevokeBadgeFromUser,
   };
 }

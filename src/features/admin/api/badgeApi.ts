@@ -2,6 +2,9 @@ import type {
   Badge,
   CreateOrUpdateBadgeRequest,
   CreateOrUpdateBadgeResponse,
+  GetUsersWithBadges,
+  AwardOrRevokeBadgeRequest,
+  AwardOrRevokeBadgeResponse,
 } from '@features/admin/types/badge';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -55,6 +58,41 @@ export class BadgeApi {
     res = await this.apiClient.get<Badge[]>({
       url: apiUrl.badge.getAllOrPostBadge,
     });
+    return res.data;
+  }
+
+  async getUsersWithBadges(params: {
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<GetUsersWithBadges> {
+    const res = await this.apiClient.get<GetUsersWithBadges>({
+      url: apiUrl.badge.getUsersWithBadges,
+      params,
+    });
+    return res.data;
+  }
+
+  async awardBadgeToUser(
+    data: AwardOrRevokeBadgeRequest
+  ): Promise<AwardOrRevokeBadgeResponse> {
+    const res = await this.apiClient.post<
+      AwardOrRevokeBadgeResponse,
+      AwardOrRevokeBadgeRequest
+    >({
+      url: apiUrl.badge.awardUserBadge(data.userId, data.badgeId),
+      data,
+    });
+
+    return res.data;
+  }
+
+  async revokeBadgeFromUser(
+    data: AwardOrRevokeBadgeRequest
+  ): Promise<AwardOrRevokeBadgeResponse> {
+    const res = await this.apiClient.delete<AwardOrRevokeBadgeResponse>({
+      url: apiUrl.badge.revokeUserBadge(data.userId, data.badgeId),
+    });
+
     return res.data;
   }
 }

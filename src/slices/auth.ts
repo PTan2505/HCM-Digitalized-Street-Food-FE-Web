@@ -39,7 +39,7 @@ export const userLoginWithGoogle = createAppAsyncThunk(
 
       tokenManagement.setTokens({ newAccessToken: token });
 
-      return { user };
+      return user;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -56,7 +56,7 @@ export const userLoginWithFacebook = createAppAsyncThunk(
 
       tokenManagement.setTokens({ newAccessToken: token });
 
-      return { user };
+      return user;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -101,7 +101,7 @@ export const verifyPhoneNumber = createAppAsyncThunk(
       });
       tokenManagement.setTokens({ newAccessToken: token });
 
-      return { user };
+      return user;
     } catch (error) {
       // API errors are already formatted by ApiClient
       return rejectWithValue(error);
@@ -122,6 +122,31 @@ export const loadUserFromStorage = createAppAsyncThunk(
   }
 );
 
+export const updateProfile = createAppAsyncThunk(
+  'user/updateProfile',
+  async (payload: Partial<User>, { rejectWithValue }) => {
+    try {
+      const user = await axiosApi.userProfileApi.updateUserProfile(payload);
+      await axiosApi.userProfileApi.markUserInfoSetup();
+      return user;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const markUserInfoSetup = createAppAsyncThunk(
+  'user/markUserInfoSetup',
+  async (_, { rejectWithValue }) => {
+    try {
+      await axiosApi.userProfileApi.markUserInfoSetup();
+      return;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: 'user',
   initialState,
@@ -137,19 +162,25 @@ export const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(userLoginWithGoogle.fulfilled, (state, action) => {
-        state.value = action.payload.user;
+        state.value = action.payload;
       })
       .addCase(userLoginWithFacebook.fulfilled, (state, action) => {
-        state.value = action.payload.user;
+        state.value = action.payload;
       })
       .addCase(userLoginWithPhoneNumber.fulfilled, (state) => {
         state.isGeneratedOTP = true;
       })
       .addCase(verifyPhoneNumber.fulfilled, (state, action) => {
-        state.value = action.payload.user;
+        state.value = action.payload;
       })
       .addCase(loadUserFromStorage.fulfilled, (state, action) => {
         state.value = action.payload;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.value = action.payload;
+      })
+      .addCase(markUserInfoSetup.fulfilled, (state) => {
+        if (state.value) state.value.userInfoSetup = true;
       })
       // Matcher: Gom tất cả các case đang chạy (pending)
       .addMatcher(isPending, (state) => {
@@ -159,7 +190,9 @@ export const authSlice = createSlice({
       // Matcher: Gom tất cả các case thất bại (rejected)
       .addMatcher(isRejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload ?? { message: 'An error occurred' };
+        state.error = (action as { payload?: unknown }).payload ?? {
+          message: 'An error occurred',
+        };
       })
       // Matcher: Gom các case thành công (ngoại trừ logout) để set status succeeded
       .addMatcher(
