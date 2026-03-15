@@ -125,7 +125,7 @@ export default function UserProfileForm(): JSX.Element {
               placeholder="Nhập email"
               {...register('email')}
               disabled={!!user?.email}
-              className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-gray-500 transition-all duration-200 outline-none disabled:cursor-not-allowed"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:hover:border-gray-200 disabled:hover:bg-gray-100"
             />
             {/* <p className="mt-2 text-xs text-gray-500">
               Email không thể thay đổi
@@ -181,7 +181,8 @@ export default function UserProfileForm(): JSX.Element {
               type="tel"
               placeholder="Nhập số điện thoại"
               {...register('phoneNumber')}
-              className={`w-full rounded-xl border bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white ${
+              disabled={!!user?.phoneNumber}
+              className={`w-full rounded-xl border bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:hover:border-gray-200 disabled:hover:bg-gray-100 ${
                 errors.phoneNumber ? 'border-red-500' : 'border-gray-200'
               }`}
             />
