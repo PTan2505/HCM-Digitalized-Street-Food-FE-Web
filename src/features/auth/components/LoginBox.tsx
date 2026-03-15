@@ -7,7 +7,7 @@ type Props = {
 
 export const LoginBoxBlur = (props: Props): JSX.Element => {
   return (
-    <Box className="bg-primary-200 flex h-121 w-150 items-center justify-center rounded-[36px] shadow-[0_0_40px_rgba(183,211,189,0.8)]">
+    <Box className="flex h-121 w-150 items-center justify-center rounded-[36px] bg-white/10 p-6 shadow-[0_0_40px_rgba(183,211,189,0.8)] backdrop-blur-xl">
       {props.children}
     </Box>
   );

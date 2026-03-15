@@ -9,6 +9,7 @@ import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { selectIsGeneratedOTP, selectUserStatus } from '@slices/auth';
 import type { JSX } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+// import logoImage from '@assets/lowca-logo.png';
 
 const initialValues: LoginWithPhoneNumberRequest = { phoneNumber: '', otp: '' };
 
@@ -58,6 +59,11 @@ export const PhoneNumberLoginForm = (): JSX.Element => {
           onSubmit={handleSubmit(onSubmit)}
           className="flex w-[400px] flex-col items-center justify-between"
         >
+          {/* <img
+            src={logoImage}
+            alt="Logo"
+            className="mb-6 h-[75px] object-contain"
+          /> */}
           <Typography className="display-small text-primary-900">
             Đăng nhập
           </Typography>
