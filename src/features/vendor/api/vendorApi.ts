@@ -4,14 +4,21 @@ import type {
   SubmitLicenseResponse,
   CheckLicenseStatusResponse,
   GetMyVendorResponse,
-  SubmitImagesRequest,
   SubmitImagesResponse,
+  GetImagesResponse,
+  CreateOrUpdateBranchResponse,
+  UpdateVendorNameRequest,
+  UpdateVendorNameResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
   WorkScheduleResponse,
   DayOff,
   DayOffResponse,
+  GetWorkScheduleResponse,
+  GetDayOffResponse,
+  UpdateWorkSchedule,
+  WorkScheduleItem,
 } from '@features/vendor/types/workSchedule';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -74,11 +81,15 @@ export class VendorApi {
   async createBranch(
     vendorId: number,
     data: VendorRegistrationRequest
-  ): Promise<void> {
-    await this.apiClient.post({
+  ): Promise<CreateOrUpdateBranchResponse> {
+    const res = await this.apiClient.post<
+      CreateOrUpdateBranchResponse,
+      VendorRegistrationRequest
+    >({
       url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
       data,
     });
+    return res.data;
   }
 
   // async getBranches(vendorId: number): Promise<void> {
@@ -90,11 +101,15 @@ export class VendorApi {
   async updateBranch(
     branchId: number,
     data: VendorRegistrationRequest
-  ): Promise<void> {
-    await this.apiClient.put({
+  ): Promise<CreateOrUpdateBranchResponse> {
+    const res = await this.apiClient.put<
+      CreateOrUpdateBranchResponse,
+      VendorRegistrationRequest
+    >({
       url: apiUrl.vendor.updateOrDeleteBranch(branchId),
       data,
     });
+    return res.data;
   }
 
   async deleteBranch(branchId: number): Promise<void> {
@@ -114,20 +129,28 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getWorkSchedules(branchId: number): Promise<WorkScheduleResponse[]> {
-  //   const res = await this.apiClient.get<WorkScheduleResponse[]>({
-  //     url: apiUrl.vendor.createOrGetWorkSchedulesOfABranch(branchId),
-  //   });
-  //   return res.data;
-  // }
-
-  async deleteWorkSchedule(
-    workScheduleId: number
-  ): Promise<WorkScheduleResponse> {
-    const res = await this.apiClient.delete<WorkScheduleResponse>({
-      url: apiUrl.vendor.deleteWorkScheduleOfABranch(workScheduleId),
+  async updateWorkSchedule(
+    workScheduleId: number,
+    data: UpdateWorkSchedule
+  ): Promise<WorkScheduleItem> {
+    const res = await this.apiClient.put<WorkScheduleItem, UpdateWorkSchedule>({
+      url: apiUrl.vendor.deleteOrUpdateWorkScheduleOfABranch(workScheduleId),
+      data,
     });
     return res.data;
+  }
+
+  async getWorkSchedules(branchId: number): Promise<GetWorkScheduleResponse> {
+    const res = await this.apiClient.get<GetWorkScheduleResponse>({
+      url: apiUrl.vendor.createOrGetWorkSchedulesOfABranch(branchId),
+    });
+    return res.data;
+  }
+
+  async deleteWorkSchedule(workScheduleId: number): Promise<void> {
+    await this.apiClient.delete({
+      url: apiUrl.vendor.deleteOrUpdateWorkScheduleOfABranch(workScheduleId),
+    });
   }
 
   async submitDayOff(branchId: number, data: DayOff): Promise<DayOffResponse> {
@@ -138,28 +161,29 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getDayOffs(branchId: number): Promise<DayOffResponse[]> {
-  //   const res = await this.apiClient.get<DayOffResponse[]>({
-  //     url: apiUrl.vendor.createOrGetDayOffsOfABranch(branchId),
-  //   });
-  //   return res.data;
-  // }
-
-  async deleteDayOff(dayOffId: number): Promise<DayOffResponse> {
-    const res = await this.apiClient.delete<DayOffResponse>({
-      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+  async getDayOffs(branchId: number): Promise<GetDayOffResponse> {
+    const res = await this.apiClient.get<GetDayOffResponse>({
+      url: apiUrl.vendor.createOrGetDayOffsOfABranch(branchId),
     });
     return res.data;
   }
 
-  async submitImage(
-    branchId: number,
-    image: File
-  ): Promise<SubmitImagesResponse> {
-    const formData = new FormData();
-    formData.append('image', image);
+  async deleteDayOff(dayOffId: number): Promise<void> {
+    await this.apiClient.delete({
+      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+    });
+  }
 
-    const res = await this.apiClient.post<SubmitImagesResponse, FormData>({
+  async submitImages(
+    branchId: number,
+    images: File[]
+  ): Promise<SubmitImagesResponse[]> {
+    const formData = new FormData();
+    images.forEach((file) => {
+      formData.append('images', file);
+    });
+
+    const res = await this.apiClient.post<SubmitImagesResponse[], FormData>({
       url: apiUrl.vendor.createOrGetImagesOfABranch(branchId),
       data: formData,
       headers: {
@@ -169,16 +193,33 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getImages(branchId: number): Promise<string[]> {
-  //   const res = await this.apiClient.get<string[]>({
-  //     url: apiUrl.vendor.createOrGetImagesOfABranch(branchId),
-  //   });
-  //   return res.data;
-  // }
+  async getImages(
+    branchId: number,
+    params: { pageNumber: number; pageSize: number }
+  ): Promise<GetImagesResponse> {
+    const res = await this.apiClient.get<GetImagesResponse>({
+      url: apiUrl.vendor.createOrGetImagesOfABranch(branchId),
+      params,
+    });
+    return res.data;
+  }
 
   async deleteImage(imageId: number): Promise<void> {
     await this.apiClient.delete({
       url: apiUrl.vendor.deleteImagesOfABranch(imageId),
     });
+  }
+
+  async updateVendorName(
+    data: UpdateVendorNameRequest
+  ): Promise<UpdateVendorNameResponse> {
+    const res = await this.apiClient.put<
+      UpdateVendorNameResponse,
+      UpdateVendorNameRequest
+    >({
+      url: apiUrl.vendor.updateVendorName,
+      data,
+    });
+    return res.data;
   }
 }

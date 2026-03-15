@@ -11,6 +11,7 @@ interface BranchDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   branch: Branch | null;
+  showPayment?: boolean;
 }
 
 interface InfoFieldProps {
@@ -60,6 +61,7 @@ export default function BranchDetailsModal({
   isOpen,
   onClose,
   branch,
+  showPayment = true,
 }: BranchDetailsModalProps): JSX.Element | null {
   const { onCreatePaymentLink } = usePayment();
   const [paying, setPaying] = useState(false);
@@ -89,7 +91,7 @@ export default function BranchDetailsModal({
   };
 
   const getLicenseStatusLabel = (status: string | null): string => {
-    if (!status) return '-';
+    if (!status) return 'Chờ duyệt';
     // Xử lý không phân biệt hoa thường và bao gồm cả trường hợp Accept/Reject
     const s = status.toLowerCase();
     if (['pending'].includes(s)) return 'Chờ duyệt';
@@ -101,7 +103,7 @@ export default function BranchDetailsModal({
   const getLicenseStatusColor = (
     status: string | null
   ): 'default' | 'warning' | 'success' | 'error' => {
-    if (!status) return 'default';
+    if (!status) return 'warning';
     const s = status.toLowerCase();
     if (['pending'].includes(s)) return 'warning';
     if (['approved', 'accept'].includes(s)) return 'success';
@@ -111,7 +113,7 @@ export default function BranchDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity"
       onClick={onClose}
     >
       <div
@@ -177,14 +179,14 @@ export default function BranchDetailsModal({
 
                 <InfoField label="Phường/Xã" value={branch.ward} />
                 <InfoField label="Thành phố" value={branch.city} />
-                <InfoField
+                {/* <InfoField
                   label="Tọa độ"
                   value={
                     branch.lat && branch.long
                       ? `${branch.lat}, ${branch.long}`
                       : '-'
                   }
-                />
+                /> */}
 
                 <InfoField
                   label="Ngày tạo"
@@ -215,18 +217,18 @@ export default function BranchDetailsModal({
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <span className="text-sm font-medium text-gray-600">
-                    Trạng thái mở cửa
+                    Tình trạng hoạt động
                   </span>
                   <StatusBadge
                     label={
-                      branch.isActive ? 'Đang hoạt động' : 'Ngưng hoạt động'
+                      branch.isActive ? 'Đang hoạt động' : 'Không hoạt động'
                     }
                     type={branch.isActive ? 'success' : 'error'}
                   />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <span className="text-sm font-medium text-gray-600">
-                    Kiểm duyệt giấy phép
+                    Trạng thái kiểm duyệt
                   </span>
                   <StatusBadge
                     label={getLicenseStatusLabel(branch.licenseStatus)}
@@ -308,7 +310,7 @@ export default function BranchDetailsModal({
         {/* Modal Actions */}
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-5">
           <div>
-            {!branch.isSubscribed && (
+            {showPayment && !branch.isSubscribed && branch.isVerified && (
               <Button
                 onClick={() => {
                   void handlePayment();

@@ -65,6 +65,7 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,
@@ -77,7 +78,7 @@ export const apiUrl = {
     //WorkSchedules
     createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
-    deleteWorkScheduleOfABranch: (workScheduleId: number): string =>
+    deleteOrUpdateWorkScheduleOfABranch: (workScheduleId: number): string =>
       `/Branch/work-schedules/${workScheduleId}`,
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>

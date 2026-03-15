@@ -19,9 +19,9 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
-import VendorRegistration from '@features/vendor/pages/VendorRegistrationPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
+import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
 import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
@@ -63,11 +63,6 @@ export const router = createBrowserRouter([
     path: ROUTES.ROOT,
     element: <RootLayout />,
     children: [
-      {
-        path: ROUTES.VENDOR_REGISTRATION,
-        element: <VendorRegistration />,
-      },
-
       {
         path: ROUTES.MODERATOR.BASE,
         element: <ModeratorLayout />,
@@ -117,6 +112,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.BRANCH,
             element: <VendorBranchPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY,
+            element: <VendorRegistrationHistoryPage />,
           },
           {
             path: ROUTES.VENDOR.PATHS.PAYMENT_HISTORY,

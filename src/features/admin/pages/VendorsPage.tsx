@@ -22,17 +22,17 @@ import type { AdminVendor } from '@features/admin/types/vendor';
 import useVendor from '@features/admin/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
-  selectVendors,
-  selectVendorsPagination,
-  selectVendorStatus,
-  selectVendorDetail,
-} from '@slices/vendorAdmin';
+  selectAdminVendors,
+  selectAdminVendorsPagination,
+  selectAdminVendorStatus,
+  selectAdminVendorDetail,
+} from '@slices/vendor';
 
 export default function VendorsPage(): JSX.Element {
-  const vendors = useAppSelector(selectVendors);
-  const pagination = useAppSelector(selectVendorsPagination);
-  const status = useAppSelector(selectVendorStatus);
-  const vendorDetail = useAppSelector(selectVendorDetail);
+  const vendors = useAppSelector(selectAdminVendors);
+  const pagination = useAppSelector(selectAdminVendorsPagination);
+  const status = useAppSelector(selectAdminVendorStatus);
+  const vendorDetail = useAppSelector(selectAdminVendorDetail);
   const {
     onGetAllVendors,
     onGetVendorDetail,
