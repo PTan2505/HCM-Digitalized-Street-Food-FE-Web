@@ -6,11 +6,13 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import IconButton from '@mui/material/IconButton';
 import { Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import usePayment from '@features/vendor/hooks/usePayment';
+import PaymentBenefitsModal from '@features/vendor/components/PaymentBenefitsModal';
 
 interface BranchDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   branch: Branch | null;
+  hasAnySubscribedBranch?: boolean;
   showPayment?: boolean;
 }
 
@@ -61,15 +63,17 @@ export default function BranchDetailsModal({
   isOpen,
   onClose,
   branch,
-  showPayment = true,
+  hasAnySubscribedBranch = false,
+  showPayment = false,
 }: BranchDetailsModalProps): JSX.Element | null {
   const { onCreatePaymentLink } = usePayment();
   const [paying, setPaying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showBenefitsModal, setShowBenefitsModal] = useState(false);
 
   if (!isOpen || !branch) return null;
 
-  const handlePayment = async (): Promise<void> => {
+  const executePayment = async (): Promise<void> => {
     setPaying(true);
     try {
       const res = await onCreatePaymentLink({ branchId: branch.branchId });
@@ -236,9 +240,25 @@ export default function BranchDetailsModal({
                   />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-                  <span className="text-sm font-medium text-gray-600">
-                    Gói đăng ký
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-gray-600">
+                      Gói đăng ký
+                    </span>
+                    {!branch.isSubscribed &&
+                      branch.isVerified &&
+                      branch.licenseStatus === 'Accept' &&
+                      showPayment &&
+                      !hasAnySubscribedBranch && (
+                        <button
+                          type="button"
+                          onClick={() => setShowBenefitsModal(true)}
+                          disabled={paying}
+                          className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Xem quyền lợi khi đăng ký gói
+                        </button>
+                      )}
+                  </div>
                   <div className="flex items-center gap-2">
                     {branch.isSubscribed &&
                       branch.daysRemaining !== null &&
@@ -252,8 +272,8 @@ export default function BranchDetailsModal({
                     <StatusBadge
                       label={
                         branch.isSubscribed
-                          ? 'Đã thanh toán'
-                          : 'Chưa thanh toán'
+                          ? 'Đã đăng ký gói'
+                          : 'Chưa đăng ký gói'
                       }
                       type={branch.isSubscribed ? 'success' : 'error'}
                     />
@@ -310,26 +330,28 @@ export default function BranchDetailsModal({
         {/* Modal Actions */}
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-5">
           <div>
-            {showPayment && !branch.isSubscribed && branch.isVerified && (
-              <Button
-                onClick={() => {
-                  void handlePayment();
-                }}
-                type="button"
-                disabled={paying}
-                variant="outlined"
-                color="primary"
-                startIcon={
-                  paying ? (
-                    <CircularProgress size={14} color="inherit" />
-                  ) : (
-                    <PaymentIcon fontSize="small" />
-                  )
-                }
-              >
-                Thanh toán
-              </Button>
-            )}
+            {!branch.isSubscribed &&
+              branch.isVerified &&
+              branch.licenseStatus === 'Accept' &&
+              showPayment &&
+              hasAnySubscribedBranch && (
+                <Button
+                  onClick={() => void executePayment()}
+                  type="button"
+                  disabled={paying}
+                  variant="outlined"
+                  color="primary"
+                  startIcon={
+                    paying ? (
+                      <CircularProgress size={14} color="inherit" />
+                    ) : (
+                      <PaymentIcon fontSize="small" />
+                    )
+                  }
+                >
+                  Thanh toán
+                </Button>
+              )}
           </div>
           <button
             onClick={onClose}
@@ -351,6 +373,15 @@ export default function BranchDetailsModal({
           {errorMsg}
         </Alert>
       </Snackbar>
+
+      {showBenefitsModal && (
+        <PaymentBenefitsModal
+          isOpen={showBenefitsModal}
+          onClose={() => setShowBenefitsModal(false)}
+          onContinue={() => void executePayment()}
+          isPaying={paying}
+        />
+      )}
     </div>
   );
 }

@@ -168,10 +168,10 @@ export default function PaymentSuccess(): JSX.Element {
                   textTransform: 'none',
                 }}
               >
-                {confirmed ? 'Quay lại trang chi nhánh' : 'Về trang chi nhánh'}
+                {confirmed ? 'Về trang chính' : 'Về trang chi nhánh'}
               </Button>
 
-              <Button
+              {/* <Button
                 variant="outlined"
                 fullWidth
                 size="large"
@@ -188,7 +188,7 @@ export default function PaymentSuccess(): JSX.Element {
                 }}
               >
                 Về trang tổng quan
-              </Button>
+              </Button> */}
             </Box>
           </>
         )}
