@@ -156,7 +156,7 @@ axiosInstance.interceptors.response.use(
       const message =
         responseData?.message ?? error.message ?? 'Something went wrong';
 
-      if (message) {
+      if (message && originalRequest?.method !== 'get') {
         toast.error(CustomNotification, {
           data: {
             title: 'Có lỗi xảy ra!',
