@@ -157,7 +157,11 @@ export default function PaymentSuccess(): JSX.Element {
                 variant="contained"
                 fullWidth
                 size="large"
-                onClick={() => void navigate(`${ROUTES.VENDOR.BASE}`)}
+                onClick={() =>
+                  void navigate(
+                    `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`
+                  )
+                }
                 sx={{
                   bgcolor: '#7ab82d',
                   '&:hover': { bgcolor: '#5f9324' },

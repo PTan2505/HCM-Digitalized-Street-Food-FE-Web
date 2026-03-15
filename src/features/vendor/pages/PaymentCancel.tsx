@@ -158,7 +158,11 @@ export default function PaymentCancel(): JSX.Element {
                 variant="contained"
                 fullWidth
                 size="large"
-                onClick={() => void navigate(`${ROUTES.VENDOR.BASE}`)}
+                onClick={() =>
+                  void navigate(
+                    `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`
+                  )
+                }
                 sx={{
                   bgcolor: '#f53425',
                   '&:hover': { bgcolor: '#c0392b' },
