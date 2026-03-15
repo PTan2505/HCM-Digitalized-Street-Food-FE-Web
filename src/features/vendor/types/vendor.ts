@@ -14,7 +14,8 @@ export interface VendorRegistrationRequest {
 export interface Branch {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   phoneNumber: string;
   email: string;
@@ -40,7 +41,8 @@ export interface Branch {
 export interface VendorRegistrationResponse {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -52,7 +54,8 @@ export interface VendorRegistrationResponse {
 export interface CreateOrUpdateBranchResponse {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   phoneNumber: string;
   email: string;
@@ -77,7 +80,8 @@ export interface CreateOrUpdateBranchResponse {
 
 export interface GetMyVendorResponse {
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -134,7 +138,8 @@ export interface UpdateVendorNameRequest {
 
 export interface UpdateVendorNameResponse {
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;

@@ -116,6 +116,9 @@ function BranchPage(): JSX.Element {
   const verifiedBranches: Branch[] = branches.filter(
     (b) => b.licenseStatus === 'Accept'
   );
+
+  const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
+
   // const pendingBranches = branches.filter((b) => b.licenseStatus === 'Pending');
   // const hasSinglePending = pendingBranches.length === 1;
   // const vendorId: number | undefined = myVendor?.vendorId;
@@ -368,6 +371,8 @@ function BranchPage(): JSX.Element {
         isOpen={selectedBranch !== null}
         onClose={() => setSelectedBranch(null)}
         branch={selectedBranch}
+        hasAnySubscribedBranch={hasAnySubscribedBranch}
+        showPayment={true}
       />
 
       <BranchFormModal
