@@ -90,8 +90,11 @@ export default function DishPage(): JSX.Element {
         params: {
           pageNumber,
           pageSize,
-          ...(filters.categoryId !== undefined && { categoryId: filters.categoryId }),
-          ...(filters.keyword !== undefined && filters.keyword !== '' && { keyword: filters.keyword }),
+          ...(filters.categoryId !== undefined && {
+            categoryId: filters.categoryId,
+          }),
+          ...(filters.keyword !== undefined &&
+            filters.keyword !== '' && { keyword: filters.keyword }),
         },
       });
     }

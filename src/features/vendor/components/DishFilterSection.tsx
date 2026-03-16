@@ -102,7 +102,7 @@ export default function DishFilterSection({
       <Box className="flex flex-wrap items-center gap-4">
         {/* Keyword search */}
         <Box className="w-full sm:w-80">
-          <Typography className="mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <Typography className="mb-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">
             Từ khóa
           </Typography>
           <OutlinedInput
@@ -145,7 +145,7 @@ export default function DishFilterSection({
 
         {/* Category filter */}
         <Box className="w-full sm:w-64">
-          <Typography className="mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <Typography className="mb-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">
             Danh mục
           </Typography>
           <Select

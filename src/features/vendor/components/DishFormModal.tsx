@@ -17,7 +17,10 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DishSchema, type DishFormData } from '@features/vendor/utils/dishSchema';
+import {
+  DishSchema,
+  type DishFormData,
+} from '@features/vendor/utils/dishSchema';
 
 import type {
   CreateOrUpdateDishRequest,
@@ -257,7 +260,7 @@ export default function DishFormModal({
                       <input
                         {...field}
                         type="text"
-                        className={`w-full rounded-xl border px-4 py-2.5 outline-none transition-all focus:ring-[var(--color-primary-500)] ${
+                        className={`w-full rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
                           errors.name
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                             : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
@@ -289,7 +292,7 @@ export default function DishFormModal({
                         type="number"
                         onChange={(e) => field.onChange(Number(e.target.value))}
                         value={field.value === 0 ? '' : field.value}
-                        className={`w-full rounded-xl border px-4 py-2.5 outline-none transition-all focus:ring-[var(--color-primary-500)] ${
+                        className={`w-full rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
                           errors.price
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                             : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
@@ -320,7 +323,7 @@ export default function DishFormModal({
                       <textarea
                         {...field}
                         rows={4}
-                        className={`w-full resize-none rounded-xl border px-4 py-2.5 outline-none transition-all focus:ring-[var(--color-primary-500)] ${
+                        className={`w-full resize-none rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
                           errors.description
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                             : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
@@ -348,7 +351,9 @@ export default function DishFormModal({
                   render={({ field }) => (
                     <Select
                       value={field.value ? 1 : 0}
-                      onChange={(e) => field.onChange(Number(e.target.value) === 1)}
+                      onChange={(e) =>
+                        field.onChange(Number(e.target.value) === 1)
+                      }
                       fullWidth
                       className="rounded-xl bg-white"
                       sx={{
@@ -366,10 +371,14 @@ export default function DishFormModal({
                       }}
                     >
                       <MenuItem value={1}>
-                        <span className="font-medium text-green-700">Đang bán</span>
+                        <span className="font-medium text-green-700">
+                          Đang bán
+                        </span>
                       </MenuItem>
                       <MenuItem value={0}>
-                        <span className="font-medium text-red-700">Ngừng bán</span>
+                        <span className="font-medium text-red-700">
+                          Ngừng bán
+                        </span>
                       </MenuItem>
                     </Select>
                   )}
@@ -401,14 +410,20 @@ export default function DishFormModal({
                         error={!!errors.categoryId}
                         sx={{
                           '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: errors.categoryId ? '#ef4444' : '#e5e7eb',
+                            borderColor: errors.categoryId
+                              ? '#ef4444'
+                              : '#e5e7eb',
                             borderRadius: '0.75rem',
                           },
                           '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: errors.categoryId ? '#ef4444' : '#d1d5db',
+                            borderColor: errors.categoryId
+                              ? '#ef4444'
+                              : '#d1d5db',
                           },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: errors.categoryId ? '#ef4444' : 'var(--color-primary-500)',
+                            borderColor: errors.categoryId
+                              ? '#ef4444'
+                              : 'var(--color-primary-500)',
                             borderWidth: errors.categoryId ? '1px' : '1px',
                           },
                         }}
@@ -451,7 +466,9 @@ export default function DishFormModal({
                               label={t.name}
                               onClick={() => {
                                 const newValue = isSelected
-                                  ? field.value.filter((val) => val !== t.tasteId)
+                                  ? field.value.filter(
+                                      (val) => val !== t.tasteId
+                                    )
                                   : [...field.value, t.tasteId];
                                 field.onChange(newValue);
                               }}
@@ -465,7 +482,9 @@ export default function DishFormModal({
                           );
                         })}
                         {tastes.length === 0 && (
-                          <span className="text-sm text-gray-400">Không có dữ liệu</span>
+                          <span className="text-sm text-gray-400">
+                            Không có dữ liệu
+                          </span>
                         )}
                       </Box>
                       {errors.tasteIds && (
@@ -490,7 +509,9 @@ export default function DishFormModal({
                     <>
                       <Box className="flex flex-wrap gap-2">
                         {dietaryPreferences.map((d: UserDietaryPreference) => {
-                          const isSelected = field.value.includes(d.dietaryPreferenceId);
+                          const isSelected = field.value.includes(
+                            d.dietaryPreferenceId
+                          );
                           return (
                             <Chip
                               key={d.dietaryPreferenceId}
@@ -513,7 +534,9 @@ export default function DishFormModal({
                           );
                         })}
                         {dietaryPreferences.length === 0 && (
-                          <span className="text-sm text-gray-400">Không có dữ liệu</span>
+                          <span className="text-sm text-gray-400">
+                            Không có dữ liệu
+                          </span>
                         )}
                       </Box>
                       {errors.dietaryIds && (
@@ -533,7 +556,7 @@ export default function DishFormModal({
               <Box>
                 <label className="mb-2.5 flex items-center justify-between text-sm font-semibold text-gray-700">
                   <span>
-                    Hình ảnh món ăn {' '}
+                    Hình ảnh món ăn{' '}
                     {!isEditMode && <span className="text-red-500">*</span>}
                   </span>
                   {isEditMode && !imageFile && (
@@ -544,7 +567,8 @@ export default function DishFormModal({
                 </label>
 
                 {/* Khung tải ảnh */}
-                <label className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed bg-gray-50/60 p-6 transition-all hover:border-[var(--color-primary-400)] hover:bg-gray-50 ${
+                <label
+                  className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed bg-gray-50/60 p-6 transition-all hover:border-[var(--color-primary-400)] hover:bg-gray-50 ${
                     imageError ? 'border-red-400' : 'border-gray-300'
                   }`}
                 >
@@ -626,7 +650,11 @@ export default function DishFormModal({
               },
             }}
           >
-            {submitting ? 'Đang lưu...' : isEditMode ? 'Lưu thay đổi' : 'Hoàn tất thêm'}
+            {submitting
+              ? 'Đang lưu...'
+              : isEditMode
+                ? 'Lưu thay đổi'
+                : 'Hoàn tất thêm'}
           </Button>
         </Box>
       </Box>
