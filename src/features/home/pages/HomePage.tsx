@@ -1,13 +1,7 @@
 import type { JSX } from 'react';
 import { useEffect } from 'react';
-import {
-  Box,
-  Button,
-  Container,
-  Grid,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Box, Button, Container, Grid, Typography } from '@mui/material';
 import lightLogo from '../../../assets/ios-light.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -15,18 +9,46 @@ import 'aos/dist/aos.css';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import HeroCarousel from '../components/HeroCarousel';
+import PopularCategoriesSection from '../components/PopularCategoriesSection';
 import RecipeCard from '../components/RecipeCard';
-import LatestRecipeCard from '../components/LatestRecipeCard';
-import CollectionCard from '../components/CollectionCard';
-import {
-  CATEGORIES,
-  RECIPES,
-  COLLECTIONS,
-  LATEST_RECIPES,
-  LOREM,
-} from '../data/homeData';
+import useBranch from '../hooks/useBranch';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { ROUTES } from '@constants/routes';
+import { selectActiveBranches } from '@slices/branch';
 
 export default function HomePage(): JSX.Element {
+  const { onGetActiveBranches } = useBranch();
+  const activeBranches = useAppSelector(selectActiveBranches);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fallbackParams = { pageNumber: 1, pageSize: 9 };
+
+    if (!navigator.geolocation) {
+      void onGetActiveBranches(fallbackParams);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        void onGetActiveBranches({
+          Lat: position.coords.latitude,
+          Long: position.coords.longitude,
+          pageNumber: 1,
+          pageSize: 9,
+        });
+      },
+      () => {
+        void onGetActiveBranches(fallbackParams);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      }
+    );
+  }, [onGetActiveBranches]);
+
   useEffect(() => {
     AOS.init({
       duration: 700,
@@ -37,7 +59,7 @@ export default function HomePage(): JSX.Element {
   }, []);
 
   return (
-    <Box className="flex min-h-screen flex-col bg-white">
+    <Box className="flex min-h-screen flex-col overflow-x-hidden bg-white">
       <Navbar />
 
       {/* ── Hero Carousel (images only) ── */}
@@ -45,93 +67,7 @@ export default function HomePage(): JSX.Element {
         <HeroCarousel />
       </Box>
 
-      {/* ── Popular Categories ── */}
-      <Box
-        component="section"
-        className="mt-20"
-        aria-labelledby="categories-heading"
-      >
-        <Container maxWidth="xl">
-          <Box
-            className="mb-10 flex items-center justify-between"
-            data-aos="fade-right"
-          >
-            <Typography id="categories-heading" variant="h4" fontWeight={700}>
-              Danh mục phổ biến
-            </Typography>
-            <Button
-              variant="text"
-              color="primary"
-              sx={{
-                fontWeight: 700,
-                '&:hover': { bgcolor: 'var(--color-primary-50)' },
-              }}
-            >
-              Xem tất cả →
-            </Button>
-          </Box>
-          <Grid container spacing={3}>
-            {CATEGORIES.map((cat) => (
-              <Grid
-                key={cat.name}
-                size={{ xs: 6, sm: 4, md: 2 }}
-                data-aos="zoom-in"
-              >
-                <Box
-                  className="group relative cursor-pointer overflow-hidden rounded-2xl shadow-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-2xl"
-                  sx={{ aspectRatio: '3/4' }}
-                >
-                  {/* Background image */}
-                  <img
-                    src={cat.img}
-                    alt={cat.name}
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                      transition:
-                        'transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)',
-                    }}
-                    className="group-hover:scale-110"
-                  />
-                  {/* Gradient overlay */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      inset: 0,
-                      background:
-                        'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)',
-                      transition: 'opacity 0.3s',
-                    }}
-                  />
-                  {/* Category label */}
-                  <Typography
-                    variant="body1"
-                    fontWeight={700}
-                    sx={{
-                      position: 'absolute',
-                      bottom: 16,
-                      left: 0,
-                      right: 0,
-                      textAlign: 'center',
-                      color: '#fff',
-                      px: 1.5,
-                      lineHeight: 1.3,
-                      textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                      letterSpacing: 0.3,
-                    }}
-                  >
-                    {cat.name}
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
+      <PopularCategoriesSection />
 
       {/* ── Super Delicious ── */}
       <Box
@@ -150,29 +86,32 @@ export default function HomePage(): JSX.Element {
               Những Quán Ăn Ngon Nhất Thành Phố
             </Typography>
             <Typography color="text.secondary" className="mx-auto max-w-xl">
-              {LOREM}
+              Khám phá hàng ngàn quán ăn nấu ăn ngon từ khắp nơi, từ món ăn
+              truyền thống đến hiện đại, giúp bữa ăn của bạn thêm phong phú và
+              đầy hương vị.
             </Typography>
           </Box>
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} data-aos="fade-right">
-              <RecipeCard
-                img="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=80"
-                title="Burger Wagyu Bữa Sáng Phô Mai Đậm Đà"
-                time="30 phút"
-                type="Món Tây"
-                rating={5}
-                author="John Smith"
-                date="15 March 2022"
-              />
-            </Grid>
-
-            {RECIPES.slice(0, 4).map((r) => (
+            {activeBranches.slice(0, 5).map((branch, index) => (
               <Grid
-                key={r.title}
+                key={branch.branchId}
                 size={{ xs: 12, sm: 6, md: 4 }}
-                data-aos="fade-up"
+                data-aos={index === 0 ? 'fade-right' : 'fade-up'}
               >
-                <RecipeCard {...r} />
+                <RecipeCard
+                  branchId={branch.branchId}
+                  title={branch.vendorName + ' - ' + branch.name}
+                  rating={branch.avgRating}
+                  type="Món ăn"
+                  distanceKm={branch.distanceKm}
+                  address={
+                    branch.addressDetail +
+                    ', ' +
+                    branch.ward +
+                    ', ' +
+                    branch.city
+                  }
+                />
               </Grid>
             ))}
 
@@ -204,108 +143,29 @@ export default function HomePage(): JSX.Element {
               </Box>
             </Grid>
 
-            {RECIPES.slice(4).map((r) => (
+            {activeBranches.slice(5, 8).map((branch) => (
               <Grid
-                key={r.title}
+                key={branch.branchId}
                 size={{ xs: 12, sm: 6, md: 4 }}
                 data-aos="fade-up"
               >
-                <RecipeCard {...r} />
+                <RecipeCard
+                  branchId={branch.branchId}
+                  title={branch.vendorName + ' - ' + branch.name}
+                  rating={branch.avgRating}
+                  type="Món ăn"
+                  distanceKm={branch.distanceKm}
+                  address={
+                    branch.addressDetail +
+                    ', ' +
+                    branch.ward +
+                    ', ' +
+                    branch.city
+                  }
+                />
               </Grid>
             ))}
           </Grid>
-        </Container>
-      </Box>
-
-      {/* ── Curated Collections ── */}
-      <Box
-        component="section"
-        className="mt-20"
-        aria-labelledby="collections-heading"
-      >
-        <Container maxWidth="xl">
-          <Box className="mb-12 text-center" data-aos="fade-right">
-            <Typography
-              id="collections-heading"
-              variant="h4"
-              fontWeight={700}
-              className="mb-4!"
-            >
-              Bộ Sưu Tập Công Thức
-            </Typography>
-            <Typography color="text.secondary" className="mx-auto max-w-xl">
-              {LOREM}
-            </Typography>
-          </Box>
-          <Grid container spacing={3}>
-            {COLLECTIONS.map((col) => (
-              <Grid
-                key={col.title}
-                size={{ xs: 12, sm: 6, md: 4 }}
-                data-aos="flip-left"
-              >
-                <CollectionCard {...col} />
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* ── Latest Recipes ── */}
-      <Box
-        component="section"
-        className="mt-20"
-        aria-labelledby="latest-recipes-heading"
-      >
-        <Container maxWidth="xl">
-          <Box
-            className="mb-10 flex items-center justify-between"
-            data-aos="fade-left"
-          >
-            <Typography
-              id="latest-recipes-heading"
-              variant="h4"
-              fontWeight={700}
-            >
-              Công Thức Mới Nhất
-            </Typography>
-            <Button
-              variant="text"
-              color="primary"
-              sx={{
-                fontWeight: 700,
-                '&:hover': { bgcolor: 'var(--color-primary-50)' },
-              }}
-            >
-              Xem tất cả →
-            </Button>
-          </Box>
-          <Grid container spacing={3}>
-            {LATEST_RECIPES.map((r) => (
-              <Grid
-                key={r.title}
-                size={{ xs: 12, sm: 6, md: 3 }}
-                data-aos="zoom-in"
-              >
-                <LatestRecipeCard {...r} />
-              </Grid>
-            ))}
-          </Grid>
-          <Box className="mt-10 flex justify-center" data-aos="fade-up">
-            <Button
-              variant="outlined"
-              color="primary"
-              sx={{
-                borderRadius: 3,
-                px: 5,
-                py: 1.5,
-                fontWeight: 700,
-                '&:hover': { bgcolor: 'var(--color-primary-50)' },
-              }}
-            >
-              Tải thêm
-            </Button>
-          </Box>
         </Container>
       </Box>
 
@@ -321,37 +181,34 @@ export default function HomePage(): JSX.Element {
         >
           <Typography
             id="newsletter-heading"
-            variant="h3"
+            variant="h4"
             fontWeight={700}
             className="mb-4!"
             color="text.primary"
           >
-            Ưu Đãi Đến Tận Hộp Thư!
+            Đăng Ký Cửa Hàng Của Bạn Ngay Hôm Nay!
           </Typography>
           <Typography color="text.secondary" className="mb-10!">
-            {LOREM}
+            Mở cửa hàng của bạn ngay hôm nay để giới thiệu sản phẩm, tiếp cận
+            nhiều khách hàng và phát triển hoạt động kinh doanh trên nền tảng
+            của chúng tôi.
           </Typography>
-          <Box className="mx-auto flex max-w-md gap-3">
-            <TextField
-              type="email"
-              placeholder="Địa chỉ email của bạn..."
-              variant="outlined"
-              size="small"
-              fullWidth
-              required
-              sx={{
-                bgcolor: '#fff',
-                '& .MuiOutlinedInput-root': { borderRadius: 2 },
-              }}
-            />
+          <Box
+            className="mx-auto flex w-full max-w-md justify-center"
+            sx={{ minHeight: 56, alignItems: 'center' }}
+          >
             <Button
               variant="contained"
               color="primary"
-              type="submit"
+              type="button"
+              onClick={() => navigate(ROUTES.LOGIN)}
               sx={{
                 borderRadius: 2,
+                fontSize: '1rem',
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
+                width: { xs: '100%', sm: 220 },
+                height: 48,
                 px: 3,
               }}
             >

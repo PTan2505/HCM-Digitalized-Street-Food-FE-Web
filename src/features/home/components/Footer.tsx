@@ -32,13 +32,6 @@ const FOOTER_COLUMNS = [
   },
 ];
 
-const SOCIAL_ICONS = [
-  { icon: FacebookIcon, label: 'Facebook' },
-  { icon: TwitterIcon, label: 'Twitter' },
-  { icon: InstagramIcon, label: 'Instagram' },
-  { icon: YouTubeIcon, label: 'YouTube' },
-];
-
 export default function Footer(): JSX.Element {
   const [expanded, setExpanded] = useState<string | false>(false);
 
@@ -124,25 +117,6 @@ export default function Footer(): JSX.Element {
             </Accordion>
           ))}
 
-          {/* Social icons */}
-          <Box sx={{ display: 'flex', gap: 3, mt: 4, mb: 3 }}>
-            {SOCIAL_ICONS.map(({ icon: Icon, label }) => (
-              <Box
-                key={label}
-                component="a"
-                href="#"
-                aria-label={label}
-                sx={{
-                  color: 'text.secondary',
-                  display: 'flex',
-                  '&:hover': { color: 'text.primary' },
-                }}
-              >
-                <Icon sx={{ fontSize: 22 }} />
-              </Box>
-            ))}
-          </Box>
-
           <Typography variant="caption" color="text.secondary">
             © 2025 Lowca. Được bảo lưu mọi quyền.
           </Typography>
@@ -172,23 +146,6 @@ export default function Footer(): JSX.Element {
                 Khám phá hàng ngàn quán ăn ngon, giúp bữa ăn của bạn thêm phong
                 phú mỗi ngày.
               </Typography>
-              <Box className="mt-6 flex gap-4">
-                {SOCIAL_ICONS.map(({ icon: Icon, label }) => (
-                  <Box
-                    key={label}
-                    component="a"
-                    href="#"
-                    aria-label={label}
-                    sx={{
-                      color: '#9ca3af',
-                      display: 'flex',
-                      '&:hover': { color: '#fff' },
-                    }}
-                  >
-                    <Icon sx={{ fontSize: 20 }} />
-                  </Box>
-                ))}
-              </Box>
             </Box>
             <Box className="flex flex-wrap gap-20">
               {FOOTER_COLUMNS.map((col) => (

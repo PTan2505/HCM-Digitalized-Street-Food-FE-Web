@@ -1,26 +1,64 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import lowcaLogo from '@assets/logos/lowcaLogo.svg';
-import { Box, Button, Container, Drawer, IconButton } from '@mui/material';
+import {
+  Box,
+  Button,
+  Container,
+  Drawer,
+  IconButton,
+  TextField,
+} from '@mui/material';
 import {
   Search as SearchIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import { NAV_LINKS } from '../data/homeData';
+import { ROUTES } from '@constants/routes';
+import { useNavigate } from 'react-router-dom';
 
 export default function Navbar(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const navbarHeight = isScrolled ? 78 : 78;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = (): void => {
+      setIsScrolled(window.scrollY > 8);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return (): void => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <>
       <Box
+        sx={{ height: `${navbarHeight}px`, transition: 'height 0.25s ease' }}
+      />
+
+      <Box
         component="header"
         role="banner"
-        className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white shadow-sm"
+        className="fixed top-0 right-0 left-0 z-50 w-full border-b border-gray-100 bg-white transition-all duration-300"
+        sx={{
+          boxShadow: isScrolled
+            ? '0 8px 20px rgba(0,0,0,0.08)'
+            : '0 1px 6px rgba(0,0,0,0.06)',
+          backdropFilter: isScrolled ? 'blur(6px)' : 'none',
+        }}
       >
         <Container maxWidth="xl">
-          <Box className="relative flex h-16 items-center justify-between">
+          <Box
+            className="relative flex items-center justify-between"
+            sx={{
+              height: navbarHeight,
+              transition: 'height 0.25s ease',
+            }}
+          >
             {/* ── Mobile Left: Search ── */}
             <IconButton
               aria-label="Tìm kiếm"
@@ -65,55 +103,48 @@ export default function Navbar(): JSX.Element {
               />
             </Box>
 
-            {/* ── Desktop Center: Nav ── */}
-            <Box
-              component="nav"
-              aria-label="Primary navigation"
-              sx={{
-                display: { xs: 'none', md: 'block' },
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)',
-              }}
-            >
-              <Box component="ul" className="m-0 flex list-none gap-10 p-0">
-                {NAV_LINKS.map((link) => (
-                  <Box component="li" key={link}>
-                    <Box
-                      component="a"
-                      href="#"
-                      className="hover:text-primary-600 text-sm font-semibold text-gray-700 no-underline transition-colors"
-                    >
-                      {link}
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-
             {/* ── Desktop Right: Search + Login ── */}
             <Box
               sx={{
                 display: { xs: 'none', md: 'flex' },
                 alignItems: 'center',
-                gap: 1,
+                gap: 2,
               }}
             >
-              <IconButton
-                aria-label="Tìm kiếm"
-                size="small"
-                sx={{ color: 'text.secondary' }}
-              >
-                <SearchIcon sx={{ fontSize: 22 }} />
-              </IconButton>
+              <TextField
+                id="standard-search"
+                label="Tìm kiếm"
+                type="text"
+                variant="standard"
+                sx={{
+                  width: '30ch',
+                  mr: 2,
+                  mb: 2,
+                  '& .MuiInputBase-root': {
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderRadius: 0,
+                    padding: 0,
+                    height: 'auto',
+                    color: 'inherit',
+                  },
+                  '& .MuiInputBase-root.Mui-focused': {
+                    border: 'none',
+                    color: 'inherit',
+                  },
+                }}
+              />
               <Button
                 size="small"
                 variant="outlined"
                 color="primary"
+                type="button"
+                onClick={() => navigate(ROUTES.LOGIN)}
                 sx={{
                   fontWeight: 600,
                   borderRadius: 2,
                   px: 2.5,
+                  py: 0.75,
                   '&:hover': { bgcolor: 'var(--color-primary-50)' },
                 }}
               >
@@ -172,35 +203,11 @@ export default function Navbar(): JSX.Element {
             </IconButton>
           </Box>
 
-          <Box component="nav" aria-label="Mobile navigation" sx={{ flex: 1 }}>
-            {NAV_LINKS.map((link) => (
-              <Box
-                key={link}
-                component="a"
-                href="#"
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  display: 'block',
-                  py: 1.75,
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  fontWeight: 600,
-                  color: 'text.primary',
-                  textDecoration: 'none',
-                  fontSize: '1rem',
-                  '&:hover': { color: 'primary.main' },
-                }}
-              >
-                {link}
-              </Box>
-            ))}
-          </Box>
-
           <Button
             variant="contained"
             color="primary"
             fullWidth
-            sx={{ borderRadius: 2, fontWeight: 700, py: 1.5, mt: 4 }}
+            sx={{ borderRadius: 2, fontWeight: 700, py: 1.5, mt: 'auto' }}
             onClick={() => setMobileOpen(false)}
           >
             Đăng nhập
