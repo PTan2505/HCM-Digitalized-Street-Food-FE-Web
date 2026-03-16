@@ -48,6 +48,7 @@ export const ROUTES = {
       BRANCH: 'branch',
       REGISTRATION_HISTORY: 'registration-history',
       PAYMENT_HISTORY: 'payment-history',
+      DISH: 'dish',
     },
   },
 

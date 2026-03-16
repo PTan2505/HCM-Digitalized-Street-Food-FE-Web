@@ -7,6 +7,7 @@ import vendorReducer from '@slices/vendor';
 import branchReducer from '@slices/branch';
 import tasteReducer from '@slices/taste';
 import paymentReducer from '@slices/payment';
+import dishReducer from '@slices/dish';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     branch: branchReducer,
     taste: tasteReducer,
     payment: paymentReducer,
+    dish: dishReducer,
   },
 });
 

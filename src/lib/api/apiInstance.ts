@@ -9,6 +9,7 @@ import { VendorApi } from '@features/vendor/api/vendorApi';
 import { BranchApi } from '@features/moderator/api/branchApi';
 import { TasteApi } from '@features/admin/api/tasteApi';
 import { PaymentApi } from '@features/vendor/api/paymentApi';
+import { DishApi } from '@features/vendor/api/dishApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -25,4 +26,5 @@ export const axiosApi = {
   branchApi: new BranchApi(axiosClient),
   tasteApi: new TasteApi(axiosClient),
   paymentApi: new PaymentApi(axiosClient),
+  dishApi: new DishApi(axiosClient),
 };
