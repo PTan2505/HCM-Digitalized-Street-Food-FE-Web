@@ -92,6 +92,7 @@ export const apiUrl = {
       `/Branch/images/${imageId}`,
     //For moderator
     getPendingRegistrations: '/Branch/pending-registrations',
+    getActiveBranches: '/Branch/active',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
   },

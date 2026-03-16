@@ -1,29 +1,60 @@
 import type { JSX } from 'react';
-import { Box, Rating, Typography } from '@mui/material';
-import { Favorite as FavoriteIcon } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
+import { Box, Rating, Typography, Skeleton } from '@mui/material';
+import {
+  Bookmark as BookmarkIcon,
+  LocationOn as LocationOnIcon,
+} from '@mui/icons-material';
 import RecipeMeta from './RecipeMeta';
+import { axiosApi } from '@lib/api/apiInstance';
 
 export interface RecipeCardProps {
-  img: string;
+  branchId: number;
   title: string;
-  time: string;
   type: string;
   rating: number;
-  author: string;
-  date: string;
+  distanceKm: number;
+  address: string;
   stretch?: boolean;
 }
 
 export default function RecipeCard({
-  img,
+  branchId,
   title,
-  time,
   type,
   rating,
-  author,
-  date,
+  distanceKm,
+  address,
   stretch,
 }: RecipeCardProps): JSX.Element {
+  const [img, setImg] = useState<string>(
+    'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80'
+  );
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchImage = async (): Promise<void> => {
+      try {
+        const res = await axiosApi.vendorApi.getImages(branchId, {
+          pageNumber: 1,
+          pageSize: 1,
+        });
+        if (mounted && res.items && res.items.length > 0) {
+          setImg(res.items[0].imageUrl);
+        }
+      } catch {
+        // ignore or fallback
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void fetchImage();
+    return (): void => {
+      mounted = false;
+    };
+  }, [branchId]);
+
   return (
     <Box
       sx={{
@@ -44,19 +75,23 @@ export default function RecipeCard({
       <Box
         sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '4/3' }}
       >
-        <img
-          src={img}
-          alt={title}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-          }}
-        />
+        {loading ? (
+          <Skeleton variant="rectangular" width="100%" height="100%" />
+        ) : (
+          <img
+            src={img}
+            alt={title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        )}
         <Box
           component="button"
-          aria-label="Add to favorites"
+          aria-label="Save"
           sx={{
             position: 'absolute',
             top: 12,
@@ -75,7 +110,7 @@ export default function RecipeCard({
             transition: 'background 0.2s',
           }}
         >
-          <FavoriteIcon sx={{ fontSize: 16, color: '#ccc' }} />
+          <BookmarkIcon sx={{ fontSize: 16, color: '#ccc' }} />
         </Box>
       </Box>
       <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -83,8 +118,28 @@ export default function RecipeCard({
           value={rating}
           readOnly
           size="small"
+          precision={0.1}
           sx={{ mb: 1, '& .MuiRating-iconFilled': { color: '#f5a623' } }}
         />
+        <Box
+          sx={{
+            mb: 0.75,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Typography
+            variant="caption"
+            fontWeight={700}
+            sx={{ color: 'var(--color-primary-700)' }}
+          >
+            {(distanceKm ?? 0).toFixed(2)} km
+          </Typography>
+          <RecipeMeta type={type} />
+        </Box>
+
         <Typography
           variant="body2"
           fontWeight={600}
@@ -93,35 +148,19 @@ export default function RecipeCard({
         >
           {title}
         </Typography>
-        <RecipeMeta time={time} type={type} />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
-          <img
-            src={`https://i.pravatar.cc/40?u=${encodeURIComponent(author)}`}
-            alt={author}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: '50%',
-              objectFit: 'cover',
-            }}
-          />
-          <Box>
-            <Typography
-              variant="caption"
-              fontWeight={600}
-              display="block"
-              lineHeight={1.2}
-            >
-              {author}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              lineHeight={1.2}
-            >
-              {date}
-            </Typography>
-          </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 0.5,
+            mb: 1.5,
+            color: 'text.secondary',
+          }}
+        >
+          <LocationOnIcon sx={{ fontSize: 16, mt: 0.2 }} />
+          <Typography variant="caption" lineHeight={1.4}>
+            {address}
+          </Typography>
         </Box>
       </Box>
     </Box>
