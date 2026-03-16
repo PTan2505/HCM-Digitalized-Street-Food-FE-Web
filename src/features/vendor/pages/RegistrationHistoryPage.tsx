@@ -16,6 +16,7 @@ import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
+import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
 
 const StatusBadge = ({
   label,
@@ -48,6 +49,7 @@ function RegistrationHistoryPage(): JSX.Element {
   const [formMode, setFormMode] = useState<BranchFormMode>({
     type: 'createVendor',
   });
+  const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
     void onGetMyVendor();
@@ -182,9 +184,12 @@ function RegistrationHistoryPage(): JSX.Element {
     {
       label: <ImageIcon fontSize="small" />,
       menuLabel: 'Xem ảnh',
-      onClick: (): void => {},
+      onClick: (branch: Branch): void => {
+        setImagesBranch(branch);
+      },
       color: 'primary' as const,
-      show: (): boolean => false,
+      show: (branch: Branch): boolean =>
+        branch.licenseStatus === 'Pending' || branch.licenseStatus === null,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
@@ -243,6 +248,12 @@ function RegistrationHistoryPage(): JSX.Element {
         onClose={() => setFormModalOpen(false)}
         mode={formMode}
         onSuccess={handleFormSuccess}
+      />
+
+      <ImagesDetailsModal
+        isOpen={imagesBranch !== null}
+        onClose={() => setImagesBranch(null)}
+        branch={imagesBranch}
       />
     </div>
   );
