@@ -65,8 +65,8 @@ export default function useLogin(): {
 
   function onLogout(): void {
     dispatch(logout());
-    dispatch(resetVendorState());
-    dispatch(resetPaymentState());
+    // dispatch(resetVendorState());
+    // dispatch(resetPaymentState());
     navigate(ROUTES.LOGIN);
   }
   return {
