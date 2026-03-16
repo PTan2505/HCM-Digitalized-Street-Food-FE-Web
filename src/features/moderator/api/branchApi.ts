@@ -1,9 +1,9 @@
 import type {
   GetPendingRegistrationsResponse,
-  VerifyRegistrationRequest,
   RejectRegistrationRequest,
-  VerifyRegistrationResponse,
   RejectRegistrationResponse,
+  VerifyRegistrationRequest,
+  VerifyRegistrationResponse,
 } from '@features/moderator/types/branch';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';

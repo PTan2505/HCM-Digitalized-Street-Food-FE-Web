@@ -53,9 +53,14 @@ const RootLayout = (): JSX.Element => {
           }
         } else if (
           currentPath === ROUTES.ROOT ||
-          !currentPath.startsWith(ROUTES.VENDOR_REGISTRATION)
+          !currentPath.startsWith(ROUTES.VENDOR.BASE)
         ) {
-          navigate(ROUTES.VENDOR_REGISTRATION, { replace: true });
+          navigate(
+            `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY}`,
+            {
+              replace: true,
+            }
+          );
         }
       } else if (user.role === ROLES.VENDOR) {
         if (

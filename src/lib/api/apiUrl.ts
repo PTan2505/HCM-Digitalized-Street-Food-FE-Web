@@ -65,15 +65,31 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,
     checkLicenseStatus: (branchId: number): string =>
       `/Branch/${branchId}/license-status`,
-    workSchedules: (branchId: number): string =>
+    //Branches
+    createOrGetBranchesOfAVendor: (vendorId: number): string =>
+      `/Branch/vendor/${vendorId}`,
+    updateOrDeleteBranch: (branchId: number): string => `/Branch/${branchId}`,
+    //WorkSchedules
+    createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
-    dayOffs: (branchId: number): string => `/Branch/${branchId}/day-offs`,
-    uploadImages: (branchId: number): string => `/Branch/${branchId}/images`,
+    deleteOrUpdateWorkScheduleOfABranch: (workScheduleId: number): string =>
+      `/Branch/work-schedules/${workScheduleId}`,
+    //Day-offs
+    createOrGetDayOffsOfABranch: (branchId: number): string =>
+      `/Branch/${branchId}/day-offs`,
+    deleteDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
+    //Images
+    createOrGetImagesOfABranch: (branchId: number): string =>
+      `/Branch/${branchId}/images`,
+    deleteImagesOfABranch: (imageId: number): string =>
+      `/Branch/images/${imageId}`,
     //For moderator
     getPendingRegistrations: '/Branch/pending-registrations',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
@@ -82,5 +98,27 @@ export const apiUrl = {
   taste: {
     getAllOrPostTaste: '/tastes',
     updateOrDeleteTaste: (id: number): string => `/tastes/${id}`,
+  },
+  payment: {
+    createPaymentLink: '/Payment/create-link',
+    getPaymentStatus: (orderCode: string): string =>
+      `/Payment/status/${orderCode}`,
+    getPaymentHistory: '/Payment/history',
+    getPaymentSuccess: '/Payment/success',
+    getPaymentCancel: '/Payment/cancel',
+    confirmPayment: '/Payment/confirm/',
+  },
+  dish: {
+    CreateOrGetDishesOfAVendor: (vendorId: number): string =>
+      `/dishes/vendor/${vendorId}`,
+    UpdateOrDeleteDish: (dishId: number): string => `/dishes/${dishId}`,
+    GetDishesByBranch: (branchId: number): string =>
+      `/dishes/branch/${branchId}`,
+    AssignOrUnassignDishToBranch: (dishId: number, branchId: number): string =>
+      `dishes/${dishId}/branch/${branchId}`,
+    UpdateDishAvailabilityByBranch: (
+      dishId: number,
+      branchId: number
+    ): string => `dishes/${dishId}/branch/${branchId}/availability`,
   },
 };

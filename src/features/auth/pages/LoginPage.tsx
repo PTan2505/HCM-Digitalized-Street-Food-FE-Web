@@ -8,7 +8,7 @@ export default function LoginPage(): JSX.Element {
   const [loginOption, setLoginOption] = useState<'phoneNumber' | ''>('');
 
   return (
-    <Box className="bg-gradient-primary flex h-screen w-screen items-center justify-center">
+    <Box className="bg-gradient-moderator flex h-screen w-screen items-center justify-center">
       <LoginBoxBlur>
         {loginOption === 'phoneNumber' ? (
           <PhoneNumberLoginForm />

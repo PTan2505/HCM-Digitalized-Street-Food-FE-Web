@@ -33,6 +33,14 @@ export interface VendorBranch {
   licenseRejectReason: string | null;
 }
 
+export interface VendorOwner {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  avatarUrl: string | null;
+}
+
 export interface VendorDetail {
   vendorId: number;
   userId: number;
@@ -40,6 +48,7 @@ export interface VendorDetail {
   createdAt: string;
   updatedAt: string | null;
   isActive: boolean;
+  vendorOwner: VendorOwner;
   vendorOwnerName: string;
   branches: VendorBranch[];
 }
