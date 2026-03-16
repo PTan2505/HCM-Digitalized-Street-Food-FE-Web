@@ -9,6 +9,7 @@ import {
   ClipboardDocumentListIcon,
   DocumentTextIcon,
   XMarkIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -42,6 +43,12 @@ const navigation = [
     href: '/vendor/payment-history',
     icon: ClipboardDocumentListIcon,
     isForVendor: true,
+  },
+  {
+    name: 'Quản lý món ăn',
+    href: '/vendor/dish',
+    icon: ShoppingBagIcon,
+    isForVendor: false,
   },
 ];
 

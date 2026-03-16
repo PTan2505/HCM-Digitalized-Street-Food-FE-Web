@@ -118,10 +118,10 @@ export default class ApiClient {
     });
   }
 
-  delete<TResponse>(
-    requestConfig: AxiosRequestConfig<null>
+  delete<TResponse, TRequest = unknown>(
+    requestConfig: AxiosRequestConfig<TRequest>
   ): Promise<ApiResponse<TResponse>> {
-    return this.handleRequest<TResponse, null>({
+    return this.handleRequest<TResponse, TRequest>({
       ...requestConfig,
       method: 'DELETE',
     });
