@@ -45,6 +45,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
       number,
       {
         name: string;
+        vendorOwnerName?: string;
         vendorOwner: {
           firstName: string;
           lastName: string;
@@ -71,11 +72,17 @@ export default function VendorVerificationPage(): React.JSX.Element {
       missing.map(async (id) => {
         try {
           const vendor = await axiosApi.vendorAdminApi.getVendorDetail(id);
-          return { id, name: vendor.name, vendorOwner: vendor.vendorOwner };
+          return {
+            id,
+            name: vendor.name,
+            vendorOwner: vendor.vendorOwner,
+            vendorOwnerName: vendor.vendorOwnerName,
+          };
         } catch {
           return {
             id,
             name: '-',
+            vendorOwnerName: '-',
             vendorOwner: {
               firstName: '-',
               lastName: '',
@@ -89,8 +96,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
     ).then((results) => {
       setVendorDetails((prev) => {
         const next = { ...prev };
-        results.forEach(({ id, name, vendorOwner }) => {
-          next[id] = { name, vendorOwner };
+        results.forEach(({ id, name, vendorOwner, vendorOwnerName }) => {
+          next[id] = { name, vendorOwner, vendorOwnerName };
         });
         return next;
       });
@@ -196,9 +203,10 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (_: unknown, row: Record<string, unknown>): string => {
         const branch = row.branch as { vendorId: number } | undefined;
         if (!branch) return '-';
-        const owner = vendorDetails[branch.vendorId]?.vendorOwner;
-        if (!owner) return '...';
-        return `${owner.firstName} ${owner.lastName}`.trim();
+        // const owner = vendorDetails[branch.vendorId]?.vendorOwner;
+        // if (!owner) return '...';
+        // return `${owner.firstName} ${owner.lastName}`.trim();
+        return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
       },
     },
     {

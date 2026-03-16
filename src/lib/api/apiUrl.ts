@@ -108,4 +108,17 @@ export const apiUrl = {
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm/',
   },
+  dish: {
+    CreateOrGetDishesOfAVendor: (vendorId: number): string =>
+      `/dishes/vendor/${vendorId}`,
+    UpdateOrDeleteDish: (dishId: number): string => `/dishes/${dishId}`,
+    GetDishesByBranch: (branchId: number): string =>
+      `/dishes/branch/${branchId}`,
+    AssignOrUnassignDishToBranch: (dishId: number, branchId: number): string =>
+      `dishes/${dishId}/branch/${branchId}`,
+    UpdateDishAvailabilityByBranch: (
+      dishId: number,
+      branchId: number
+    ): string => `dishes/${dishId}/branch/${branchId}/availability`,
+  },
 };
