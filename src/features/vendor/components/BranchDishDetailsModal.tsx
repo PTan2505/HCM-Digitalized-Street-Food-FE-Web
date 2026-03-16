@@ -8,11 +8,7 @@ import useDish from '@features/vendor/hooks/useDish';
 import CloseIcon from '@mui/icons-material/Close';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import IconButton from '@mui/material/IconButton';
-import {
-  Checkbox,
-  Switch,
-  CircularProgress,
-} from '@mui/material';
+import { Checkbox, Switch, CircularProgress } from '@mui/material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 
@@ -37,7 +33,9 @@ export default function BranchDishDetailsModal({
     onUpdateDishAvailabilityByBranch,
   } = useDish();
 
-  const [vendorDishes, setVendorDishes] = useState<CreateOrUpdateDishResponse[]>([]);
+  const [vendorDishes, setVendorDishes] = useState<
+    CreateOrUpdateDishResponse[]
+  >([]);
   const [vendorPage, setVendorPage] = useState(1);
   const [vendorPageSize, setVendorPageSize] = useState(10);
   const [vendorTotalPages, setVendorTotalPages] = useState(1);
@@ -61,7 +59,11 @@ export default function BranchDishDetailsModal({
 
   // ─── Fetch vendor dishes ────────────────────────────────────
   const fetchVendorDishes = useCallback(
-    async (page: number, filterValues: DishFilterValues, size: number = vendorPageSize) => {
+    async (
+      page: number,
+      filterValues: DishFilterValues,
+      size: number = vendorPageSize
+    ) => {
       if (!vendorId) return;
       setLoading(true);
       try {
@@ -269,7 +271,10 @@ export default function BranchDishDetailsModal({
       key: 'checkbox',
       label: '',
       style: { width: '48px', textAlign: 'center' as const },
-      render: (_: unknown, dish: CreateOrUpdateDishResponse): React.ReactNode => {
+      render: (
+        _: unknown,
+        dish: CreateOrUpdateDishResponse
+      ): React.ReactNode => {
         const isAssigned = branchDishMap.has(dish.dishId);
         const isItemLoading = actionLoading.has(dish.dishId);
 
@@ -293,7 +298,10 @@ export default function BranchDishDetailsModal({
     {
       key: 'dish',
       label: 'Tên món ăn',
-      render: (_: unknown, dish: CreateOrUpdateDishResponse): React.ReactNode => {
+      render: (
+        _: unknown,
+        dish: CreateOrUpdateDishResponse
+      ): React.ReactNode => {
         const isAssigned = branchDishMap.has(dish.dishId);
         return (
           <div className="flex items-center gap-3">
@@ -330,7 +338,10 @@ export default function BranchDishDetailsModal({
       key: 'status',
       label: 'Trạng thái',
       style: { width: '120px', textAlign: 'center' as const },
-      render: (_: unknown, dish: CreateOrUpdateDishResponse): React.ReactNode => {
+      render: (
+        _: unknown,
+        dish: CreateOrUpdateDishResponse
+      ): React.ReactNode => {
         const isAssigned = branchDishMap.has(dish.dishId);
         return (
           <span
@@ -349,7 +360,10 @@ export default function BranchDishDetailsModal({
       key: 'availability',
       label: 'Còn / Hết',
       style: { width: '160px', textAlign: 'center' as const },
-      render: (_: unknown, dish: CreateOrUpdateDishResponse): React.ReactNode => {
+      render: (
+        _: unknown,
+        dish: CreateOrUpdateDishResponse
+      ): React.ReactNode => {
         const isAssigned = branchDishMap.has(dish.dishId);
         const branchInfo = branchDishMap.get(dish.dishId);
         const isSoldOut = branchInfo?.isSoldOut ?? false;
