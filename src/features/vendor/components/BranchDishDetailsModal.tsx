@@ -11,6 +11,13 @@ import IconButton from '@mui/material/IconButton';
 import { Checkbox, Switch, CircularProgress } from '@mui/material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
+import { useAppSelector } from '@hooks/reduxHooks';
+import {
+  selectVendorDishes,
+  selectVendorDishesPagination,
+  selectBranchDishes,
+  selectDishStatus,
+} from '@slices/dish';
 
 interface BranchDishDetailsModalProps {
   isOpen: boolean;
@@ -33,26 +40,23 @@ export default function BranchDishDetailsModal({
     onUpdateDishAvailabilityByBranch,
   } = useDish();
 
-  const [vendorDishes, setVendorDishes] = useState<
-    CreateOrUpdateDishResponse[]
-  >([]);
+  // ─── Redux state ────────────────────────────────────────────
+  const vendorDishes = useAppSelector(selectVendorDishes);
+  const vendorPagination = useAppSelector(selectVendorDishesPagination);
+  const branchDishes = useAppSelector(selectBranchDishes);
+  const status = useAppSelector(selectDishStatus);
+
+  // Derive branchDishMap từ branchDishes trong slice (Map<dishId, { isSoldOut }>)
+  const branchDishMap = useMemo<Map<number, { isSoldOut: boolean }>>(
+    () =>
+      new Map(branchDishes.map((d) => [d.dishId, { isSoldOut: d.isSoldOut }])),
+    [branchDishes]
+  );
+
+  // ─── Local UI state ──────────────────────────────────────────
   const [vendorPage, setVendorPage] = useState(1);
   const [vendorPageSize, setVendorPageSize] = useState(10);
-  const [vendorTotalPages, setVendorTotalPages] = useState(1);
-  const [vendorTotalCount, setVendorTotalCount] = useState(0);
-  const [vendorHasNext, setVendorHasNext] = useState(false);
-  const [vendorHasPrevious, setVendorHasPrevious] = useState(false);
-
-  // Branch dish IDs (assigned to this branch)
-  const [branchDishMap, setBranchDishMap] = useState<
-    Map<number, { isSoldOut: boolean }>
-  >(new Map());
-
-  // Filter state
   const [filters, setFilters] = useState<DishFilterValues>({});
-
-  // Loading / feedback
-  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<Set<number>>(new Set());
 
   const branchId = branch?.branchId;
@@ -65,47 +69,28 @@ export default function BranchDishDetailsModal({
       size: number = vendorPageSize
     ) => {
       if (!vendorId) return;
-      setLoading(true);
-      try {
-        const res = await onGetDishesOfAVendor({
-          vendorId,
-          params: {
-            pageNumber: page,
-            pageSize: size,
-            ...(filterValues.keyword ? { keyword: filterValues.keyword } : {}),
-            ...(filterValues.categoryId
-              ? { categoryId: filterValues.categoryId }
-              : {}),
-          },
-        });
-        setVendorDishes(res.items);
-        setVendorTotalPages(res.totalPages);
-        setVendorTotalCount(res.totalCount);
-        setVendorHasNext(res.hasNext);
-        setVendorHasPrevious(res.hasPrevious);
-      } catch {
-        // Handle error if needed
-      } finally {
-        setLoading(false);
-      }
+      await onGetDishesOfAVendor({
+        vendorId,
+        params: {
+          pageNumber: page,
+          pageSize: size,
+          ...(filterValues.keyword ? { keyword: filterValues.keyword } : {}),
+          ...(filterValues.categoryId
+            ? { categoryId: filterValues.categoryId }
+            : {}),
+        },
+      });
     },
-    [vendorId, onGetDishesOfAVendor]
+    [vendorId, vendorPageSize, onGetDishesOfAVendor]
   );
 
   // ─── Fetch branch dishes (all pages) ───────────────────────
   const fetchBranchDishes = useCallback(async () => {
     if (!branchId) return;
-    try {
-      const res = await onGetDishesByBranch({
-        branchId,
-        params: { pageNumber: 1, pageSize: 999 },
-      });
-      const map = new Map<number, { isSoldOut: boolean }>();
-      res.items.forEach((d) => map.set(d.dishId, { isSoldOut: d.isSoldOut }));
-      setBranchDishMap(map);
-    } catch {
-      // silent — branch dish list is supplementary
-    }
+    await onGetDishesByBranch({
+      branchId,
+      params: { pageNumber: 1, pageSize: 999 },
+    });
   }, [branchId, onGetDishesByBranch]);
 
   // ─── Initial load ───────────────────────────────────────────
@@ -139,26 +124,12 @@ export default function BranchDishDetailsModal({
   const handleAssign = async (dishId: number): Promise<void> => {
     if (!branchId) return;
     addToActionLoading(dishId);
-
-    // Optimistic update
-    setBranchDishMap((prev) => {
-      const next = new Map(prev);
-      next.set(dishId, { isSoldOut: false });
-      return next;
-    });
-
     try {
       await onAssignDishToBranch({
         branchId,
         data: { dishIds: [dishId] },
       });
-    } catch {
-      // Rollback
-      setBranchDishMap((prev) => {
-        const next = new Map(prev);
-        next.delete(dishId);
-        return next;
-      });
+      // slice's addCase(assignDishToBranch.fulfilled) sẽ push dish vào branchDishes
     } finally {
       removeFromActionLoading(dishId);
     }
@@ -168,31 +139,12 @@ export default function BranchDishDetailsModal({
   const handleUnassign = async (dishId: number): Promise<void> => {
     if (!branchId) return;
     addToActionLoading(dishId);
-
-    // Save previous state for rollback
-    const prevState = branchDishMap.get(dishId);
-
-    // Optimistic update
-    setBranchDishMap((prev) => {
-      const next = new Map(prev);
-      next.delete(dishId);
-      return next;
-    });
-
     try {
       await onUnassignDishToBranch({
         branchId,
         data: { dishIds: [dishId] },
       });
-    } catch {
-      // Rollback
-      if (prevState) {
-        setBranchDishMap((prev) => {
-          const next = new Map(prev);
-          next.set(dishId, prevState);
-          return next;
-        });
-      }
+      // slice's addCase(unassignDishToBranch.fulfilled) sẽ filter branchDishes
     } finally {
       removeFromActionLoading(dishId);
     }
@@ -205,29 +157,13 @@ export default function BranchDishDetailsModal({
   ): Promise<void> => {
     if (!branchId) return;
     addToActionLoading(dishId);
-
-    const newSoldOut = !currentSoldOut;
-
-    // Optimistic update
-    setBranchDishMap((prev) => {
-      const next = new Map(prev);
-      next.set(dishId, { isSoldOut: newSoldOut });
-      return next;
-    });
-
     try {
       await onUpdateDishAvailabilityByBranch({
         dishId,
         branchId,
-        data: { isSoldOut: newSoldOut },
+        data: { isSoldOut: !currentSoldOut },
       });
-    } catch {
-      // Rollback
-      setBranchDishMap((prev) => {
-        const next = new Map(prev);
-        next.set(dishId, { isSoldOut: currentSoldOut });
-        return next;
-      });
+      // slice's addCase(updateDishAvailabilityByBranch.fulfilled) sẽ cập nhật isSoldOut
     } finally {
       removeFromActionLoading(dishId);
     }
@@ -470,19 +406,19 @@ export default function BranchDishDetailsModal({
               columns={columns}
               data={vendorDishes}
               rowKey="dishId"
-              loading={loading}
+              loading={status === 'pending'}
               emptyMessage="Không tìm thấy món ăn nào."
             />
 
             {/* Pagination */}
-            {vendorTotalCount > 0 && (
+            {vendorPagination.totalCount > 0 && (
               <Pagination
-                currentPage={vendorPage}
-                totalPages={vendorTotalPages}
-                totalCount={vendorTotalCount}
-                pageSize={vendorPageSize}
-                hasPrevious={vendorHasPrevious}
-                hasNext={vendorHasNext}
+                currentPage={vendorPagination.currentPage}
+                totalPages={vendorPagination.totalPages}
+                totalCount={vendorPagination.totalCount}
+                pageSize={vendorPagination.pageSize}
+                hasPrevious={vendorPagination.hasPrevious}
+                hasNext={vendorPagination.hasNext}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 pageSizeOptions={[5, 10, 20]}

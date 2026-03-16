@@ -83,7 +83,7 @@ export default function CategoryPage(): JSX.Element {
       } else {
         await onCreateCategory(payload);
       }
-      await onGetAllCategories();
+      // await onGetAllCategories();
       handleCloseDialog();
     } catch (error) {
       console.error('Failed to save category:', error);

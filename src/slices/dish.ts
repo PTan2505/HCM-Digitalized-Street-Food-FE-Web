@@ -162,7 +162,7 @@ export const assignDishToBranch = createAppAsyncThunk(
   ) => {
     try {
       await axiosApi.dishApi.assignDishToBranch(payload.data, payload.branchId);
-      return;
+      return { dishIds: payload.data.dishIds, branchId: payload.branchId };
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -180,7 +180,7 @@ export const unassignDishToBranch = createAppAsyncThunk(
         payload.data,
         payload.branchId
       );
-      return;
+      return { dishIds: payload.data.dishIds, branchId: payload.branchId };
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -286,6 +286,35 @@ export const dishSlice = createSlice({
           hasPrevious: action.payload.hasPrevious,
           hasNext: action.payload.hasNext,
         };
+      })
+      .addCase(assignDishToBranch.fulfilled, (state, action) => {
+        if (action.payload) {
+          const { dishIds } = action.payload;
+          dishIds.forEach((dishId) => {
+            const alreadyInBranch = state.branchDishes.some(
+              (d) => d.dishId === dishId
+            );
+            if (!alreadyInBranch) {
+              const dish = state.vendorDishes.find((d) => d.dishId === dishId);
+              if (dish) {
+                state.branchDishes.push({ ...dish, isSoldOut: false });
+                state.branchDishesPagination.totalCount += 1;
+              }
+            }
+          });
+        }
+      })
+      .addCase(unassignDishToBranch.fulfilled, (state, action) => {
+        if (action.payload) {
+          const { dishIds } = action.payload;
+          state.branchDishes = state.branchDishes.filter(
+            (d) => !dishIds.includes(d.dishId)
+          );
+          state.branchDishesPagination.totalCount = Math.max(
+            0,
+            state.branchDishesPagination.totalCount - dishIds.length
+          );
+        }
       })
       .addCase(updateDishAvailabilityByBranch.fulfilled, (state, action) => {
         if (action.payload) {
