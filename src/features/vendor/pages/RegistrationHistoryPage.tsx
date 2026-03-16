@@ -162,7 +162,8 @@ function RegistrationHistoryPage(): JSX.Element {
         handleOpenEditModal(branch);
       },
       color: 'primary' as const,
-      show: (branch: Branch): boolean => branch.licenseStatus === 'Pending',
+      show: (branch: Branch): boolean =>
+        branch.licenseStatus === 'Pending' || branch.licenseStatus === null,
     },
     {
       label: <DeleteIcon fontSize="small" />,
