@@ -31,6 +31,7 @@ import type { BranchFormMode } from '@features/vendor/components/BranchFormModal
 import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
 import WorkScheduleModal from '@features/vendor/components/WorkScheduleModal';
 import DayOffModal from '@features/vendor/components/DayOffModal';
+import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetailsModal';
 
 const StatusBadge = ({
   label,
@@ -71,6 +72,7 @@ function BranchPage(): JSX.Element {
   const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
   const [scheduleBranch, setScheduleBranch] = useState<Branch | null>(null);
   const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
+  const [dishBranch, setDishBranch] = useState<Branch | null>(null);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -255,9 +257,8 @@ function BranchPage(): JSX.Element {
     {
       label: <RestaurantMenuIcon fontSize="small" />,
       menuLabel: 'Quản lý menu',
-      onClick: (): void => {
-        // Handle menu management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ CRUD MENU
+      onClick: (branch: Branch): void => {
+        setDishBranch(branch);
       },
       color: 'primary' as const,
     },
@@ -398,6 +399,13 @@ function BranchPage(): JSX.Element {
         isOpen={dayOffBranch !== null}
         onClose={() => setDayOffBranch(null)}
         branch={dayOffBranch}
+      />
+
+      <BranchDishDetailsModal
+        isOpen={dishBranch !== null}
+        onClose={() => setDishBranch(null)}
+        branch={dishBranch}
+        vendorId={myVendor?.vendorId}
       />
 
       <Dialog

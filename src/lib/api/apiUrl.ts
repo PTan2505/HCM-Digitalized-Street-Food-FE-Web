@@ -92,6 +92,7 @@ export const apiUrl = {
       `/Branch/images/${imageId}`,
     //For moderator
     getPendingRegistrations: '/Branch/pending-registrations',
+    getActiveBranches: '/Branch/active',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
   },
@@ -114,8 +115,8 @@ export const apiUrl = {
     UpdateOrDeleteDish: (dishId: number): string => `/dishes/${dishId}`,
     GetDishesByBranch: (branchId: number): string =>
       `/dishes/branch/${branchId}`,
-    AssignOrUnassignDishToBranch: (dishId: number, branchId: number): string =>
-      `dishes/${dishId}/branch/${branchId}`,
+    AssignOrUnassignDishToBranch: (branchId: number): string =>
+      `/dishes/branch/${branchId}`,
     UpdateDishAvailabilityByBranch: (
       dishId: number,
       branchId: number
