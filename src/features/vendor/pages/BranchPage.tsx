@@ -20,6 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -32,6 +33,7 @@ import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
 import WorkScheduleModal from '@features/vendor/components/WorkScheduleModal';
 import DayOffModal from '@features/vendor/components/DayOffModal';
 import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetailsModal';
+import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 
 const StatusBadge = ({
   label,
@@ -73,6 +75,7 @@ function BranchPage(): JSX.Element {
   const [scheduleBranch, setScheduleBranch] = useState<Branch | null>(null);
   const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
+  const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -263,8 +266,16 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      label: <RateReviewIcon fontSize="small" />,
+      menuLabel: 'Phản hồi về chi nhánh',
+      onClick: (branch: Branch): void => {
+        setFeedbackBranch(branch);
+      },
+      color: 'info' as const,
+    },
+    {
       label: <ImageIcon fontSize="small" />,
-      menuLabel: 'Xem ảnh',
+      menuLabel: 'Cập nhật ảnh quán',
       onClick: (branch: Branch): void => {
         setImagesBranch(branch);
       },
@@ -406,6 +417,12 @@ function BranchPage(): JSX.Element {
         onClose={() => setDishBranch(null)}
         branch={dishBranch}
         vendorId={myVendor?.vendorId}
+      />
+
+      <BranchFeedbackModal
+        isOpen={feedbackBranch !== null}
+        onClose={() => setFeedbackBranch(null)}
+        branch={feedbackBranch}
       />
 
       <Dialog

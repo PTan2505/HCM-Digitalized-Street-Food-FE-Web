@@ -287,7 +287,9 @@ export default function BranchDishDetailsModal({
                 : 'border-gray-200 bg-gray-100 text-gray-400'
             }`}
           >
-            {isAssigned ? 'Đã gán' : 'Chưa gán'}
+            {isAssigned
+              ? 'Đã gán vào chi nhánh này'
+              : 'Chưa gán vào chi nhánh này'}
           </span>
         );
       },
@@ -409,33 +411,24 @@ export default function BranchDishDetailsModal({
               loading={status === 'pending'}
               emptyMessage="Không tìm thấy món ăn nào."
             />
-
-            {/* Pagination */}
-            {vendorPagination.totalCount > 0 && (
-              <Pagination
-                currentPage={vendorPagination.currentPage}
-                totalPages={vendorPagination.totalPages}
-                totalCount={vendorPagination.totalCount}
-                pageSize={vendorPagination.pageSize}
-                hasPrevious={vendorPagination.hasPrevious}
-                hasNext={vendorPagination.hasNext}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                pageSizeOptions={[5, 10, 20]}
-              />
-            )}
           </div>
         </div>
 
-        {/* ─── Modal Footer ─────────────────────────────────── */}
-        <div className="flex items-center justify-end border-t border-gray-100 bg-gray-50/50 px-8 py-4">
-          <button
-            onClick={onClose}
-            type="button"
-            className="rounded-lg bg-gray-100 px-5 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-200"
-          >
-            Đóng
-          </button>
+        {/* ─── Pagination Footer ─────────────────────────────── */}
+        <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-3">
+          {vendorPagination.totalCount > 0 && (
+            <Pagination
+              currentPage={vendorPagination.currentPage}
+              totalPages={vendorPagination.totalPages}
+              totalCount={vendorPagination.totalCount}
+              pageSize={vendorPagination.pageSize}
+              hasPrevious={vendorPagination.hasPrevious}
+              hasNext={vendorPagination.hasNext}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              pageSizeOptions={[5, 10, 20]}
+            />
+          )}
         </div>
       </div>
     </div>

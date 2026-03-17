@@ -9,6 +9,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type {
@@ -108,6 +109,30 @@ function getTitle(mode: BranchFormMode): string {
     default:
       return '';
   }
+}
+
+function getSubtitle(mode: BranchFormMode): {
+  badge: string;
+  name: string;
+} {
+  if (mode.type === 'createVendor') {
+    return {
+      badge: 'Tạo mới',
+      name: 'Thiết lập cửa hàng và chi nhánh đầu tiên',
+    };
+  }
+
+  if (mode.type === 'addBranch') {
+    return {
+      badge: `#${mode.vendorId}`,
+      name: 'Thêm chi nhánh mới cho cửa hàng hiện có',
+    };
+  }
+
+  return {
+    badge: `#${mode.branch.branchId}`,
+    name: mode.branch.name,
+  };
 }
 
 export default function BranchFormModal({
@@ -247,6 +272,7 @@ export default function BranchFormModal({
   };
 
   const isCreate = mode.type === 'createVendor' || mode.type === 'addBranch';
+  const subtitle = getSubtitle(mode);
 
   // Map zod errors to section error props
   const ownerErrors = {
@@ -275,19 +301,40 @@ export default function BranchFormModal({
       >
         <DialogTitle
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontWeight: 700,
-            fontSize: '1.25rem',
             borderBottom: '1px solid #e5e7eb',
-            pb: 2,
+            px: 4,
+            py: 2.5,
           }}
         >
-          {getTitle(mode)}
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+                <StorefrontIcon />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
+                  {getTitle(mode)}
+                </h2>
+                <p className="mt-0.5 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
+                  <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                    {subtitle.badge}
+                  </span>
+                  {subtitle.name}
+                </p>
+              </div>
+            </div>
+            <IconButton
+              onClick={onClose}
+              size="small"
+              sx={{
+                bgcolor: 'white',
+                border: '1px solid #f3f4f6',
+                '&:hover': { bgcolor: '#f3f4f6' },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </div>
         </DialogTitle>
 
         <DialogContent sx={{ pt: 3, pb: 1, mt: 3 }}>

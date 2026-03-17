@@ -122,4 +122,10 @@ export const apiUrl = {
       branchId: number
     ): string => `dishes/${dishId}/branch/${branchId}/availability`,
   },
+  feedback: {
+    GetFeedbacksByBranch: (branchId: number): string =>
+      `/Feedback/branch/${branchId}`,
+    CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}/reply`,
+  },
 };
