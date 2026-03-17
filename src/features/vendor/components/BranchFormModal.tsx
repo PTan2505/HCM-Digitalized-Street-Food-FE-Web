@@ -407,7 +407,9 @@ export default function BranchFormModal({
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={submitting || !isValid}
+            disabled={
+              submitting || !isValid || (isCreate && storeImages.length === 0)
+            }
             sx={{
               bgcolor: '#06AA4C',
               '&:hover': { bgcolor: '#058f40' },
