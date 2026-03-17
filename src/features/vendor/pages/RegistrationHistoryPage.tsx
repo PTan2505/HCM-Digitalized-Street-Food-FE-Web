@@ -183,7 +183,7 @@ function RegistrationHistoryPage(): JSX.Element {
     },
     {
       label: <ImageIcon fontSize="small" />,
-      menuLabel: 'Xem ảnh',
+      menuLabel: 'Cập nhật ảnh quán',
       onClick: (branch: Branch): void => {
         setImagesBranch(branch);
       },

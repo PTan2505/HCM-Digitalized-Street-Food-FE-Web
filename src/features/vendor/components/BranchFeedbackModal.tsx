@@ -15,7 +15,9 @@ import StarIcon from '@mui/icons-material/Star';
 import SendIcon from '@mui/icons-material/Send';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
 import {
   Dialog,
   DialogActions,
@@ -143,7 +145,7 @@ export default function BranchFeedbackModal({
         });
       }
 
-      await fetchFeedbacks();
+      // await fetchFeedbacks();
       setEditingIds((prev) => {
         const next = new Set(prev);
         next.delete(feedback.feedbackId);
@@ -174,7 +176,7 @@ export default function BranchFeedbackModal({
     addProcessing(feedbackId);
     try {
       await onDeleteReply(feedbackId);
-      await fetchFeedbacks();
+      // await fetchFeedbacks();
       setEditingIds((prev) => {
         const next = new Set(prev);
         next.delete(feedbackId);
@@ -214,22 +216,34 @@ export default function BranchFeedbackModal({
         className="mx-4 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-          <div>
-            <h2 className="text-table-text-primary text-lg font-bold">
-              Phản hồi về chi nhánh
-            </h2>
-            <p className="text-table-text-secondary text-sm">
-              {branch.name} • ID {branch.branchId}
-            </p>
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+              <RateReviewIcon />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
+                Phản hồi về chi nhánh
+              </h2>
+              <p className="mt-0.5 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
+                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                  #{branch.branchId}
+                </span>
+                {branch.name}
+              </p>
+            </div>
           </div>
-          <button
+          <IconButton
+            size="small"
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-            title="Đóng"
+            sx={{
+              bgcolor: 'white',
+              border: '1px solid #f3f4f6',
+              '&:hover': { bgcolor: '#f3f4f6' },
+            }}
           >
             <CloseIcon fontSize="small" />
-          </button>
+          </IconButton>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
