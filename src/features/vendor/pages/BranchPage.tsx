@@ -1,21 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, Tooltip as MuiTooltip } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  Tooltip as MuiTooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
-import TabsContainer from '@features/vendor/components/Tab';
-import { Add as AddIcon } from '@mui/icons-material';
+import BranchFormModal from '@features/vendor/components/BranchFormModal';
+import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
+import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
+import WorkScheduleModal from '@features/vendor/components/WorkScheduleModal';
+import DayOffModal from '@features/vendor/components/DayOffModal';
+import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetailsModal';
+import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 
 const StatusBadge = ({
   label,
@@ -42,8 +60,58 @@ const StatusBadge = ({
 function BranchPage(): JSX.Element {
   const myVendor = useAppSelector(selectMyVendor);
   const status = useAppSelector(selectVendorStatus);
-  const { onGetMyVendor } = useVendor();
+  const { onGetMyVendor, onUpdateVendorName, onDeleteBranch } = useVendor();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState<BranchFormMode>({
+    type: 'createVendor',
+  });
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
+  const [scheduleBranch, setScheduleBranch] = useState<Branch | null>(null);
+  const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
+  const [dishBranch, setDishBranch] = useState<Branch | null>(null);
+  const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
+
+  const handleStartEditName = (): void => {
+    setEditedName(myVendor?.name ?? '');
+    setIsEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  };
+
+  const handleSaveName = (): void => {
+    const trimmed = editedName.trim();
+    if (trimmed && trimmed !== myVendor?.name) {
+      void onUpdateVendorName({ name: trimmed });
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEditName = (): void => {
+    setIsEditingName(false);
+  };
+
+  const handleDeleteBranch = (branch: Branch): void => {
+    setDeletingBranch(branch);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (deletingBranch) {
+      await onDeleteBranch(deletingBranch.branchId);
+      setOpenDeleteDialog(false);
+      setDeletingBranch(null);
+    }
+  };
+
+  const handleCancelDelete = (): void => {
+    setOpenDeleteDialog(false);
+    setDeletingBranch(null);
+  };
 
   useEffect(() => {
     void onGetMyVendor();
@@ -53,7 +121,30 @@ function BranchPage(): JSX.Element {
   const verifiedBranches: Branch[] = branches.filter(
     (b) => b.licenseStatus === 'Accept'
   );
-  const vendorId: number | undefined = myVendor?.vendorId;
+
+  const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
+
+  // const pendingBranches = branches.filter((b) => b.licenseStatus === 'Pending');
+  // const hasSinglePending = pendingBranches.length === 1;
+  // const vendorId: number | undefined = myVendor?.vendorId;
+
+  // const handleOpenCreateModal = (): void => {
+  //   if (branches.length === 0) {
+  //     setFormMode({ type: 'createVendor' });
+  //   } else if (vendorId !== undefined) {
+  //     setFormMode({ type: 'addBranch', vendorId });
+  //   }
+  //   setFormModalOpen(true);
+  // };
+
+  const handleOpenEditModal = (branch: Branch): void => {
+    setFormMode({ type: 'editBranch', branch });
+    setFormModalOpen(true);
+  };
+
+  const handleFormSuccess = (): void => {
+    // Slice already handles branch update/create
+  };
 
   const columns = [
     {
@@ -106,7 +197,7 @@ function BranchPage(): JSX.Element {
       style: { width: '120px' },
       render: (value: unknown): React.ReactNode => (
         <StatusBadge
-          label={value ? 'Đang hoạt động' : 'Ngưng hoạt động'}
+          label={value ? 'Đang hoạt động' : 'Không hoạt động'}
           type={value ? 'success' : 'error'}
         />
       ),
@@ -152,57 +243,57 @@ function BranchPage(): JSX.Element {
     },
     {
       label: <EditIcon fontSize="small" />,
-      menuLabel: 'Chỉnh sửa chi nhánh',
-      onClick: (): void => {
-        // Handle editing the selected branch
-        // API PUT BRANCH DÙNG CHUNG MODAL VỚI API POST BRANCH, CHỈ KHÁC Ở 2 CHỖ:
-        // 1. API POST CÓ THÊM 1 SECTION ĐỂ SUBMIT LICENSE VÀ 1 SECTION ĐỂ UPLOAD HÌNH ẢNH CỦA QUÁN
-        // 2. API PUT CHỈ CÓ 1 SECTION ĐỂ CHỈNH SỬA THÔNG TIN CHI NHÁNH, KHÔNG CÓ 2 SECTION LICENSE VÀ UPLOAD HÌNH ẢNH NHƯ API POST VÀ SẼ CÓ THÊM FIELD isActive
+      menuLabel: 'Cập nhật chi nhánh',
+      onClick: (branch: Branch): void => {
+        handleOpenEditModal(branch);
       },
       color: 'primary' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
-      onClick: (): void => {
-        // Handle deleting the selected branch
-        // PHẢI HỎI XÁC NHẬN TRƯỚC KHI XÓA
+      onClick: (branch: Branch): void => {
+        handleDeleteBranch(branch);
       },
       color: 'error' as const,
     },
     {
       label: <RestaurantMenuIcon fontSize="small" />,
       menuLabel: 'Quản lý menu',
-      onClick: (): void => {
-        // Handle menu management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ CRUD MENU
+      onClick: (branch: Branch): void => {
+        setDishBranch(branch);
       },
       color: 'primary' as const,
     },
     {
+      label: <RateReviewIcon fontSize="small" />,
+      menuLabel: 'Phản hồi về chi nhánh',
+      onClick: (branch: Branch): void => {
+        setFeedbackBranch(branch);
+      },
+      color: 'info' as const,
+    },
+    {
       label: <ImageIcon fontSize="small" />,
-      menuLabel: 'Xem ảnh',
-      onClick: (): void => {
-        // Handle image management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ POST, GET, DELETE ẢNH CỦA CHI NHÁNH
+      menuLabel: 'Cập nhật ảnh quán',
+      onClick: (branch: Branch): void => {
+        setImagesBranch(branch);
       },
       color: 'primary' as const,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
-      menuLabel: 'Quản lý lịch làm việc',
-      onClick: (): void => {
-        // Handle schedule management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ CRUD LỊCH LÀM VIỆC CỦA CHI NHÁNH
+      menuLabel: 'Quản lý thời gian hoạt động',
+      onClick: (branch: Branch): void => {
+        setScheduleBranch(branch);
       },
       color: 'primary' as const,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý ngày nghỉ',
-      onClick: (): void => {
-        // Handle schedule management for the selected branch
-        // KHI BẤM VÀO SẼ MỞ MODAL ĐỂ POST, GET, DELETE NGÀY NGHỈ CỦA CHI NHÁNH
+      onClick: (branch: Branch): void => {
+        setDayOffBranch(branch);
       },
       color: 'error' as const,
     },
@@ -217,56 +308,152 @@ function BranchPage(): JSX.Element {
             Quản lý chi nhánh
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
-            Danh sách các chi nhánh của cửa hàng
+            Tên cửa hàng:{' '}
+            {isEditingName ? (
+              <span className="inline-flex items-center gap-1">
+                <input
+                  ref={nameInputRef}
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') handleCancelEditName();
+                  }}
+                  className="rounded border border-[var(--color-primary-400)] px-1.5 py-0.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[var(--color-primary-300)]"
+                  autoFocus
+                />
+                <IconButton
+                  size="small"
+                  onClick={handleSaveName}
+                  color="success"
+                  title="Lưu"
+                >
+                  <CheckIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  onClick={handleCancelEditName}
+                  color="error"
+                  title="Hủy"
+                >
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 font-semibold">
+                {myVendor?.name ?? 'Chưa có tên cửa hàng'}
+                {myVendor?.name && (
+                  <EditIcon
+                    sx={{
+                      fontSize: 15,
+                      cursor: 'pointer',
+                      '&:hover': { color: 'var(--color-primary-600)' },
+                    }}
+                    onClick={handleStartEditName}
+                    titleAccess="Nhấn để chỉnh sửa tên cửa hàng"
+                  />
+                )}
+              </span>
+            )}
           </p>
         </div>
-        <button
-          // onClick={() => handleOpenDialog()}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-        >
-          <AddIcon fontSize="small" />
-          Thêm chi nhánh
-        </button>
+        {/* {!hasSinglePending && (
+          <button
+            // onClick={() => handleOpenDialog()}
+            className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          >
+            <AddIcon fontSize="small" />
+            {verifiedBranches.length === 0
+              ? 'Tạo cửa hàng mới'
+              : 'Thêm chi nhánh'}
+          </button>
+        )} */}
       </div>
 
-      {/* Tabs */}
-      <TabsContainer
-        tabs={[
-          {
-            label: 'Lịch sử đăng ký',
-            content: (
-              <Table
-                columns={columns}
-                data={branches}
-                rowKey="branchId"
-                loading={status === 'pending'}
-                emptyMessage="Chưa có chi nhánh nào"
-                actions={actions}
-              />
-            ),
-          },
-          {
-            label: 'Chi nhánh đã xác thực',
-            content: (
-              <Table
-                columns={columns}
-                data={verifiedBranches}
-                rowKey="branchId"
-                loading={status === 'pending'}
-                emptyMessage="Chưa có chi nhánh đã xác thực"
-                actions={actions}
-              />
-            ),
-          },
-        ]}
+      <Table
+        columns={columns}
+        data={verifiedBranches}
+        rowKey="branchId"
+        loading={status === 'pending'}
+        emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
+        actions={actions}
       />
 
-      {/* Branch Details Modal */}
       <BranchDetailsModal
         isOpen={selectedBranch !== null}
         onClose={() => setSelectedBranch(null)}
         branch={selectedBranch}
+        hasAnySubscribedBranch={hasAnySubscribedBranch}
+        showPayment={true}
       />
+
+      <BranchFormModal
+        isOpen={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        mode={formMode}
+        onSuccess={handleFormSuccess}
+      />
+
+      <ImagesDetailsModal
+        isOpen={imagesBranch !== null}
+        onClose={() => setImagesBranch(null)}
+        branch={imagesBranch}
+      />
+
+      <WorkScheduleModal
+        isOpen={scheduleBranch !== null}
+        onClose={() => setScheduleBranch(null)}
+        branch={scheduleBranch}
+      />
+
+      <DayOffModal
+        isOpen={dayOffBranch !== null}
+        onClose={() => setDayOffBranch(null)}
+        branch={dayOffBranch}
+      />
+
+      <BranchDishDetailsModal
+        isOpen={dishBranch !== null}
+        onClose={() => setDishBranch(null)}
+        branch={dishBranch}
+        vendorId={myVendor?.vendorId}
+      />
+
+      <BranchFeedbackModal
+        isOpen={feedbackBranch !== null}
+        onClose={() => setFeedbackBranch(null)}
+        branch={feedbackBranch}
+      />
+
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-branch-dialog-title"
+        aria-describedby="delete-branch-dialog-description"
+      >
+        <DialogTitle id="delete-branch-dialog-title">
+          Xác nhận xóa chi nhánh
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-branch-dialog-description">
+            Bạn có chắc chắn muốn xóa chi nhánh &quot;
+            {deletingBranch?.name}&quot;? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Hủy
+          </Button>
+          <Button
+            onClick={() => void handleConfirmDelete()}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

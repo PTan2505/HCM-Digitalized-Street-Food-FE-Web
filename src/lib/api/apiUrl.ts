@@ -65,7 +65,12 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
+    getDietaryPreferencesOfAVendor(vendorId: number): string {
+      return `/Vendor/${vendorId}/dietary-preferences`;
+    },
+    updateDietaryPreferencesOfMyVendor: '/Vendor/my-vendor/dietary-preferences',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,
     checkLicenseStatus: (branchId: number): string =>
@@ -77,7 +82,7 @@ export const apiUrl = {
     //WorkSchedules
     createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
-    deleteWorkScheduleOfABranch: (workScheduleId: number): string =>
+    deleteOrUpdateWorkScheduleOfABranch: (workScheduleId: number): string =>
       `/Branch/work-schedules/${workScheduleId}`,
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
@@ -91,6 +96,7 @@ export const apiUrl = {
       `/Branch/images/${imageId}`,
     //For moderator
     getPendingRegistrations: '/Branch/pending-registrations',
+    getActiveBranches: '/Branch/active',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
   },
@@ -106,5 +112,24 @@ export const apiUrl = {
     getPaymentSuccess: '/Payment/success',
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm/',
+  },
+  dish: {
+    CreateOrGetDishesOfAVendor: (vendorId: number): string =>
+      `/dishes/vendor/${vendorId}`,
+    UpdateOrDeleteDish: (dishId: number): string => `/dishes/${dishId}`,
+    GetDishesByBranch: (branchId: number): string =>
+      `/dishes/branch/${branchId}`,
+    AssignOrUnassignDishToBranch: (branchId: number): string =>
+      `/dishes/branch/${branchId}`,
+    UpdateDishAvailabilityByBranch: (
+      dishId: number,
+      branchId: number
+    ): string => `dishes/${dishId}/branch/${branchId}/availability`,
+  },
+  feedback: {
+    GetFeedbacksByBranch: (branchId: number): string =>
+      `/Feedback/branch/${branchId}`,
+    CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}/reply`,
   },
 };

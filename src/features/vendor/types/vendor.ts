@@ -1,20 +1,22 @@
 export interface VendorRegistrationRequest {
-  name: string;
+  name?: string;
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  branchName: string;
+  branchName?: string;
   ward: string;
   city: string;
   lat: number;
   long: number;
+  dietaryPreferenceIds: number[];
   isActive?: boolean;
 }
 
 export interface Branch {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   phoneNumber: string;
   email: string;
@@ -40,7 +42,8 @@ export interface Branch {
 export interface VendorRegistrationResponse {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -49,9 +52,37 @@ export interface VendorRegistrationResponse {
   branches: Branch[];
 }
 
+export interface CreateOrUpdateBranchResponse {
+  branchId: number;
+  vendorId: number;
+  userId?: number;
+  managerId: number;
+  name: string;
+  phoneNumber: string;
+  email: string;
+  addressDetail: string;
+  ward: string;
+  city: string;
+  lat: number;
+  long: number;
+  createdAt: string;
+  updatedAt: string | null;
+  isVerified: boolean;
+  avgRating: number;
+  isActive: boolean;
+  isSubscribed: boolean;
+  subscriptionExpiresAt: string | null;
+  daysRemaining: number | null;
+  licenseUrl?: string | null;
+  licenseUrls: string[] | null;
+  licenseStatus: string | null;
+  licenseRejectReason: string | null;
+}
+
 export interface GetMyVendorResponse {
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -66,8 +97,9 @@ export interface SubmitLicenseRequest {
 }
 
 export interface SubmitLicenseResponse {
-  message: string;
-  success: boolean;
+  branchId: number;
+  licenseUrls: string[];
+  status: string;
 }
 
 export interface CheckLicenseStatusResponse {
@@ -100,3 +132,30 @@ export interface GetImagesResponse {
   hasNext: boolean;
   items: SubmitImagesResponse[];
 }
+
+export interface UpdateVendorNameRequest {
+  name: string;
+}
+
+export interface UpdateVendorNameResponse {
+  vendorId: number;
+  userId?: number;
+  managerId: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string | null;
+  isActive: boolean;
+  vendorOwnerName: string;
+  branches: Branch[];
+}
+
+export type UpdateDietaryPreferencesOfMyVendorRequest = number[];
+
+export interface DietaryPreferences {
+  dietaryPreferenceId: number;
+  name: string;
+  description: string;
+}
+
+export type UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+  DietaryPreferences[];

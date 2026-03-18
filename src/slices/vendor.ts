@@ -6,12 +6,23 @@ import type {
   GetMyVendorResponse,
   SubmitImagesResponse,
   GetImagesResponse,
+  CreateOrUpdateBranchResponse,
+  Branch,
+  UpdateVendorNameRequest,
+  UpdateVendorNameResponse,
+  UpdateDietaryPreferencesOfMyVendorRequest,
+  UpdateOrGetDietaryPreferencesOfMyVendorResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
   WorkScheduleResponse,
   DayOff,
   DayOffResponse,
+  GetWorkScheduleResponse,
+  GetDayOffResponse,
+  UpdateWorkSchedule,
+  WorkScheduleItem,
+  WeekdayName,
 } from '@features/vendor/types/workSchedule';
 import type {
   AdminVendor,
@@ -35,8 +46,11 @@ export interface VendorState {
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   myVendor: GetMyVendorResponse | null;
+  myVendorDietaryPreferences: UpdateOrGetDietaryPreferencesOfMyVendorResponse;
   licenseStatus: CheckLicenseStatusResponse | null;
   images: GetImagesResponse | null;
+  workSchedules: GetWorkScheduleResponse;
+  dayOffs: GetDayOffResponse;
   // Admin
   adminVendors: AdminVendor[];
   selectedVendorDetail: VendorDetail | null;
@@ -58,8 +72,11 @@ const initialState: VendorState = {
   status: 'idle',
   error: null,
   myVendor: null,
+  myVendorDietaryPreferences: [],
   licenseStatus: null,
   images: null,
+  workSchedules: [],
+  dayOffs: [],
   // Admin
   adminVendors: [],
   selectedVendorDetail: null,
@@ -152,6 +169,50 @@ export const submitWorkSchedule = createAppAsyncThunk(
   }
 );
 
+export const getWorkSchedules = createAppAsyncThunk(
+  'vendor/getWorkSchedules',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      const response: GetWorkScheduleResponse =
+        await axiosApi.vendorApi.getWorkSchedules(branchId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateWorkSchedule = createAppAsyncThunk(
+  'vendor/updateWorkSchedule',
+  async (
+    payload: { workScheduleId: number; data: UpdateWorkSchedule },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: WorkScheduleItem =
+        await axiosApi.vendorApi.updateWorkSchedule(
+          payload.workScheduleId,
+          payload.data
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteWorkSchedule = createAppAsyncThunk(
+  'vendor/deleteWorkSchedule',
+  async (workScheduleId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteWorkSchedule(workScheduleId);
+      return workScheduleId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const submitDayOff = createAppAsyncThunk(
   'vendor/submitDayOff',
   async (payload: { branchId: number; data: DayOff }, { rejectWithValue }) => {
@@ -161,6 +222,31 @@ export const submitDayOff = createAppAsyncThunk(
         payload.data
       );
       return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getDayOffs = createAppAsyncThunk(
+  'vendor/getDayOffs',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      const response: GetDayOffResponse =
+        await axiosApi.vendorApi.getDayOffs(branchId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteDayOff = createAppAsyncThunk(
+  'vendor/deleteDayOff',
+  async (dayOffId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteDayOff(dayOffId);
+      return dayOffId;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -197,6 +283,111 @@ export const getImages = createAppAsyncThunk(
         payload.branchId,
         payload.params
       );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteImage = createAppAsyncThunk(
+  'vendor/deleteImage',
+  async (imageId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteImage(imageId);
+      return imageId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const createBranch = createAppAsyncThunk(
+  'vendor/createBranch',
+  async (
+    payload: { vendorId: number; data: VendorRegistrationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: CreateOrUpdateBranchResponse =
+        await axiosApi.vendorApi.createBranch(payload.vendorId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateBranch = createAppAsyncThunk(
+  'vendor/updateBranch',
+  async (
+    payload: { branchId: number; data: VendorRegistrationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: CreateOrUpdateBranchResponse =
+        await axiosApi.vendorApi.updateBranch(payload.branchId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteBranch = createAppAsyncThunk(
+  'vendor/deleteBranch',
+  async (branchId: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.vendorApi.deleteBranch(branchId);
+      return branchId;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateVendorName = createAppAsyncThunk(
+  'vendor/updateVendorName',
+  async (payload: UpdateVendorNameRequest, { rejectWithValue }) => {
+    try {
+      const response: UpdateVendorNameResponse =
+        await axiosApi.vendorApi.updateVendorName(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getDietaryPreferencesOfMyVendor = createAppAsyncThunk(
+  'vendor/getDietaryPreferencesOfMyVendor',
+  async (
+    payload: {
+      vendorId: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+        await axiosApi.vendorApi.getDietaryPreferencesOfMyVendor(
+          payload.vendorId
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateDietaryPreferencesOfMyVendor = createAppAsyncThunk(
+  'vendor/updateDietaryPreferencesOfMyVendor',
+  async (
+    payload: UpdateDietaryPreferencesOfMyVendorRequest,
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+        await axiosApi.vendorApi.updateDietaryPreferencesOfMyVendor(payload);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -292,10 +483,19 @@ export const vendorSlice = createSlice({
       // ─── Vendor Cases ────────────────────────────────────
       .addCase(registerVendor.fulfilled, (state, action) => {
         state.vendorId = action.payload.vendorId;
-        state.branchId = action.payload.branchId;
+        state.branchId = action.payload.branches[0]?.branchId;
+        state.myVendor = action.payload;
       })
-      .addCase(submitLicense.fulfilled, (state) => {
-        state.status = 'succeeded';
+      .addCase(submitLicense.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          const branch = state.myVendor.branches.find(
+            (b) => b.branchId === action.payload.branchId
+          );
+          if (branch) {
+            branch.licenseUrls = action.payload.licenseUrls;
+            branch.licenseStatus = action.payload.status;
+          }
+        }
       })
       .addCase(getMyVendor.fulfilled, (state, action) => {
         state.myVendor = action.payload;
@@ -303,11 +503,111 @@ export const vendorSlice = createSlice({
       .addCase(checkLicenseStatus.fulfilled, (state, action) => {
         state.licenseStatus = action.payload;
       })
-      .addCase(submitImages.fulfilled, (state) => {
-        state.status = 'succeeded';
+      .addCase(submitImages.fulfilled, (state, action) => {
+        if (state.images) {
+          state.images.items.push(...action.payload);
+          state.images.totalCount += action.payload.length;
+        }
       })
       .addCase(getImages.fulfilled, (state, action) => {
         state.images = action.payload;
+      })
+      .addCase(deleteImage.fulfilled, (state, action) => {
+        if (state.images) {
+          state.images.items = state.images.items.filter(
+            (img) => img.branchImageId !== action.payload
+          );
+          state.images.totalCount -= 1;
+        }
+      })
+      .addCase(deleteBranch.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.branches = state.myVendor.branches.filter(
+            (b) => b.branchId !== action.payload
+          );
+        }
+      })
+      .addCase(createBranch.fulfilled, (state, action) => {
+        if (state.myVendor && action.payload) {
+          state.myVendor.branches.push(action.payload as unknown as Branch);
+        }
+      })
+      .addCase(updateBranch.fulfilled, (state, action) => {
+        if (state.myVendor && action.payload) {
+          const branchIndex = state.myVendor.branches.findIndex(
+            (b) => b.branchId === action.payload.branchId
+          );
+          if (branchIndex > -1) {
+            state.myVendor.branches[branchIndex] =
+              action.payload as unknown as Branch;
+          }
+        }
+      })
+      .addCase(updateVendorName.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.name = action.payload.name;
+        }
+      })
+      .addCase(getDietaryPreferencesOfMyVendor.fulfilled, (state, action) => {
+        state.myVendorDietaryPreferences = action.payload;
+      })
+      .addCase(
+        updateDietaryPreferencesOfMyVendor.fulfilled,
+        (state, action) => {
+          state.myVendorDietaryPreferences = action.payload;
+        }
+      )
+      .addCase(getWorkSchedules.fulfilled, (state, action) => {
+        state.workSchedules = action.payload;
+      })
+      .addCase(submitWorkSchedule.fulfilled, (state, action) => {
+        const weekdayNameMap: Record<number, WeekdayName> = {
+          0: 'Sunday',
+          1: 'Monday',
+          2: 'Tuesday',
+          3: 'Wednesday',
+          4: 'Thursday',
+          5: 'Friday',
+          6: 'Saturday',
+        };
+        const mapped = action.payload.map((item) => ({
+          workScheduleId: item.workScheduleId,
+          branchId: item.branchId,
+          weekday: item.weekday,
+          weekdayName: weekdayNameMap[item.weekday] ?? 'Monday',
+          openTime: item.openTime,
+          closeTime: item.closeTime,
+        }));
+        state.workSchedules.push(...mapped);
+      })
+      .addCase(updateWorkSchedule.fulfilled, (state, action) => {
+        const idx = state.workSchedules.findIndex(
+          (ws) => ws.workScheduleId === action.payload.workScheduleId
+        );
+        if (idx > -1) {
+          state.workSchedules[idx] = {
+            ...state.workSchedules[idx],
+            weekday: action.payload.weekday,
+            openTime: action.payload.openTime,
+            closeTime: action.payload.closeTime,
+          };
+        }
+      })
+      .addCase(deleteWorkSchedule.fulfilled, (state, action) => {
+        state.workSchedules = state.workSchedules.filter(
+          (ws) => ws.workScheduleId !== action.payload
+        );
+      })
+      .addCase(getDayOffs.fulfilled, (state, action) => {
+        state.dayOffs = action.payload;
+      })
+      .addCase(submitDayOff.fulfilled, (state, action) => {
+        state.dayOffs.push(action.payload);
+      })
+      .addCase(deleteDayOff.fulfilled, (state, action) => {
+        state.dayOffs = state.dayOffs.filter(
+          (d) => d.dayOffId !== action.payload
+        );
       })
       // ─── Admin Cases ─────────────────────────────────────
       .addCase(getAllVendors.fulfilled, (state, action) => {
@@ -364,9 +664,20 @@ export const vendorSlice = createSlice({
           getMyVendor,
           checkLicenseStatus,
           submitWorkSchedule,
+          getWorkSchedules,
+          updateWorkSchedule,
+          deleteWorkSchedule,
           submitDayOff,
+          getDayOffs,
+          deleteDayOff,
           submitImages,
-          getImages
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch,
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor
         ),
         (state) => {
           state.status = 'pending';
@@ -380,9 +691,20 @@ export const vendorSlice = createSlice({
           getMyVendor,
           checkLicenseStatus,
           submitWorkSchedule,
+          getWorkSchedules,
+          updateWorkSchedule,
+          deleteWorkSchedule,
           submitDayOff,
+          getDayOffs,
+          deleteDayOff,
           submitImages,
-          getImages
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch,
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor
         ),
         (state, action) => {
           state.status = 'failed';
@@ -398,9 +720,20 @@ export const vendorSlice = createSlice({
           getMyVendor,
           checkLicenseStatus,
           submitWorkSchedule,
+          getWorkSchedules,
+          updateWorkSchedule,
+          deleteWorkSchedule,
           submitDayOff,
+          getDayOffs,
+          deleteDayOff,
           submitImages,
-          getImages
+          getImages,
+          createBranch,
+          updateBranch,
+          deleteBranch,
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor
         ),
         (state) => {
           state.status = 'succeeded';
@@ -476,8 +809,20 @@ export const selectLicenseStatus = (
 export const selectMyVendor = (state: RootState): GetMyVendorResponse | null =>
   state.vendor.myVendor;
 
+export const selectMyVendorDietaryPreferences = (
+  state: RootState
+): UpdateOrGetDietaryPreferencesOfMyVendorResponse =>
+  state.vendor.myVendorDietaryPreferences;
+
 export const selectImages = (state: RootState): GetImagesResponse | null =>
   state.vendor.images;
+
+export const selectWorkSchedules = (
+  state: RootState
+): GetWorkScheduleResponse => state.vendor.workSchedules;
+
+export const selectDayOffs = (state: RootState): GetDayOffResponse =>
+  state.vendor.dayOffs;
 
 // ─── Admin Selectors ──────────────────────────────────────
 

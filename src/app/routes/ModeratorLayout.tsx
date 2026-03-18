@@ -23,23 +23,23 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
-  {
-    name: 'Quản lý giao dịch',
-    href: '/moderator/transactions',
-    icon: HomeIcon,
-  },
+  // {
+  //   name: 'Quản lý giao dịch',
+  //   href: '/moderator/transactions',
+  //   icon: HomeIcon,
+  // },
   {
     name: 'Xác minh người bán',
     href: '/moderator/verification',
     icon: ShoppingBagIcon,
   },
-  { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
-  { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
-  {
-    name: 'Yêu cầu rút tiền',
-    href: '/moderator/cashout',
-    icon: CurrencyDollarIcon,
-  },
+  // { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
+  // { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
+  // {
+  //   name: 'Yêu cầu rút tiền',
+  //   href: '/moderator/cashout',
+  //   icon: CurrencyDollarIcon,
+  // },
 ];
 
 function ModeratorLayout(): JSX.Element {
@@ -153,31 +153,6 @@ function ModeratorLayout(): JSX.Element {
                   {navigation.find((item) => item.href === location.pathname)
                     ?.name ?? 'Dashboard'}
                 </Typography>
-              </Box>
-            </Box>
-
-            <Box className="flex items-center gap-3">
-              {/* User menu */}
-              <Box className="flex items-center gap-3">
-                <Box className="hidden flex-col items-end sm:flex">
-                  <Typography variant="body2" className="text-sm font-medium">
-                    {user?.firstName && user?.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Moderator User')}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    className="text-xs text-gray-500"
-                  >
-                    {user?.email ?? 'moderator@example.com'}
-                  </Typography>
-                </Box>
-                <Avatar
-                  src={user?.avatarUrl ?? undefined}
-                  className="cursor-pointer hover:opacity-80"
-                >
-                  {!user?.avatarUrl && <UserCircleIcon className="h-6 w-6" />}
-                </Avatar>
               </Box>
             </Box>
           </Box>

@@ -32,13 +32,14 @@ interface Action<T> {
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
+  show?: (row: T) => boolean;
 }
 
 interface TableProps<T extends object> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   loadingMessage?: string;
   rowKey?: string;
   maxHeight?: string | 'none';
@@ -160,32 +161,48 @@ const Table = <T extends object>({
                           </TableCell>
                         );
                       })}
-                      {actions && actions.length > 0 && (
-                        <TableCell
-                          className="border-table-divider border-b"
-                          style={{
-                            paddingTop: '12px',
-                            paddingBottom: '12px',
-                            verticalAlign: 'middle',
-                            width: '48px',
-                          }}
-                        >
-                          <Tooltip title="Xem thêm" placement="top" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setMenuState({
-                                  anchorEl: e.currentTarget,
-                                  row,
-                                });
+                      {actions &&
+                        actions.length > 0 &&
+                        (() => {
+                          const visibleActions = actions.filter(
+                            (a) => !a.show || a.show(row)
+                          );
+                          return visibleActions.length > 0 ? (
+                            <TableCell
+                              className="border-table-divider border-b"
+                              style={{
+                                paddingTop: '12px',
+                                paddingBottom: '12px',
+                                verticalAlign: 'middle',
+                                width: '48px',
                               }}
                             >
-                              <MoreHorizIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      )}
+                              <Tooltip title="Xem thêm" placement="top" arrow>
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMenuState({
+                                      anchorEl: e.currentTarget,
+                                      row,
+                                    });
+                                  }}
+                                >
+                                  <MoreHorizIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                          ) : (
+                            <TableCell
+                              className="border-table-divider border-b"
+                              style={{
+                                paddingTop: '12px',
+                                paddingBottom: '12px',
+                                width: '48px',
+                              }}
+                            />
+                          );
+                        })()}
                     </TableRow>
                   );
                 })
@@ -201,28 +218,30 @@ const Table = <T extends object>({
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
-          {actions.map((action, index) => (
-            <MenuItem
-              key={index}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (menuState.row) action.onClick(menuState.row);
-                setMenuState({ anchorEl: null, row: null });
-              }}
-              sx={{
-                gap: 1.5,
-                color: action.color ? `${action.color}.main` : 'text.primary',
-                minWidth: 180,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {action.label}
-                {action.menuLabel && (
-                  <Typography variant="body2">{action.menuLabel}</Typography>
-                )}
-              </Box>
-            </MenuItem>
-          ))}
+          {actions
+            .filter((a) => !a.show || (menuState.row && a.show(menuState.row)))
+            .map((action, index) => (
+              <MenuItem
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (menuState.row) action.onClick(menuState.row);
+                  setMenuState({ anchorEl: null, row: null });
+                }}
+                sx={{
+                  gap: 1.5,
+                  color: action.color ? `${action.color}.main` : 'text.primary',
+                  minWidth: 180,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  {action.label}
+                  {action.menuLabel && (
+                    <Typography variant="body2">{action.menuLabel}</Typography>
+                  )}
+                </Box>
+              </MenuItem>
+            ))}
         </Menu>
       )}
     </>

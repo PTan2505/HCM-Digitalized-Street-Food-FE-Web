@@ -4,6 +4,7 @@ import useLogin from '@features/auth/hooks/useLogin';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { Box, Button, Icon } from '@mui/material';
 import { type JSX } from 'react';
+import logoImage from '@assets/lowca-logo.png';
 
 type Props = {
   setLoginOption: (option: 'phoneNumber' | '') => void;
@@ -13,7 +14,12 @@ export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
   const { onGoogleLoginSubmit, onFacebookLoginSubmit } = useLogin();
 
   return (
-    <Box className="flex w-full flex-col gap-4 px-10">
+    <Box className="flex w-full flex-col gap-4">
+      <img
+        src={logoImage}
+        alt="Logo"
+        className="mb-6 h-[75px] object-contain"
+      />
       <Button
         variant="contained"
         fullWidth

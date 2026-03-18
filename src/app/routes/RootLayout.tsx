@@ -53,12 +53,14 @@ const RootLayout = (): JSX.Element => {
           }
         } else if (
           currentPath === ROUTES.ROOT ||
-          !currentPath.startsWith(ROUTES.VENDOR_REGISTRATION)
-          //THAY VÌ NAVIGATE TỚI TRANG ĐĂNG KÍ THÌ SẼ NAVIGATE TỚI ROUTES.VENDOR.BASE/ROUTES.VENDOR.PATHS.BRANCH
-          // CÓ THỂ HIỆN BẢNG TRỐNG XONG THÊM 1 NÚT ĐĂNG KÝ VENDOR VÔ ĐÓ, NHẤN VÀO NÚT ĐÓ MỚI NAVIGATE TỚI ROUTES.VENDOR_REGISTRATION
-          // ĐĂNG KÝ XONG MỚI NAVIGATE TỚI ROUTES.VENDOR.BASE/ROUTES.VENDOR.PATHS.BRANCH
+          !currentPath.startsWith(ROUTES.VENDOR.BASE)
         ) {
-          navigate(ROUTES.VENDOR_REGISTRATION, { replace: true });
+          navigate(
+            `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY}`,
+            {
+              replace: true,
+            }
+          );
         }
       } else if (user.role === ROLES.VENDOR) {
         if (

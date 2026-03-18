@@ -1,26 +1,26 @@
-import type { JSX } from 'react';
+import type { VendorDetail } from '@features/admin/types/vendor';
+import {
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  Email as EmailIcon,
+  LocationOn as LocationOnIcon,
+  Phone as PhoneIcon,
+} from '@mui/icons-material';
 import {
   Box,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Card,
   CardContent,
-  Typography,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Rating,
+  Typography,
 } from '@mui/material';
-import {
-  LocationOn as LocationOnIcon,
-  Phone as PhoneIcon,
-  Email as EmailIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-} from '@mui/icons-material';
-import type { VendorDetail } from '@features/admin/types/vendor';
+import type { JSX } from 'react';
 
 interface VendorDetailModalProps {
   open: boolean;
@@ -83,7 +83,8 @@ export default function VendorDetailModal({
                       Chủ cửa hàng
                     </Typography>
                     <Typography variant="body1" className="font-medium">
-                      {vendorDetail.vendorOwnerName}
+                      {vendorDetail.vendorOwner.firstName}{' '}
+                      {vendorDetail.vendorOwner.lastName}
                     </Typography>
                   </Box>
                   <Box>

@@ -2,7 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Box, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { HERO_SLIDES } from '../data/homeData';
+
+const HERO_SLIDES = [
+  {
+    src: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1400&q=80',
+    alt: 'Cinnamon Apple Loaded Tart',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1400&q=80',
+    alt: 'Pan-Fried Crispy Kale Sauce',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1400&q=80',
+    alt: 'Berry Moist Breakfast Biscuits',
+  },
+];
 
 export default function HeroCarousel(): JSX.Element {
   const [current, setCurrent] = useState(0);
@@ -28,22 +42,21 @@ export default function HeroCarousel(): JSX.Element {
         width: '100%',
         overflow: 'hidden',
         bgcolor: '#111',
+        aspectRatio: { xs: '4/3', sm: '16/9', md: '16/7' },
       }}
     >
       {/* Slides */}
       <Box
         sx={{
           display: 'flex',
+          height: '100%',
           transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           transform: `translateX(-${current * 100}%)`,
           willChange: 'transform',
         }}
       >
         {HERO_SLIDES.map((slide, i) => (
-          <Box
-            key={i}
-            sx={{ minWidth: '100%', aspectRatio: '16/7', flexShrink: 0 }}
-          >
+          <Box key={i} sx={{ minWidth: '100%', height: '100%', flexShrink: 0 }}>
             <img
               src={slide.src}
               alt={slide.alt}

@@ -6,12 +6,22 @@ import type {
   GetMyVendorResponse,
   SubmitImagesResponse,
   GetImagesResponse,
+  CreateOrUpdateBranchResponse,
+  UpdateVendorNameRequest,
+  UpdateVendorNameResponse,
+  UpdateDietaryPreferencesOfMyVendorRequest,
+  UpdateOrGetDietaryPreferencesOfMyVendorResponse,
 } from '@features/vendor/types/vendor';
+
 import type {
   WorkSchedule,
   WorkScheduleResponse,
   DayOff,
   DayOffResponse,
+  GetWorkScheduleResponse,
+  GetDayOffResponse,
+  UpdateWorkSchedule,
+  WorkScheduleItem,
 } from '@features/vendor/types/workSchedule';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -21,8 +31,20 @@ import {
   getMyVendor,
   submitWorkSchedule,
   submitDayOff,
+  getWorkSchedules,
+  updateWorkSchedule,
+  deleteWorkSchedule,
+  getDayOffs,
+  deleteDayOff,
   submitImages,
   getImages,
+  deleteImage,
+  createBranch,
+  updateBranch,
+  deleteBranch,
+  updateVendorName,
+  getDietaryPreferencesOfMyVendor,
+  updateDietaryPreferencesOfMyVendor,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -42,10 +64,18 @@ export default function useVendor(): {
     branchId: number;
     data: WorkSchedule;
   }) => Promise<WorkScheduleResponse>;
+  onGetWorkSchedules: (branchId: number) => Promise<GetWorkScheduleResponse>;
+  onUpdateWorkSchedule: (payload: {
+    workScheduleId: number;
+    data: UpdateWorkSchedule;
+  }) => Promise<WorkScheduleItem>;
+  onDeleteWorkSchedule: (workScheduleId: number) => Promise<number>;
   onSubmitDayOff: (payload: {
     branchId: number;
     data: DayOff;
   }) => Promise<DayOffResponse>;
+  onGetDayOffs: (branchId: number) => Promise<GetDayOffResponse>;
+  onDeleteDayOff: (dayOffId: number) => Promise<number>;
   onSubmitImages: (payload: {
     branchId: number;
     images: File[];
@@ -54,6 +84,25 @@ export default function useVendor(): {
     branchId: number;
     params: { pageNumber: number; pageSize: number };
   }) => Promise<GetImagesResponse>;
+  onDeleteImage: (imageId: number) => Promise<number>;
+  onCreateBranch: (payload: {
+    vendorId: number;
+    data: VendorRegistrationRequest;
+  }) => Promise<CreateOrUpdateBranchResponse>;
+  onUpdateBranch: (payload: {
+    branchId: number;
+    data: VendorRegistrationRequest;
+  }) => Promise<CreateOrUpdateBranchResponse>;
+  onDeleteBranch: (branchId: number) => Promise<number>;
+  onUpdateVendorName: (
+    payload: UpdateVendorNameRequest
+  ) => Promise<UpdateVendorNameResponse>;
+  onGetDietaryPreferencesOfMyVendor: (payload: {
+    vendorId: number;
+  }) => Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse>;
+  onUpdateDietaryPreferencesOfMyVendor: (
+    payload: UpdateDietaryPreferencesOfMyVendorRequest
+  ) => Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse>;
 } {
   const dispatch = useAppDispatch();
 
@@ -102,6 +151,30 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onGetWorkSchedules = useCallback(
+    async (branchId: number): Promise<GetWorkScheduleResponse> => {
+      return await dispatch(getWorkSchedules(branchId)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onUpdateWorkSchedule = useCallback(
+    async (payload: {
+      workScheduleId: number;
+      data: UpdateWorkSchedule;
+    }): Promise<WorkScheduleItem> => {
+      return await dispatch(updateWorkSchedule(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onDeleteWorkSchedule = useCallback(
+    async (workScheduleId: number): Promise<number> => {
+      return await dispatch(deleteWorkSchedule(workScheduleId)).unwrap();
+    },
+    [dispatch]
+  );
+
   const onSubmitDayOff = useCallback(
     async (payload: {
       branchId: number;
@@ -109,6 +182,20 @@ export default function useVendor(): {
     }): Promise<DayOffResponse> => {
       const response = await dispatch(submitDayOff(payload)).unwrap();
       return response;
+    },
+    [dispatch]
+  );
+
+  const onGetDayOffs = useCallback(
+    async (branchId: number): Promise<GetDayOffResponse> => {
+      return await dispatch(getDayOffs(branchId)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onDeleteDayOff = useCallback(
+    async (dayOffId: number): Promise<number> => {
+      return await dispatch(deleteDayOff(dayOffId)).unwrap();
     },
     [dispatch]
   );
@@ -135,14 +222,90 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onDeleteImage = useCallback(
+    async (imageId: number): Promise<number> => {
+      return await dispatch(deleteImage(imageId)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onCreateBranch = useCallback(
+    async (payload: {
+      vendorId: number;
+      data: VendorRegistrationRequest;
+    }): Promise<CreateOrUpdateBranchResponse> => {
+      return await dispatch(createBranch(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onUpdateBranch = useCallback(
+    async (payload: {
+      branchId: number;
+      data: VendorRegistrationRequest;
+    }): Promise<CreateOrUpdateBranchResponse> => {
+      return await dispatch(updateBranch(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onDeleteBranch = useCallback(
+    async (branchId: number): Promise<number> => {
+      const response = await dispatch(deleteBranch(branchId)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
+  const onUpdateVendorName = useCallback(
+    async (
+      payload: UpdateVendorNameRequest
+    ): Promise<UpdateVendorNameResponse> => {
+      return await dispatch(updateVendorName(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onGetDietaryPreferencesOfMyVendor = useCallback(
+    async (payload: {
+      vendorId: number;
+    }): Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse> => {
+      return await dispatch(getDietaryPreferencesOfMyVendor(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onUpdateDietaryPreferencesOfMyVendor = useCallback(
+    async (
+      payload: UpdateDietaryPreferencesOfMyVendorRequest
+    ): Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse> => {
+      return await dispatch(
+        updateDietaryPreferencesOfMyVendor(payload)
+      ).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
     onCheckLicenseStatus,
     onGetMyVendor,
     onSubmitWorkSchedule,
+    onGetWorkSchedules,
+    onUpdateWorkSchedule,
+    onDeleteWorkSchedule,
     onSubmitDayOff,
+    onGetDayOffs,
+    onDeleteDayOff,
     onSubmitImages,
     onGetImages,
+    onDeleteImage,
+    onCreateBranch,
+    onUpdateBranch,
+    onDeleteBranch,
+    onUpdateVendorName,
+    onGetDietaryPreferencesOfMyVendor,
+    onUpdateDietaryPreferencesOfMyVendor,
   };
 }
