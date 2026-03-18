@@ -21,6 +21,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RateReviewIcon from '@mui/icons-material/RateReview';
+import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -118,24 +119,21 @@ function BranchPage(): JSX.Element {
   }, [onGetMyVendor]);
 
   const branches: Branch[] = myVendor?.branches ?? [];
+  const vendorId: number | undefined = myVendor?.vendorId;
   const verifiedBranches: Branch[] = branches.filter(
     (b) => b.licenseStatus === 'Accept'
   );
 
   const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
 
-  // const pendingBranches = branches.filter((b) => b.licenseStatus === 'Pending');
-  // const hasSinglePending = pendingBranches.length === 1;
-  // const vendorId: number | undefined = myVendor?.vendorId;
-
-  // const handleOpenCreateModal = (): void => {
-  //   if (branches.length === 0) {
-  //     setFormMode({ type: 'createVendor' });
-  //   } else if (vendorId !== undefined) {
-  //     setFormMode({ type: 'addBranch', vendorId });
-  //   }
-  //   setFormModalOpen(true);
-  // };
+  const handleOpenCreateModal = (): void => {
+    if (branches.length === 0) {
+      setFormMode({ type: 'createVendor' });
+    } else if (vendorId !== undefined) {
+      setFormMode({ type: 'addBranch', vendorId });
+    }
+    setFormModalOpen(true);
+  };
 
   const handleOpenEditModal = (branch: Branch): void => {
     setFormMode({ type: 'editBranch', branch });
@@ -357,17 +355,13 @@ function BranchPage(): JSX.Element {
             )}
           </p>
         </div>
-        {/* {!hasSinglePending && (
-          <button
-            // onClick={() => handleOpenDialog()}
-            className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-          >
-            <AddIcon fontSize="small" />
-            {verifiedBranches.length === 0
-              ? 'Tạo cửa hàng mới'
-              : 'Thêm chi nhánh'}
-          </button>
-        )} */}
+        <button
+          onClick={handleOpenCreateModal}
+          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+        >
+          <AddIcon fontSize="small" />
+          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
+        </button>
       </div>
 
       <Table
