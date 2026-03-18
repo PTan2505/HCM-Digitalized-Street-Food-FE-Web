@@ -186,7 +186,6 @@ export default function AddressAutocomplete({
           admin_v2: 'true',
           location: DEFAULT_LOCATION,
           radius: '50',
-          admin_v2: 'true',
         });
 
         if (apiKey) params.append('apikey', apiKey);
