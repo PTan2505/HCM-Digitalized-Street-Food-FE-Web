@@ -7,44 +7,65 @@ import { MapPinIcon } from '@heroicons/react/24/solid';
 import type { JSX } from 'react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-// ??? OpenMap GeoJSON (OSM) response format ?????????????????????????????
-interface FeatureProperties {
-  id: string;
-  name: string;
-  label: string; // full display address
-  short_address: string; // → addressDetail sent to vendor API
-  locality: string; // → ward  (e.g. "phường Bình Trưng Tây")
-  county: string; // → district (e.g. "quận Tân Phú")
-  region: string; // → city  (e.g. "thành phố Hồ Chí Minh")
-  distance: number | null;
-  housenumber: string | null;
-  street: string | null;
+interface OpenMapAutocompletePrediction {
+  description: string;
+  place_id: string;
+  structured_formatting?: {
+    main_text?: string;
+    secondary_text?: string;
+  };
 }
 
-interface GeoJsonFeature {
-  type: 'Feature';
-  geometry: {
-    type: 'Point';
-    coordinates: [number, number]; // [lng, lat]
-  } | null;
-  properties: FeatureProperties;
+interface OpenMapAutocompleteResponse {
+  status: string;
+  predictions?: OpenMapAutocompletePrediction[];
 }
 
-interface AutocompleteResponse {
-  features: GeoJsonFeature[];
-  errors: string | null;
+interface OpenMapAddressComponent {
+  long_name: string;
+  short_name: string;
+  types?: string[];
 }
 
-interface NominatimResult {
-  lat: string;
-  lon: string;
+interface OpenMapPlaceResponse {
+  status: string;
+  result?: {
+    formatted_address: string;
+    name: string;
+    address_components?: OpenMapAddressComponent[];
+    geometry: {
+      location: {
+        lat: number;
+        lng: number;
+      };
+    };
+  };
 }
 
-// ??? Public types ??????????????????????????????????????????????????????
+interface OpenMapForwardGeocodeResponse {
+  status: string;
+  results?: Array<{
+    formatted_address: string;
+    geometry: {
+      location: {
+        lat: number;
+        lng: number;
+      };
+    };
+  }>;
+}
+
+interface AddressSuggestion {
+  placeId: string;
+  displayText: string;
+  mainText: string;
+  secondaryText: string;
+}
+
 export interface AddressSelectData {
-  addressDetail: string; // short_address (or label fallback)
-  ward: string; // locality
-  city: string; // region
+  addressDetail: string;
+  ward: string;
+  city: string;
   latitude: number | null;
   longitude: number | null;
 }
@@ -58,9 +79,55 @@ interface AddressAutocompleteProps {
   placeholder?: string;
 }
 
-// Proxied via vite dev server to avoid CORS
 const OPENMAP_BASE = '/openmap/v1';
 const DEFAULT_LOCATION = '10.762622,106.660172';
+
+const WARD_TYPES = [
+  'administrative_area_level_4',
+  'administrative_area_level_3',
+  'sublocality_level_1',
+  'sublocality',
+  'locality',
+];
+
+const CITY_TYPES = [
+  'administrative_area_level_2',
+  'administrative_area_level_1',
+  'locality',
+  'political',
+];
+
+const DEFAULT_CITY = 'Thành phố Hồ Chí Minh';
+
+const VIETNAMESE_WARD_PREFIXES = ['phường', 'xã', 'thị trấn'];
+const VIETNAMESE_CITY_PREFIXES = ['thành phố', 'tỉnh'];
+
+const findAddressPart = (
+  components: OpenMapAddressComponent[] | undefined,
+  preferredTypes: string[]
+): string => {
+  if (!components?.length) return '';
+
+  const component = components.find((item) =>
+    preferredTypes.some((type) => item.types?.includes(type))
+  );
+
+  return component?.long_name ?? '';
+};
+
+const findAddressPartByPrefix = (
+  components: OpenMapAddressComponent[] | undefined,
+  prefixes: string[]
+): string => {
+  if (!components?.length) return '';
+
+  const component = components.find((item) => {
+    const value = item.long_name.toLowerCase();
+    return prefixes.some((prefix) => value.startsWith(prefix));
+  });
+
+  return component?.long_name ?? '';
+};
 
 export default function AddressAutocomplete({
   value,
@@ -68,21 +135,19 @@ export default function AddressAutocomplete({
   onChange,
   disabled = false,
   error,
-  placeholder = 'T?m ki?m �?a ch? c?a h�ng...',
+  placeholder = 'Tìm kiếm địa chỉ cửa hàng...',
 }: AddressAutocompleteProps): JSX.Element {
   const [inputValue, setInputValue] = useState(value);
-  const [features, setFeatures] = useState<GeoJsonFeature[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // Prevents the value→inputValue sync effect from overriding the display label
-  // right after the user picks a suggestion from the dropdown.
   const justSelectedRef = useRef(false);
+  const latestSelectionRef = useRef(0);
   const apiKey = import.meta.env.VITE_OPENMAP_API_KEY as string | undefined;
 
-  // Sync external value into input (skip immediately after a dropdown selection)
   useEffect(() => {
     if (!justSelectedRef.current) {
       setInputValue(value);
@@ -90,7 +155,6 @@ export default function AddressAutocomplete({
     justSelectedRef.current = false;
   }, [value]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent): void => {
       if (
@@ -100,6 +164,7 @@ export default function AddressAutocomplete({
         setOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return (): void => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -109,7 +174,7 @@ export default function AddressAutocomplete({
   const fetchSuggestions = useCallback(
     async (text: string): Promise<void> => {
       if (!text || text.trim().length < 3) {
-        setFeatures([]);
+        setSuggestions([]);
         setOpen(false);
         return;
       }
@@ -117,11 +182,13 @@ export default function AddressAutocomplete({
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          text: text.trim(),
+          input: text.trim(),
+          admin_v2: 'true',
           location: DEFAULT_LOCATION,
           radius: '50',
           admin_v2: 'true',
         });
+
         if (apiKey) params.append('apikey', apiKey);
 
         const res = await fetch(
@@ -129,12 +196,26 @@ export default function AddressAutocomplete({
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const data = (await res.json()) as AutocompleteResponse;
-        const list = data.features ?? [];
-        setFeatures(list);
-        setOpen(list.length > 0);
+        const data = (await res.json()) as OpenMapAutocompleteResponse;
+        if (data.status !== 'OK') {
+          setSuggestions([]);
+          setOpen(false);
+          return;
+        }
+
+        const nextSuggestions = (data.predictions ?? []).map((prediction) => ({
+          placeId: prediction.place_id,
+          displayText: prediction.description,
+          mainText:
+            prediction.structured_formatting?.main_text ??
+            prediction.description,
+          secondaryText: prediction.structured_formatting?.secondary_text ?? '',
+        }));
+
+        setSuggestions(nextSuggestions);
+        setOpen(nextSuggestions.length > 0);
       } catch {
-        setFeatures([]);
+        setSuggestions([]);
         setOpen(false);
       } finally {
         setLoading(false);
@@ -143,153 +224,153 @@ export default function AddressAutocomplete({
     [apiKey]
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const val = e.target.value;
-    setInputValue(val);
-    onChange?.(val);
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      void fetchSuggestions(val);
-    }, 400);
-  };
-
-  /**
-   * Geocode with Nominatim using two strategies:
-   * 1. Structured (street + district + city) — most accurate, handles house-number ranges.
-   * 2. Freeform query fallback.
-   * OpenMap /autocomplete always returns geometry: null, so we must geocode ourselves.
-   */
-  const geocodeCleanAddress = useCallback(
-    async (opts: {
-      housenumber: string | null;
-      street: string | null;
-      locality: string;
-      county: string;
-      region: string;
-    }): Promise<{ lat: number; lng: number } | null> => {
-      // Strip administrative prefix ("quận", "huyện", ...) so Nominatim can match
-      const stripPrefix = (s: string): string =>
-        s.replace(/^(quận|huyện|thành phố|thị xã)\s+/i, '').trim();
-
-      // --- Strategy 1: Nominatim structured geocoding ---
-      if (opts.street) {
-        // Take only the first number in a range like "156 - 158" so Nominatim can match
-        const hn = opts.housenumber
-          ? opts.housenumber.split(/[\s\-–,]+/)[0].trim()
-          : '';
-        const street = hn ? `${hn} ${opts.street}` : opts.street;
-        const district = opts.county ? stripPrefix(opts.county) : '';
-        const city = opts.region ? stripPrefix(opts.region) : 'Hồ Chí Minh';
-
+  const getPlaceDetail = useCallback(
+    async (
+      placeId: string
+    ): Promise<{
+      lat: number;
+      lng: number;
+      formattedAddress: string;
+      ward: string;
+      city: string;
+    } | null> => {
+      try {
         const params = new URLSearchParams({
-          format: 'json',
-          limit: '3',
-          street,
-          city,
-          country: 'Vietnam',
-          bounded: '1',
-          viewbox: '106.4,10.5,107.0,11.0',
+          ids: placeId,
+          format: 'google',
+          admin_v2: 'true',
         });
-        if (district) params.set('district', district);
+        if (apiKey) params.append('apikey', apiKey);
 
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?${params.toString()}`
+        const res = await fetch(`${OPENMAP_BASE}/place?${params.toString()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = (await res.json()) as OpenMapPlaceResponse;
+        if (data.status !== 'OK' || !data.result) return null;
+
+        const ward =
+          findAddressPart(data.result.address_components, WARD_TYPES) ||
+          findAddressPartByPrefix(
+            data.result.address_components,
+            VIETNAMESE_WARD_PREFIXES
           );
-          if (res.ok) {
-            const data = (await res.json()) as NominatimResult[];
-            if (data.length > 0) {
-              return {
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon),
-              };
-            }
-          }
-        } catch {
-          /* fall through */
-        }
+
+        const city =
+          findAddressPart(data.result.address_components, CITY_TYPES) ||
+          findAddressPartByPrefix(
+            data.result.address_components,
+            VIETNAMESE_CITY_PREFIXES
+          ) ||
+          DEFAULT_CITY;
+
+        return {
+          lat: data.result.geometry.location.lat,
+          lng: data.result.geometry.location.lng,
+          formattedAddress: data.result.formatted_address,
+          ward,
+          city,
+        };
+      } catch {
+        return null;
       }
-
-      // --- Strategy 2: Freeform query (short_address built from housenumber + street) ---
-      const addrParts = [
-        opts.housenumber && opts.street
-          ? `${opts.housenumber} ${opts.street}`
-          : null,
-        opts.locality,
-        opts.county,
-        opts.region,
-      ].filter(Boolean);
-
-      if (addrParts.length > 0) {
-        const query = addrParts.join(', ') + ', Vietnam';
-        try {
-          const params = new URLSearchParams({
-            format: 'json',
-            limit: '3',
-            bounded: '1',
-            viewbox: '106.4,10.5,107.0,11.0',
-            q: query,
-          });
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?${params.toString()}`
-          );
-          if (res.ok) {
-            const data = (await res.json()) as NominatimResult[];
-            if (data.length > 0) {
-              return {
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon),
-              };
-            }
-          }
-        } catch {
-          /* give up */
-        }
-      }
-
-      return null;
     },
-    []
+    [apiKey]
   );
 
-  const handleSelectFeature = (feature: GeoJsonFeature): void => {
-    const p = feature.properties;
-    const displayLabel = p.label || p.name;
+  const forwardGeocode = useCallback(
+    async (address: string): Promise<{ lat: number; lng: number } | null> => {
+      if (!address.trim()) return null;
 
-    justSelectedRef.current = true;
-    setInputValue(displayLabel);
-    setOpen(false);
-    setFeatures([]);
+      try {
+        const params = new URLSearchParams({
+          address,
+          admin_v2: 'true',
+        });
+        if (apiKey) params.append('apikey', apiKey);
 
-    // Build the addressDetail from the most specific available fields
-    const addressDetail =
-      p.short_address ||
-      (p.housenumber && p.street ? `${p.housenumber} ${p.street}` : '') ||
-      displayLabel;
+        const res = await fetch(
+          `${OPENMAP_BASE}/geocode/forward?${params.toString()}`
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+        const data = (await res.json()) as OpenMapForwardGeocodeResponse;
+        if (data.status !== 'OK' || !data.results?.[0]) return null;
+
+        return {
+          lat: data.results[0].geometry.location.lat,
+          lng: data.results[0].geometry.location.lng,
+        };
+      } catch {
+        return null;
+      }
+    },
+    [apiKey]
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const nextValue = e.target.value;
+    setInputValue(nextValue);
+    onChange?.(nextValue);
+
+    // User is editing free text, so previous coordinates are no longer trusted.
+    latestSelectionRef.current += 1;
     onSelect({
-      addressDetail,
-      ward: p.locality || '',
-      city: p.region || 'Thành phố Hồ Chí Minh',
+      addressDetail: nextValue,
+      ward: '',
+      city: DEFAULT_CITY,
       latitude: null,
       longitude: null,
     });
 
-    void geocodeCleanAddress({
-      housenumber: p.housenumber,
-      street: p.street,
-      locality: p.locality,
-      county: p.county,
-      region: p.region,
-    }).then((coords) => {
-      if (coords) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void fetchSuggestions(nextValue);
+    }, 400);
+  };
+
+  const handleSelectSuggestion = (suggestion: AddressSuggestion): void => {
+    const selectionId = latestSelectionRef.current + 1;
+    latestSelectionRef.current = selectionId;
+
+    justSelectedRef.current = true;
+    setInputValue(suggestion.displayText);
+    setOpen(false);
+    setSuggestions([]);
+
+    const addressDetail = suggestion.mainText || suggestion.displayText;
+
+    onSelect({
+      addressDetail,
+      ward: '',
+      city: DEFAULT_CITY,
+      latitude: null,
+      longitude: null,
+    });
+
+    void getPlaceDetail(suggestion.placeId).then(async (detail) => {
+      if (selectionId !== latestSelectionRef.current) return;
+
+      if (detail) {
+        onSelect({
+          addressDetail: detail.formattedAddress,
+          ward: detail.ward,
+          city: detail.city,
+          latitude: detail.lat,
+          longitude: detail.lng,
+        });
+        return;
+      }
+
+      const fallback = await forwardGeocode(suggestion.displayText);
+      if (selectionId !== latestSelectionRef.current) return;
+
+      if (fallback) {
         onSelect({
           addressDetail,
-          ward: p.locality || '',
-          city: p.region || 'Thành phố Hồ Chí Minh',
-          latitude: coords.lat,
-          longitude: coords.lng,
+          ward: '',
+          city: DEFAULT_CITY,
+          latitude: fallback.lat,
+          longitude: fallback.lng,
         });
       }
     });
@@ -297,23 +378,17 @@ export default function AddressAutocomplete({
 
   const handleClear = (): void => {
     setInputValue('');
-    setFeatures([]);
+    setSuggestions([]);
     setOpen(false);
     onChange?.('');
-  };
-
-  const formatDistance = (meters: number | null): string | null => {
-    if (meters === null || meters === 0) return null;
-    if (meters < 1000) return `${Math.round(meters)} m`;
-    return `${(meters / 1000).toFixed(1)} km`;
-  };
-
-  // Secondary text: label without leading "Name, " prefix
-  const getSubtitle = (feature: GeoJsonFeature): string => {
-    const { name, label } = feature.properties;
-    if (!label) return '';
-    const prefix = name + ', ';
-    return label.startsWith(prefix) ? label.slice(prefix.length) : label;
+    latestSelectionRef.current += 1;
+    onSelect({
+      addressDetail: '',
+      ward: '',
+      city: DEFAULT_CITY,
+      latitude: null,
+      longitude: null,
+    });
   };
 
   return (
@@ -337,7 +412,7 @@ export default function AddressAutocomplete({
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => {
-            if (features.length > 0) setOpen(true);
+            if (suggestions.length > 0) setOpen(true);
           }}
           disabled={disabled}
           placeholder={placeholder}
@@ -361,20 +436,18 @@ export default function AddressAutocomplete({
       </div>
 
       {/* Dropdown suggestions */}
-      {open && features.length > 0 && (
+      {open && suggestions.length > 0 && (
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-          {features.map((feature) => {
-            const p = feature.properties;
-            const subtitle = getSubtitle(feature);
-            const distance = formatDistance(p.distance);
+          {suggestions.map((suggestion) => {
+            const subtitle = suggestion.secondaryText;
 
             return (
               <button
-                key={p.id}
+                key={suggestion.placeId}
                 type="button"
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  handleSelectFeature(feature);
+                  handleSelectSuggestion(suggestion);
                 }}
                 className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
               >
@@ -384,7 +457,7 @@ export default function AddressAutocomplete({
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-900">
-                    {p.name}
+                    {suggestion.mainText}
                   </p>
                   {subtitle && (
                     <p className="truncate text-xs text-gray-500">{subtitle}</p>
@@ -392,9 +465,6 @@ export default function AddressAutocomplete({
                 </div>
 
                 <div className="flex shrink-0 flex-col items-end gap-0.5">
-                  {distance && (
-                    <span className="text-xs text-gray-400">{distance}</span>
-                  )}
                   <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-400" />
                 </div>
               </button>
