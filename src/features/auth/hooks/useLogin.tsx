@@ -13,8 +13,15 @@ import {
   userLoginWithPhoneNumber,
   verifyPhoneNumber,
 } from '@slices/auth';
+import { resetBadgeState } from '@slices/badge';
+import { resetBranchState } from '@slices/branch';
+import { resetCategoryState } from '@slices/category';
+import { resetFeedbackState } from '@slices/feedback';
 import { resetVendorState } from '@slices/vendor';
 import { resetPaymentState } from '@slices/payment';
+import { resetDishState } from '@slices/dish';
+import { resetTasteState } from '@slices/taste';
+import { resetUserDietaryPreferenceState } from '@slices/userPreferenceDietary';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -65,8 +72,15 @@ export default function useLogin(): {
 
   function onLogout(): void {
     dispatch(logout());
-    // dispatch(resetVendorState());
-    // dispatch(resetPaymentState());
+    dispatch(resetBadgeState());
+    dispatch(resetBranchState());
+    dispatch(resetCategoryState());
+    dispatch(resetFeedbackState());
+    dispatch(resetVendorState());
+    dispatch(resetPaymentState());
+    dispatch(resetDishState());
+    dispatch(resetTasteState());
+    dispatch(resetUserDietaryPreferenceState());
     navigate(ROUTES.LOGIN);
   }
   return {

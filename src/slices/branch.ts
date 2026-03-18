@@ -117,7 +117,9 @@ export const rejectBranchRegistration = createAppAsyncThunk(
 const branchSlice = createSlice({
   name: 'branch',
   initialState,
-  reducers: {},
+  reducers: {
+    resetBranchState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getActiveBranches.fulfilled, (state, action) => {
@@ -185,6 +187,8 @@ const branchSlice = createSlice({
       );
   },
 });
+
+export const { resetBranchState } = branchSlice.actions;
 
 export default branchSlice.reducer;
 

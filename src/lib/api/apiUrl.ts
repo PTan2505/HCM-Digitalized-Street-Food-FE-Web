@@ -67,6 +67,10 @@ export const apiUrl = {
     register: '/Vendor',
     updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
+    getDietaryPreferencesOfAVendor(vendorId: number): string {
+      return `/Vendor/${vendorId}/dietary-preferences`;
+    },
+    updateDietaryPreferencesOfMyVendor: '/Vendor/my-vendor/dietary-preferences',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,
     checkLicenseStatus: (branchId: number): string =>

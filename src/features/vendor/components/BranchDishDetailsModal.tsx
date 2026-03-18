@@ -12,6 +12,7 @@ import { Checkbox, Switch, CircularProgress } from '@mui/material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import { useAppSelector } from '@hooks/reduxHooks';
+import { Link } from 'react-router-dom';
 import {
   selectVendorDishes,
   selectVendorDishesPagination,
@@ -54,7 +55,6 @@ export default function BranchDishDetailsModal({
   );
 
   // ─── Local UI state ──────────────────────────────────────────
-  const [vendorPage, setVendorPage] = useState(1);
   const [vendorPageSize, setVendorPageSize] = useState(10);
   const [filters, setFilters] = useState<DishFilterValues>({});
   const [actionLoading, setActionLoading] = useState<Set<number>>(new Set());
@@ -98,7 +98,6 @@ export default function BranchDishDetailsModal({
     if (isOpen && vendorId && branchId) {
       void fetchVendorDishes(1, {});
       void fetchBranchDishes();
-      setVendorPage(1);
       setFilters({});
     }
     // fetchVendorDishes / fetchBranchDishes are intentionally excluded:
@@ -183,7 +182,6 @@ export default function BranchDishDetailsModal({
   const handleFilterChange = useCallback(
     (newFilters: DishFilterValues) => {
       setFilters(newFilters);
-      setVendorPage(1);
       void fetchVendorDishes(1, newFilters);
     },
     [fetchVendorDishes]
@@ -191,13 +189,11 @@ export default function BranchDishDetailsModal({
 
   // ─── Page change handler ───────────────────────────────────
   const handlePageChange = (page: number): void => {
-    setVendorPage(page);
     void fetchVendorDishes(page, filters);
   };
 
   const handlePageSizeChange = (newPageSize: number): void => {
     setVendorPageSize(newPageSize);
-    setVendorPage(1);
     void fetchVendorDishes(1, filters, newPageSize);
   };
 
@@ -409,7 +405,18 @@ export default function BranchDishDetailsModal({
               data={vendorDishes}
               rowKey="dishId"
               loading={status === 'pending'}
-              emptyMessage="Không tìm thấy món ăn nào."
+              emptyMessage={
+                <span>
+                  Không tìm thấy món ăn nào. Vui lòng tạo món ăn mới tại trang{' '}
+                  <Link
+                    to="/vendor/dish"
+                    className="font-semibold text-[var(--color-primary-600)] underline hover:text-[var(--color-primary-700)]"
+                  >
+                    Quản lý món ăn
+                  </Link>{' '}
+                  trước khi gán vào chi nhánh.
+                </span>
+              }
             />
           </div>
         </div>

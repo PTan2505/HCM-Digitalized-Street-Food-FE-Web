@@ -24,6 +24,7 @@ import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
 import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage';
 import VendorDishPage from '@features/vendor/pages/DishPage';
+import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -125,6 +126,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.DISH,
             element: <VendorDishPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.DIETARY,
+            element: <VendorDietaryPreferencesPage />,
           },
         ],
       },

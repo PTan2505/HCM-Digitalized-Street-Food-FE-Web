@@ -128,7 +128,9 @@ export const getUsersWithDietaryPreferences = createAppAsyncThunk(
 export const userDietaryPreferenceSlice = createSlice({
   name: 'userDietaryPreference',
   initialState,
-  reducers: {},
+  reducers: {
+    resetUserDietaryPreferenceState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getAllUserDietaryPreferences.fulfilled, (state, action) => {
@@ -214,6 +216,9 @@ export const userDietaryPreferenceSlice = createSlice({
       );
   },
 });
+
+export const { resetUserDietaryPreferenceState } =
+  userDietaryPreferenceSlice.actions;
 
 export const selectUserDietaryPreferenceStatus = (
   state: RootState
