@@ -7,7 +7,6 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -56,16 +55,6 @@ function RegistrationHistoryPage(): JSX.Element {
   }, [onGetMyVendor]);
 
   const branches: Branch[] = myVendor?.branches ?? [];
-  const vendorId: number | undefined = myVendor?.vendorId;
-
-  const handleOpenCreateModal = (): void => {
-    if (branches.length === 0) {
-      setFormMode({ type: 'createVendor' });
-    } else if (vendorId !== undefined) {
-      setFormMode({ type: 'addBranch', vendorId });
-    }
-    setFormModalOpen(true);
-  };
 
   const handleOpenEditModal = (branch: Branch): void => {
     setFormMode({ type: 'editBranch', branch });
@@ -218,13 +207,6 @@ function RegistrationHistoryPage(): JSX.Element {
             Danh sách tất cả chi nhánh đã đăng ký
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-        >
-          <AddIcon fontSize="small" />
-          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
-        </button>
       </div>
 
       <Table
