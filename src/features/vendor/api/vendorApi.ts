@@ -9,6 +9,8 @@ import type {
   CreateOrUpdateBranchResponse,
   UpdateVendorNameRequest,
   UpdateVendorNameResponse,
+  UpdateDietaryPreferencesOfMyVendorRequest,
+  UpdateOrGetDietaryPreferencesOfMyVendorResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -218,6 +220,29 @@ export class VendorApi {
       UpdateVendorNameRequest
     >({
       url: apiUrl.vendor.updateVendorName,
+      data,
+    });
+    return res.data;
+  }
+
+  async getDietaryPreferencesOfMyVendor(vendorId: number): Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse> {
+    const res =
+      await this.apiClient.get<UpdateOrGetDietaryPreferencesOfMyVendorResponse>(
+        {
+          url: apiUrl.vendor.getDietaryPreferencesOfAVendor(vendorId),
+        }
+      );
+    return res.data;
+  }
+
+  async updateDietaryPreferencesOfMyVendor(
+    data: UpdateDietaryPreferencesOfMyVendorRequest
+  ): Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse> {
+    const res = await this.apiClient.put<
+      UpdateOrGetDietaryPreferencesOfMyVendorResponse,
+      UpdateDietaryPreferencesOfMyVendorRequest
+    >({
+      url: apiUrl.vendor.updateDietaryPreferencesOfMyVendor,
       data,
     });
     return res.data;

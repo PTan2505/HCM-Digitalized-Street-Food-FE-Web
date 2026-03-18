@@ -8,6 +8,7 @@ export interface VendorRegistrationRequest {
   city: string;
   lat: number;
   long: number;
+  dietaryPreferenceIds: number[];
   isActive?: boolean;
 }
 
@@ -147,3 +148,14 @@ export interface UpdateVendorNameResponse {
   vendorOwnerName: string;
   branches: Branch[];
 }
+
+export type UpdateDietaryPreferencesOfMyVendorRequest = number[];
+
+export interface DietaryPreferences {
+  dietaryPreferenceId: number;
+  name: string;
+  description: string;
+}
+
+export type UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+  DietaryPreferences[];

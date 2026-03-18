@@ -28,14 +28,14 @@ import type {
 } from '@features/vendor/types/dish';
 import type { Category } from '@features/admin/types/category';
 import type { Taste } from '@features/admin/types/taste';
-import type { UserDietaryPreference } from '@features/admin/types/userDietaryPreference';
+// import type { UserDietaryPreference } from '@features/admin/types/userDietaryPreference';
 import useCategory from '@features/admin/hooks/useCategory';
 import useTaste from '@features/admin/hooks/useTaste';
-import useDietary from '@features/admin/hooks/useDietary';
+// import useDietary from '@features/admin/hooks/useDietary';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectCategories } from '@slices/category';
 import { selectTastes } from '@slices/taste';
-import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
+// import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
 
 interface DishFormModalProps {
   isOpen: boolean;
@@ -66,11 +66,11 @@ export default function DishFormModal({
 }: DishFormModalProps): JSX.Element | null {
   const categories = useAppSelector(selectCategories);
   const tastes = useAppSelector(selectTastes);
-  const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
+  // const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
 
   const { onGetAllCategories } = useCategory();
   const { onGetAllTastes } = useTaste();
-  const { onGetAllUserDietaryPreferences } = useDietary();
+  // const { onGetAllUserDietaryPreferences } = useDietary();
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
@@ -91,7 +91,7 @@ export default function DishFormModal({
       description: '',
       categoryId: 0,
       tasteIds: [],
-      dietaryIds: [],
+      // dietaryIds: [],
       isActive: true,
     },
   });
@@ -100,14 +100,9 @@ export default function DishFormModal({
     if (isOpen) {
       void onGetAllCategories();
       void onGetAllTastes();
-      void onGetAllUserDietaryPreferences();
+      // void onGetAllUserDietaryPreferences();
     }
-  }, [
-    isOpen,
-    onGetAllCategories,
-    onGetAllTastes,
-    onGetAllUserDietaryPreferences,
-  ]);
+  }, [isOpen, onGetAllCategories, onGetAllTastes]);
 
   useEffect(() => {
     if (isOpen && isEditMode && editingDish) {
@@ -115,11 +110,11 @@ export default function DishFormModal({
         .filter((t: Taste) => editingDish.tasteNames.includes(t.name))
         .map((t: Taste) => t.tasteId);
 
-      const dietaryIds = dietaryPreferences
-        .filter((d: UserDietaryPreference) =>
-          editingDish.dietaryPreferenceNames.includes(d.name)
-        )
-        .map((d: UserDietaryPreference) => d.dietaryPreferenceId);
+      // const dietaryIds = dietaryPreferences
+      //   .filter((d: UserDietaryPreference) =>
+      //     editingDish.dietaryPreferenceNames.includes(d.name)
+      //   )
+      //   .map((d: UserDietaryPreference) => d.dietaryPreferenceId);
 
       reset({
         name: editingDish.name,
@@ -127,7 +122,7 @@ export default function DishFormModal({
         description: editingDish.description ?? '',
         categoryId: editingDish.categoryId,
         tasteIds: tasteIds,
-        dietaryIds: dietaryIds,
+        // dietaryIds: dietaryIds,
         isActive: editingDish.isActive,
       });
 
@@ -141,14 +136,14 @@ export default function DishFormModal({
         description: '',
         categoryId: 0,
         tasteIds: [],
-        dietaryIds: [],
+        // dietaryIds: [],
         isActive: true,
       });
       setImageFile(null);
       setImagePreview('');
       setImageError('');
     }
-  }, [isOpen, isEditMode, editingDish, tastes, dietaryPreferences, reset]);
+  }, [isOpen, isEditMode, editingDish, tastes, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
@@ -174,7 +169,8 @@ export default function DishFormModal({
         Description: data.description ? data.description.trim() : '',
         CategoryId: data.categoryId,
         TasteIds: data.tasteIds,
-        DietaryPreferenceIds: data.dietaryIds,
+        // DietaryPreferenceIds: data.dietaryIds,
+        DietaryPreferenceIds: [],
         IsActive: data.isActive,
         imageFile: imageFile as File,
       };
@@ -498,6 +494,7 @@ export default function DishFormModal({
               </Box>
 
               {/* Chế độ ăn */}
+              {/*
               <Box>
                 <label className="mb-2 block text-sm font-semibold text-gray-700">
                   Chế độ ăn phù hợp <span className="text-red-500">*</span>
@@ -548,6 +545,7 @@ export default function DishFormModal({
                   )}
                 />
               </Box>
+              */}
 
               {/* Border separator before Image */}
               <Box className="my-2 border-b border-gray-100" />

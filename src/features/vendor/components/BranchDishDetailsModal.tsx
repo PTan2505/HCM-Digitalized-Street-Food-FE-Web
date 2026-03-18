@@ -409,7 +409,7 @@ export default function BranchDishDetailsModal({
               data={vendorDishes}
               rowKey="dishId"
               loading={status === 'pending'}
-              emptyMessage="Không tìm thấy món ăn nào."
+              emptyMessage="Không tìm thấy món ăn nào. Vui lòng tạo món ăn mới tại trang Quản lý món ăn trước khi gán vào chi nhánh."
             />
           </div>
         </div>

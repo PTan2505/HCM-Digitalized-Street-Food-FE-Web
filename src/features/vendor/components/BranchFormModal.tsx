@@ -6,6 +6,7 @@ import {
   DialogActions,
   IconButton,
   Button,
+  Chip,
   CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,12 +17,16 @@ import type {
   Branch,
   VendorRegistrationRequest,
 } from '@features/vendor/types/vendor';
+import type { UserDietaryPreference } from '@features/admin/types/userDietaryPreference';
+import useDietary from '@features/admin/hooks/useDietary';
 import {
   CreateVendorSchema,
   AddBranchSchema,
   EditBranchSchema,
 } from '@features/vendor/utils/vendorRegistrationSchema';
 import type { BranchFormData } from '@features/vendor/utils/vendorRegistrationSchema';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
 import StoreSection from './StoreSection';
 import OwnerInfoSection from './OwnerInfoSection';
 import LicenseUploadSection from './LicenseUploadSection';
@@ -83,6 +88,7 @@ function getDefaultValues(mode: BranchFormMode): BranchFormData {
       city: '',
       latitude: null,
       longitude: null,
+      dietaryPreferenceIds: [],
     };
   }
   // addBranch
@@ -141,6 +147,8 @@ export default function BranchFormModal({
   mode,
   onSuccess,
 }: BranchFormModalProps): JSX.Element {
+  const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
+
   const [submitting, setSubmitting] = useState(false);
   const [licenseImages, setLicenseImages] = useState<File[]>([]);
   const [storeImages, setStoreImages] = useState<File[]>([]);
@@ -152,6 +160,7 @@ export default function BranchFormModal({
     onSubmitLicense,
     onSubmitImages,
   } = useVendor();
+  const { onGetAllUserDietaryPreferences } = useDietary();
 
   const {
     watch,
@@ -173,8 +182,12 @@ export default function BranchFormModal({
       reset(getDefaultValues(mode));
       setLicenseImages([]);
       setStoreImages([]);
+
+      if (mode.type === 'createVendor') {
+        void onGetAllUserDietaryPreferences();
+      }
     }
-  }, [isOpen, mode, reset]);
+  }, [isOpen, mode, onGetAllUserDietaryPreferences, reset]);
 
   const handleChange = (field: string, value: unknown): void => {
     setValue(field as keyof BranchFormData, value as never, {
@@ -202,6 +215,10 @@ export default function BranchFormModal({
   const handleSubmit = async (): Promise<void> => {
     const valid = await trigger();
     if (!valid) return;
+
+    const selectedDietaryPreferenceIds =
+      (form as { dietaryPreferenceIds?: number[] }).dietaryPreferenceIds ?? [];
+
     setSubmitting(true);
     try {
       if (mode.type === 'createVendor') {
@@ -215,6 +232,7 @@ export default function BranchFormModal({
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
           long: form.longitude ?? 0,
+          dietaryPreferenceIds: selectedDietaryPreferenceIds,
         };
         const res = await onRegisterVendor(payload);
         const branchId = res.branches[0]?.branchId;
@@ -235,6 +253,7 @@ export default function BranchFormModal({
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
           long: form.longitude ?? 0,
+          dietaryPreferenceIds: [],
         };
         const res = await onCreateBranch({
           vendorId: mode.vendorId,
@@ -258,6 +277,7 @@ export default function BranchFormModal({
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
           long: form.longitude ?? 0,
+          dietaryPreferenceIds: [],
         };
         await onUpdateBranch({ branchId: mode.branch.branchId, data: payload });
       }
@@ -350,6 +370,85 @@ export default function BranchFormModal({
                 onChange={handleChange}
                 errors={ownerErrors}
               />
+            )}
+
+            {/* Dietary preference — only for createVendor */}
+            {mode.type === 'createVendor' && (
+              <div className="mb-12">
+                <h2 className="mb-6 text-lg font-semibold text-gray-800">
+                  2. Chế độ ăn phù hợp
+                </h2>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Chọn chế độ ăn <span className="text-red-500">*</span>
+                </label>
+
+                <div
+                  className={`rounded-xl border px-3 py-3 transition-all duration-200 ${
+                    (errors as Record<string, { message?: string }>)
+                      .dietaryPreferenceIds?.message
+                      ? 'border-red-500 bg-white'
+                      : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white'
+                  }`}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {dietaryPreferences.map((d: UserDietaryPreference) => {
+                      const selectedDietaryPreferenceIds =
+                        (form as { dietaryPreferenceIds?: number[] })
+                          .dietaryPreferenceIds ?? [];
+                      const isSelected = selectedDietaryPreferenceIds.includes(
+                        d.dietaryPreferenceId
+                      );
+
+                      return (
+                        <Chip
+                          key={d.dietaryPreferenceId}
+                          label={d.name}
+                          onClick={() => {
+                            const nextValues = isSelected
+                              ? selectedDietaryPreferenceIds.filter(
+                                  (id) => id !== d.dietaryPreferenceId
+                                )
+                              : [
+                                  ...selectedDietaryPreferenceIds,
+                                  d.dietaryPreferenceId,
+                                ];
+                            handleChange('dietaryPreferenceIds', nextValues);
+                          }}
+                          variant={isSelected ? 'filled' : 'outlined'}
+                          className={`border transition-colors ${
+                            isSelected
+                              ? 'border-[#06AA4C] bg-[#E8F7EF] font-medium text-[#058F40] hover:bg-[#DCF3E7]'
+                              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                          }`}
+                        />
+                      );
+                    })}
+
+                    {dietaryPreferences.length === 0 && (
+                      <span className="text-sm text-gray-400">
+                        Không có dữ liệu
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {(errors as Record<string, { message?: string }>)
+                  .dietaryPreferenceIds?.message && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {
+                      (errors as Record<string, { message?: string }>)
+                        .dietaryPreferenceIds?.message
+                    }
+                  </p>
+                )}
+
+                {!(errors as Record<string, { message?: string }>)
+                  .dietaryPreferenceIds?.message && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Bạn có thể chọn nhiều chế độ ăn nếu phù hợp
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Owner phone & email for addBranch / editBranch */}
