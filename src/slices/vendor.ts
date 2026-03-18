@@ -361,12 +361,17 @@ export const updateVendorName = createAppAsyncThunk(
 
 export const getDietaryPreferencesOfMyVendor = createAppAsyncThunk(
   'vendor/getDietaryPreferencesOfMyVendor',
-  async (payload: {
+  async (
+    payload: {
       vendorId: number;
-    }, { rejectWithValue }) => {
+    },
+    { rejectWithValue }
+  ) => {
     try {
       const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
-        await axiosApi.vendorApi.getDietaryPreferencesOfMyVendor(payload.vendorId);
+        await axiosApi.vendorApi.getDietaryPreferencesOfMyVendor(
+          payload.vendorId
+        );
       return response;
     } catch (error) {
       return rejectWithValue(error);

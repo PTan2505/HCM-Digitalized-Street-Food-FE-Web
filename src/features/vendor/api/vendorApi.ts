@@ -225,7 +225,9 @@ export class VendorApi {
     return res.data;
   }
 
-  async getDietaryPreferencesOfMyVendor(vendorId: number): Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse> {
+  async getDietaryPreferencesOfMyVendor(
+    vendorId: number
+  ): Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse> {
     const res =
       await this.apiClient.get<UpdateOrGetDietaryPreferencesOfMyVendorResponse>(
         {

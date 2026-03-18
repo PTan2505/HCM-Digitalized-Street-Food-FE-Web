@@ -39,7 +39,7 @@ interface TableProps<T extends object> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   loadingMessage?: string;
   rowKey?: string;
   maxHeight?: string | 'none';
