@@ -15,7 +15,6 @@ import StarIcon from '@mui/icons-material/Star';
 import SendIcon from '@mui/icons-material/Send';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import RateReviewIcon from '@mui/icons-material/RateReview';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import {
@@ -216,21 +215,16 @@ export default function BranchFeedbackModal({
         className="mx-4 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-              <RateReviewIcon />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Phản hồi về chi nhánh
-              </h2>
-              <p className="mt-0.5 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                  #{branch.branchId}
-                </span>
-                {branch.name}
-              </p>
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-4">
+          <div className="min-w-0">
+            <p className="text-primary-700 mb-1 text-xs font-semibold tracking-wide uppercase">
+              Chi nhánh đang xem
+            </p>
+            <h2 className="text-table-text-primary truncate text-lg leading-tight font-bold">
+              {branch.name}
+            </h2>
+            <div className="mt-1 inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs text-gray-600">
+              Mã chi nhánh: #{branch.branchId}
             </div>
           </div>
           <IconButton
@@ -263,31 +257,63 @@ export default function BranchFeedbackModal({
                 const draft = draftReplies[feedback.feedbackId] ?? '';
                 const isEditing = editingIds.has(feedback.feedbackId);
                 const isReadOnly = Boolean(replyContent) && !isEditing;
+                const displayName = getDisplayName(feedback);
+                const avatarInitial = displayName
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase();
+                const rating = Math.max(
+                  0,
+                  Math.min(5, Math.round(feedback.rating ?? 0))
+                );
 
                 return (
                   <div
                     key={feedback.feedbackId}
-                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
                   >
-                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                      <div className="text-table-text-primary text-sm font-semibold">
-                        {getDisplayName(feedback)}
+                    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-primary-100 text-primary-700 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold">
+                          {avatarInitial || 'A'}
+                        </div>
+                        <div>
+                          <div className="text-table-text-primary text-sm font-semibold">
+                            {displayName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Khách hàng
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-500">
                         {formatDateTime(feedback.createdAt)}
                       </div>
                     </div>
 
-                    <div className="mb-2 flex items-center gap-1 text-amber-500">
-                      <StarIcon sx={{ fontSize: 18 }} />
-                      <span className="text-xs font-semibold">
-                        {feedback.rating ?? 0}/5
-                      </span>
+                    <div
+                      className="mb-3 flex items-center gap-1"
+                      aria-label={`Đánh giá ${rating} sao`}
+                    >
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <StarIcon
+                          key={index}
+                          sx={{ fontSize: 18 }}
+                          className={
+                            index < rating ? 'text-amber-500' : 'text-gray-300'
+                          }
+                        />
+                      ))}
                     </div>
 
-                    <p className="text-table-text-primary mb-4 text-sm whitespace-pre-wrap">
-                      {feedback.comment}
-                    </p>
+                    <div className="mb-4 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
+                      <p className="mb-1 text-xs font-semibold tracking-wide text-gray-500">
+                        Nhận xét của {displayName}
+                      </p>
+                      <p className="text-table-text-primary text-sm whitespace-pre-wrap">
+                        {feedback.comment || '-'}
+                      </p>
+                    </div>
 
                     <div className="bg-primary-50 border-primary-100 rounded-lg border p-3">
                       <label
