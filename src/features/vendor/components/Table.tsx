@@ -28,11 +28,12 @@ interface Column<T> {
 
 interface Action<T> {
   label: string | React.ReactNode;
-  menuLabel?: string;
+  menuLabel?: React.ReactNode;
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
   show?: (row: T) => boolean;
+  disabled?: (row: T) => boolean;
 }
 
 interface TableProps<T extends object> {
@@ -163,7 +164,7 @@ const Table = <T extends object>({
                       })}
                       {actions &&
                         actions.length > 0 &&
-                        (() => {
+                        ((): JSX.Element => {
                           const visibleActions = actions.filter(
                             (a) => !a.show || a.show(row)
                           );
@@ -223,6 +224,11 @@ const Table = <T extends object>({
             .map((action, index) => (
               <MenuItem
                 key={index}
+                disabled={
+                  menuState.row
+                    ? (action.disabled?.(menuState.row) ?? false)
+                    : false
+                }
                 onClick={(e) => {
                   e.stopPropagation();
                   if (menuState.row) action.onClick(menuState.row);

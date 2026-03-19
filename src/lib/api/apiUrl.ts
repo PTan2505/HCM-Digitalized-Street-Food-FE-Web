@@ -132,4 +132,14 @@ export const apiUrl = {
     CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
       `/Feedback/${feedbackId}/reply`,
   },
+  order: {
+    getVendorBranchOrders: (branchId: number): string =>
+      `/order/vendor/branches/${branchId}/orders`,
+    decideVendorOrder: (orderId: number): string =>
+      `/order/vendor/orders/${orderId}/decision`,
+    getOrderPickupCode: (orderId: number): string =>
+      `/order/${orderId}/pickup-code`,
+    completeVendorOrder: (orderId: number): string =>
+      `/order/vendor/orders/${orderId}/complete`,
+  },
 };
