@@ -49,6 +49,7 @@ export const ROUTES = {
       REGISTRATION_HISTORY: 'registration-history',
       PAYMENT_HISTORY: 'payment-history',
       DISH: 'dish',
+      ORDER: 'orders',
       DIETARY: 'dietary-preferences',
     },
   },
