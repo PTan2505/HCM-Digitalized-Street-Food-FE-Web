@@ -55,12 +55,9 @@ const RootLayout = (): JSX.Element => {
           currentPath === ROUTES.ROOT ||
           !currentPath.startsWith(ROUTES.VENDOR.BASE)
         ) {
-          navigate(
-            `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY}`,
-            {
-              replace: true,
-            }
-          );
+          navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`, {
+            replace: true,
+          });
         }
       } else if (user.role === ROLES.VENDOR) {
         if (

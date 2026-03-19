@@ -42,7 +42,11 @@ export default function StoreSection({
     onChange('city', data.city || 'Thành phố Hồ Chí Minh');
     if (data.latitude !== null && data.longitude !== null) {
       onLocationChange(data.latitude, data.longitude);
+      return;
     }
+
+    onChange('latitude', null);
+    onChange('longitude', null);
   };
 
   return (
