@@ -50,7 +50,7 @@ export const CustomInput = <T extends FieldValues>(
             required={required}
             className={
               field.value?.length > 0 && !fieldState.error
-                ? 'border-primary-1000 text-primary-1000'
+                ? 'text-primary-1000'
                 : ''
             }
             type={
@@ -58,6 +58,30 @@ export const CustomInput = <T extends FieldValues>(
             }
             error={!!fieldState.error}
             placeholder={placeholder}
+            sx={{
+              borderRadius: '9999px',
+              border: '1px solid',
+              borderColor: fieldState.error
+                ? '#FE4763'
+                : field.value?.length > 0
+                  ? '#9fd356'
+                  : '#A8B8A7',
+              backgroundColor: '#E9EFE8',
+              paddingInline: '14px',
+              '&.Mui-focused': {
+                borderColor: '#9fd356',
+                boxShadow: '0 0 0 2px rgba(159, 211, 86, 0.2)',
+              },
+              '& .MuiInputBase-input': {
+                padding: '10px 0',
+                color: '#547c1c',
+                fontWeight: 800,
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: '#B8C3B7',
+                opacity: 1,
+              },
+            }}
             endAdornment={
               type === 'password' && (
                 <InputAdornment position="end">
