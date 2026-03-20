@@ -10,6 +10,8 @@ import {
   DocumentTextIcon,
   XMarkIcon,
   ShoppingBagIcon,
+  SparklesIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/outline';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -48,7 +50,19 @@ const navigation = [
     name: 'Quản lý món ăn',
     href: '/vendor/dish',
     icon: ShoppingBagIcon,
-    isForVendor: false,
+    isForVendor: true,
+  },
+  {
+    name: 'Quản lý đơn hàng',
+    href: '/vendor/orders',
+    icon: QueueListIcon,
+    isForVendor: true,
+  },
+  {
+    name: 'Chế độ ăn',
+    href: '/vendor/dietary-preferences',
+    icon: SparklesIcon,
+    isForVendor: true,
   },
 ];
 

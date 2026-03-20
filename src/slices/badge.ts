@@ -144,7 +144,9 @@ export const revokeBadgeFromUser = createAppAsyncThunk(
 export const badgeSlice = createSlice({
   name: 'badge',
   initialState,
-  reducers: {},
+  reducers: {
+    resetBadgeState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getAllBadges.fulfilled, (state, action) => {
@@ -258,6 +260,8 @@ export const badgeSlice = createSlice({
       );
   },
 });
+
+export const { resetBadgeState } = badgeSlice.actions;
 
 export const selectBadgeStatus = (
   state: RootState

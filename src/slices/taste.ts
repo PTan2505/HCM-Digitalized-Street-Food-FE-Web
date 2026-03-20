@@ -81,7 +81,9 @@ export const deleteTaste = createAppAsyncThunk(
 export const tasteSlice = createSlice({
   name: 'taste',
   initialState,
-  reducers: {},
+  reducers: {
+    resetTasteState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getAllTastes.fulfilled, (state, action) => {
@@ -132,6 +134,8 @@ export const tasteSlice = createSlice({
       );
   },
 });
+
+export const { resetTasteState } = tasteSlice.actions;
 
 export const selectTasteStatus = (
   state: RootState

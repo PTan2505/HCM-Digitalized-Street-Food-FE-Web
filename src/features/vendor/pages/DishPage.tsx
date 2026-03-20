@@ -220,22 +220,22 @@ export default function DishPage(): JSX.Element {
         );
       },
     },
-    {
-      key: 'dietaryPreferenceNames',
-      label: 'Chế độ ăn',
-      render: (value: unknown): React.ReactNode => {
-        const names = value as string[];
-        return (
-          <Box className="flex flex-wrap gap-1">
-            {names.length > 0
-              ? names.map((n) => (
-                  <Chip key={n} label={n} size="small" variant="outlined" />
-                ))
-              : '-'}
-          </Box>
-        );
-      },
-    },
+    // {
+    //   key: 'dietaryPreferenceNames',
+    //   label: 'Chế độ ăn',
+    //   render: (value: unknown): React.ReactNode => {
+    //     const names = value as string[];
+    //     return (
+    //       <Box className="flex flex-wrap gap-1">
+    //         {names.length > 0
+    //           ? names.map((n) => (
+    //               <Chip key={n} label={n} size="small" variant="outlined" />
+    //             ))
+    //           : '-'}
+    //       </Box>
+    //     );
+    //   },
+    // },
     {
       key: 'isActive',
       label: 'Trạng thái',

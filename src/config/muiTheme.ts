@@ -44,18 +44,37 @@ export const theme = createTheme({
           backgroundColor: '#F9FFF9',
           width: '100%',
           height: '40px',
-          border: `1px solid #7FAE9B`,
+          color: '#7FAE9B',
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
           borderRadius: '20px',
           padding: '8px 16px',
-          color: '#7FAE9B',
+
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#7FAE9B',
+          },
+
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#7FAE9B',
+          },
+
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#14143D',
+          },
+
+          '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#F53425',
+          },
 
           '&.Mui-focused': {
-            borderColor: '#14143D',
-            color: ' #14143D',
+            color: '#14143D',
           },
 
           '&.Mui-error': {
-            borderColor: '#F53425',
             color: '#F53425',
           },
         },

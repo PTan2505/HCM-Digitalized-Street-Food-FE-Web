@@ -10,6 +10,8 @@ import type {
   Branch,
   UpdateVendorNameRequest,
   UpdateVendorNameResponse,
+  UpdateDietaryPreferencesOfMyVendorRequest,
+  UpdateOrGetDietaryPreferencesOfMyVendorResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -44,6 +46,7 @@ export interface VendorState {
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   myVendor: GetMyVendorResponse | null;
+  myVendorDietaryPreferences: UpdateOrGetDietaryPreferencesOfMyVendorResponse;
   licenseStatus: CheckLicenseStatusResponse | null;
   images: GetImagesResponse | null;
   workSchedules: GetWorkScheduleResponse;
@@ -69,6 +72,7 @@ const initialState: VendorState = {
   status: 'idle',
   error: null,
   myVendor: null,
+  myVendorDietaryPreferences: [],
   licenseStatus: null,
   images: null,
   workSchedules: [],
@@ -355,6 +359,42 @@ export const updateVendorName = createAppAsyncThunk(
   }
 );
 
+export const getDietaryPreferencesOfMyVendor = createAppAsyncThunk(
+  'vendor/getDietaryPreferencesOfMyVendor',
+  async (
+    payload: {
+      vendorId: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+        await axiosApi.vendorApi.getDietaryPreferencesOfMyVendor(
+          payload.vendorId
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateDietaryPreferencesOfMyVendor = createAppAsyncThunk(
+  'vendor/updateDietaryPreferencesOfMyVendor',
+  async (
+    payload: UpdateDietaryPreferencesOfMyVendorRequest,
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+        await axiosApi.vendorApi.updateDietaryPreferencesOfMyVendor(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Admin Thunks ─────────────────────────────────────────
 
 export const getAllVendors = createAppAsyncThunk(
@@ -508,6 +548,15 @@ export const vendorSlice = createSlice({
           state.myVendor.name = action.payload.name;
         }
       })
+      .addCase(getDietaryPreferencesOfMyVendor.fulfilled, (state, action) => {
+        state.myVendorDietaryPreferences = action.payload;
+      })
+      .addCase(
+        updateDietaryPreferencesOfMyVendor.fulfilled,
+        (state, action) => {
+          state.myVendorDietaryPreferences = action.payload;
+        }
+      )
       .addCase(getWorkSchedules.fulfilled, (state, action) => {
         state.workSchedules = action.payload;
       })
@@ -626,7 +675,9 @@ export const vendorSlice = createSlice({
           createBranch,
           updateBranch,
           deleteBranch,
-          updateVendorName
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor
         ),
         (state) => {
           state.status = 'pending';
@@ -651,7 +702,9 @@ export const vendorSlice = createSlice({
           createBranch,
           updateBranch,
           deleteBranch,
-          updateVendorName
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor
         ),
         (state, action) => {
           state.status = 'failed';
@@ -678,7 +731,9 @@ export const vendorSlice = createSlice({
           createBranch,
           updateBranch,
           deleteBranch,
-          updateVendorName
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor
         ),
         (state) => {
           state.status = 'succeeded';
@@ -753,6 +808,11 @@ export const selectLicenseStatus = (
 
 export const selectMyVendor = (state: RootState): GetMyVendorResponse | null =>
   state.vendor.myVendor;
+
+export const selectMyVendorDietaryPreferences = (
+  state: RootState
+): UpdateOrGetDietaryPreferencesOfMyVendorResponse =>
+  state.vendor.myVendorDietaryPreferences;
 
 export const selectImages = (state: RootState): GetImagesResponse | null =>
   state.vendor.images;

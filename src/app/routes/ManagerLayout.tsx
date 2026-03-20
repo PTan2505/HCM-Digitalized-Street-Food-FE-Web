@@ -1,19 +1,12 @@
 import SidebarContent from '@components/layout/SidebarContent';
-import type { NavigationItem } from '@components/layout/SidebarContent';
-import { ADMIN_USER_INFO } from '@constants/adminTheme';
+import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
   Bars3Icon,
-  BuildingStorefrontIcon,
   ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  RectangleStackIcon,
   ShoppingBagIcon,
-  SparklesIcon,
-  StarIcon,
-  UserCircleIcon,
-  UserGroupIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -23,96 +16,40 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
-  // {
-  //   name: 'Quản lý giao dịch',
-  //   href: '/admin/transactions',
-  //   icon: HomeIcon,
-  // },
-  // { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
+const navigation = [
+  { name: 'Dashboard', href: '/manager/revenue', icon: ChartBarIcon },
   {
-    name: 'Quản lý cửa hàng',
-    href: '/admin/vendors',
-    icon: BuildingStorefrontIcon,
-  },
-  {
-    name: 'Quản lý danh mục',
-    href: '/admin/category',
-    icon: RectangleStackIcon,
-  },
-  {
-    name: 'Huy hiệu',
-    icon: StarIcon,
-    children: [
-      {
-        name: 'Quản lý huy hiệu',
-        href: '/admin/badge',
-        icon: StarIcon,
-      },
-      {
-        name: 'Huy hiệu của người dùng',
-        href: '/admin/badge-users',
-        icon: ShoppingBagIcon,
-      },
-    ],
-  },
-  {
-    name: 'Quản lý khẩu vị',
-    href: '/admin/taste',
-    icon: SparklesIcon,
-  },
-  {
-    name: 'Chế độ ăn',
-    icon: UserGroupIcon,
-    children: [
-      {
-        name: 'Quản lý chế độ ăn',
-        href: '/admin/user-dietary',
-        icon: UserGroupIcon,
-      },
-      {
-        name: 'Chế độ ăn của người dùng',
-        href: '/admin/users-with-dietary',
-        icon: UserCircleIcon,
-      },
-    ],
+    name: 'Xác minh người bán',
+    href: '/manager/verification',
+    icon: ShoppingBagIcon,
   },
 ];
 
-function AdminLayout(): JSX.Element {
+function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
-  // Mock user data for UI only
+
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/admin');
+    navigate('/manager');
   };
 
   const sidebarUserInfo = {
     name:
       user?.firstName && user?.lastName
         ? `${user.firstName} ${user.lastName}`
-        : ADMIN_USER_INFO.name,
-    email: user?.email ?? ADMIN_USER_INFO.email,
-    role: ADMIN_USER_INFO.role,
+        : MANAGER_USER_INFO.name,
+    email: user?.email ?? MANAGER_USER_INFO.email,
+    role: MANAGER_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
 
-  const currentPageTitle =
-    navigation.find((item) => item.href === location.pathname)?.name ??
-    navigation
-      .flatMap((item) => item.children ?? [])
-      .find((child) => child.href === location.pathname)?.name ??
-    'Dashboard';
-
   return (
     <Box className="min-h-screen bg-white text-gray-900">
-      {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 z-40 md:hidden ${
           sidebarOpen ? '' : 'hidden'
@@ -136,14 +73,13 @@ function AdminLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/admin/settings"
+            settingsPath="/manager/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
           />
         </div>
       </div>
 
-      {/* Desktop sidebar */}
       <div
         className={`hidden transition-all duration-300 ease-in-out md:fixed md:inset-y-0 md:flex md:flex-col ${
           sidebarCollapsed ? 'md:w-16' : 'md:w-64'
@@ -153,19 +89,17 @@ function AdminLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/admin/settings"
+          settingsPath="/manager/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
       </div>
 
-      {/* Main content */}
       <Box
         className={`pl-0 transition-all duration-300 ease-in-out ${
           sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
         }`}
       >
-        {/* Top navigation */}
         <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
           <Box className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <Box className="flex items-center gap-4">
@@ -176,7 +110,6 @@ function AdminLayout(): JSX.Element {
                 <Bars3Icon className="h-6 w-6" />
               </IconButton>
 
-              {/* Desktop collapse button */}
               <IconButton
                 className="hidden md:block"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -194,16 +127,16 @@ function AdminLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {currentPageTitle}
+                  {navigation.find((item) => item.href === location.pathname)
+                    ?.name ?? 'Dashboard'}
                 </Typography>
               </Box>
             </Box>
           </Box>
         </Box>
 
-        {/* Page content */}
         <Box component="main" className="py-6">
-          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <Box className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />
           </Box>
         </Box>
@@ -212,4 +145,4 @@ function AdminLayout(): JSX.Element {
   );
 }
 
-export default AdminLayout;
+export default ManagerLayout;

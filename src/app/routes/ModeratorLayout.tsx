@@ -23,23 +23,23 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
-  {
-    name: 'Quản lý giao dịch',
-    href: '/moderator/transactions',
-    icon: HomeIcon,
-  },
+  // {
+  //   name: 'Quản lý giao dịch',
+  //   href: '/moderator/transactions',
+  //   icon: HomeIcon,
+  // },
   {
     name: 'Xác minh người bán',
     href: '/moderator/verification',
     icon: ShoppingBagIcon,
   },
-  { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
-  { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
-  {
-    name: 'Yêu cầu rút tiền',
-    href: '/moderator/cashout',
-    icon: CurrencyDollarIcon,
-  },
+  // { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
+  // { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
+  // {
+  //   name: 'Yêu cầu rút tiền',
+  //   href: '/moderator/cashout',
+  //   icon: CurrencyDollarIcon,
+  // },
 ];
 
 function ModeratorLayout(): JSX.Element {
