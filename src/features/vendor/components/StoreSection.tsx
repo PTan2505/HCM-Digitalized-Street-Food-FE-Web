@@ -35,6 +35,20 @@ export default function StoreSection({
   branchNameRequired = false,
   errors,
 }: StoreSectionProps): JSX.Element {
+  const handleMapAddressResolved = (data: {
+    detailAddress: string;
+    ward: string;
+    city: string;
+  }): void => {
+    onChange('detailAddress', data.detailAddress);
+    if (data.ward) {
+      onChange('ward', data.ward);
+    }
+    if (data.city) {
+      onChange('city', data.city);
+    }
+  };
+
   // Handle address autocomplete selection — syncs all address fields at once
   const handleAddressSelect = (data: AddressSelectData): void => {
     onChange('detailAddress', data.addressDetail);
@@ -174,6 +188,7 @@ export default function StoreSection({
               latitude={formData.latitude}
               longitude={formData.longitude}
               onLocationChange={onLocationChange}
+              onAddressResolved={handleMapAddressResolved}
             />
             {/* {formData.latitude !== null && formData.longitude !== null ? (
               <p className="mt-2 text-xs text-green-600">
