@@ -34,13 +34,16 @@ const CustomOTPInput = styled(MuiOtpInput)({
     width: '40px',
     height: '48px',
     padding: '0px',
+    borderRadius: '10px',
     border: '1px solid #7FAE9B',
     '& .MuiInputBase-input': {
       padding: '0px',
+      color: '#547c1c',
+      fontWeight: 800,
     },
     '&.Mui-focused': {
       color: '#14143D',
-      borderColor: '#14143D',
+      borderColor: '#7FAE9B',
     },
   },
 
@@ -58,7 +61,7 @@ const CustomOTPInput = styled(MuiOtpInput)({
   '& .is-filled': {
     '& .MuiInputBase-root.MuiOutlinedInput-root ': {
       color: '#14143D',
-      borderColor: '#14143D',
+      borderColor: '#7FAE9B',
     },
   },
 

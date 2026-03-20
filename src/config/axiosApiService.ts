@@ -62,7 +62,7 @@ axiosInstance.interceptors.response.use(
   (response) => {
     const message = response.data?.message;
 
-    if (message && response.config.method !== 'get') {
+    if (message && message !== 'Success' && response.config.method !== 'get') {
       toast.success(CustomNotification, {
         data: {
           title: 'Thành công!',

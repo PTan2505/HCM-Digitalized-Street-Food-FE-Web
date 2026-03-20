@@ -1,20 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
   ArrowRightOnRectangleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import logoImage from '@assets/lowca-logo.png';
 import unionLogo from '@assets/logos/Union.png';
 import type { JSX } from 'react';
+import { useState } from 'react';
 import { Avatar, Box, Tooltip, Typography } from '@mui/material';
 
-interface NavigationItem {
+export interface NavigationItem {
   name: string;
-  href: string;
+  href?: string;
   icon: React.ComponentType<{
     className?: string;
     style?: React.CSSProperties;
   }>;
+  children?: NavigationItem[];
 }
 
 interface SidebarContentProps {
@@ -39,6 +43,25 @@ const SidebarContent = ({
   onLogoClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  const isPathActive = (href?: string): boolean =>
+    Boolean(href && location.pathname === href);
+
+  const hasActiveChild = (item: NavigationItem): boolean =>
+    Boolean(item.children?.some((child) => isPathActive(child.href)));
+
+  const isGroupExpanded = (item: NavigationItem): boolean =>
+    expandedGroups[item.name] ?? hasActiveChild(item);
+
+  const toggleGroup = (groupName: string): void => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupName]: !prev[groupName],
+    }));
+  };
 
   return (
     <Box className="bg-gradient-moderator flex flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
@@ -76,7 +99,87 @@ const SidebarContent = ({
         {/* Navigation */}
         <Box component="nav" className="mt-4 flex-1 px-2">
           {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = isPathActive(item.href);
+            const isDropdown = Boolean(
+              item.children && item.children.length > 0
+            );
+            const isChildActive = hasActiveChild(item);
+            const isExpanded = isGroupExpanded(item);
+
+            if (isDropdown) {
+              return (
+                <Box key={item.name} className="mb-1">
+                  <Tooltip
+                    title={collapsed ? item.name : ''}
+                    placement="right"
+                    disableHoverListener={!collapsed}
+                  >
+                    <Box
+                      component="button"
+                      type="button"
+                      onClick={() => toggleGroup(item.name)}
+                      className={`flex w-full cursor-pointer items-center overflow-hidden rounded-lg border-none px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
+                        isChildActive
+                          ? 'bg-moderator-active-bg text-moderator-active-text hover:bg-moderator-active-bg hover:text-moderator-active-text shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                          : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
+                      }`}
+                    >
+                      <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
+                        <item.icon
+                          className="h-5 w-5"
+                          style={{ color: 'inherit' }}
+                        />
+                      </Box>
+                      <Typography
+                        className={`ml-3 overflow-hidden text-[0.9rem] font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+                          collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                        }`}
+                      >
+                        {item.name}
+                      </Typography>
+                      {!collapsed && (
+                        <Box className="ml-auto flex h-4 w-4 items-center justify-center">
+                          {isExpanded ? (
+                            <ChevronDownIcon className="h-4 w-4" />
+                          ) : (
+                            <ChevronRightIcon className="h-4 w-4" />
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  </Tooltip>
+
+                  {!collapsed && isExpanded && (
+                    <Box className="mt-1 ml-8 space-y-1">
+                      {item.children?.map((child) => {
+                        const isChildItemActive = isPathActive(child.href);
+
+                        return (
+                          <Link
+                            key={child.name}
+                            to={child.href ?? '#'}
+                            className="block no-underline"
+                          >
+                            <Box
+                              className={`flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
+                                isChildItemActive
+                                  ? 'bg-moderator-active-bg text-moderator-active-text shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                                  : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
+                              }`}
+                            >
+                              <Typography className="overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
+                                {child.name}
+                              </Typography>
+                            </Box>
+                          </Link>
+                        );
+                      })}
+                    </Box>
+                  )}
+                </Box>
+              );
+            }
+
             return (
               <Tooltip
                 key={item.name}
@@ -84,7 +187,7 @@ const SidebarContent = ({
                 placement="right"
                 disableHoverListener={!collapsed}
               >
-                <Link to={item.href} className="no-underline">
+                <Link to={item.href ?? '#'} className="no-underline">
                   <Box
                     className={`mb-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
                       isActive

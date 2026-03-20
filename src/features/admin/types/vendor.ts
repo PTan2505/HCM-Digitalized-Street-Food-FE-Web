@@ -49,6 +49,7 @@ export interface VendorDetail {
   updatedAt: string | null;
   isActive: boolean;
   vendorOwner: VendorOwner;
+  vendorOwnerName: string;
   branches: VendorBranch[];
 }
 

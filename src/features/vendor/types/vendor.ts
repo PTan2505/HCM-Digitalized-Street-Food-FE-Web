@@ -8,13 +8,15 @@ export interface VendorRegistrationRequest {
   city: string;
   lat: number;
   long: number;
+  dietaryPreferenceIds: number[];
   isActive?: boolean;
 }
 
 export interface Branch {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   phoneNumber: string;
   email: string;
@@ -40,7 +42,8 @@ export interface Branch {
 export interface VendorRegistrationResponse {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -52,7 +55,8 @@ export interface VendorRegistrationResponse {
 export interface CreateOrUpdateBranchResponse {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   phoneNumber: string;
   email: string;
@@ -77,7 +81,8 @@ export interface CreateOrUpdateBranchResponse {
 
 export interface GetMyVendorResponse {
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -134,7 +139,8 @@ export interface UpdateVendorNameRequest {
 
 export interface UpdateVendorNameResponse {
   vendorId: number;
-  userId: number;
+  userId?: number;
+  managerId: number;
   name: string;
   createdAt: string;
   updatedAt: string | null;
@@ -142,3 +148,14 @@ export interface UpdateVendorNameResponse {
   vendorOwnerName: string;
   branches: Branch[];
 }
+
+export type UpdateDietaryPreferencesOfMyVendorRequest = number[];
+
+export interface DietaryPreferences {
+  dietaryPreferenceId: number;
+  name: string;
+  description: string;
+}
+
+export type UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+  DietaryPreferences[];

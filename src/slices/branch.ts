@@ -1,5 +1,10 @@
 import type { RootState } from '@app/store';
 import type {
+  ActiveBranch,
+  GetActiveBranchesParams,
+  GetActiveBranchesResponse,
+} from '@features/home/types/branch';
+import type {
   BranchRegisterRequest,
   GetPendingRegistrationsResponse,
   VerifyRegistrationRequest,
@@ -16,6 +21,7 @@ import {
 
 export interface BranchState {
   pendingRegistrations: BranchRegisterRequest[];
+  activeBranches: ActiveBranch[];
   pendingRegistrationsPagination: {
     currentPage: number;
     pageSize: number;
@@ -30,6 +36,7 @@ export interface BranchState {
 
 const initialState: BranchState = {
   pendingRegistrations: [],
+  activeBranches: [],
   pendingRegistrationsPagination: {
     currentPage: 1,
     pageSize: 10,
@@ -41,6 +48,19 @@ const initialState: BranchState = {
   status: 'idle',
   error: null,
 };
+
+export const getActiveBranches = createAppAsyncThunk(
+  'vendor/getActiveBranches',
+  async (params: GetActiveBranchesParams | undefined, { rejectWithValue }) => {
+    try {
+      const response: GetActiveBranchesResponse =
+        await axiosApi.homeBranchApi.getActiveBranches(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 export const getPendingRegistrations = createAppAsyncThunk(
   'vendor/getPendingRegistrations',
@@ -97,9 +117,14 @@ export const rejectBranchRegistration = createAppAsyncThunk(
 const branchSlice = createSlice({
   name: 'branch',
   initialState,
-  reducers: {},
+  reducers: {
+    resetBranchState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
+      .addCase(getActiveBranches.fulfilled, (state, action) => {
+        state.activeBranches = action.payload.items;
+      })
       .addCase(getPendingRegistrations.fulfilled, (state, action) => {
         state.pendingRegistrations = action.payload.items;
         state.pendingRegistrationsPagination = {
@@ -128,6 +153,7 @@ const branchSlice = createSlice({
       })
       .addMatcher(
         isPending(
+          getActiveBranches,
           getPendingRegistrations,
           verifyBranchRegistration,
           rejectBranchRegistration
@@ -138,6 +164,7 @@ const branchSlice = createSlice({
       )
       .addMatcher(
         isFulfilled(
+          getActiveBranches,
           getPendingRegistrations,
           verifyBranchRegistration,
           rejectBranchRegistration
@@ -148,6 +175,7 @@ const branchSlice = createSlice({
       )
       .addMatcher(
         isRejected(
+          getActiveBranches,
           getPendingRegistrations,
           verifyBranchRegistration,
           rejectBranchRegistration
@@ -160,7 +188,12 @@ const branchSlice = createSlice({
   },
 });
 
+export const { resetBranchState } = branchSlice.actions;
+
 export default branchSlice.reducer;
+
+export const selectActiveBranches = (state: RootState): ActiveBranch[] =>
+  state.branch.activeBranches;
 
 export const selectBranchStatus = (
   state: RootState

@@ -158,7 +158,11 @@ export default function PaymentCancel(): JSX.Element {
                 variant="contained"
                 fullWidth
                 size="large"
-                onClick={() => void navigate(`${ROUTES.VENDOR.BASE}`)}
+                onClick={() =>
+                  void navigate(
+                    `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`
+                  )
+                }
                 sx={{
                   bgcolor: '#f53425',
                   '&:hover': { bgcolor: '#c0392b' },
@@ -169,9 +173,9 @@ export default function PaymentCancel(): JSX.Element {
                   textTransform: 'none',
                 }}
               >
-                {confirmed ? 'Quay lại trang chi nhánh' : 'Thử lại thanh toán'}
+                {confirmed ? 'Về trang chính' : 'Thử lại thanh toán'}
               </Button>
-              <Button
+              {/* <Button
                 variant="outlined"
                 fullWidth
                 size="large"
@@ -187,8 +191,8 @@ export default function PaymentCancel(): JSX.Element {
                   textTransform: 'none',
                 }}
               >
-                Về trang tổng quan
-              </Button>
+                Về trang chính
+              </Button> */}
             </Box>
           </>
         )}

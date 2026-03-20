@@ -7,7 +7,6 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -16,6 +15,7 @@ import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
+import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
 
 const StatusBadge = ({
   label,
@@ -48,22 +48,13 @@ function RegistrationHistoryPage(): JSX.Element {
   const [formMode, setFormMode] = useState<BranchFormMode>({
     type: 'createVendor',
   });
+  const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
     void onGetMyVendor();
   }, [onGetMyVendor]);
 
   const branches: Branch[] = myVendor?.branches ?? [];
-  const vendorId: number | undefined = myVendor?.vendorId;
-
-  const handleOpenCreateModal = (): void => {
-    if (branches.length === 0) {
-      setFormMode({ type: 'createVendor' });
-    } else if (vendorId !== undefined) {
-      setFormMode({ type: 'addBranch', vendorId });
-    }
-    setFormModalOpen(true);
-  };
 
   const handleOpenEditModal = (branch: Branch): void => {
     setFormMode({ type: 'editBranch', branch });
@@ -162,7 +153,8 @@ function RegistrationHistoryPage(): JSX.Element {
         handleOpenEditModal(branch);
       },
       color: 'primary' as const,
-      show: (branch: Branch): boolean => branch.licenseStatus === 'Pending',
+      show: (branch: Branch): boolean =>
+        branch.licenseStatus === 'Pending' || branch.licenseStatus === null,
     },
     {
       label: <DeleteIcon fontSize="small" />,
@@ -180,10 +172,13 @@ function RegistrationHistoryPage(): JSX.Element {
     },
     {
       label: <ImageIcon fontSize="small" />,
-      menuLabel: 'Xem ảnh',
-      onClick: (): void => {},
+      menuLabel: 'Cập nhật ảnh quán',
+      onClick: (branch: Branch): void => {
+        setImagesBranch(branch);
+      },
       color: 'primary' as const,
-      show: (): boolean => false,
+      show: (branch: Branch): boolean =>
+        branch.licenseStatus === 'Pending' || branch.licenseStatus === null,
     },
     {
       label: <ScheduleIcon fontSize="small" />,
@@ -212,13 +207,6 @@ function RegistrationHistoryPage(): JSX.Element {
             Danh sách tất cả chi nhánh đã đăng ký
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-        >
-          <AddIcon fontSize="small" />
-          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
-        </button>
       </div>
 
       <Table
@@ -242,6 +230,12 @@ function RegistrationHistoryPage(): JSX.Element {
         onClose={() => setFormModalOpen(false)}
         mode={formMode}
         onSuccess={handleFormSuccess}
+      />
+
+      <ImagesDetailsModal
+        isOpen={imagesBranch !== null}
+        onClose={() => setImagesBranch(null)}
+        branch={imagesBranch}
       />
     </div>
   );
