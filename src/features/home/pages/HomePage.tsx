@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Container, Grid, Typography } from '@mui/material';
 import lightLogo from '../../../assets/ios-light.png';
@@ -21,32 +21,17 @@ export default function HomePage(): JSX.Element {
   const activeBranches = useAppSelector(selectActiveBranches);
   const navigate = useNavigate();
 
+  const topFinalScoreBranches = useMemo(() => {
+    return [...activeBranches]
+      .sort((a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0))
+      .slice(0, 8);
+  }, [activeBranches]);
+
   useEffect(() => {
-    const fallbackParams = { pageNumber: 1, pageSize: 9 };
-
-    if (!navigator.geolocation) {
-      void onGetActiveBranches(fallbackParams);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        void onGetActiveBranches({
-          Lat: position.coords.latitude,
-          Long: position.coords.longitude,
-          pageNumber: 1,
-          pageSize: 9,
-        });
-      },
-      () => {
-        void onGetActiveBranches(fallbackParams);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000,
-      }
-    );
+    void onGetActiveBranches({
+      pageNumber: 1,
+      pageSize: 100,
+    });
   }, [onGetActiveBranches]);
 
   useEffect(() => {
@@ -92,7 +77,7 @@ export default function HomePage(): JSX.Element {
             </Typography>
           </Box>
           <Grid container spacing={3}>
-            {activeBranches.slice(0, 5).map((branch, index) => (
+            {topFinalScoreBranches.slice(0, 5).map((branch, index) => (
               <Grid
                 key={branch.branchId}
                 size={{ xs: 12, sm: 6, md: 4 }}
@@ -101,9 +86,8 @@ export default function HomePage(): JSX.Element {
                 <RecipeCard
                   branchId={branch.branchId}
                   title={branch.vendorName + ' - ' + branch.name}
-                  rating={branch.avgRating}
-                  type="Món ăn"
-                  distanceKm={branch.distanceKm}
+                  avgRating={branch.avgRating}
+                  totalReviewCount={branch.totalReviewCount}
                   address={
                     branch.addressDetail +
                     ', ' +
@@ -143,7 +127,7 @@ export default function HomePage(): JSX.Element {
               </Box>
             </Grid>
 
-            {activeBranches.slice(5, 8).map((branch) => (
+            {topFinalScoreBranches.slice(5, 8).map((branch) => (
               <Grid
                 key={branch.branchId}
                 size={{ xs: 12, sm: 6, md: 4 }}
@@ -152,9 +136,8 @@ export default function HomePage(): JSX.Element {
                 <RecipeCard
                   branchId={branch.branchId}
                   title={branch.vendorName + ' - ' + branch.name}
-                  rating={branch.avgRating}
-                  type="Món ăn"
-                  distanceKm={branch.distanceKm}
+                  avgRating={branch.avgRating}
+                  totalReviewCount={branch.totalReviewCount}
                   address={
                     branch.addressDetail +
                     ', ' +

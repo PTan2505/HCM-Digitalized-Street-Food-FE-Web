@@ -1,3 +1,7 @@
+export interface BranchDish {
+  categoryName?: string;
+}
+
 export interface ActiveBranch {
   branchId: number;
   vendorId: number;
@@ -11,12 +15,20 @@ export interface ActiveBranch {
   lat: number;
   long: number;
   avgRating: number;
+  totalReviewCount: number;
+  totalRatingSum: number;
   isVerified: boolean;
-  distanceKm: number;
-  dishes: unknown[];
+  finalScore: number;
+  dishes: BranchDish[];
+  dietaryPreferenceNames: string[];
 }
 
 export interface GetActiveBranchesResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
   hasNext: boolean;
   items: ActiveBranch[];
 }
