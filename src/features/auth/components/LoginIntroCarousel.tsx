@@ -1,16 +1,24 @@
 import logoImage from '@assets/lowca-logo.png';
+import { ROUTES } from '@constants/routes';
 import Box from '@mui/material/Box';
 import { type JSX } from 'react';
+import { Link } from 'react-router-dom';
 
 export const LoginIntroCarousel = (): JSX.Element => {
   return (
     <Box className="flex h-full w-full flex-col justify-center gap-8 p-3 text-center lg:pr-14">
       <Box className="flex flex-col items-center gap-3">
-        <img
-          src={logoImage}
-          alt="Lowca"
-          className="h-20 w-auto object-contain md:h-24"
-        />
+        <Link
+          to={ROUTES.HOME}
+          aria-label="Về trang chủ"
+          className="inline-block"
+        >
+          <img
+            src={logoImage}
+            alt="Lowca"
+            className="h-20 w-auto object-contain transition-opacity hover:opacity-80 md:h-24"
+          />
+        </Link>
         {/* <p className="title-md text-[#144820]">Lowca Street Food</p> */}
       </Box>
 
