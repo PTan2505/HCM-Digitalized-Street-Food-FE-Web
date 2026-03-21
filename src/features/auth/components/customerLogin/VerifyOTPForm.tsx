@@ -27,23 +27,26 @@ type Props<T extends FieldValues> = {
 };
 
 const CustomOTPInput = styled(MuiOtpInput)({
-  gap: '8px',
+  gap: '10px',
   justifyContent: 'center',
 
   '& .MuiInputBase-root.MuiOutlinedInput-root ': {
-    width: '40px',
-    height: '48px',
+    width: '48px',
+    height: '56px',
     padding: '0px',
-    borderRadius: '10px',
-    border: '1px solid #7FAE9B',
+    borderRadius: '14px',
+    border: '1px solid #8FB89A',
+    background: 'rgba(255,255,255,0.72)',
+    transition: 'all .2s ease',
     '& .MuiInputBase-input': {
       padding: '0px',
-      color: '#547c1c',
+      color: '#2f5f3c',
       fontWeight: 800,
+      fontSize: '1.1rem',
     },
     '&.Mui-focused': {
-      color: '#14143D',
-      borderColor: '#7FAE9B',
+      borderColor: '#9FD356',
+      boxShadow: '0 0 0 2px rgba(159,211,86,.22)',
     },
   },
 
@@ -60,8 +63,9 @@ const CustomOTPInput = styled(MuiOtpInput)({
 
   '& .is-filled': {
     '& .MuiInputBase-root.MuiOutlinedInput-root ': {
-      color: '#14143D',
-      borderColor: '#7FAE9B',
+      color: '#2f5f3c',
+      borderColor: '#9FD356',
+      background: '#F2F8ED',
     },
   },
 
@@ -97,13 +101,14 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
   };
 
   return (
-    <Box className="flex w-[400px] flex-col items-center justify-center gap-6">
-      <Typography className="display-small text-primary-900">
-        Nhập mã OTP
-      </Typography>
-      <Typography className="body-large text-primary-900">
+    <Box className="flex w-full max-w-xl flex-col items-center justify-center gap-5">
+      {/* <Typography className="title-xl text-[#103b1c]">Nhập mã OTP</Typography> */}
+      <Typography className="body-large text-center text-[#3d6647]">
         Mã OTP đã được gửi tới số điện thoại {''}
-        <Typography className="label-large" component="span">
+        <Typography
+          className="label-large font-bold text-[#103b1c]"
+          component="span"
+        >
           {secretPhoneNumber()}
         </Typography>
       </Typography>
@@ -112,7 +117,7 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
         control={control}
         render={({ field, fieldState }) => {
           return (
-            <Box>
+            <Box className="w-full">
               <CustomOTPInput
                 {...field}
                 TextFieldsProps={(index) => {
@@ -127,7 +132,7 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
                 length={6}
               />
               {fieldState.error && (
-                <FormHelperText error>
+                <FormHelperText className="mt-2 text-center" error>
                   {fieldState.error.message}
                 </FormHelperText>
               )}
@@ -135,10 +140,10 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
           );
         }}
       />
-      <Typography className="body-large text-primary-900">
+      <Typography className="body-large text-[#3d6647]">
         Bạn chưa nhận được mã OTP?{' '}
         <Link
-          className="label-large text-primary-900"
+          className="label-large font-semibold text-[#2f6f3b]"
           component="button"
           type="button"
           onClick={async () =>
@@ -154,15 +159,16 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
         type="submit"
         fullWidth
         disabled={disabledSubmitButton}
-        className="body-large h-10 rounded-[20px] normal-case"
+        className="body-large h-12 rounded-full normal-case"
         variant="contained"
         color="primary"
+        disableElevation
         onClick={handleSubmit(onSubmit)}
       >
         Đăng nhập
       </Button>
       <Link
-        className="body-large text-primary-700 font-bold"
+        className="body-large font-bold text-[#4B8D2B]"
         component="button"
         onClick={() => dispatch(changeAccount())}
       >
