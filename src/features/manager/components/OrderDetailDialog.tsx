@@ -8,7 +8,6 @@ import {
   Typography,
 } from '@mui/material';
 import type { JSX } from 'react';
-import type { User } from '@custom-types/user';
 import type {
   ManagerOrder,
   ManagerOrderItem,
@@ -26,6 +25,20 @@ const formatDateTime = (value: string | null | undefined): string => {
 const formatCurrency = (value: number | null | undefined): string => {
   if (typeof value !== 'number') return '-';
   return `${value.toLocaleString('vi-VN')}đ`;
+};
+
+const getOrderItemUnitPrice = (
+  item: ManagerOrder['items'][number]
+): number | null => {
+  if (typeof item.unitPrice === 'number') {
+    return item.unitPrice;
+  }
+
+  if (typeof item.price === 'number') {
+    return item.price;
+  }
+
+  return null;
 };
 
 const getOrderItemAmount = (
@@ -78,11 +91,9 @@ const getDisplayOrderItemAmount = (
 
 export const OrderDetailDialog = ({
   detailOrder,
-  detailProfile,
   onClose,
 }: {
   detailOrder: ManagerOrder | null;
-  detailProfile: User | null;
   onClose: () => void;
 }): JSX.Element => {
   return (
@@ -165,16 +176,8 @@ export const OrderDetailDialog = ({
                   Người đặt đơn
                 </Typography>
                 <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {detailProfile?.username ??
+                  {detailOrder?.userName?.trim() ??
                     `User #${detailOrder?.userId ?? '-'}`}
-                </Typography>
-              </Box>
-              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
-                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
-                  Số điện thoại
-                </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {detailProfile?.phoneNumber ?? '-'}
                 </Typography>
               </Box>
             </Box>
@@ -185,12 +188,15 @@ export const OrderDetailDialog = ({
               Danh sách món
             </Typography>
             <Box className="max-h-56 overflow-y-auto pr-1">
-              <Box className="grid grid-cols-[minmax(0,1fr)_88px_120px] gap-2 rounded-lg border border-gray-200/80 bg-gray-100/80 px-3 py-2">
+              <Box className="grid grid-cols-[minmax(0,1fr)_88px_110px_120px] gap-2 rounded-lg border border-gray-200/80 bg-gray-100/80 px-3 py-2">
                 <Typography className="text-xs font-bold tracking-wide text-gray-600 uppercase">
                   Món
                 </Typography>
                 <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
                   Số lượng
+                </Typography>
+                <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
+                  Đơn giá
                 </Typography>
                 <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
                   Tiền món
@@ -200,7 +206,7 @@ export const OrderDetailDialog = ({
                 {(detailOrder?.items ?? []).map((item: ManagerOrderItem) => (
                   <Box
                     key={`${item.dishId}-${item.dishName}`}
-                    className="grid grid-cols-[minmax(0,1fr)_88px_120px] items-center gap-2 rounded-lg border border-gray-200/70 bg-white px-3 py-2"
+                    className="grid grid-cols-[minmax(0,1fr)_88px_110px_120px] items-center gap-2 rounded-lg border border-gray-200/70 bg-white px-3 py-2"
                   >
                     <Box className="min-w-0">
                       <Typography className="text-table-text-primary truncate text-sm font-semibold">
@@ -212,6 +218,9 @@ export const OrderDetailDialog = ({
                     </Box>
                     <Typography className="text-right text-sm font-semibold text-gray-700">
                       x{item.quantity}
+                    </Typography>
+                    <Typography className="text-right text-sm font-semibold text-gray-700">
+                      {formatCurrency(getOrderItemUnitPrice(item))}
                     </Typography>
                     <Typography className="text-right text-sm font-bold text-emerald-700">
                       {formatCurrency(

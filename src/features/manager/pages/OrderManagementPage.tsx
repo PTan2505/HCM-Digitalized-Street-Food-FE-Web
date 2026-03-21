@@ -20,21 +20,17 @@ import type {
   ManagerOrder,
   ManagerOrderItem,
 } from '@features/manager/types/orderManagement';
-import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
-import { loadUserFromStorage, selectUser } from '@slices/auth';
+import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectOrderStatus,
   selectVendorOrders,
   selectVendorOrdersPagination,
 } from '@slices/order';
-import type { User } from '@custom-types/user';
 
 export default function OrderManagementPage(): JSX.Element {
-  const dispatch = useAppDispatch();
   const { onGetManagerOrders } = useOrderManagement();
   const { onDecideVendorOrder, onCompleteVendorOrder } = useOrder();
 
-  const currentUser = useAppSelector(selectUser);
   const orders = useAppSelector(selectVendorOrders);
   const pagination = useAppSelector(selectVendorOrdersPagination);
   const status = useAppSelector(selectOrderStatus);
@@ -42,7 +38,6 @@ export default function OrderManagementPage(): JSX.Element {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [detailOrder, setDetailOrder] = useState<ManagerOrder | null>(null);
-  const [detailProfile, setDetailProfile] = useState<User | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);
   const [completeMessage, setCompleteMessage] = useState('');
@@ -131,20 +126,12 @@ export default function OrderManagementPage(): JSX.Element {
     }
   };
 
-  const handleOpenDetail = async (order: ManagerOrder): Promise<void> => {
+  const handleOpenDetail = (order: ManagerOrder): void => {
     setDetailOrder(order);
-
-    try {
-      const profile = await dispatch(loadUserFromStorage()).unwrap();
-      setDetailProfile(profile);
-    } catch {
-      setDetailProfile(currentUser);
-    }
   };
 
   const handleCloseDetail = (): void => {
     setDetailOrder(null);
-    setDetailProfile(null);
   };
 
   const columns = useMemo(
@@ -240,7 +227,7 @@ export default function OrderManagementPage(): JSX.Element {
         <span className="font-semibold text-blue-700">Xem chi tiết</span>
       ),
       onClick: (row: ManagerOrder): void => {
-        void handleOpenDetail(row);
+        handleOpenDetail(row);
       },
     },
     {
@@ -306,7 +293,6 @@ export default function OrderManagementPage(): JSX.Element {
 
       <OrderDetailDialog
         detailOrder={detailOrder}
-        detailProfile={detailProfile}
         onClose={handleCloseDetail}
       />
     </div>
