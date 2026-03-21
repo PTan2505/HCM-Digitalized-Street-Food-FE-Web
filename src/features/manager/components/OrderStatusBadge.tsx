@@ -13,11 +13,11 @@ export const getOrderStatusMeta = (
   label: string;
   type: OrderStatusType;
 } => {
-  if (status === 0) return { label: 'Chờ thanh toán', type: 'warning' };
-  if (status === 1) return { label: 'Đã thanh toán', type: 'info' };
-  if (status === 2) return { label: 'Đã chấp nhận', type: 'success' };
-  if (status === 3) return { label: 'Hoàn tất', type: 'success' };
-  if (status === 4) return { label: 'Đã từ chối', type: 'error' };
+  if (status === 0) return { label: 'Chờ xử lý', type: 'warning' };
+  if (status === 1) return { label: 'Chờ xác nhận', type: 'warning' };
+  if (status === 2) return { label: 'Đã thanh toán', type: 'info' };
+  if (status === 3) return { label: 'Đã hủy', type: 'error' };
+  if (status === 4) return { label: 'Hoàn tất', type: 'success' };
   return { label: 'Không xác định', type: 'default' };
 };
 

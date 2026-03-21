@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,6 +21,59 @@ import {
 const formatDateTime = (value: string | null | undefined): string => {
   if (!value) return '-';
   return new Date(value).toLocaleString('vi-VN');
+};
+
+const formatCurrency = (value: number | null | undefined): string => {
+  if (typeof value !== 'number') return '-';
+  return `${value.toLocaleString('vi-VN')}đ`;
+};
+
+const getOrderItemAmount = (
+  item: ManagerOrder['items'][number]
+): number | null => {
+  const itemAmountCandidates = [
+    item.lineAmount,
+    item.finalAmount,
+    item.totalAmount,
+    item.amount,
+    item.subtotal,
+  ];
+
+  const amountFromCandidates = itemAmountCandidates.find(
+    (amount) => typeof amount === 'number'
+  );
+
+  if (typeof amountFromCandidates === 'number') {
+    return amountFromCandidates;
+  }
+
+  if (typeof item.unitPrice === 'number') {
+    return item.unitPrice * item.quantity;
+  }
+
+  if (typeof item.price === 'number') {
+    return item.price * item.quantity;
+  }
+
+  return null;
+};
+
+const getDisplayOrderItemAmount = (
+  item: ManagerOrder['items'][number],
+  order: ManagerOrder | null
+): number | null => {
+  const directItemAmount = getOrderItemAmount(item);
+  if (typeof directItemAmount === 'number') {
+    return directItemAmount;
+  }
+
+  if (!order) return null;
+
+  if (order.items.length === 1 && typeof order.totalAmount === 'number') {
+    return order.totalAmount;
+  }
+
+  return null;
 };
 
 export const OrderDetailDialog = ({
@@ -89,6 +141,25 @@ export const OrderDetailDialog = ({
                   {detailOrder?.isTakeAway ? 'Mang đi' : 'Tại bàn'}
                 </Typography>
               </Box>
+              <Box className="rounded-lg border border-gray-200/60 bg-white p-3">
+                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                  Bàn
+                </Typography>
+                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {((): string => {
+                    const tableName = detailOrder?.table?.trim();
+                    return tableName && tableName.length > 0 ? tableName : '-';
+                  })()}
+                </Typography>
+              </Box>
+              <Box className="rounded-lg border border-gray-200/60 bg-white p-3">
+                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                  Thời gian tạo
+                </Typography>
+                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {formatDateTime(detailOrder?.createdAt)}
+                </Typography>
+              </Box>
               <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
                 <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                   Người đặt đơn
@@ -106,14 +177,6 @@ export const OrderDetailDialog = ({
                   {detailProfile?.phoneNumber ?? '-'}
                 </Typography>
               </Box>
-              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
-                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
-                  Thời gian tạo
-                </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {formatDateTime(detailOrder?.createdAt)}
-                </Typography>
-              </Box>
             </Box>
           </Box>
 
@@ -121,27 +184,43 @@ export const OrderDetailDialog = ({
             <Typography className="mb-3 text-xs font-bold tracking-wider text-gray-700 uppercase">
               Danh sách món
             </Typography>
-            <Box className="max-h-56 space-y-2 overflow-y-auto pr-1">
-              {(detailOrder?.items ?? []).map((item: ManagerOrderItem) => (
-                <Box
-                  key={`${item.dishId}-${item.dishName}`}
-                  className="flex items-center justify-between rounded-lg border border-gray-200/70 bg-white px-3 py-2"
-                >
-                  <Box className="min-w-0">
-                    <Typography className="text-table-text-primary truncate text-sm font-semibold">
-                      {item.dishName}
+            <Box className="max-h-56 overflow-y-auto pr-1">
+              <Box className="grid grid-cols-[minmax(0,1fr)_88px_120px] gap-2 rounded-lg border border-gray-200/80 bg-gray-100/80 px-3 py-2">
+                <Typography className="text-xs font-bold tracking-wide text-gray-600 uppercase">
+                  Món
+                </Typography>
+                <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
+                  Số lượng
+                </Typography>
+                <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
+                  Tiền món
+                </Typography>
+              </Box>
+              <Box className="mt-2 space-y-2">
+                {(detailOrder?.items ?? []).map((item: ManagerOrderItem) => (
+                  <Box
+                    key={`${item.dishId}-${item.dishName}`}
+                    className="grid grid-cols-[minmax(0,1fr)_88px_120px] items-center gap-2 rounded-lg border border-gray-200/70 bg-white px-3 py-2"
+                  >
+                    <Box className="min-w-0">
+                      <Typography className="text-table-text-primary truncate text-sm font-semibold">
+                        {item.dishName}
+                      </Typography>
+                      <Typography className="text-table-text-secondary text-xs">
+                        Mã món: #{item.dishId}
+                      </Typography>
+                    </Box>
+                    <Typography className="text-right text-sm font-semibold text-gray-700">
+                      x{item.quantity}
                     </Typography>
-                    <Typography className="text-table-text-secondary text-xs">
-                      Mã món: #{item.dishId}
+                    <Typography className="text-right text-sm font-bold text-emerald-700">
+                      {formatCurrency(
+                        getDisplayOrderItemAmount(item, detailOrder)
+                      )}
                     </Typography>
                   </Box>
-                  <Chip
-                    label={`x${item.quantity}`}
-                    size="small"
-                    className="bg-primary-100 text-primary-800 font-semibold"
-                  />
-                </Box>
-              ))}
+                ))}
+              </Box>
               {(detailOrder?.items?.length ?? 0) === 0 ? (
                 <Typography className="text-table-text-secondary text-sm">
                   Không có món trong đơn hàng.
@@ -151,15 +230,34 @@ export const OrderDetailDialog = ({
           </Box>
 
           <Box className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-4 shadow-sm">
-            <Box className="flex items-center justify-between">
-              <Typography className="text-sm font-bold text-emerald-800">
-                Tổng thanh toán
-              </Typography>
-              <Typography className="text-lg font-extrabold text-emerald-700">
-                {detailOrder?.finalAmount !== undefined
-                  ? `${detailOrder.finalAmount.toLocaleString('vi-VN')}đ`
-                  : '-'}
-              </Typography>
+            <Typography className="mb-3 text-xs font-bold tracking-wider text-emerald-800 uppercase">
+              Thanh toán
+            </Typography>
+            <Box className="space-y-2">
+              <Box className="flex items-center justify-between">
+                <Typography className="text-sm text-emerald-900">
+                  Tổng tiền món
+                </Typography>
+                <Typography className="text-sm font-semibold text-emerald-800">
+                  {formatCurrency(detailOrder?.totalAmount)}
+                </Typography>
+              </Box>
+              <Box className="flex items-center justify-between">
+                <Typography className="text-sm text-emerald-900">
+                  Giảm giá
+                </Typography>
+                <Typography className="text-sm font-semibold text-emerald-800">
+                  {formatCurrency(detailOrder?.discountAmount)}
+                </Typography>
+              </Box>
+              <Box className="flex items-center justify-between border-t border-emerald-200 pt-2">
+                <Typography className="text-sm font-bold text-emerald-900">
+                  Thanh toán cuối cùng
+                </Typography>
+                <Typography className="text-lg font-extrabold text-emerald-700">
+                  {formatCurrency(detailOrder?.finalAmount)}
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </Box>

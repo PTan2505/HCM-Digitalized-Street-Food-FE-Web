@@ -119,7 +119,7 @@ export default function OrderManagementPage(): JSX.Element {
 
       const completedOrder: ManagerOrder = {
         ...matchedOrder,
-        status: 3,
+        status: 4,
         updatedAt: new Date().toISOString(),
       };
 
