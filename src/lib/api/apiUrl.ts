@@ -112,6 +112,8 @@ export const apiUrl = {
     getPaymentSuccess: '/Payment/success',
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm/',
+    getVendorBalance: '/Payment/vendor/balance',
+    vendorRequestTransfer: '/Payment/vendor/transfer',
   },
   dish: {
     CreateOrGetDishesOfAVendor: (vendorId: number): string =>
@@ -139,6 +141,7 @@ export const apiUrl = {
       `/order/vendor/orders/${orderId}/decision`,
     getOrderPickupCode: (orderId: number): string =>
       `/order/${orderId}/pickup-code`,
+    getManagerOrders: '/order/manager/orders',
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
   },
