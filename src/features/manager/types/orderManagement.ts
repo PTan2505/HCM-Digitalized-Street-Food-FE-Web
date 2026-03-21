@@ -2,6 +2,13 @@ export interface ManagerOrderItem {
   dishId: number;
   dishName: string;
   quantity: number;
+  unitPrice?: number | null;
+  totalAmount?: number | null;
+  finalAmount?: number | null;
+  lineAmount?: number | null;
+  amount?: number | null;
+  subtotal?: number | null;
+  price?: number | null;
 }
 
 export interface ManagerOrder {
