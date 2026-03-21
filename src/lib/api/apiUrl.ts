@@ -112,6 +112,8 @@ export const apiUrl = {
     getPaymentSuccess: '/Payment/success',
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm/',
+    getVendorBalance: '/Payment/vendor/balance',
+    vendorRequestTransfer: '/Payment/vendor/transfer',
   },
   dish: {
     CreateOrGetDishesOfAVendor: (vendorId: number): string =>
