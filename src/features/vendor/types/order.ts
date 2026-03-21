@@ -14,6 +14,7 @@ export interface VendorOrderItem {
 export interface VendorOrder {
   orderId: number;
   userId: number;
+  userName?: string | null;
   branchId: number;
   branchName: string;
   status: number;
