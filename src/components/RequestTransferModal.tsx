@@ -12,7 +12,7 @@ import {
   MenuItem,
   Button,
   CircularProgress,
-  IconButton
+  IconButton,
 } from '@mui/material';
 import type { JSX } from 'react';
 import { useEffect } from 'react';
@@ -119,7 +119,9 @@ export default function RequestTransferModal({
               </Typography>
               <Typography className="mt-0.5 text-sm font-medium text-[var(--color-table-text-secondary)]">
                 Số dư hiện tại:{' '}
-                <span className="font-bold text-gray-800">{formatVnd(currentBalance)}</span>
+                <span className="font-bold text-gray-800">
+                  {formatVnd(currentBalance)}
+                </span>
               </Typography>
             </Box>
           </Box>
@@ -141,7 +143,6 @@ export default function RequestTransferModal({
         {/* Modal Content */}
         <Box className="flex-1 overflow-y-auto px-8 py-6">
           <Box className="flex flex-col gap-6">
-            
             <Box>
               <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                 Nội dung <span className="text-red-500">*</span>
@@ -224,7 +225,9 @@ export default function RequestTransferModal({
                           borderColor: errors.toBin ? '#ef4444' : '#d1d5db',
                         },
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: errors.toBin ? '#ef4444' : 'var(--color-primary-500)',
+                          borderColor: errors.toBin
+                            ? '#ef4444'
+                            : 'var(--color-primary-500)',
                           borderWidth: '1px',
                         },
                       }}
@@ -279,7 +282,6 @@ export default function RequestTransferModal({
                 )}
               />
             </Box>
-
           </Box>
         </Box>
 
