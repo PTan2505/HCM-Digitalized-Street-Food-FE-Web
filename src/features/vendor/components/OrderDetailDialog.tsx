@@ -1,22 +1,19 @@
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Typography,
+  Button,
 } from '@mui/material';
 import type { JSX } from 'react';
 import type { User } from '@custom-types/user';
-import type {
-  ManagerOrder,
-  ManagerOrderItem,
-} from '@features/manager/types/orderManagement';
+import type { VendorOrder } from '@features/vendor/types/order';
 import {
   getOrderStatusMeta,
   OrderStatusBadge,
-} from '@features/manager/components/OrderStatusBadge';
+} from '@features/vendor/components/OrderStatusBadge';
 
 const formatDateTime = (value: string | null | undefined): string => {
   if (!value) return '-';
@@ -29,7 +26,7 @@ const formatCurrency = (value: number | null | undefined): string => {
 };
 
 const getOrderItemAmount = (
-  item: ManagerOrder['items'][number]
+  item: VendorOrder['items'][number]
 ): number | null => {
   const itemAmountCandidates = [
     item.lineAmount,
@@ -59,8 +56,8 @@ const getOrderItemAmount = (
 };
 
 const getDisplayOrderItemAmount = (
-  item: ManagerOrder['items'][number],
-  order: ManagerOrder | null
+  item: VendorOrder['items'][number],
+  order: VendorOrder | null
 ): number | null => {
   const directItemAmount = getOrderItemAmount(item);
   if (typeof directItemAmount === 'number') {
@@ -81,7 +78,7 @@ export const OrderDetailDialog = ({
   detailProfile,
   onClose,
 }: {
-  detailOrder: ManagerOrder | null;
+  detailOrder: VendorOrder | null;
   detailProfile: User | null;
   onClose: () => void;
 }): JSX.Element => {
@@ -127,8 +124,8 @@ export const OrderDetailDialog = ({
                 </Typography>
                 <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
                   {detailOrder
-                    ? detailOrder.branchName.trim() !== ''
-                      ? detailOrder.branchName.trim()
+                    ? detailOrder.branchName.trim().length > 0
+                      ? detailOrder.branchName
                       : `Chi nhánh #${detailOrder.branchId}`
                     : '-'}
                 </Typography>
@@ -146,10 +143,7 @@ export const OrderDetailDialog = ({
                   Bàn
                 </Typography>
                 <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {((): string => {
-                    const tableName = detailOrder?.table?.trim();
-                    return tableName && tableName.length > 0 ? tableName : '-';
-                  })()}
+                  {detailOrder?.table?.trim() ? detailOrder.table.trim() : '-'}
                 </Typography>
               </Box>
               <Box className="rounded-lg border border-gray-200/60 bg-white p-3">
@@ -197,7 +191,7 @@ export const OrderDetailDialog = ({
                 </Typography>
               </Box>
               <Box className="mt-2 space-y-2">
-                {(detailOrder?.items ?? []).map((item: ManagerOrderItem) => (
+                {(detailOrder?.items ?? []).map((item) => (
                   <Box
                     key={`${item.dishId}-${item.dishName}`}
                     className="grid grid-cols-[minmax(0,1fr)_88px_120px] items-center gap-2 rounded-lg border border-gray-200/70 bg-white px-3 py-2"
