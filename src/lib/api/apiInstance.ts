@@ -12,6 +12,7 @@ import { PaymentApi } from '@features/vendor/api/paymentApi';
 import { HomeBranchApi } from '@features/home/api/homeBranchApi';
 import { DishApi } from '@features/vendor/api/dishApi';
 import { FeedbackApi } from '@features/vendor/api/feedbackApi';
+import { OrderManagementApi } from '@features/manager/api/orderManagementApi';
 import { OrderApi } from '@features/vendor/api/orderApi';
 import ApiClient from '@lib/api/apiClient';
 
@@ -33,4 +34,5 @@ export const axiosApi = {
   dishApi: new DishApi(axiosClient),
   feedbackApi: new FeedbackApi(axiosClient),
   orderApi: new OrderApi(axiosClient),
+  orderManagementApi: new OrderManagementApi(axiosClient),
 };

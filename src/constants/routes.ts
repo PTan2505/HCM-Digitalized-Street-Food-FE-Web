@@ -26,6 +26,7 @@ export const ROUTES = {
     BASE: '/manager',
     // Child paths
     PATHS: {
+      ORDER: 'orders',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       VERIFICATION: 'verification',

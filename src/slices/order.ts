@@ -1,4 +1,5 @@
 import type { RootState } from '@app/store';
+import type { GetManagerOrdersResponse } from '@features/manager/types/orderManagement';
 import type {
   CompleteVendorOrderResponse,
   DecideVendorOrderResponse,
@@ -71,6 +72,25 @@ export const getVendorBranchOrders = createAppAsyncThunk(
   }
 );
 
+export const getManagerOrders = createAppAsyncThunk(
+  'order/getManagerOrders',
+  async (
+    params: {
+      pageNumber: number;
+      pageSize: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: GetManagerOrdersResponse =
+        await axiosApi.orderManagementApi.getManagerOrders(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const decideVendorOrder = createAppAsyncThunk(
   'order/decideVendorOrder',
   async (
@@ -124,6 +144,7 @@ export const completeVendorOrder = createAppAsyncThunk(
 
 const allThunks = [
   getVendorBranchOrders,
+  getManagerOrders,
   decideVendorOrder,
   getOrderPickupCode,
   completeVendorOrder,
@@ -138,6 +159,17 @@ export const orderSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getVendorBranchOrders.fulfilled, (state, action) => {
+        state.orders = action.payload.items;
+        state.pagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
+      .addCase(getManagerOrders.fulfilled, (state, action) => {
         state.orders = action.payload.items;
         state.pagination = {
           currentPage: action.payload.currentPage,

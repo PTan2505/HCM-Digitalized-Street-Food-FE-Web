@@ -661,8 +661,9 @@ export default function OrderPage(): JSX.Element {
                   </Typography>
                   <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
                     {detailOrder
-                      ? detailOrder.branchName.trim() ||
-                        `Chi nhánh #${detailOrder.branchId}`
+                      ? detailOrder.branchName.trim() !== ''
+                        ? detailOrder.branchName.trim()
+                        : `Chi nhánh #${detailOrder.branchId}`
                       : '-'}
                   </Typography>
                 </Box>

@@ -3,7 +3,6 @@ import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
   Bars3Icon,
-  ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ShoppingBagIcon,
@@ -17,10 +16,9 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Dashboard', href: '/manager/revenue', icon: ChartBarIcon },
   {
-    name: 'Xác minh người bán',
-    href: '/manager/verification',
+    name: 'Quản lý đơn hàng',
+    href: '/manager/orders',
     icon: ShoppingBagIcon,
   },
 ];
