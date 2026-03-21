@@ -20,6 +20,7 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
+import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
@@ -107,31 +108,11 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.MANAGER.PATHS.REVENUE} replace />,
+            element: <Navigate to={ROUTES.MANAGER.PATHS.ORDER} replace />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.REVENUE,
-            element: <ModeratorRevenuePage />,
-          },
-          {
-            path: ROUTES.MANAGER.PATHS.TRANSACTIONS,
-            element: <ModeratorTransactionsPage />,
-          },
-          {
-            path: ROUTES.MANAGER.PATHS.VERIFICATION,
-            element: <ModeratorVendorVerificationPage />,
-          },
-          {
-            path: ROUTES.MANAGER.PATHS.POSTS,
-            element: <ModeratorPostsPage />,
-          },
-          {
-            path: ROUTES.MANAGER.PATHS.USERS,
-            element: <ModeratorUsersPage />,
-          },
-          {
-            path: ROUTES.MANAGER.PATHS.CASHOUT,
-            element: <ModeratorCashoutPage />,
+            path: ROUTES.MANAGER.PATHS.ORDER,
+            element: <OrderManagementPage />,
           },
         ],
       },
