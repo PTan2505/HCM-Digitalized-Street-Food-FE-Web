@@ -45,6 +45,9 @@ export const CreateVendorSchema = z.object({
     .nonempty('Vui lòng nhập tên cửa hàng!')
     .min(3, 'Tên cửa hàng phải có ít nhất 3 ký tự!')
     .max(100, 'Tên cửa hàng không được vượt quá 100 ký tự!'),
+  dietaryPreferenceIds: z
+    .array(z.number())
+    .min(1, 'Vui lòng chọn ít nhất một chế độ ăn phù hợp!'),
 });
 
 // Schema for addBranch mode — requires branchName

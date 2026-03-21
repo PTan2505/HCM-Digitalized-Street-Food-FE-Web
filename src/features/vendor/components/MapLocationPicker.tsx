@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import maplibregl from '@openmapvn/openmapvn-gl';
 import '@openmapvn/openmapvn-gl/dist/maplibre-gl.css';
 import type { JSX } from 'react';
@@ -13,6 +13,11 @@ interface MapLocationPickerProps {
   latitude: number | null;
   longitude: number | null;
   onLocationChange: (lat: number, lng: number) => void;
+  onAddressResolved?: (data: {
+    detailAddress: string;
+    ward: string;
+    city: string;
+  }) => void;
 }
 
 export default function MapLocationPicker({
@@ -20,14 +25,104 @@ export default function MapLocationPicker({
   latitude,
   longitude,
   onLocationChange,
+  onAddressResolved,
 }: MapLocationPickerProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
+  const reverseRequestIdRef = useRef(0);
+  const updateSourceRef = useRef<'map' | 'external'>('external');
+  const onLocationChangeRef = useRef(onLocationChange);
+  const onAddressResolvedRef = useRef(onAddressResolved);
   const [inputLat, setInputLat] = useState<string>('');
   const [inputLng, setInputLng] = useState<string>('');
 
   const apiKey = import.meta.env.VITE_OPENMAP_API_KEY;
+
+  const WARD_PREFIXES = ['phường', 'xã', 'thị trấn'];
+  const CITY_PREFIXES = ['thành phố', 'tỉnh'];
+
+  const findByPrefix = (
+    values: string[],
+    prefixes: string[]
+  ): string | undefined => {
+    const lowerPrefixes = prefixes.map((p) => p.toLowerCase());
+    return values.find((value) => {
+      const lower = value.toLowerCase();
+      return lowerPrefixes.some((prefix) => lower.startsWith(prefix));
+    });
+  };
+
+  const reverseGeocodeAndSync = useCallback(
+    async (lat: number, lng: number): Promise<void> => {
+      if (!onAddressResolvedRef.current) return;
+
+      reverseRequestIdRef.current += 1;
+      const requestId = reverseRequestIdRef.current;
+
+      try {
+        const params = new URLSearchParams({
+          latlng: `${lat},${lng}`,
+          admin_v2: 'true',
+        });
+        if (apiKey) {
+          params.append('apikey', apiKey);
+        }
+
+        const res = await fetch(
+          `/openmap/v1/geocode/reverse?${params.toString()}`
+        );
+        if (!res.ok) return;
+
+        const data = (await res.json()) as {
+          status?: string;
+          results?: Array<{
+            formatted_address?: string;
+            name?: string;
+            address?: string;
+            address_components?: Array<{
+              long_name?: string;
+            }>;
+          }>;
+        };
+
+        if (requestId !== reverseRequestIdRef.current) return;
+        if (data.status !== 'OK' || !data.results?.[0]) return;
+
+        const first = data.results[0];
+        const componentValues = (first.address_components ?? [])
+          .map((item) => item.long_name?.trim() ?? '')
+          .filter(Boolean);
+
+        const ward = findByPrefix(componentValues, WARD_PREFIXES) ?? '';
+        const city =
+          findByPrefix(componentValues, CITY_PREFIXES) ??
+          'Thành phố Hồ Chí Minh';
+
+        const detailAddress =
+          first.formatted_address ?? first.name ?? first.address ?? '';
+
+        if (!detailAddress) return;
+
+        onAddressResolvedRef.current({
+          detailAddress,
+          ward,
+          city,
+        });
+      } catch {
+        // Ignore reverse geocode errors and keep manual position.
+      }
+    },
+    [apiKey]
+  );
+
+  useEffect(() => {
+    onLocationChangeRef.current = onLocationChange;
+  }, [onLocationChange]);
+
+  useEffect(() => {
+    onAddressResolvedRef.current = onAddressResolved;
+  }, [onAddressResolved]);
 
   // Sync input values khi props thay đổi
   useEffect(() => {
@@ -55,9 +150,16 @@ export default function MapLocationPicker({
       marker.current.on('dragend', () => {
         if (marker.current) {
           const lngLat = marker.current.getLngLat();
-          onLocationChange(lngLat.lat, lngLat.lng);
+          updateSourceRef.current = 'map';
+          onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+          void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
         }
       });
+    }
+
+    if (updateSourceRef.current === 'map') {
+      updateSourceRef.current = 'external';
+      return;
     }
 
     map.current.flyTo({
@@ -65,7 +167,7 @@ export default function MapLocationPicker({
       zoom: 17,
       duration: 1000,
     });
-  }, [latitude, longitude, onLocationChange]);
+  }, [latitude, longitude, reverseGeocodeAndSync]);
 
   // Hàm cập nhật marker từ input tọa độ
   const handleApplyCoordinates = (): void => {
@@ -85,7 +187,9 @@ export default function MapLocationPicker({
       if (!confirm) return;
     }
 
-    onLocationChange(lat, lng);
+    updateSourceRef.current = 'map';
+    onLocationChangeRef.current(lat, lng);
+    void reverseGeocodeAndSync(lat, lng);
 
     // Cập nhật marker trên map
     if (map.current) {
@@ -99,7 +203,9 @@ export default function MapLocationPicker({
         marker.current.on('dragend', () => {
           if (marker.current) {
             const lngLat = marker.current.getLngLat();
-            onLocationChange(lngLat.lat, lngLat.lng);
+            updateSourceRef.current = 'map';
+            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
           }
         });
       }
@@ -134,7 +240,7 @@ export default function MapLocationPicker({
       });
 
       // Thêm marker nếu đã có tọa độ
-      if (latitude && longitude) {
+      if (latitude !== null && longitude !== null) {
         marker.current = new maplibregl.Marker({ draggable: true })
           .setLngLat([longitude, latitude])
           .addTo(map.current);
@@ -143,7 +249,9 @@ export default function MapLocationPicker({
         marker.current.on('dragend', () => {
           if (marker.current) {
             const lngLat = marker.current.getLngLat();
-            onLocationChange(lngLat.lat, lngLat.lng);
+            updateSourceRef.current = 'map';
+            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
           }
         });
       }
@@ -163,12 +271,16 @@ export default function MapLocationPicker({
           marker.current.on('dragend', () => {
             if (marker.current) {
               const lngLat = marker.current.getLngLat();
-              onLocationChange(lngLat.lat, lngLat.lng);
+              updateSourceRef.current = 'map';
+              onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+              void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
             }
           });
         }
 
-        onLocationChange(lat, lng);
+        updateSourceRef.current = 'map';
+        onLocationChangeRef.current(lat, lng);
+        void reverseGeocodeAndSync(lat, lng);
       });
     } catch {
       // map failed to load
@@ -180,7 +292,7 @@ export default function MapLocationPicker({
         map.current = null;
       }
     };
-  }, []);
+  }, [apiKey, reverseGeocodeAndSync]);
 
   // Geocoding khi địa chỉ thay đổi (với debounce)
   useEffect(() => {

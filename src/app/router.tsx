@@ -1,3 +1,4 @@
+import ManagerLayout from '@app/routes/ManagerLayout';
 import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
 import VendorLayout from '@app/routes/VendorLayout';
@@ -23,6 +24,9 @@ import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
 import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage';
+import VendorDishPage from '@features/vendor/pages/DishPage';
+import VendorOrderPage from '@features/vendor/pages/OrderPage';
+import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -98,6 +102,40 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        path: ROUTES.MANAGER.BASE,
+        element: <ManagerLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.MANAGER.PATHS.REVENUE} replace />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.REVENUE,
+            element: <ModeratorRevenuePage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.TRANSACTIONS,
+            element: <ModeratorTransactionsPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.VERIFICATION,
+            element: <ModeratorVendorVerificationPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.POSTS,
+            element: <ModeratorPostsPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.USERS,
+            element: <ModeratorUsersPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.CASHOUT,
+            element: <ModeratorCashoutPage />,
+          },
+        ],
+      },
+      {
         path: ROUTES.VENDOR.BASE,
         element: <VendorLayout />,
         children: [
@@ -120,6 +158,18 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.PAYMENT_HISTORY,
             element: <VendorPaymentHistoryPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.DISH,
+            element: <VendorDishPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.ORDER,
+            element: <VendorOrderPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.DIETARY,
+            element: <VendorDietaryPreferencesPage />,
           },
         ],
       },

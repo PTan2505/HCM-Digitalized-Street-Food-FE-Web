@@ -1,105 +1,54 @@
 import type { JSX } from 'react';
 import lowcaLogo from '@assets/logos/lowcaLogo.svg';
 import { Box, Container, Typography } from '@mui/material';
-import {
-  Facebook as FacebookIcon,
-  Twitter as TwitterIcon,
-  Instagram as InstagramIcon,
-} from '@mui/icons-material';
-
-const FOOTER_COLUMNS = [
-  {
-    title: 'Công thức',
-    links: ['Bữa sáng', 'Bữa trưa', 'Bữa tối', 'Tráng miệng'],
-  },
-  {
-    title: 'Công ty',
-    links: ['Về chúng tôi', 'Liên hệ', 'Tuyển dụng', 'Tin tức'],
-  },
-  {
-    title: 'Pháp lý',
-    links: ['Giải đáp pháp lý', 'Bảo mật', 'Cookie'],
-  },
-];
 
 export default function Footer(): JSX.Element {
   return (
-    <Box
-      component="footer"
-      className="w-full bg-[#1a1a1a] py-20 text-white"
-      role="contentinfo"
-    >
+    <Box component="footer" role="contentinfo" sx={{ bgcolor: '#ffffff' }}>
       <Container maxWidth="xl">
-        <Box className="mb-16 flex flex-wrap justify-between gap-8">
-          <Box className="max-w-xs">
-            <img
-              src={lowcaLogo}
-              alt="Lowca"
-              className="mb-6 h-auto w-36 brightness-0 invert"
-            />
-            <Typography
-              variant="body2"
-              className="text-gray-400"
-              sx={{ lineHeight: 1.8 }}
-            >
-              Khám phá hàng ngàn quán ăn ngon, giúp bữa ăn của bạn thêm phong
-              phú mỗi ngày.
-            </Typography>
-            <Box className="mt-6 flex gap-4">
-              <Box
-                component="a"
-                href="#"
-                aria-label="Facebook"
-                className="text-gray-400 transition-colors hover:text-white"
-              >
-                <FacebookIcon sx={{ fontSize: 20 }} />
-              </Box>
-              <Box
-                component="a"
-                href="#"
-                aria-label="Twitter"
-                className="text-gray-400 transition-colors hover:text-white"
-              >
-                <TwitterIcon sx={{ fontSize: 20 }} />
-              </Box>
-              <Box
-                component="a"
-                href="#"
-                aria-label="Instagram"
-                className="text-gray-400 transition-colors hover:text-white"
-              >
-                <InstagramIcon sx={{ fontSize: 20 }} />
-              </Box>
-            </Box>
-          </Box>
-          <Box className="flex flex-wrap gap-20">
-            {FOOTER_COLUMNS.map((col) => (
-              <Box key={col.title} className="flex flex-col">
-                <Typography fontWeight={700} className="mb-6! text-white">
-                  {col.title}
-                </Typography>
-                <Box
-                  component="ul"
-                  className="m-0 flex list-none flex-col gap-4 p-0"
-                >
-                  {col.links.map((link) => (
-                    <Box component="li" key={link}>
-                      <Box
-                        component="a"
-                        href="#"
-                        className="body-medium text-gray-400 no-underline transition-colors hover:text-white"
-                      >
-                        {link}
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            ))}
-          </Box>
+        <Box
+          sx={{
+            py: { xs: 6, md: 8 },
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: { xs: 'center', md: 'flex-start' },
+            textAlign: { xs: 'center', md: 'left' },
+            gap: 2,
+          }}
+        >
+          <img
+            src={lowcaLogo}
+            alt="Lowca"
+            style={{ height: 70, width: 'auto' }}
+          />
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#4b5563',
+              lineHeight: 1.8,
+              maxWidth: { xs: '100%', md: 760 },
+            }}
+          >
+            Lowca là nền tảng giúp đối tác quản lý và phát triển hoạt động kinh
+            doanh ẩm thực một cách hiệu quả. Với hệ thống quản trị tập trung,
+            bạn có thể dễ dàng cập nhật thực đơn, quản lý nhiều chi nhánh, theo
+            dõi thông tin cửa hàng và tối ưu vận hành mỗi ngày chỉ trên một nền
+            tảng duy nhất. Bên cạnh đó, Lowca hỗ trợ tăng khả năng tiếp cận
+            khách hàng thông qua hệ thống hiển thị thông minh, đánh giá minh
+            bạch và gợi ý nổi bật. Nhờ đó, cửa hàng của bạn không chỉ được quản
+            lý tốt hơn mà còn được quảng bá hiệu quả, thu hút thêm nhiều khách
+            hàng tiềm năng và gia tăng doanh thu bền vững.
+          </Typography>
         </Box>
-        <Box className="flex items-center justify-between border-t border-[#333] pt-10">
-          <Typography variant="body2" className="text-gray-400">
+
+        <Box
+          sx={{
+            borderTop: '1px solid #e5e7eb',
+            py: 2.5,
+            textAlign: { xs: 'center', md: 'left' },
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#6b7280' }}>
             © 2025 Lowca. Được bảo lưu mọi quyền.
           </Typography>
         </Box>

@@ -21,6 +21,20 @@ export const ROUTES = {
     },
   },
 
+  // Manager routes
+  MANAGER: {
+    BASE: '/manager',
+    // Child paths
+    PATHS: {
+      REVENUE: 'revenue',
+      TRANSACTIONS: 'transactions',
+      VERIFICATION: 'verification',
+      POSTS: 'posts',
+      USERS: 'users',
+      CASHOUT: 'cashout',
+    },
+  },
+
   // Admin routes
   ADMIN: {
     BASE: '/admin',
@@ -48,6 +62,9 @@ export const ROUTES = {
       BRANCH: 'branch',
       REGISTRATION_HISTORY: 'registration-history',
       PAYMENT_HISTORY: 'payment-history',
+      DISH: 'dish',
+      ORDER: 'orders',
+      DIETARY: 'dietary-preferences',
     },
   },
 

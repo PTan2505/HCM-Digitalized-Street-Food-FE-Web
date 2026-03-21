@@ -82,7 +82,9 @@ export const deleteCategory = createAppAsyncThunk(
 const categorySlice = createSlice({
   name: 'category',
   initialState,
-  reducers: {},
+  reducers: {
+    resetCategoryState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       // Get all categories
@@ -162,6 +164,8 @@ const categorySlice = createSlice({
       );
   },
 });
+
+export const { resetCategoryState } = categorySlice.actions;
 
 export const selectCategories = (state: RootState): Category[] =>
   state.category?.categories ?? [];

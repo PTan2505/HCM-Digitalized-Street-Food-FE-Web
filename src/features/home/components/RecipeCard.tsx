@@ -1,29 +1,53 @@
 import type { JSX } from 'react';
-import { Box, Rating, Typography } from '@mui/material';
-import { Favorite as FavoriteIcon } from '@mui/icons-material';
-import RecipeMeta from './RecipeMeta';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Skeleton, Rating } from '@mui/material';
+import { axiosApi } from '@lib/api/apiInstance';
 
 export interface RecipeCardProps {
-  img: string;
+  branchId: number;
   title: string;
-  time: string;
-  type: string;
-  rating: number;
-  author: string;
-  date: string;
+  avgRating: number;
+  totalReviewCount: number;
+  address: string;
   stretch?: boolean;
 }
 
 export default function RecipeCard({
-  img,
+  branchId,
   title,
-  time,
-  type,
-  rating,
-  author,
-  date,
+  avgRating,
+  totalReviewCount,
+  address,
   stretch,
 }: RecipeCardProps): JSX.Element {
+  const [img, setImg] = useState<string>(
+    'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80'
+  );
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchImage = async (): Promise<void> => {
+      try {
+        const res = await axiosApi.vendorApi.getImages(branchId, {
+          pageNumber: 1,
+          pageSize: 1,
+        });
+        if (mounted && res.items && res.items.length > 0) {
+          setImg(res.items[0].imageUrl);
+        }
+      } catch {
+        // ignore or fallback
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    void fetchImage();
+    return (): void => {
+      mounted = false;
+    };
+  }, [branchId]);
+
   return (
     <Box
       sx={{
@@ -44,47 +68,50 @@ export default function RecipeCard({
       <Box
         sx={{ position: 'relative', overflow: 'hidden', aspectRatio: '4/3' }}
       >
-        <img
-          src={img}
-          alt={title}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-          }}
-        />
-        <Box
-          component="button"
-          aria-label="Add to favorites"
-          sx={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            bgcolor: '#fff',
-            border: 0,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-            '&:hover': { bgcolor: '#f5f5f5' },
-            transition: 'background 0.2s',
-          }}
-        >
-          <FavoriteIcon sx={{ fontSize: 16, color: '#ccc' }} />
-        </Box>
+        {loading ? (
+          <Skeleton variant="rectangular" width="100%" height="100%" />
+        ) : (
+          <img
+            src={img}
+            alt={title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        )}
       </Box>
       <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <Rating
-          value={rating}
-          readOnly
-          size="small"
-          sx={{ mb: 1, '& .MuiRating-iconFilled': { color: '#f5a623' } }}
-        />
+        <Box
+          sx={{
+            mb: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+            <Rating
+              value={avgRating}
+              readOnly
+              max={5}
+              precision={0.1}
+              size="small"
+              sx={{ '& .MuiRating-iconFilled': { color: '#f5a623' } }}
+            />
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              sx={{ color: 'var(--color-primary-700)' }}
+            >
+              ({totalReviewCount} đánh giá)
+            </Typography>
+          </Box>
+        </Box>
+
         <Typography
           variant="body2"
           fontWeight={600}
@@ -93,35 +120,15 @@ export default function RecipeCard({
         >
           {title}
         </Typography>
-        <RecipeMeta time={time} type={type} />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
-          <img
-            src={`https://i.pravatar.cc/40?u=${encodeURIComponent(author)}`}
-            alt={author}
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: '50%',
-              objectFit: 'cover',
-            }}
-          />
-          <Box>
-            <Typography
-              variant="caption"
-              fontWeight={600}
-              display="block"
-              lineHeight={1.2}
-            >
-              {author}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              lineHeight={1.2}
-            >
-              {date}
-            </Typography>
-          </Box>
+        <Box
+          sx={{
+            mb: 1.5,
+            color: 'text.secondary',
+          }}
+        >
+          <Typography variant="caption" lineHeight={1.4}>
+            {address}
+          </Typography>
         </Box>
       </Box>
     </Box>
