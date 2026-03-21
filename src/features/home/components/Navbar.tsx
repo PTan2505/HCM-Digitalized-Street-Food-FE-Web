@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Navbar(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const navbarHeight = isScrolled ? 78 : 78;
+  const navbarHeight = isScrolled ? 60 : 70;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function Navbar(): JSX.Element {
                 gap: 2,
               }}
             >
-              <TextField
+              {/* <TextField
                 id="standard-search"
                 label="Tìm kiếm"
                 type="text"
@@ -133,7 +133,7 @@ export default function Navbar(): JSX.Element {
                     color: 'inherit',
                   },
                 }}
-              />
+              /> */}
               <Button
                 size="small"
                 variant="outlined"

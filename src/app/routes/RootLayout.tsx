@@ -46,6 +46,13 @@ const RootLayout = (): JSX.Element => {
         ) {
           navigate(ROUTES.MODERATOR.BASE, { replace: true });
         }
+      } else if (user.role === ROLES.MANAGER) {
+        if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.MANAGER.BASE)
+        ) {
+          navigate(ROUTES.MANAGER.BASE, { replace: true });
+        }
       } else if (user.role === ROLES.USER) {
         if (!user.userInfoSetup) {
           if (currentPath !== ROUTES.USER_INFO_SETUP) {
