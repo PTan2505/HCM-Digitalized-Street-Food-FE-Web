@@ -1,4 +1,5 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
@@ -6,16 +7,11 @@ import {
   ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CurrencyDollarIcon,
-  HomeIcon,
   ShoppingBagIcon,
-  UserCircleIcon,
-  UserGroupIcon,
-  UsersIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@hooks/reduxHooks';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -154,6 +150,10 @@ function ModeratorLayout(): JSX.Element {
                     ?.name ?? 'Dashboard'}
                 </Typography>
               </Box>
+            </Box>
+
+            <Box className="flex items-center gap-4">
+              <NotificationBell />
             </Box>
           </Box>
         </Box>

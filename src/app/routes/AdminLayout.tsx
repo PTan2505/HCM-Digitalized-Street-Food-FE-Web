@@ -1,4 +1,5 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import type { NavigationItem } from '@components/layout/SidebarContent';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
@@ -197,6 +198,10 @@ function AdminLayout(): JSX.Element {
                   {currentPageTitle}
                 </Typography>
               </Box>
+            </Box>
+
+            <Box className="flex items-center gap-4">
+              <NotificationBell />
             </Box>
           </Box>
         </Box>
