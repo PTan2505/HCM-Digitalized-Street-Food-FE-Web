@@ -25,15 +25,13 @@ import Pagination from '@features/vendor/components/Pagination';
 import useOrder from '@features/vendor/hooks/useOrder';
 import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorOrder } from '@features/vendor/types/order';
-import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
-import { loadUserFromStorage, selectUser } from '@slices/auth';
+import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectOrderStatus,
   selectVendorOrders,
   selectVendorOrdersPagination,
 } from '@slices/order';
 import { selectMyVendor } from '@slices/vendor';
-import type { User } from '@custom-types/user';
 
 const getBranchDisplayName = (branch: {
   branchName?: string | null;
@@ -45,7 +43,6 @@ const getBranchDisplayName = (branch: {
 type SelectedBranch = number | 'all';
 
 export default function OrderPage(): JSX.Element {
-  const dispatch = useAppDispatch();
   const { onGetMyVendor } = useVendor();
   const {
     onGetVendorBranchOrders,
@@ -54,7 +51,6 @@ export default function OrderPage(): JSX.Element {
   } = useOrder();
 
   const myVendor = useAppSelector(selectMyVendor);
-  const currentUser = useAppSelector(selectUser);
   const orders = useAppSelector(selectVendorOrders);
   const pagination = useAppSelector(selectVendorOrdersPagination);
   const status = useAppSelector(selectOrderStatus);
@@ -68,7 +64,6 @@ export default function OrderPage(): JSX.Element {
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);
   const [completeMessage, setCompleteMessage] = useState('');
-  const [detailProfile, setDetailProfile] = useState<User | null>(null);
 
   const branches = useMemo(
     () => (myVendor?.branches ?? []).filter((branch) => branch.isActive),
@@ -257,20 +252,12 @@ export default function OrderPage(): JSX.Element {
     }
   };
 
-  const handleOpenDetail = async (order: VendorOrder): Promise<void> => {
+  const handleOpenDetail = (order: VendorOrder): void => {
     setDetailOrder(order);
-
-    try {
-      const profile = await dispatch(loadUserFromStorage()).unwrap();
-      setDetailProfile(profile);
-    } catch {
-      setDetailProfile(currentUser);
-    }
   };
 
   const handleCloseDetail = (): void => {
     setDetailOrder(null);
-    setDetailProfile(null);
   };
 
   const columns = useMemo(
@@ -366,7 +353,7 @@ export default function OrderPage(): JSX.Element {
         <span className="font-semibold text-blue-700">Xem chi tiết</span>
       ),
       onClick: (row: VendorOrder): void => {
-        void handleOpenDetail(row);
+        handleOpenDetail(row);
       },
     },
     {
@@ -520,7 +507,6 @@ export default function OrderPage(): JSX.Element {
 
       <OrderDetailDialog
         detailOrder={detailOrder}
-        detailProfile={detailProfile}
         onClose={handleCloseDetail}
       />
     </div>

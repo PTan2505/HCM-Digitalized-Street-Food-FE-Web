@@ -8,7 +8,6 @@ import {
   Button,
 } from '@mui/material';
 import type { JSX } from 'react';
-import type { User } from '@custom-types/user';
 import type { VendorOrder } from '@features/vendor/types/order';
 import {
   getOrderStatusMeta,
@@ -75,11 +74,9 @@ const getDisplayOrderItemAmount = (
 
 export const OrderDetailDialog = ({
   detailOrder,
-  detailProfile,
   onClose,
 }: {
   detailOrder: VendorOrder | null;
-  detailProfile: User | null;
   onClose: () => void;
 }): JSX.Element => {
   return (
@@ -152,23 +149,6 @@ export const OrderDetailDialog = ({
                 </Typography>
                 <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
                   {formatDateTime(detailOrder?.createdAt)}
-                </Typography>
-              </Box>
-              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
-                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
-                  Người đặt đơn
-                </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {detailProfile?.username ??
-                    `User #${detailOrder?.userId ?? '-'}`}
-                </Typography>
-              </Box>
-              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
-                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
-                  Số điện thoại
-                </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {detailProfile?.phoneNumber ?? '-'}
                 </Typography>
               </Box>
             </Box>
