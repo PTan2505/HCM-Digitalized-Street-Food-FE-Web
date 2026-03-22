@@ -126,7 +126,9 @@ export default function NotificationBell(): JSX.Element {
             ...notifications.map((notification) => (
               <MenuItem
                 key={notification.notificationId}
-                onClick={() => { void handleNotificationClick(notification); }}
+                onClick={() => {
+                  void handleNotificationClick(notification);
+                }}
                 className={`flex flex-col items-start px-4 py-3 ${
                   notification.isRead ? 'bg-white' : 'bg-blue-50'
                 }`}
@@ -158,23 +160,25 @@ export default function NotificationBell(): JSX.Element {
                 </Typography>
               </MenuItem>
             )),
-            hasMore ? (
-              [
-                <Divider key="hasMore-divider" />,
-                <MenuItem
-                  key="hasMore-button"
-                  onClick={() => { void handleLoadMore(); }}
-                  className="justify-center py-2"
-                >
-                  <Typography
-                    variant="body2"
-                    className="text-center text-blue-600"
+            hasMore
+              ? [
+                  <Divider key="hasMore-divider" />,
+                  <MenuItem
+                    key="hasMore-button"
+                    onClick={() => {
+                      void handleLoadMore();
+                    }}
+                    className="justify-center py-2"
                   >
-                    Xem thêm
-                  </Typography>
-                </MenuItem>,
-              ]
-            ) : null,
+                    <Typography
+                      variant="body2"
+                      className="text-center text-blue-600"
+                    >
+                      Xem thêm
+                    </Typography>
+                  </MenuItem>,
+                ]
+              : null,
           ]
         )}
       </Menu>
