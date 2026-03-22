@@ -75,7 +75,7 @@ const navigation = [
     name: 'Nhận quán',
     href: '/vendor/ghost-pin',
     icon: MapPinIcon,
-    isForVendor: true,
+    isForVendor: false,
   },
 ];
 
