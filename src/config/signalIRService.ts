@@ -20,7 +20,7 @@ class SignalRService {
     }
 
     this.connection = new HubConnectionBuilder()
-      .withUrl(import.meta.env.VITE_SIGNALIR_URL as string, {
+      .withUrl(import.meta.env.VITE_SIGNALR_URL as string, {
         accessTokenFactory: () => tokenManagement.getAccessToken() || '',
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000])

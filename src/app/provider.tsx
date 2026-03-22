@@ -17,9 +17,7 @@ export function AppProvider({
     <GoogleOAuthProvider clientId={googleClientId}>
       <Provider store={store}>
         <ThemeProvider theme={theme}>
-          <NotificationProvider>
-            {children}
-          </NotificationProvider>
+          <NotificationProvider>{children}</NotificationProvider>
         </ThemeProvider>
       </Provider>
     </GoogleOAuthProvider>

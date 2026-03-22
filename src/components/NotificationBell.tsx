@@ -47,7 +47,7 @@ export default function NotificationBell(): JSX.Element {
           <NotificationsIcon />
           {/* Status Indicator */}
           <span
-            className={`absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-white ${
+            className={`absolute top-1 right-1 h-3 w-3 rounded-full border-2 border-white ${
               isConnected ? 'bg-green-500' : 'bg-red-500'
             }`}
             title={isConnected ? 'Connected' : 'Disconnected'}
@@ -83,7 +83,9 @@ export default function NotificationBell(): JSX.Element {
           notifications.map((notification) => (
             <MenuItem
               key={notification.notificationId}
-              onClick={() => handleNotificationClick(notification.notificationId)}
+              onClick={() =>
+                handleNotificationClick(notification.notificationId)
+              }
               className={`flex flex-col items-start px-4 py-3 ${
                 notification.isRead ? 'bg-white' : 'bg-blue-50'
               }`}
@@ -103,7 +105,7 @@ export default function NotificationBell(): JSX.Element {
               </Box>
               <Typography
                 variant="body2"
-                className="mt-1 w-full whitespace-normal text-sm text-gray-600 line-clamp-2"
+                className="mt-1 line-clamp-2 w-full text-sm whitespace-normal text-gray-600"
               >
                 {notification.message}
               </Typography>
