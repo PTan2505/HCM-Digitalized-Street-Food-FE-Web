@@ -19,6 +19,7 @@
     "@emotion/styled": "^11.14.1",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
+    "@microsoft/signalr": "^10.0.0",
     "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.6",
     "@openmapvn/openmapvn-gl": "^1.0.1",

@@ -1,4 +1,5 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
@@ -129,6 +130,10 @@ function ManagerLayout(): JSX.Element {
                     ?.name ?? 'Dashboard'}
                 </Typography>
               </Box>
+            </Box>
+
+            <Box className="flex items-center gap-4">
+              <NotificationBell />
             </Box>
           </Box>
         </Box>

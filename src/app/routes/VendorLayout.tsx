@@ -1,5 +1,6 @@
 import RequestTransferModal from '@components/RequestTransferModal';
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import usePayment from '@features/vendor/hooks/usePayment';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
@@ -234,25 +235,28 @@ function VendorLayout(): JSX.Element {
               </Box>
             </Box>
 
-            {isVendor && (
-              <Box className="flex items-center gap-3">
-                <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
-                  <AccountBalanceIcon fontSize="small" />
-                  Số dư: {formatCurrencyVnd(accountBalance?.balance)}
+            <Box className="flex items-center gap-4">
+              {isVendor && (
+                <Box className="flex items-center gap-3">
+                  <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
+                    <AccountBalanceIcon fontSize="small" />
+                    Số dư: {formatCurrencyVnd(accountBalance?.balance)}
+                  </Box>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setIsTransferModalOpen(true)}
+                    disabled={accountBalance?.balance === 0}
+                    startIcon={<MoneyIcon />}
+                    className="bg-primary-600 hover:bg-primary-700 h-10 rounded-lg px-4 text-sm font-bold whitespace-nowrap text-white shadow-sm"
+                    disableElevation
+                  >
+                    Yêu cầu rút tiền
+                  </Button>
                 </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => setIsTransferModalOpen(true)}
-                  disabled={accountBalance?.balance === 0}
-                  startIcon={<MoneyIcon />}
-                  className="bg-primary-600 hover:bg-primary-700 h-10 rounded-lg px-4 text-sm font-bold whitespace-nowrap text-white shadow-sm"
-                  disableElevation
-                >
-                  Yêu cầu rút tiền
-                </Button>
-              </Box>
-            )}
+              )}
+              <NotificationBell />
+            </Box>
           </Box>
         </Box>
 
