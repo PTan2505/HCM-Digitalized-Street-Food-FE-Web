@@ -211,6 +211,15 @@ const feedbackSlice = createSlice({
           feedback.replyContent = action.payload.data.content;
           feedback.repliedAt = new Date().toISOString();
         }
+        if (state.selectedFeedback?.id === action.payload.feedbackId) {
+          const now = new Date().toISOString();
+          state.selectedFeedback.vendorReply = {
+            ...(state.selectedFeedback.vendorReply ?? {}),
+            content: action.payload.data.content,
+            createdAt: now,
+            updatedAt: now,
+          };
+        }
       })
       .addCase(updateFeedbackReply.fulfilled, (state, action) => {
         const feedback = state.feedbacks.find(
@@ -220,6 +229,14 @@ const feedbackSlice = createSlice({
           feedback.replyContent = action.payload.data.content;
           feedback.repliedAt = new Date().toISOString();
         }
+        if (state.selectedFeedback?.id === action.payload.feedbackId) {
+          const now = new Date().toISOString();
+          state.selectedFeedback.vendorReply = {
+            ...(state.selectedFeedback.vendorReply ?? {}),
+            content: action.payload.data.content,
+            updatedAt: now,
+          };
+        }
       })
       .addCase(deleteFeedbackReply.fulfilled, (state, action) => {
         const feedback = state.feedbacks.find(
@@ -228,6 +245,9 @@ const feedbackSlice = createSlice({
         if (feedback) {
           feedback.replyContent = null;
           feedback.repliedAt = null;
+        }
+        if (state.selectedFeedback?.id === action.payload) {
+          state.selectedFeedback.vendorReply = null;
         }
       })
       .addMatcher(isPending(...allThunks), (state) => {
