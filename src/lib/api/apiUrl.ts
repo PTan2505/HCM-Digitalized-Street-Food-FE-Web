@@ -134,6 +134,12 @@ export const apiUrl = {
     CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
       `/Feedback/${feedbackId}/reply`,
   },
+  notification: {
+    getNotifications: '/notifications',
+    getUnreadCount: '/notifications/unread-count',
+    markAsRead: (id: number): string => `/notifications/${id}/read`,
+    markAllAsRead: '/notifications/read-all',
+  },
   order: {
     getVendorBranchOrders: (branchId: number): string =>
       `/order/vendor/branches/${branchId}/orders`,

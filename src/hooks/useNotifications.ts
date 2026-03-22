@@ -1,55 +1,120 @@
-import { useEffect, useState } from 'react';
-import { HubConnection } from '@microsoft/signalr';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { signalRService } from '@config/signalIRService';
+import { axiosApi } from '@lib/api/apiInstance';
 import { toast } from 'react-toastify';
 import CustomNotification from '@components/CustomNotification';
+import type { NotificationDto } from '@custom-types/notification';
 
-export interface NotificationDto {
-  notificationId: number;
-  type: string;
-  title: string;
-  message: string;
-  referenceId?: number;
-  isRead: boolean;
-  createdAt: string;
-}
+export type { NotificationDto } from '@custom-types/notification';
 
 interface UseNotificationsReturn {
-  connection: HubConnection | null;
   isConnected: boolean;
   connectionError: string | null;
   notifications: NotificationDto[];
-  clearNotifications: () => void;
-  markAsRead: (notificationId: number) => void;
+  unreadCount: number;
+  hasMore: boolean;
+  loadMore: () => Promise<void>;
+  markAsRead: (notificationId: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
 }
 
 export const useNotifications = (
   token: string | null
 ): UseNotificationsReturn => {
-  const [connection, setConnection] = useState<HubConnection | null>(null);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const isMountedRef = useRef(true);
 
+  // Fetch initial notifications + unread count
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const [notifRes, countRes] = await Promise.all([
+        axiosApi.notificationApi.getNotifications(1, 20),
+        axiosApi.notificationApi.getUnreadCount(),
+      ]);
+      if (!isMountedRef.current) return;
+      setNotifications(notifRes.items);
+      setUnreadCount(countRes.unreadCount);
+      setPage(1);
+      setHasMore(notifRes.hasNext);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  }, []);
+
+  // Load more notifications (pagination)
+  const loadMore = useCallback(async () => {
+    if (!hasMore) return;
+    try {
+      const nextPage = page + 1;
+      const res = await axiosApi.notificationApi.getNotifications(nextPage, 20);
+      if (!isMountedRef.current) return;
+      setNotifications((prev) => [...prev, ...res.items]);
+      setPage(nextPage);
+      setHasMore(res.hasNext);
+    } catch (error) {
+      console.error('Failed to load more notifications:', error);
+    }
+  }, [hasMore, page]);
+
+  // Mark single notification as read (API + local state)
+  const markAsRead = useCallback(async (notificationId: number) => {
+    try {
+      await axiosApi.notificationApi.markAsRead(notificationId);
+      if (!isMountedRef.current) return;
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.notificationId === notificationId ? { ...n, isRead: true } : n
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  }, []);
+
+  // Mark all as read (API + local state)
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await axiosApi.notificationApi.markAllAsRead();
+      if (!isMountedRef.current) return;
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  }, []);
+
+  // SignalR connection + event listener
   useEffect(() => {
     if (!token) return;
 
-    let isMounted = true;
+    isMountedRef.current = true;
 
-    const init = async (): Promise<void | (() => void)> => {
+    const init = async (): Promise<(() => void) | void> => {
+      // Fetch initial data from REST API
+      await fetchInitialData();
+
+      // Connect SignalR
       const conn = await signalRService.connect();
 
-      if (!conn || !isMounted) {
+      if (!conn || !isMountedRef.current) {
         setConnectionError('Connection failed');
         setIsConnected(false);
         return;
       }
 
-      setConnection(conn);
       setIsConnected(true);
+      setConnectionError(null);
 
-      // 🔥 handler
+      // Handle incoming real-time notifications (only NewFeedback)
       const handler = (data: NotificationDto): void => {
+        if (data.type !== 'NewFeedback') return;
+
         console.log('📬 New notification:', data);
         toast.info(CustomNotification, {
           data: {
@@ -57,33 +122,29 @@ export const useNotifications = (
             content: data.message,
           },
         });
-        setNotifications((prev: NotificationDto[]) => [data, ...prev]);
+        setNotifications((prev) => [data, ...prev]);
+        setUnreadCount((prev) => prev + 1);
       };
 
       signalRService.on<NotificationDto>('ReceiveNotification', handler);
 
-      // 🔄 lifecycle
       conn.onreconnecting(() => {
-        if (!isMounted) return;
-        console.log('🔄 Reconnecting...');
+        if (!isMountedRef.current) return;
         setIsConnected(false);
       });
 
       conn.onreconnected(() => {
-        if (!isMounted) return;
-        console.log('✅ Reconnected');
+        if (!isMountedRef.current) return;
         setIsConnected(true);
         setConnectionError(null);
       });
 
       conn.onclose((err) => {
-        if (!isMounted) return;
-        console.log('❌ Connection closed');
+        if (!isMountedRef.current) return;
         setIsConnected(false);
         if (err) setConnectionError(err.message);
       });
 
-      // cleanup
       return () => {
         signalRService.off<NotificationDto>('ReceiveNotification', handler);
       };
@@ -91,37 +152,23 @@ export const useNotifications = (
 
     const cleanupPromise = init();
 
-    return () => {
-      isMounted = false;
-
-      cleanupPromise?.then((cleanup: void | (() => void)): void => {
-        if (typeof cleanup === 'function') {
-          cleanup();
-        }
+    return (): void => {
+      isMountedRef.current = false;
+      cleanupPromise?.then((cleanup: (() => void) | void): void => {
+        if (typeof cleanup === 'function') cleanup();
       });
-
       signalRService.disconnect();
     };
-  }, [token]);
-
-  const clearNotifications = (): void => {
-    setNotifications([]);
-  };
-
-  const markAsRead = (id: number): void => {
-    setNotifications((prev: NotificationDto[]) =>
-      prev.map((n: NotificationDto) =>
-        n.notificationId === id ? { ...n, isRead: true } : n
-      )
-    );
-  };
+  }, [token, fetchInitialData]);
 
   return {
-    connection,
     isConnected,
     connectionError,
     notifications,
-    clearNotifications,
+    unreadCount,
+    hasMore,
+    loadMore,
     markAsRead,
+    markAllAsRead,
   };
 };

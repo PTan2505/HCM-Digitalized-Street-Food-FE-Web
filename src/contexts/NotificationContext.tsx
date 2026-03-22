@@ -11,9 +11,11 @@ interface NotificationContextType {
   isConnected: boolean;
   connectionError: string | null;
   notifications: NotificationDto[];
-  clearNotifications: () => void;
-  markAsRead: (id: number) => void;
   unreadCount: number;
+  hasMore: boolean;
+  loadMore: () => Promise<void>;
+  markAsRead: (id: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -32,11 +34,12 @@ export const NotificationProvider = ({
     isConnected,
     connectionError,
     notifications,
-    clearNotifications,
+    unreadCount,
+    hasMore,
+    loadMore,
     markAsRead,
+    markAllAsRead,
   } = useNotifications(token);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <NotificationContext.Provider
@@ -44,9 +47,11 @@ export const NotificationProvider = ({
         isConnected,
         connectionError,
         notifications,
-        clearNotifications,
-        markAsRead,
         unreadCount,
+        hasMore,
+        loadMore,
+        markAsRead,
+        markAllAsRead,
       }}
     >
       {children}

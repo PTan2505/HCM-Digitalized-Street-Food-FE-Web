@@ -7,13 +7,22 @@ import {
   Box,
   Typography,
   Divider,
+  Button,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { useNotificationContext } from '@contexts/NotificationContext';
 
 export default function NotificationBell(): JSX.Element {
-  const { notifications, unreadCount, markAsRead, isConnected } =
-    useNotificationContext();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    hasMore,
+    loadMore,
+    isConnected,
+  } = useNotificationContext();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const open = Boolean(anchorEl);
@@ -26,14 +35,36 @@ export default function NotificationBell(): JSX.Element {
     setAnchorEl(null);
   };
 
-  const handleNotificationClick = (id: number): void => {
-    markAsRead(id);
-    // Add navigation if tracking `referenceId`
+  const handleNotificationClick = async (notification: {
+    notificationId: number;
+    isRead: boolean;
+  }): Promise<void> => {
+    if (!notification.isRead) {
+      await markAsRead(notification.notificationId);
+    }
+  };
+
+  const handleMarkAllAsRead = async (): Promise<void> => {
+    await markAllAsRead();
+  };
+
+  const handleLoadMore = async (): Promise<void> => {
+    await loadMore();
   };
 
   const formatTime = (isoString: string): string => {
     try {
       const date = new Date(isoString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHour = Math.floor(diffMs / 3600000);
+      const diffDay = Math.floor(diffMs / 86400000);
+
+      if (diffMin < 1) return 'Vừa xong';
+      if (diffMin < 60) return `${diffMin} phút trước`;
+      if (diffHour < 24) return `${diffHour} giờ trước`;
+      if (diffDay < 7) return `${diffDay} ngày trước`;
       return date.toLocaleString('vi-VN');
     } catch {
       return isoString;
@@ -45,7 +76,6 @@ export default function NotificationBell(): JSX.Element {
       <IconButton color="inherit" onClick={handleClick} className="relative">
         <Badge badgeContent={unreadCount} color="error">
           <NotificationsIcon />
-          {/* Status Indicator */}
           <span
             className={`absolute top-1 right-1 h-3 w-3 rounded-full border-2 border-white ${
               isConnected ? 'bg-green-500' : 'bg-red-500'
@@ -60,63 +90,91 @@ export default function NotificationBell(): JSX.Element {
         onClose={handleClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        PaperProps={{
-          style: {
-            maxHeight: 400,
-            width: 320,
+        slotProps={{
+          paper: {
+            style: {
+              maxHeight: 450,
+              width: 360,
+            },
           },
         }}
       >
-        <Box className="px-4 py-2">
+        <Box className="flex items-center justify-between px-4 py-2">
           <Typography variant="h6" className="font-semibold text-gray-800">
-            Thông báo
+            Thong bao
           </Typography>
+          {unreadCount > 0 && (
+            <Button
+              size="small"
+              startIcon={<DoneAllIcon />}
+              onClick={handleMarkAllAsRead}
+              className="text-xs! normal-case!"
+            >
+              Doc tat ca
+            </Button>
+          )}
         </Box>
         <Divider />
         {notifications.length === 0 ? (
           <MenuItem disabled className="py-4 text-center">
             <Typography variant="body2" className="w-full text-gray-500">
-              Không có thông báo mới
+              Khong co thong bao
             </Typography>
           </MenuItem>
         ) : (
-          notifications.map((notification) => (
-            <MenuItem
-              key={notification.notificationId}
-              onClick={() =>
-                handleNotificationClick(notification.notificationId)
-              }
-              className={`flex flex-col items-start px-4 py-3 ${
-                notification.isRead ? 'bg-white' : 'bg-blue-50'
-              }`}
-            >
-              <Box className="flex w-full items-start justify-between">
+          <>
+            {notifications.map((notification) => (
+              <MenuItem
+                key={notification.notificationId}
+                onClick={() => handleNotificationClick(notification)}
+                className={`flex flex-col items-start px-4 py-3 ${
+                  notification.isRead ? 'bg-white' : 'bg-blue-50'
+                }`}
+              >
+                <Box className="flex w-full items-start justify-between">
+                  <Typography
+                    variant="subtitle2"
+                    className={`font-semibold ${
+                      notification.isRead ? 'text-gray-700' : 'text-blue-800'
+                    }`}
+                  >
+                    {notification.title}
+                  </Typography>
+                  {!notification.isRead && (
+                    <span className="mt-1 ml-2 h-2 w-2 shrink-0 rounded-full bg-blue-600"></span>
+                  )}
+                </Box>
                 <Typography
-                  variant="subtitle2"
-                  className={`font-semibold ${
-                    notification.isRead ? 'text-gray-700' : 'text-blue-800'
-                  }`}
+                  variant="body2"
+                  className="mt-1 line-clamp-2 w-full text-sm whitespace-normal text-gray-600"
                 >
-                  {notification.title}
+                  {notification.message}
                 </Typography>
-                {!notification.isRead && (
-                  <span className="h-2 w-2 rounded-full bg-blue-600"></span>
-                )}
-              </Box>
-              <Typography
-                variant="body2"
-                className="mt-1 line-clamp-2 w-full text-sm whitespace-normal text-gray-600"
-              >
-                {notification.message}
-              </Typography>
-              <Typography
-                variant="caption"
-                className="mt-2 text-xs text-gray-400"
-              >
-                {formatTime(notification.createdAt)}
-              </Typography>
-            </MenuItem>
-          ))
+                <Typography
+                  variant="caption"
+                  className="mt-2 text-xs text-gray-400"
+                >
+                  {formatTime(notification.createdAt)}
+                </Typography>
+              </MenuItem>
+            ))}
+            {hasMore && (
+              <>
+                <Divider />
+                <MenuItem
+                  onClick={handleLoadMore}
+                  className="justify-center py-2"
+                >
+                  <Typography
+                    variant="body2"
+                    className="text-center text-blue-600"
+                  >
+                    Xem them
+                  </Typography>
+                </MenuItem>
+              </>
+            )}
+          </>
         )}
       </Menu>
     </Box>
