@@ -109,8 +109,6 @@ export default function FeedbackDetailsModal({
         });
       }
       setIsEditing(false);
-      // Refresh để lấy data mới nhất
-      await onGetFeedbackDetails(feedback.id);
     } finally {
       setIsProcessing(false);
     }
@@ -123,7 +121,6 @@ export default function FeedbackDetailsModal({
       await onDeleteReply(feedback.id);
       setShowDeleteConfirm(false);
       setIsEditing(false);
-      await onGetFeedbackDetails(feedback.id);
     } finally {
       setIsProcessing(false);
     }
