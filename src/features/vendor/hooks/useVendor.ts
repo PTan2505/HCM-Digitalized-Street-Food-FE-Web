@@ -11,6 +11,9 @@ import type {
   UpdateVendorNameResponse,
   UpdateDietaryPreferencesOfMyVendorRequest,
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
+  GetAllGhostPinsResponse,
+  ClaimBranchRequest,
+  ClaimBranchResponse,
 } from '@features/vendor/types/vendor';
 
 import type {
@@ -45,6 +48,8 @@ import {
   updateVendorName,
   getDietaryPreferencesOfMyVendor,
   updateDietaryPreferencesOfMyVendor,
+  getAllGhostPins,
+  claimBranch,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -103,6 +108,11 @@ export default function useVendor(): {
   onUpdateDietaryPreferencesOfMyVendor: (
     payload: UpdateDietaryPreferencesOfMyVendorRequest
   ) => Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse>;
+  onGetAllGhostPins: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetAllGhostPinsResponse>;
+  onClaimBranch: (payload: ClaimBranchRequest) => Promise<ClaimBranchResponse>;
 } {
   const dispatch = useAppDispatch();
 
@@ -286,6 +296,23 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onGetAllGhostPins = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetAllGhostPinsResponse> => {
+      return await dispatch(getAllGhostPins(params)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onClaimBranch = useCallback(
+    async (payload: ClaimBranchRequest): Promise<ClaimBranchResponse> => {
+      return await dispatch(claimBranch(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
@@ -307,5 +334,7 @@ export default function useVendor(): {
     onUpdateVendorName,
     onGetDietaryPreferencesOfMyVendor,
     onUpdateDietaryPreferencesOfMyVendor,
+    onGetAllGhostPins,
+    onClaimBranch,
   };
 }
