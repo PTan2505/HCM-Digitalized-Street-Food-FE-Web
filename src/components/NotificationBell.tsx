@@ -13,7 +13,13 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { useNotificationContext } from '@contexts/NotificationContext';
 
-export default function NotificationBell(): JSX.Element {
+interface NotificationBellProps {
+  onFeedbackNotificationClick?: (feedbackId: number) => void;
+}
+
+export default function NotificationBell({
+  onFeedbackNotificationClick,
+}: NotificationBellProps): JSX.Element {
   const {
     notifications,
     unreadCount,
@@ -35,12 +41,23 @@ export default function NotificationBell(): JSX.Element {
     setAnchorEl(null);
   };
 
-  const handleNotificationClick = async (notification: {
+  const handleNotificationClick = (notification: {
     notificationId: number;
+    type: string;
     isRead: boolean;
-  }): Promise<void> => {
+    referenceId: number | null;
+  }): void => {
+    handleClose();
+
     if (!notification.isRead) {
-      await markAsRead(notification.notificationId);
+      void markAsRead(notification.notificationId);
+    }
+
+    if (
+      notification.type === 'NewFeedback' &&
+      notification.referenceId !== null
+    ) {
+      onFeedbackNotificationClick?.(notification.referenceId);
     }
   };
 
@@ -84,6 +101,7 @@ export default function NotificationBell(): JSX.Element {
           />
         </Badge>
       </IconButton>
+
       <Menu
         anchorEl={anchorEl}
         open={open}
@@ -92,32 +110,91 @@ export default function NotificationBell(): JSX.Element {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         slotProps={{
           paper: {
-            style: {
-              maxHeight: 450,
-              width: 360,
+            sx: {
+              maxHeight: 460,
+              width: 370,
+              borderRadius: '14px',
+              boxShadow:
+                '0 8px 32px color-mix(in srgb, var(--color-primary-500) 15%, transparent), 0 2px 8px rgba(0,0,0,0.10)',
+              border:
+                '1px solid color-mix(in srgb, var(--color-primary-400) 30%, transparent)',
+              overflow: 'hidden',
+              // Xóa padding mặc định của Paper/List bên trong Menu
+              '& .MuiList-root': {
+                paddingTop: 0,
+                paddingBottom: 0,
+              },
             },
           },
         }}
       >
-        <Box className="flex items-center justify-between px-4 py-2">
-          <Typography variant="h6" className="font-semibold text-gray-800">
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            px: 2,
+            py: 1.5,
+            background:
+              'linear-gradient(90deg, color-mix(in srgb, var(--color-primary-500) 12%, transparent) 0%, color-mix(in srgb, var(--color-primary-500) 5%, transparent) 100%)',
+            borderBottom:
+              '1.5px solid color-mix(in srgb, var(--color-primary-400) 30%, transparent)',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              fontSize: '1rem',
+              color: 'var(--color-primary-700)',
+              letterSpacing: 0.2,
+            }}
+          >
             Thông báo
           </Typography>
+
           {unreadCount > 0 && (
-            <Button
-              size="small"
-              startIcon={<DoneAllIcon />}
-              onClick={handleMarkAllAsRead}
-              className="text-xs! normal-case!"
-            >
-              Đọc tất cả
-            </Button>
+            <Box sx={{ position: 'absolute', right: 12 }}>
+              <Button
+                size="small"
+                startIcon={<DoneAllIcon sx={{ fontSize: 15 }} />}
+                onClick={() => void handleMarkAllAsRead()}
+                sx={{
+                  color: 'var(--color-primary-700)',
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                  textTransform: 'none',
+                  px: 1.2,
+                  py: 0.4,
+                  borderRadius: '8px',
+                  '&:hover': {
+                    background:
+                      'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
+                  },
+                }}
+              >
+                Đọc tất cả
+              </Button>
+            </Box>
           )}
         </Box>
-        <Divider />
+
+        {/* Items */}
         {notifications.length === 0 ? (
-          <MenuItem disabled className="py-4 text-center">
-            <Typography variant="body2" className="w-full text-gray-500">
+          <MenuItem
+            disabled
+            sx={{
+              py: 4,
+              justifyContent: 'center',
+              '&.Mui-disabled': { opacity: 1 },
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ color: '#aaa', fontSize: '0.85rem' }}
+            >
               Không có thông báo
             </Typography>
           </MenuItem>
@@ -126,53 +203,141 @@ export default function NotificationBell(): JSX.Element {
             ...notifications.map((notification) => (
               <MenuItem
                 key={notification.notificationId}
-                onClick={() => {
-                  void handleNotificationClick(notification);
+                onClick={() => handleNotificationClick(notification)}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  px: 2,
+                  py: 1.4,
+                  background: notification.isRead
+                    ? '#fff'
+                    : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
+                  borderLeft: notification.isRead
+                    ? '3px solid transparent'
+                    : '3px solid var(--color-primary-500)',
+                  transition: 'background 0.18s ease',
+                  '&:hover': {
+                    background: notification.isRead
+                      ? 'var(--color-primary-50)'
+                      : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
+                  },
                 }}
-                className={`flex flex-col items-start px-4 py-3 ${
-                  notification.isRead ? 'bg-white' : 'bg-blue-50'
-                }`}
               >
-                <Box className="flex w-full items-start justify-between">
+                {/* Title row */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    width: '100%',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                  }}
+                >
                   <Typography
                     variant="subtitle2"
-                    className={`font-semibold ${
-                      notification.isRead ? 'text-gray-700' : 'text-blue-800'
-                    }`}
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      color: notification.isRead
+                        ? '#374151'
+                        : 'var(--color-primary-700)',
+                      lineHeight: 1.4,
+                    }}
                   >
                     {notification.title}
                   </Typography>
                   {!notification.isRead && (
-                    <span className="mt-1 ml-2 h-2 w-2 shrink-0 rounded-full bg-blue-600"></span>
+                    <Box
+                      sx={{
+                        flexShrink: 0,
+                        mt: 0.5,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: 'var(--color-primary-500)',
+                        boxShadow:
+                          '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
+                      }}
+                    />
                   )}
                 </Box>
+
+                {/* Message */}
                 <Typography
                   variant="body2"
-                  className="mt-1 line-clamp-2 w-full text-sm whitespace-normal text-gray-600"
+                  sx={{
+                    mt: 0.4,
+                    width: '100%',
+                    fontSize: '0.78rem',
+                    color: '#6b7280',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.5,
+                  }}
                 >
                   {notification.message}
                 </Typography>
-                <Typography
-                  variant="caption"
-                  className="mt-2 text-xs text-gray-400"
+
+                {/* Footer row */}
+                <Box
+                  sx={{
+                    mt: 0.8,
+                    display: 'flex',
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
                 >
-                  {formatTime(notification.createdAt)}
-                </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ fontSize: '0.7rem', color: '#9ca3af' }}
+                  >
+                    {formatTime(notification.createdAt)}
+                  </Typography>
+
+                  {notification.type === 'NewFeedback' &&
+                    notification.referenceId !== null && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          color: 'var(--color-primary-600)',
+                        }}
+                      >
+                        Xem chi tiết →
+                      </Typography>
+                    )}
+                </Box>
               </MenuItem>
             )),
+
             hasMore
               ? [
-                  <Divider key="hasMore-divider" />,
+                  <Divider key="hasMore-divider" sx={{ my: 0 }} />,
                   <MenuItem
                     key="hasMore-button"
                     onClick={() => {
                       void handleLoadMore();
                     }}
-                    className="justify-center py-2"
+                    sx={{
+                      justifyContent: 'center',
+                      py: 1.2,
+                      transition: 'background 0.18s ease',
+                      '&:hover': { background: 'var(--color-primary-50)' },
+                    }}
                   >
                     <Typography
                       variant="body2"
-                      className="text-center text-blue-600"
+                      sx={{
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        color: 'var(--color-primary-600)',
+                      }}
                     >
                       Xem thêm
                     </Typography>

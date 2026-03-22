@@ -2,6 +2,7 @@ import RequestTransferModal from '@components/RequestTransferModal';
 import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
+import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import usePayment from '@features/vendor/hooks/usePayment';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
 import {
@@ -85,6 +86,7 @@ function VendorLayout(): JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
+  const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -255,7 +257,9 @@ function VendorLayout(): JSX.Element {
                   </Button>
                 </Box>
               )}
-              <NotificationBell />
+              <NotificationBell
+                onFeedbackNotificationClick={setFeedbackModalId}
+              />
             </Box>
           </Box>
         </Box>
@@ -274,6 +278,11 @@ function VendorLayout(): JSX.Element {
         currentBalance={accountBalance?.balance}
         onClose={() => setIsTransferModalOpen(false)}
         onSubmit={handleSubmitTransferRequest}
+      />
+      <FeedbackDetailsModal
+        isOpen={feedbackModalId !== null}
+        onClose={() => setFeedbackModalId(null)}
+        feedbackId={feedbackModalId}
       />
     </Box>
   );
