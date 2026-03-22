@@ -102,6 +102,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
         return next;
       });
     });
+    console.log(pendingRegistrations);
   }, [pendingRegistrations]);
 
   const handlePageChange = useCallback((page: number): void => {
@@ -180,7 +181,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const columns = [
     {
-      key: 'branchRegisterRequestId',
+      key: 'branchRequestId',
       label: 'STT',
       render: (
         _: unknown,
@@ -383,7 +384,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
         columns={columns}
         data={pendingRegistrations as unknown as Record<string, unknown>[]}
         loading={status === 'pending'}
-        rowKey="branchRegisterRequestId"
+        rowKey="branchRequestId"
         actions={actions}
         emptyMessage="Chưa có yêu cầu xác minh nào"
         loadingMessage="Đang tải danh sách..."

@@ -1,4 +1,6 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
+import type { NavigationItem } from '@components/layout/SidebarContent';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
@@ -7,14 +9,12 @@ import {
   ChartBarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  HomeIcon,
   RectangleStackIcon,
   ShoppingBagIcon,
   SparklesIcon,
   StarIcon,
   UserCircleIcon,
   UserGroupIcon,
-  UsersIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -24,14 +24,14 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-const navigation = [
+const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
-  {
-    name: 'Quản lý giao dịch',
-    href: '/admin/transactions',
-    icon: HomeIcon,
-  },
-  { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
+  // {
+  //   name: 'Quản lý giao dịch',
+  //   href: '/admin/transactions',
+  //   icon: HomeIcon,
+  // },
+  // { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
     name: 'Quản lý cửa hàng',
     href: '/admin/vendors',
@@ -43,14 +43,20 @@ const navigation = [
     icon: RectangleStackIcon,
   },
   {
-    name: 'Quản lý huy hiệu',
-    href: '/admin/badge',
+    name: 'Huy hiệu',
     icon: StarIcon,
-  },
-  {
-    name: 'Huy hiệu của người dùng',
-    href: '/admin/badge-users',
-    icon: ShoppingBagIcon,
+    children: [
+      {
+        name: 'Quản lý huy hiệu',
+        href: '/admin/badge',
+        icon: StarIcon,
+      },
+      {
+        name: 'Huy hiệu của người dùng',
+        href: '/admin/badge-users',
+        icon: ShoppingBagIcon,
+      },
+    ],
   },
   {
     name: 'Quản lý khẩu vị',
@@ -58,14 +64,20 @@ const navigation = [
     icon: SparklesIcon,
   },
   {
-    name: 'Quản lý chế độ ăn',
-    href: '/admin/user-dietary',
+    name: 'Chế độ ăn',
     icon: UserGroupIcon,
-  },
-  {
-    name: 'Chế độ ăn của người dùng',
-    href: '/admin/users-with-dietary',
-    icon: UserCircleIcon,
+    children: [
+      {
+        name: 'Quản lý chế độ ăn',
+        href: '/admin/user-dietary',
+        icon: UserGroupIcon,
+      },
+      {
+        name: 'Chế độ ăn của người dùng',
+        href: '/admin/users-with-dietary',
+        icon: UserCircleIcon,
+      },
+    ],
   },
 ];
 
@@ -91,6 +103,13 @@ function AdminLayout(): JSX.Element {
     role: ADMIN_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
+
+  const currentPageTitle =
+    navigation.find((item) => item.href === location.pathname)?.name ??
+    navigation
+      .flatMap((item) => item.children ?? [])
+      .find((child) => child.href === location.pathname)?.name ??
+    'Dashboard';
 
   return (
     <Box className="min-h-screen bg-white text-gray-900">
@@ -176,10 +195,13 @@ function AdminLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {navigation.find((item) => item.href === location.pathname)
-                    ?.name ?? 'Dashboard'}
+                  {currentPageTitle}
                 </Typography>
               </Box>
+            </Box>
+
+            <Box className="flex items-center gap-4">
+              <NotificationBell />
             </Box>
           </Box>
         </Box>

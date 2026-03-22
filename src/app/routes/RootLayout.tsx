@@ -46,6 +46,13 @@ const RootLayout = (): JSX.Element => {
         ) {
           navigate(ROUTES.MODERATOR.BASE, { replace: true });
         }
+      } else if (user.role === ROLES.MANAGER) {
+        if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.MANAGER.BASE)
+        ) {
+          navigate(ROUTES.MANAGER.BASE, { replace: true });
+        }
       } else if (user.role === ROLES.USER) {
         if (!user.userInfoSetup) {
           if (currentPath !== ROUTES.USER_INFO_SETUP) {
@@ -55,12 +62,9 @@ const RootLayout = (): JSX.Element => {
           currentPath === ROUTES.ROOT ||
           !currentPath.startsWith(ROUTES.VENDOR.BASE)
         ) {
-          navigate(
-            `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.REGISTRATION_HISTORY}`,
-            {
-              replace: true,
-            }
-          );
+          navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`, {
+            replace: true,
+          });
         }
       } else if (user.role === ROLES.VENDOR) {
         if (

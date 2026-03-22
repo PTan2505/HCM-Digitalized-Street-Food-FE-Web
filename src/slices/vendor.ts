@@ -10,6 +10,10 @@ import type {
   Branch,
   UpdateVendorNameRequest,
   UpdateVendorNameResponse,
+  UpdateDietaryPreferencesOfMyVendorRequest,
+  UpdateOrGetDietaryPreferencesOfMyVendorResponse,
+  ClaimBranchRequest,
+  GhostPin,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -38,16 +42,37 @@ import {
 } from '@reduxjs/toolkit';
 import type { CheckLicenseStatusResponse } from '@features/vendor/types/vendor';
 
+export type PaginationState = {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+};
+
+const defaultPagination: PaginationState = {
+  currentPage: 1,
+  pageSize: 10,
+  totalPages: 1,
+  totalCount: 0,
+  hasPrevious: false,
+  hasNext: false,
+};
+
 export interface VendorState {
   vendorId: number | null;
   branchId: number | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   myVendor: GetMyVendorResponse | null;
+  myVendorDietaryPreferences: UpdateOrGetDietaryPreferencesOfMyVendorResponse;
   licenseStatus: CheckLicenseStatusResponse | null;
   images: GetImagesResponse | null;
   workSchedules: GetWorkScheduleResponse;
   dayOffs: GetDayOffResponse;
+  ghostPins: GhostPin[];
+  ghostPinsPagination: PaginationState;
   // Admin
   adminVendors: AdminVendor[];
   selectedVendorDetail: VendorDetail | null;
@@ -69,10 +94,13 @@ const initialState: VendorState = {
   status: 'idle',
   error: null,
   myVendor: null,
+  myVendorDietaryPreferences: [],
   licenseStatus: null,
   images: null,
   workSchedules: [],
   dayOffs: [],
+  ghostPins: [],
+  ghostPinsPagination: { ...defaultPagination },
   // Admin
   adminVendors: [],
   selectedVendorDetail: null,
@@ -355,6 +383,72 @@ export const updateVendorName = createAppAsyncThunk(
   }
 );
 
+export const getDietaryPreferencesOfMyVendor = createAppAsyncThunk(
+  'vendor/getDietaryPreferencesOfMyVendor',
+  async (
+    payload: {
+      vendorId: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+        await axiosApi.vendorApi.getDietaryPreferencesOfMyVendor(
+          payload.vendorId
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateDietaryPreferencesOfMyVendor = createAppAsyncThunk(
+  'vendor/updateDietaryPreferencesOfMyVendor',
+  async (
+    payload: UpdateDietaryPreferencesOfMyVendorRequest,
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+        await axiosApi.vendorApi.updateDietaryPreferencesOfMyVendor(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getAllGhostPins = createAppAsyncThunk(
+  'vendor/getAllGhostPins',
+  async (
+    params: { pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.vendorApi.getAllGhostPins(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const claimBranch = createAppAsyncThunk(
+  'vendor/claimBranch',
+  async (payload: ClaimBranchRequest, { rejectWithValue }) => {
+    try {
+      const response = await axiosApi.vendorApi.claimBranch(
+        payload.branchId,
+        payload.licenseImages
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Admin Thunks ─────────────────────────────────────────
 
 export const getAllVendors = createAppAsyncThunk(
@@ -508,6 +602,15 @@ export const vendorSlice = createSlice({
           state.myVendor.name = action.payload.name;
         }
       })
+      .addCase(getDietaryPreferencesOfMyVendor.fulfilled, (state, action) => {
+        state.myVendorDietaryPreferences = action.payload;
+      })
+      .addCase(
+        updateDietaryPreferencesOfMyVendor.fulfilled,
+        (state, action) => {
+          state.myVendorDietaryPreferences = action.payload;
+        }
+      )
       .addCase(getWorkSchedules.fulfilled, (state, action) => {
         state.workSchedules = action.payload;
       })
@@ -559,6 +662,23 @@ export const vendorSlice = createSlice({
         state.dayOffs = state.dayOffs.filter(
           (d) => d.dayOffId !== action.payload
         );
+      })
+      .addCase(getAllGhostPins.fulfilled, (state, action) => {
+        state.ghostPins = action.payload.items;
+        state.ghostPinsPagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
+      .addCase(claimBranch.fulfilled, (state, action) => {
+        state.ghostPins = state.ghostPins.filter(
+          (pin) => pin.branchId !== action.meta.arg.branchId
+        );
+        state.ghostPinsPagination.totalCount -= 1;
       })
       // ─── Admin Cases ─────────────────────────────────────
       .addCase(getAllVendors.fulfilled, (state, action) => {
@@ -626,7 +746,11 @@ export const vendorSlice = createSlice({
           createBranch,
           updateBranch,
           deleteBranch,
-          updateVendorName
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor,
+          getAllGhostPins,
+          claimBranch
         ),
         (state) => {
           state.status = 'pending';
@@ -651,7 +775,11 @@ export const vendorSlice = createSlice({
           createBranch,
           updateBranch,
           deleteBranch,
-          updateVendorName
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor,
+          getAllGhostPins,
+          claimBranch
         ),
         (state, action) => {
           state.status = 'failed';
@@ -678,7 +806,11 @@ export const vendorSlice = createSlice({
           createBranch,
           updateBranch,
           deleteBranch,
-          updateVendorName
+          updateVendorName,
+          getDietaryPreferencesOfMyVendor,
+          updateDietaryPreferencesOfMyVendor,
+          getAllGhostPins,
+          claimBranch
         ),
         (state) => {
           state.status = 'succeeded';
@@ -737,6 +869,12 @@ export default vendorSlice.reducer;
 export const selectVendorId = (state: RootState): number | null =>
   state.vendor.vendorId;
 
+export const selectGhostPins = (state: RootState): GhostPin[] =>
+  state.vendor.ghostPins;
+
+export const selectGhostPinsPagination = (state: RootState): PaginationState =>
+  state.vendor.ghostPinsPagination;
+
 export const selectBranchId = (state: RootState): number | null =>
   state.vendor.branchId;
 
@@ -753,6 +891,11 @@ export const selectLicenseStatus = (
 
 export const selectMyVendor = (state: RootState): GetMyVendorResponse | null =>
   state.vendor.myVendor;
+
+export const selectMyVendorDietaryPreferences = (
+  state: RootState
+): UpdateOrGetDietaryPreferencesOfMyVendorResponse =>
+  state.vendor.myVendorDietaryPreferences;
 
 export const selectImages = (state: RootState): GetImagesResponse | null =>
   state.vendor.images;

@@ -65,8 +65,14 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    getAllGhostPins: '/Branch/all-ghost-pins',
+    claimBranch: '/Vendor/claim-branch',
     updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
+    getDietaryPreferencesOfAVendor(vendorId: number): string {
+      return `/Vendor/${vendorId}/dietary-preferences`;
+    },
+    updateDietaryPreferencesOfMyVendor: '/Vendor/my-vendor/dietary-preferences',
     submitLicense: (branchId: number): string =>
       `/Branch/${branchId}/submit-license`,
     checkLicenseStatus: (branchId: number): string =>
@@ -108,6 +114,8 @@ export const apiUrl = {
     getPaymentSuccess: '/Payment/success',
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm/',
+    getVendorBalance: '/Payment/vendor/balance',
+    vendorRequestTransfer: '/Payment/vendor/transfer',
   },
   dish: {
     CreateOrGetDishesOfAVendor: (vendorId: number): string =>
@@ -121,5 +129,30 @@ export const apiUrl = {
       dishId: number,
       branchId: number
     ): string => `dishes/${dishId}/branch/${branchId}/availability`,
+  },
+  feedback: {
+    GetFeedbacksByBranch: (branchId: number): string =>
+      `/Feedback/branch/${branchId}`,
+    CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}/reply`,
+    GetFeedbackDetails: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}`,
+  },
+  notification: {
+    getNotifications: '/notifications',
+    getUnreadCount: '/notifications/unread-count',
+    markAsRead: (id: number): string => `/notifications/${id}/read`,
+    markAllAsRead: '/notifications/read-all',
+  },
+  order: {
+    getVendorBranchOrders: (branchId: number): string =>
+      `/order/vendor/branches/${branchId}/orders`,
+    decideVendorOrder: (orderId: number): string =>
+      `/order/vendor/orders/${orderId}/decision`,
+    getOrderPickupCode: (orderId: number): string =>
+      `/order/${orderId}/pickup-code`,
+    getManagerOrders: '/order/manager/orders',
+    completeVendorOrder: (orderId: number): string =>
+      `/order/vendor/orders/${orderId}/complete`,
   },
 };

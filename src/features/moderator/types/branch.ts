@@ -36,13 +36,15 @@ export interface Branch {
 }
 
 export interface BranchRegisterRequest {
-  branchRegisterRequestId: number;
+  branchRequestId: number;
   branchId: number;
   licenseUrl: string;
   status: number;
   rejectReason: string | null;
   createdAt: string;
   updatedAt: string;
+  isCreatedByOwner: boolean;
+  type: number;
   branch: Branch;
 }
 

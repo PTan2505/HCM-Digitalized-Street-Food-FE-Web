@@ -8,6 +8,9 @@ import type {
   GetPaymentHistoryResponse,
   GetPaymentSuccessResponse,
   GetPaymentCancelResponse,
+  GetVendorBalanceResponse,
+  VendorRequestTransferRequest,
+  VendorRequestTransferResponse,
 } from '@features/vendor/types/payment';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -25,6 +28,7 @@ export interface PaymentState {
   paymentHistory: GetPaymentHistoryResponse | null;
   paymentSuccess: GetPaymentSuccessResponse | null;
   paymentCancel: GetPaymentCancelResponse | null;
+  accountBalance: GetVendorBalanceResponse | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -36,6 +40,7 @@ const initialState: PaymentState = {
   paymentHistory: null,
   paymentSuccess: null,
   paymentCancel: null,
+  accountBalance: null,
   status: 'idle',
   error: null,
 };
@@ -121,6 +126,32 @@ export const getPaymentCancel = createAppAsyncThunk(
   }
 );
 
+export const getVendorBalance = createAppAsyncThunk(
+  'payment/getVendorBalance',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: GetVendorBalanceResponse =
+        await axiosApi.paymentApi.getVendorBalance();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const vendorRequestTransfer = createAppAsyncThunk(
+  'payment/vendorRequestTransfer',
+  async (payload: VendorRequestTransferRequest, { rejectWithValue }) => {
+    try {
+      const response: VendorRequestTransferResponse =
+        await axiosApi.paymentApi.vendorRequestTransfer(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const paymentSlice = createSlice({
   name: 'payment',
   initialState,
@@ -148,6 +179,14 @@ export const paymentSlice = createSlice({
       .addCase(getPaymentCancel.fulfilled, (state, action) => {
         state.paymentCancel = action.payload;
       })
+      .addCase(getVendorBalance.fulfilled, (state, action) => {
+        state.accountBalance = action.payload;
+      })
+      .addCase(vendorRequestTransfer.fulfilled, (state, action) => {
+        state.accountBalance = {
+          balance: action.payload.currentVendorBalance,
+        };
+      })
       .addMatcher(
         isPending(
           createPaymentLink,
@@ -155,7 +194,9 @@ export const paymentSlice = createSlice({
           confirmPayment,
           getPaymentHistory,
           getPaymentSuccess,
-          getPaymentCancel
+          getPaymentCancel,
+          getVendorBalance,
+          vendorRequestTransfer
         ),
         (state) => {
           state.status = 'pending';
@@ -169,7 +210,9 @@ export const paymentSlice = createSlice({
           confirmPayment,
           getPaymentHistory,
           getPaymentSuccess,
-          getPaymentCancel
+          getPaymentCancel,
+          getVendorBalance,
+          vendorRequestTransfer
         ),
         (state) => {
           state.status = 'succeeded';
@@ -183,7 +226,9 @@ export const paymentSlice = createSlice({
           confirmPayment,
           getPaymentHistory,
           getPaymentSuccess,
-          getPaymentCancel
+          getPaymentCancel,
+          getVendorBalance,
+          vendorRequestTransfer
         ),
         (state, action) => {
           state.status = 'failed';
@@ -226,3 +271,7 @@ export const selectPaymentSuccess = (
 export const selectPaymentCancel = (
   state: RootState
 ): GetPaymentCancelResponse | null => state.payment.paymentCancel;
+
+export const selectVendorAccountBalance = (
+  state: RootState
+): GetVendorBalanceResponse | null => state.payment.accountBalance;

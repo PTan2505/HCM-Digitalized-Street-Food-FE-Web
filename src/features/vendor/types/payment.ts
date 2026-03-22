@@ -66,3 +66,21 @@ export interface GetPaymentSuccessResponse {
 export interface GetPaymentCancelResponse {
   message?: string;
 }
+
+export interface GetVendorBalanceResponse {
+  balance: number;
+}
+
+export interface VendorRequestTransferRequest {
+  description: string;
+  toAccountNumber: string;
+  toBin: string;
+  amount: number;
+}
+
+export interface VendorRequestTransferResponse {
+  referenceId: string;
+  payoutId: string;
+  approvalState: string;
+  currentVendorBalance: number;
+}

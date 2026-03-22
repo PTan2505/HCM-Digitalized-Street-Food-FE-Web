@@ -1,7 +1,7 @@
 export interface CreateOrUpdateDishRequest {
   CategoryId: number;
   Description: string;
-  DietaryPreferenceIds: number[];
+  DietaryPreferenceIds?: number[];
   imageFile: File;
   IsActive: boolean;
   Name: string;
@@ -31,7 +31,7 @@ export interface CreateOrUpdateDishResponse {
   categoryId: number;
   categoryName: string;
   tasteNames: string[];
-  dietaryPreferenceNames: string[];
+  dietaryPreferenceNames?: string[];
 }
 
 export interface GetDishesOfAVendorResponse {

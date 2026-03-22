@@ -8,6 +8,7 @@ export interface VendorRegistrationRequest {
   city: string;
   lat: number;
   long: number;
+  dietaryPreferenceIds: number[];
   isActive?: boolean;
 }
 
@@ -146,4 +147,66 @@ export interface UpdateVendorNameResponse {
   isActive: boolean;
   vendorOwnerName: string;
   branches: Branch[];
+}
+
+export type UpdateDietaryPreferencesOfMyVendorRequest = number[];
+
+export interface DietaryPreferences {
+  dietaryPreferenceId: number;
+  name: string;
+  description: string;
+}
+
+export type UpdateOrGetDietaryPreferencesOfMyVendorResponse =
+  DietaryPreferences[];
+
+export interface GhostPin {
+  branchId: number;
+  vendorId: number;
+  managerId: number | null;
+  name: string;
+  phoneNumber: string | null;
+  email: string | null;
+  addressDetail: string;
+  ward: string;
+  city: string;
+  lat: number;
+  long: number;
+  createdAt: string;
+  updatedAt: string | null;
+  isVerified: boolean;
+  avgRating: number;
+  totalReviewCount: number;
+  totalRatingSum: number;
+  batchReviewCount: number;
+  batchRatingSum: number;
+  isActive: boolean;
+  isSubscribed: boolean;
+  subscriptionExpiresAt: string | null;
+  daysRemaining: number | null;
+  tierId: number;
+  tierName: string;
+  licenseUrls: string[];
+  licenseStatus: string | null;
+  licenseRejectReason: string | null;
+}
+
+export interface GetAllGhostPinsResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: GhostPin[];
+}
+
+export interface ClaimBranchRequest {
+  branchId: number;
+  licenseImages: File[];
+}
+
+export interface ClaimBranchResponse {
+  paymentLink?: string | null;
+  licenseUrls: string[];
 }
