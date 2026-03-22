@@ -1,11 +1,13 @@
 import type {
   GetFeedbacksByBranchResponse,
   ReplyFeedbackRequest,
+  GetFeedbackDetailsResponse,
 } from '@features/vendor/types/feedback';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
   createFeedbackReply,
   deleteFeedbackReply,
+  getFeedbackDetails,
   getFeedbacksByBranch,
   resetFeedbackState,
   updateFeedbackReply,
@@ -26,6 +28,9 @@ export default function useFeedback(): {
     data: ReplyFeedbackRequest;
   }) => Promise<{ feedbackId: number; data: ReplyFeedbackRequest }>;
   onDeleteReply: (feedbackId: number) => Promise<number>;
+  onGetFeedbackDetails: (
+    feedbackId: number
+  ) => Promise<GetFeedbackDetailsResponse>;
   onResetFeedbackState: () => void;
 } {
   const dispatch = useAppDispatch();
@@ -67,6 +72,13 @@ export default function useFeedback(): {
     [dispatch]
   );
 
+  const onGetFeedbackDetails = useCallback(
+    async (feedbackId: number): Promise<GetFeedbackDetailsResponse> => {
+      return await dispatch(getFeedbackDetails(feedbackId)).unwrap();
+    },
+    [dispatch]
+  );
+
   const onResetFeedbackState = useCallback(() => {
     dispatch(resetFeedbackState());
   }, [dispatch]);
@@ -76,6 +88,7 @@ export default function useFeedback(): {
     onCreateReply,
     onUpdateReply,
     onDeleteReply,
+    onGetFeedbackDetails,
     onResetFeedbackState,
   };
 }

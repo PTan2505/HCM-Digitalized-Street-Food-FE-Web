@@ -135,6 +135,8 @@ export const apiUrl = {
       `/Feedback/branch/${branchId}`,
     CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
       `/Feedback/${feedbackId}/reply`,
+    GetFeedbackDetails: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}`,
   },
   notification: {
     getNotifications: '/notifications',

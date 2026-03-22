@@ -64,3 +64,28 @@ export interface GetFeedbacksByBranchResponse {
 }
 
 export type ReplyFeedbackResponse = string;
+
+export interface GetFeedbackDetailsResponse {
+  id: number;
+  user: {
+    id: number;
+    name: string;
+    avatar: string | null;
+  };
+  dishId: number;
+  dish: {
+    id: number;
+    name: string;
+  } | null;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string | null;
+  images: string[] | null;
+  tags: string[] | null;
+  upVotes: number;
+  downVotes: number;
+  netScore: number;
+  userVote: string | null;
+  vendorReply: VendorReply | null;
+}

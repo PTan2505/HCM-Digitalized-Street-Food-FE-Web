@@ -2,6 +2,7 @@ import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
+import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import {
   Bars3Icon,
   ChevronLeftIcon,
@@ -27,6 +28,7 @@ const navigation = [
 function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -133,7 +135,9 @@ function ManagerLayout(): JSX.Element {
             </Box>
 
             <Box className="flex items-center gap-4">
-              <NotificationBell />
+              <NotificationBell
+                onFeedbackNotificationClick={setFeedbackModalId}
+              />
             </Box>
           </Box>
         </Box>
@@ -144,6 +148,12 @@ function ManagerLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+
+      <FeedbackDetailsModal
+        isOpen={feedbackModalId !== null}
+        onClose={() => setFeedbackModalId(null)}
+        feedbackId={feedbackModalId}
+      />
     </Box>
   );
 }

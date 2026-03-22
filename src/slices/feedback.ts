@@ -5,6 +5,7 @@ import type {
   GetFeedbacksByBranchParams,
   RawBranchFeedbackResponse,
   ReplyFeedbackRequest,
+  GetFeedbackDetailsResponse,
 } from '@features/vendor/types/feedback';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -38,6 +39,7 @@ export interface FeedbackState {
   pagination: PaginationState;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
+  selectedFeedback: GetFeedbackDetailsResponse | null;
 }
 
 const initialState: FeedbackState = {
@@ -45,6 +47,7 @@ const initialState: FeedbackState = {
   pagination: { ...defaultPagination },
   status: 'idle',
   error: null,
+  selectedFeedback: null,
 };
 
 const normalizeReply = (
@@ -155,11 +158,25 @@ export const deleteFeedbackReply = createAppAsyncThunk(
   }
 );
 
+export const getFeedbackDetails = createAppAsyncThunk(
+  'feedback/getFeedbackDetails',
+  async (feedbackId: number, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.feedbackApi.getFeedbackDetails(feedbackId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const allThunks = [
   getFeedbacksByBranch,
   createFeedbackReply,
   updateFeedbackReply,
   deleteFeedbackReply,
+  getFeedbackDetails,
 ] as const;
 
 const feedbackSlice = createSlice({
@@ -182,6 +199,9 @@ const feedbackSlice = createSlice({
           hasPrevious: action.payload.hasPrevious,
           hasNext: action.payload.hasNext,
         };
+      })
+      .addCase(getFeedbackDetails.fulfilled, (state, action) => {
+        state.selectedFeedback = action.payload;
       })
       .addCase(createFeedbackReply.fulfilled, (state, action) => {
         const feedback = state.feedbacks.find(
@@ -244,3 +264,7 @@ export const selectBranchFeedbacks = (
 export const selectBranchFeedbacksPagination = (
   state: RootState
 ): FeedbackState['pagination'] => state.feedback.pagination;
+
+export const selectSelectedFeedback = (
+  state: RootState
+): GetFeedbackDetailsResponse | null => state.feedback.selectedFeedback;
