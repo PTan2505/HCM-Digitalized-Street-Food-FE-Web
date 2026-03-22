@@ -80,7 +80,7 @@ export default function NotificationBell(): JSX.Element {
             className={`absolute top-1 right-1 h-3 w-3 rounded-full border-2 border-white ${
               isConnected ? 'bg-green-500' : 'bg-red-500'
             }`}
-            title={isConnected ? 'Connected' : 'Disconnected'}
+            title={isConnected ? 'Đã kết nối' : 'Đã ngắt kết nối'}
           />
         </Badge>
       </IconButton>
@@ -101,7 +101,7 @@ export default function NotificationBell(): JSX.Element {
       >
         <Box className="flex items-center justify-between px-4 py-2">
           <Typography variant="h6" className="font-semibold text-gray-800">
-            Thong bao
+            Thông báo
           </Typography>
           {unreadCount > 0 && (
             <Button
@@ -110,7 +110,7 @@ export default function NotificationBell(): JSX.Element {
               onClick={handleMarkAllAsRead}
               className="text-xs! normal-case!"
             >
-              Doc tat ca
+              Đọc tất cả
             </Button>
           )}
         </Box>
@@ -118,15 +118,15 @@ export default function NotificationBell(): JSX.Element {
         {notifications.length === 0 ? (
           <MenuItem disabled className="py-4 text-center">
             <Typography variant="body2" className="w-full text-gray-500">
-              Khong co thong bao
+              Không có thông báo
             </Typography>
           </MenuItem>
         ) : (
-          <>
-            {notifications.map((notification) => (
+          [
+            ...notifications.map((notification) => (
               <MenuItem
                 key={notification.notificationId}
-                onClick={() => handleNotificationClick(notification)}
+                onClick={() => { void handleNotificationClick(notification); }}
                 className={`flex flex-col items-start px-4 py-3 ${
                   notification.isRead ? 'bg-white' : 'bg-blue-50'
                 }`}
@@ -157,24 +157,25 @@ export default function NotificationBell(): JSX.Element {
                   {formatTime(notification.createdAt)}
                 </Typography>
               </MenuItem>
-            ))}
-            {hasMore && (
-              <>
-                <Divider />
+            )),
+            hasMore ? (
+              [
+                <Divider key="hasMore-divider" />,
                 <MenuItem
-                  onClick={handleLoadMore}
+                  key="hasMore-button"
+                  onClick={() => { void handleLoadMore(); }}
                   className="justify-center py-2"
                 >
                   <Typography
                     variant="body2"
                     className="text-center text-blue-600"
                   >
-                    Xem them
+                    Xem thêm
                   </Typography>
-                </MenuItem>
-              </>
-            )}
-          </>
+                </MenuItem>,
+              ]
+            ) : null,
+          ]
         )}
       </Menu>
     </Box>

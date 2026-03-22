@@ -18,7 +18,7 @@
 //     }
 
 //     const accessToken = tokenManagement.getAccessToken();
-//     const url = `${import.meta.env.VITE_WS_URL}?token=${accessToken}`;
+//     const url = `${import.meta.env.VITE_WS_URL}?access_token=${accessToken}`;
 
 //     this.ws = new WebSocket(url);
 
