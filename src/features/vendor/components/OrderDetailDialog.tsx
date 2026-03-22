@@ -24,6 +24,20 @@ const formatCurrency = (value: number | null | undefined): string => {
   return `${value.toLocaleString('vi-VN')}đ`;
 };
 
+const getOrderItemUnitPrice = (
+  item: VendorOrder['items'][number]
+): number | null => {
+  if (typeof item.unitPrice === 'number') {
+    return item.unitPrice;
+  }
+
+  if (typeof item.price === 'number') {
+    return item.price;
+  }
+
+  return null;
+};
+
 const getOrderItemAmount = (
   item: VendorOrder['items'][number]
 ): number | null => {
@@ -151,6 +165,15 @@ export const OrderDetailDialog = ({
                   {formatDateTime(detailOrder?.createdAt)}
                 </Typography>
               </Box>
+              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
+                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                  Người đặt đơn
+                </Typography>
+                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {detailOrder?.userName?.trim() ??
+                    `User #${detailOrder?.userId ?? '-'}`}
+                </Typography>
+              </Box>
             </Box>
           </Box>
 
@@ -159,12 +182,15 @@ export const OrderDetailDialog = ({
               Danh sách món
             </Typography>
             <Box className="max-h-56 overflow-y-auto pr-1">
-              <Box className="grid grid-cols-[minmax(0,1fr)_88px_120px] gap-2 rounded-lg border border-gray-200/80 bg-gray-100/80 px-3 py-2">
+              <Box className="grid grid-cols-[minmax(0,1fr)_88px_110px_120px] gap-2 rounded-lg border border-gray-200/80 bg-gray-100/80 px-3 py-2">
                 <Typography className="text-xs font-bold tracking-wide text-gray-600 uppercase">
                   Món
                 </Typography>
                 <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
                   Số lượng
+                </Typography>
+                <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
+                  Đơn giá
                 </Typography>
                 <Typography className="text-right text-xs font-bold tracking-wide text-gray-600 uppercase">
                   Tiền món
@@ -174,7 +200,7 @@ export const OrderDetailDialog = ({
                 {(detailOrder?.items ?? []).map((item) => (
                   <Box
                     key={`${item.dishId}-${item.dishName}`}
-                    className="grid grid-cols-[minmax(0,1fr)_88px_120px] items-center gap-2 rounded-lg border border-gray-200/70 bg-white px-3 py-2"
+                    className="grid grid-cols-[minmax(0,1fr)_88px_110px_120px] items-center gap-2 rounded-lg border border-gray-200/70 bg-white px-3 py-2"
                   >
                     <Box className="min-w-0">
                       <Typography className="text-table-text-primary truncate text-sm font-semibold">
@@ -186,6 +212,9 @@ export const OrderDetailDialog = ({
                     </Box>
                     <Typography className="text-right text-sm font-semibold text-gray-700">
                       x{item.quantity}
+                    </Typography>
+                    <Typography className="text-right text-sm font-semibold text-gray-700">
+                      {formatCurrency(getOrderItemUnitPrice(item))}
                     </Typography>
                     <Typography className="text-right text-sm font-bold text-emerald-700">
                       {formatCurrency(

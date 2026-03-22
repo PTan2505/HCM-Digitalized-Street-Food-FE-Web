@@ -16,6 +16,7 @@ import {
   ShoppingBagIcon,
   SparklesIcon,
   QueueListIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import MoneyIcon from '@mui/icons-material/Money';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -70,6 +71,12 @@ const navigation = [
     href: '/vendor/dietary-preferences',
     icon: SparklesIcon,
     isForVendor: true,
+  },
+  {
+    name: 'Nhận quán',
+    href: '/vendor/ghost-pin',
+    icon: MapPinIcon,
+    isForVendor: false,
   },
 ];
 

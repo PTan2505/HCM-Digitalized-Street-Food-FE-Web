@@ -14,6 +14,7 @@ export interface ManagerOrderItem {
 export interface ManagerOrder {
   orderId: number;
   userId: number;
+  userName?: string | null;
   branchId: number;
   branchName: string;
   status: number;
