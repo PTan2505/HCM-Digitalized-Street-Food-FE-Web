@@ -11,6 +11,9 @@ import type {
   UpdateVendorNameResponse,
   UpdateDietaryPreferencesOfMyVendorRequest,
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
+  GetAllGhostPinsResponse,
+  ClaimBranchRequest,
+  ClaimBranchResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -246,6 +249,36 @@ export class VendorApi {
     >({
       url: apiUrl.vendor.updateDietaryPreferencesOfMyVendor,
       data,
+    });
+    return res.data;
+  }
+
+  async getAllGhostPins(params: {
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<GetAllGhostPinsResponse> {
+    const res = await this.apiClient.get<GetAllGhostPinsResponse>({
+      url: apiUrl.vendor.getAllGhostPins,
+      params,
+    });
+    return res.data;
+  }
+
+  async claimBranch(
+    branchId: number,
+    licenseImages: File[]
+  ): Promise<ClaimBranchResponse> {
+    const formData = new FormData();
+    licenseImages.forEach((file) => {
+      formData.append('licenseImages', file);
+    });
+    formData.append('branchId', branchId.toString());
+    const res = await this.apiClient.post<ClaimBranchResponse, FormData>({
+      url: apiUrl.vendor.claimBranch,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   }

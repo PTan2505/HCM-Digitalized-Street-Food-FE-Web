@@ -65,6 +65,8 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    getAllGhostPins: '/Branch/all-ghost-pins',
+    claimBranch: '/Vendor/claim-branch',
     updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
     getDietaryPreferencesOfAVendor(vendorId: number): string {
