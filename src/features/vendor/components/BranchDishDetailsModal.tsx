@@ -7,6 +7,7 @@ import DishFilterSection from '@features/vendor/components/DishFilterSection';
 import useDish from '@features/vendor/hooks/useDish';
 import CloseIcon from '@mui/icons-material/Close';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import SaveIcon from '@mui/icons-material/Save';
 import IconButton from '@mui/material/IconButton';
 import { Checkbox, Switch, CircularProgress } from '@mui/material';
 import Table from '@features/vendor/components/Table';
@@ -57,6 +58,8 @@ export default function BranchDishDetailsModal({
   // ─── Local UI state ──────────────────────────────────────────
   const [vendorPageSize, setVendorPageSize] = useState(10);
   const [filters, setFilters] = useState<DishFilterValues>({});
+  const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
+  const [isApplying, setIsApplying] = useState(false);
   const [actionLoading, setActionLoading] = useState<Set<number>>(new Set());
 
   const branchId = branch?.branchId;
@@ -87,10 +90,11 @@ export default function BranchDishDetailsModal({
   // ─── Fetch branch dishes (all pages) ───────────────────────
   const fetchBranchDishes = useCallback(async () => {
     if (!branchId) return;
-    await onGetDishesByBranch({
+    const response = await onGetDishesByBranch({
       branchId,
       params: { pageNumber: 1, pageSize: 999 },
     });
+    setSelectedDishIds(response.items.map((dish) => dish.dishId));
   }, [branchId, onGetDishesByBranch]);
 
   // ─── Initial load ───────────────────────────────────────────
@@ -119,36 +123,6 @@ export default function BranchDishDetailsModal({
     });
   };
 
-  // ─── Assign dish ────────────────────────────────────────────
-  const handleAssign = async (dishId: number): Promise<void> => {
-    if (!branchId) return;
-    addToActionLoading(dishId);
-    try {
-      await onAssignDishToBranch({
-        branchId,
-        data: { dishIds: [dishId] },
-      });
-      // slice's addCase(assignDishToBranch.fulfilled) sẽ push dish vào branchDishes
-    } finally {
-      removeFromActionLoading(dishId);
-    }
-  };
-
-  // ─── Unassign dish ──────────────────────────────────────────
-  const handleUnassign = async (dishId: number): Promise<void> => {
-    if (!branchId) return;
-    addToActionLoading(dishId);
-    try {
-      await onUnassignDishToBranch({
-        branchId,
-        data: { dishIds: [dishId] },
-      });
-      // slice's addCase(unassignDishToBranch.fulfilled) sẽ filter branchDishes
-    } finally {
-      removeFromActionLoading(dishId);
-    }
-  };
-
   // ─── Toggle availability ────────────────────────────────────
   const handleToggleAvailability = async (
     dishId: number,
@@ -168,13 +142,65 @@ export default function BranchDishDetailsModal({
     }
   };
 
-  // ─── Checkbox toggle ────────────────────────────────────────
+  const selectedDishIdSet = useMemo(
+    () => new Set(selectedDishIds),
+    [selectedDishIds]
+  );
+
+  const currentAssignedDishIdSet = useMemo(
+    () => new Set(branchDishes.map((dish) => dish.dishId)),
+    [branchDishes]
+  );
+
+  const isDirty = useMemo(() => {
+    if (selectedDishIds.length !== currentAssignedDishIdSet.size) {
+      return true;
+    }
+    return selectedDishIds.some(
+      (dishId) => !currentAssignedDishIdSet.has(dishId)
+    );
+  }, [currentAssignedDishIdSet, selectedDishIds]);
+
+  // ─── Checkbox toggle (local selection only) ─────────────────
   const handleCheckboxToggle = (dishId: number): void => {
-    const isAssigned = branchDishMap.has(dishId);
-    if (isAssigned) {
-      void handleUnassign(dishId);
-    } else {
-      void handleAssign(dishId);
+    setSelectedDishIds((prev) => {
+      if (prev.includes(dishId)) {
+        return prev.filter((id) => id !== dishId);
+      }
+      return [...prev, dishId];
+    });
+  };
+
+  // ─── Apply all selection changes in batch ───────────────────
+  const handleApply = async (): Promise<void> => {
+    if (!branchId || !isDirty || isApplying) {
+      return;
+    }
+
+    const dishIdsToAssign = selectedDishIds.filter(
+      (dishId) => !currentAssignedDishIdSet.has(dishId)
+    );
+    const dishIdsToUnassign = [...currentAssignedDishIdSet].filter(
+      (dishId) => !selectedDishIdSet.has(dishId)
+    );
+
+    setIsApplying(true);
+    try {
+      if (dishIdsToAssign.length > 0) {
+        await onAssignDishToBranch({
+          branchId,
+          data: { dishIds: dishIdsToAssign },
+        });
+      }
+
+      if (dishIdsToUnassign.length > 0) {
+        await onUnassignDishToBranch({
+          branchId,
+          data: { dishIds: dishIdsToUnassign },
+        });
+      }
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -207,15 +233,13 @@ export default function BranchDishDetailsModal({
         _: unknown,
         dish: CreateOrUpdateDishResponse
       ): React.ReactNode => {
-        const isAssigned = branchDishMap.has(dish.dishId);
-        const isItemLoading = actionLoading.has(dish.dishId);
+        const isSelected = selectedDishIdSet.has(dish.dishId);
 
-        return isItemLoading ? (
-          <CircularProgress size={20} />
-        ) : (
+        return (
           <Checkbox
-            checked={isAssigned}
+            checked={isSelected}
             onChange={() => handleCheckboxToggle(dish.dishId)}
+            disabled={isApplying}
             size="small"
             sx={{
               color: '#d1d5db',
@@ -234,7 +258,7 @@ export default function BranchDishDetailsModal({
         _: unknown,
         dish: CreateOrUpdateDishResponse
       ): React.ReactNode => {
-        const isAssigned = branchDishMap.has(dish.dishId);
+        const isAssigned = selectedDishIdSet.has(dish.dishId);
         return (
           <div className="flex items-center gap-3">
             {dish.imageUrl ? (
@@ -274,7 +298,7 @@ export default function BranchDishDetailsModal({
         _: unknown,
         dish: CreateOrUpdateDishResponse
       ): React.ReactNode => {
-        const isAssigned = branchDishMap.has(dish.dishId);
+        const isAssigned = selectedDishIdSet.has(dish.dishId);
         return (
           <span
             className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
@@ -298,7 +322,7 @@ export default function BranchDishDetailsModal({
         _: unknown,
         dish: CreateOrUpdateDishResponse
       ): React.ReactNode => {
-        const isAssigned = branchDishMap.has(dish.dishId);
+        const isAssigned = selectedDishIdSet.has(dish.dishId);
         const branchInfo = branchDishMap.get(dish.dishId);
         const isSoldOut = branchInfo?.isSoldOut ?? false;
         const isItemLoading = actionLoading.has(dish.dishId);
@@ -307,7 +331,7 @@ export default function BranchDishDetailsModal({
           <div className="flex items-center justify-center gap-1.5">
             <Switch
               checked={isAssigned && !isSoldOut}
-              disabled={!isAssigned || isItemLoading}
+              disabled={!isAssigned || isItemLoading || isApplying}
               onChange={() => handleToggleAvailability(dish.dishId, isSoldOut)}
               size="small"
               sx={{
@@ -393,10 +417,29 @@ export default function BranchDishDetailsModal({
               <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
               Đã gán: {assignedCount} món
             </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+              Đang chọn: {selectedDishIds.length} món
+            </span>
           </div>
 
           {/* ─── Filter Section ─────────────────────────────── */}
           <DishFilterSection onFilterChange={handleFilterChange} />
+
+          <div className="mt-4 flex w-full justify-center">
+            <button
+              onClick={() => void handleApply()}
+              disabled={status === 'pending' || isApplying || !isDirty}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              {isApplying ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <SaveIcon fontSize="small" />
+              )}
+              {isApplying ? 'Đang áp dụng...' : 'Áp dụng'}
+            </button>
+          </div>
 
           {/* ─── Dish List ──────────────────────────────────── */}
           <div className="mt-4">
