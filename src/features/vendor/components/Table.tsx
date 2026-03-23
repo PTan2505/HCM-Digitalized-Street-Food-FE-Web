@@ -70,7 +70,10 @@ const Table = <T extends object>({
       <TableContainer
         component={Paper}
         className="border-table-border rounded-lg border shadow-sm"
-        style={{ maxHeight: maxHeight === 'none' ? undefined : maxHeight }}
+        style={{
+          maxHeight: maxHeight === 'none' ? undefined : maxHeight,
+          overflowY: maxHeight === 'none' ? undefined : 'auto',
+        }}
       >
         <MuiTable stickyHeader>
           <TableHead>
