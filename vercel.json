@@ -1,6 +1,7 @@
 {
   "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ]; then exit 0; else exit 1; fi",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "http://159.223.47.89:5298/api/:path*" },
     { "source": "/((?!\\.well-known).*)", "destination": "/index.html" }
   ],
   "headers": [
