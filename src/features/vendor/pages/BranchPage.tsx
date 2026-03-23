@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   IconButton,
@@ -35,6 +36,7 @@ import WorkScheduleModal from '@features/vendor/components/WorkScheduleModal';
 import DayOffModal from '@features/vendor/components/DayOffModal';
 import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetailsModal';
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
+import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 
 const StatusBadge = ({
   label,
@@ -62,6 +64,7 @@ function BranchPage(): JSX.Element {
   const myVendor = useAppSelector(selectMyVendor);
   const status = useAppSelector(selectVendorStatus);
   const { onGetMyVendor, onUpdateVendorName, onDeleteBranch } = useVendor();
+  const location = useLocation();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<BranchFormMode>({
@@ -77,6 +80,12 @@ function BranchPage(): JSX.Element {
   const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
+  const [showOnboardingGuide, setShowOnboardingGuide] = useState(() => {
+    return (
+      (location.state as { fromEditProfile?: boolean } | null)
+        ?.fromEditProfile ?? false
+    );
+  });
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -417,6 +426,11 @@ function BranchPage(): JSX.Element {
         isOpen={feedbackBranch !== null}
         onClose={() => setFeedbackBranch(null)}
         branch={feedbackBranch}
+      />
+
+      <OnboardingGuideModal
+        open={showOnboardingGuide}
+        onClose={() => setShowOnboardingGuide(false)}
       />
 
       <Dialog
