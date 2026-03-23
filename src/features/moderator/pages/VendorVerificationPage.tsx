@@ -235,69 +235,12 @@ export default function VendorVerificationPage(): React.JSX.Element {
       key: 'branch.phoneNumber',
       label: 'Số điện thoại',
     },
-    // {
-    //   key: 'status',
-    //   label: 'Trạng thái',
-    //   render: (value: unknown): React.JSX.Element =>
-    //     getStatusBadge(value as number),
-    // },
-    // {
-    //   key: 'licenseUrl',
-    //   label: 'Giấy phép',
-    //   render: (value: unknown): React.JSX.Element => {
-    //     const apiBase = import.meta.env.VITE_API_URL as string;
-    //     const origin = apiBase.replace(/\/api$/, '');
-
-    //     const toFullUrl = (url: string): string =>
-    //       url.startsWith('http://') || url.startsWith('https://')
-    //         ? url
-    //         : `${origin}${url}`;
-
-    //     const urls: string[] = (() => {
-    //       if (Array.isArray(value)) return value as string[];
-    //       if (typeof value === 'string') {
-    //         try {
-    //           const parsed: unknown = JSON.parse(value);
-    //           if (Array.isArray(parsed)) return parsed as string[];
-    //         } catch {
-    //           // plain string url
-    //         }
-    //         return [value];
-    //       }
-    //       return [];
-    //     })();
-
-    //     if (urls.length === 0) return <span className="text-gray-400">-</span>;
-
-    //     return (
-    //       <div className="flex flex-col gap-1">
-    //         {urls.map((url, i) => (
-    //           <a
-    //             key={i}
-    //             href={toFullUrl(url)}
-    //             target="_blank"
-    //             rel="noopener noreferrer"
-    //             className="text-blue-600 hover:text-blue-800 hover:underline"
-    //           >
-    //             Xem file {urls.length > 1 ? i + 1 : ''}
-    //           </a>
-    //         ))}
-    //       </div>
-    //     );
-    //   },
-    // },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-    // {
-    //   key: 'updatedAt',
-    //   label: 'Ngày cập nhật',
-    //   render: (value: unknown): string =>
-    //     new Date(value as string).toLocaleString('vi-VN'),
-    // },
   ];
 
   const actions = [
