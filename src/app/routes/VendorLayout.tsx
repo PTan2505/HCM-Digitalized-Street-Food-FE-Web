@@ -3,7 +3,9 @@ import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
 import usePayment from '@features/vendor/hooks/usePayment';
+import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
 import {
   Menu as Bars3Icon,
@@ -27,7 +29,7 @@ import { Box, IconButton, Typography, Button } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import { selectVendorAccountBalance } from '@slices/payment';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
@@ -38,7 +40,7 @@ const navigation = [
     isForVendor: true,
   },
   {
-    name: 'Xác nhận quyền sỡ hữu quán',
+    name: 'Xác nhận sở hữu quán',
     href: '/vendor/ghost-pin',
     icon: MapPinIcon,
     isForVendor: false,
@@ -87,10 +89,13 @@ function VendorLayout(): JSX.Element {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
   const { onGetVendorBalance, onVendorRequestTransfer } = usePayment();
+  const { onGetMyVendor, onGetDietaryPreferencesOfMyVendor } = useVendor();
+  const hasCheckedDietaryRef = useRef(false);
   const user = useAppSelector(selectUser);
   const accountBalance = useAppSelector(selectVendorAccountBalance);
   const isVendor = user?.role === ROLES.VENDOR;
@@ -105,6 +110,42 @@ function VendorLayout(): JSX.Element {
 
     void onGetVendorBalance();
   }, [isVendor, onGetVendorBalance]);
+
+  useEffect(() => {
+    if (!isVendor || hasCheckedDietaryRef.current) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkDietaryPreferences = async (): Promise<void> => {
+      try {
+        const vendor = await onGetMyVendor();
+
+        if (!vendor?.vendorId) {
+          return;
+        }
+
+        const dietaryPreferences = await onGetDietaryPreferencesOfMyVendor({
+          vendorId: vendor.vendorId,
+        });
+
+        if (!isCancelled && dietaryPreferences.length === 0) {
+          setIsDietaryModalOpen(true);
+        }
+      } catch (error) {
+        console.error('Error checking dietary preferences:', error);
+      } finally {
+        hasCheckedDietaryRef.current = true;
+      }
+    };
+
+    void checkDietaryPreferences();
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isVendor, onGetMyVendor, onGetDietaryPreferencesOfMyVendor]);
 
   const handleLogoClick = (): void => {
     navigate('/vendor');
@@ -283,6 +324,10 @@ function VendorLayout(): JSX.Element {
         isOpen={feedbackModalId !== null}
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
+      />
+      <OnboardingMissingDietaryModal
+        open={isDietaryModalOpen}
+        onClose={() => setIsDietaryModalOpen(false)}
       />
     </Box>
   );
