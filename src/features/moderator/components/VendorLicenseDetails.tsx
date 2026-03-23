@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import type { BranchRegisterRequest } from '@features/moderator/types/branch';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
+import { ENV } from '@config/env';
 
 interface VendorLicenseDetailsProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ export default function VendorLicenseDetails({
 }: VendorLicenseDetailsProps): JSX.Element | null {
   if (!isOpen || !registration) return null;
 
-  const apiBase = import.meta.env.VITE_API_URL as string;
+  const apiBase = ENV.api.baseUrl;
   const origin = apiBase.replace(/\/api$/, '');
 
   const toFullUrl = (url: string): string =>

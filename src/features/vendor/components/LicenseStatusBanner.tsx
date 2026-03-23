@@ -5,10 +5,11 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { CheckLicenseStatusResponse } from '@features/vendor/types/vendor';
+import { ENV } from '@config/env';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 function resolveImageUrl(url: string): string {
-  const apiBase = import.meta.env.VITE_API_URL as string;
+  const apiBase = ENV.api.baseUrl;
   const origin = apiBase.replace(/\/api$/, '');
   return url.startsWith('http') ? url : `${origin}${url}`;
 }
