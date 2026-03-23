@@ -167,7 +167,13 @@ const SidebarContent = ({
                                   : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
                               }`}
                             >
-                              <Typography className="overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
+                              <Box className="flex h-4 w-4 shrink-0 items-center justify-center">
+                                <child.icon
+                                  className="h-4 w-4"
+                                  style={{ color: 'inherit' }}
+                                />
+                              </Box>
+                              <Typography className="ml-2 overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
                                 {child.name}
                               </Typography>
                             </Box>

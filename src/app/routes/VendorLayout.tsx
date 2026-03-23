@@ -6,19 +6,19 @@ import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsMod
 import usePayment from '@features/vendor/hooks/usePayment';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
 import {
-  Bars3Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  HomeIcon,
-  BuildingStorefrontIcon,
-  ClipboardDocumentListIcon,
-  DocumentTextIcon,
-  XMarkIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  QueueListIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/outline';
+  Menu as Bars3Icon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Home as HomeIcon,
+  Storefront as BuildingStorefrontIcon,
+  Receipt as ClipboardDocumentListIcon,
+  Description as DocumentTextIcon,
+  Close as XMarkIcon,
+  RestaurantMenu as ShoppingBagIcon,
+  LocalDining as SparklesIcon,
+  ShoppingCart as QueueListIcon,
+  LocationOn as MapPinIcon,
+} from '@mui/icons-material';
 import MoneyIcon from '@mui/icons-material/Money';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { ROLES } from '@constants/role';
@@ -36,6 +36,12 @@ const navigation = [
     href: '/vendor/dashboard',
     icon: HomeIcon,
     isForVendor: true,
+  },
+  {
+    name: 'Xác nhận quyền sỡ hữu quán',
+    href: '/vendor/ghost-pin',
+    icon: MapPinIcon,
+    isForVendor: false,
   },
   {
     name: 'Chi nhánh',
@@ -72,12 +78,6 @@ const navigation = [
     href: '/vendor/dietary-preferences',
     icon: SparklesIcon,
     isForVendor: true,
-  },
-  {
-    name: 'Nhận quán',
-    href: '/vendor/ghost-pin',
-    icon: MapPinIcon,
-    isForVendor: false,
   },
 ];
 
