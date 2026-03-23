@@ -61,6 +61,8 @@
       "@features/*": ["features/*"],
       "@auth/*": ["features/auth/*"],
       "@user/*": ["features/user/*"],
+      "@pages/*": ["pages/*"],
+      "@api/*": ["api/*"]
     }
   },
   "include": ["src/**/*"],

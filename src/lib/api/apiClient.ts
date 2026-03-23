@@ -2,6 +2,7 @@ import type { ApiService } from '@config/axiosApiService';
 import type {
   APIErrorResponse,
   ApiResponse,
+  BackendResponse,
   ErrorResponse,
 } from '@custom-types/apiResponse';
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -11,26 +12,44 @@ export interface RawAPIError {
 }
 interface IFormatAxiosResponse {
   formatResponse: <TResponse>(
-    promiseResponse: AxiosResponse<TResponse>
+    promiseResponse: AxiosResponse<BackendResponse<TResponse>>
   ) => ApiResponse<TResponse>;
   formatError: (error: RawAPIError) => APIErrorResponse;
 }
 
 class FormatAxiosResponse implements IFormatAxiosResponse {
   formatResponse<TResponse>(
-    response: AxiosResponse<TResponse>
+    response: AxiosResponse<BackendResponse<TResponse>>
   ): ApiResponse<TResponse> {
+    const backendResponse = response.data;
+
     return {
-      data: response.data,
-      status: response.status,
+      data: backendResponse.data,
+      status: backendResponse.status,
+      message: backendResponse.message,
     };
   }
   formatError(error: RawAPIError): APIErrorResponse {
+    const errorData = error.response?.data;
+
+    // Handle different error response formats
+    let fieldErrors: Record<string, string[]> | undefined = undefined;
+    let errorMessage = errorData?.message ?? 'An error occurred';
+
+    // If data is an object, it might be field errors
+    if (errorData?.data && typeof errorData.data === 'object') {
+      fieldErrors = errorData.data as Record<string, string[]>;
+    }
+    // If data is a string, it's the error message
+    else if (errorData?.data && typeof errorData.data === 'string') {
+      errorMessage = errorData.data;
+    }
+
     return {
-      code: error.response?.data.errorCode,
-      status: error.response?.status ?? 500,
-      message: error.response?.data.message,
-      fieldErrors: error.response?.data.fieldErrors ?? [],
+      code: errorData?.errorCode,
+      status: errorData?.status ?? error.response?.status ?? 500,
+      message: errorMessage,
+      fieldErrors,
     };
   }
 }
@@ -48,7 +67,7 @@ export default class ApiClient {
     requestConfig: AxiosRequestConfig<TRequest>
   ): Promise<ApiResponse<TResponse>> {
     try {
-      const res = await this.service.call<TResponse>({
+      const res = await this.service.call<BackendResponse<TResponse>>({
         ...requestConfig,
       });
       return this.formatResponse.formatResponse(res);
@@ -99,10 +118,10 @@ export default class ApiClient {
     });
   }
 
-  delete<TResponse>(
-    requestConfig: AxiosRequestConfig<null>
+  delete<TResponse, TRequest = unknown>(
+    requestConfig: AxiosRequestConfig<TRequest>
   ): Promise<ApiResponse<TResponse>> {
-    return this.handleRequest<TResponse, null>({
+    return this.handleRequest<TResponse, TRequest>({
       ...requestConfig,
       method: 'DELETE',
     });

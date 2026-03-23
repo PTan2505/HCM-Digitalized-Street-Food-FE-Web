@@ -1,0 +1,26 @@
+import type { User } from '@custom-types/user';
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginWithPhoneNumberRequest {
+  phoneNumber: string;
+  otp?: string;
+}
+
+export interface LoginWithGoogleRequest {
+  idToken?: string;
+  accessToken?: string;
+}
+
+export interface LoginWithFacebookRequest {
+  accessToken: string;
+}
+
+export interface LoginResponse {
+  message?: string;
+  token: string;
+  user: User;
+}
