@@ -1,5 +1,10 @@
+import RequestTransferModal from '@components/RequestTransferModal';
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
+import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import usePayment from '@features/vendor/hooks/usePayment';
+import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
 import {
   Bars3Icon,
   ChevronLeftIcon,
@@ -10,13 +15,19 @@ import {
   DocumentTextIcon,
   XMarkIcon,
   ShoppingBagIcon,
+  SparklesIcon,
+  QueueListIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
+import MoneyIcon from '@mui/icons-material/Money';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, Button } from '@mui/material';
 import { selectUser } from '@slices/auth';
+import { selectVendorAccountBalance } from '@slices/payment';
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
@@ -48,6 +59,24 @@ const navigation = [
     name: 'Quản lý món ăn',
     href: '/vendor/dish',
     icon: ShoppingBagIcon,
+    isForVendor: true,
+  },
+  {
+    name: 'Quản lý đơn hàng',
+    href: '/vendor/orders',
+    icon: QueueListIcon,
+    isForVendor: true,
+  },
+  {
+    name: 'Chế độ ăn',
+    href: '/vendor/dietary-preferences',
+    icon: SparklesIcon,
+    isForVendor: true,
+  },
+  {
+    name: 'Nhận quán',
+    href: '/vendor/ghost-pin',
+    icon: MapPinIcon,
     isForVendor: false,
   },
 ];
@@ -55,14 +84,27 @@ const navigation = [
 function VendorLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
+  const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
+  const { onGetVendorBalance, onVendorRequestTransfer } = usePayment();
   const user = useAppSelector(selectUser);
+  const accountBalance = useAppSelector(selectVendorAccountBalance);
   const isVendor = user?.role === ROLES.VENDOR;
   const filteredNavigation = navigation.filter(
     (item) => !item.isForVendor || isVendor
   );
+
+  useEffect(() => {
+    if (!isVendor) {
+      return;
+    }
+
+    void onGetVendorBalance();
+  }, [isVendor, onGetVendorBalance]);
 
   const handleLogoClick = (): void => {
     navigate('/vendor');
@@ -82,6 +124,26 @@ function VendorLayout(): JSX.Element {
     email: user?.email ?? '',
     role: roleLabel,
     avatarUrl: user?.avatarUrl ?? null,
+  };
+
+  const formatCurrencyVnd = (value?: number | null): string => {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '0 VND';
+    }
+
+    return `${value.toLocaleString('vi-VN')} VND`;
+  };
+
+  const handleSubmitTransferRequest = async (
+    payload: VendorRequestTransferRequest
+  ): Promise<void> => {
+    setIsSubmittingTransfer(true);
+    try {
+      await onVendorRequestTransfer(payload);
+      // await onGetVendorBalance();
+    } finally {
+      setIsSubmittingTransfer(false);
+    }
   };
 
   return (
@@ -174,6 +236,31 @@ function VendorLayout(): JSX.Element {
                 </Typography>
               </Box>
             </Box>
+
+            <Box className="flex items-center gap-4">
+              {isVendor && (
+                <Box className="flex items-center gap-3">
+                  <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
+                    <AccountBalanceIcon fontSize="small" />
+                    Số dư: {formatCurrencyVnd(accountBalance?.balance)}
+                  </Box>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setIsTransferModalOpen(true)}
+                    disabled={accountBalance?.balance === 0}
+                    startIcon={<MoneyIcon />}
+                    className="bg-primary-600 hover:bg-primary-700 h-10 rounded-lg px-4 text-sm font-bold whitespace-nowrap text-white shadow-sm"
+                    disableElevation
+                  >
+                    Yêu cầu rút tiền
+                  </Button>
+                </Box>
+              )}
+              <NotificationBell
+                onFeedbackNotificationClick={setFeedbackModalId}
+              />
+            </Box>
           </Box>
         </Box>
 
@@ -184,6 +271,19 @@ function VendorLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+
+      <RequestTransferModal
+        isOpen={isTransferModalOpen}
+        isSubmitting={isSubmittingTransfer}
+        currentBalance={accountBalance?.balance}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSubmit={handleSubmitTransferRequest}
+      />
+      <FeedbackDetailsModal
+        isOpen={feedbackModalId !== null}
+        onClose={() => setFeedbackModalId(null)}
+        feedbackId={feedbackModalId}
+      />
     </Box>
   );
 }

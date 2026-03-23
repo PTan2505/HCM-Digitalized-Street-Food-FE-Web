@@ -7,6 +7,9 @@ import type {
   GetPaymentHistoryResponse,
   GetPaymentSuccessResponse,
   GetPaymentCancelResponse,
+  GetVendorBalanceResponse,
+  VendorRequestTransferRequest,
+  VendorRequestTransferResponse,
 } from '@features/vendor/types/payment';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -16,6 +19,8 @@ import {
   getPaymentHistory,
   getPaymentSuccess,
   getPaymentCancel,
+  getVendorBalance,
+  vendorRequestTransfer,
   resetPaymentState,
 } from '@slices/payment';
 import { useCallback } from 'react';
@@ -36,6 +41,10 @@ export default function usePayment(): {
   onGetPaymentCancel: (params: {
     orderCode: number;
   }) => Promise<GetPaymentCancelResponse>;
+  onGetVendorBalance: () => Promise<GetVendorBalanceResponse>;
+  onVendorRequestTransfer: (
+    payload: VendorRequestTransferRequest
+  ) => Promise<VendorRequestTransferResponse>;
   onResetPaymentState: () => void;
 } {
   const dispatch = useAppDispatch();
@@ -93,6 +102,22 @@ export default function usePayment(): {
     [dispatch]
   );
 
+  const onGetVendorBalance =
+    useCallback(async (): Promise<GetVendorBalanceResponse> => {
+      const response = await dispatch(getVendorBalance()).unwrap();
+      return response;
+    }, [dispatch]);
+
+  const onVendorRequestTransfer = useCallback(
+    async (
+      payload: VendorRequestTransferRequest
+    ): Promise<VendorRequestTransferResponse> => {
+      const response = await dispatch(vendorRequestTransfer(payload)).unwrap();
+      return response;
+    },
+    [dispatch]
+  );
+
   const onResetPaymentState = useCallback(() => {
     dispatch(resetPaymentState());
   }, [dispatch]);
@@ -104,6 +129,8 @@ export default function usePayment(): {
     onGetPaymentHistory,
     onGetPaymentSuccess,
     onGetPaymentCancel,
+    onGetVendorBalance,
+    onVendorRequestTransfer,
     onResetPaymentState,
   };
 }

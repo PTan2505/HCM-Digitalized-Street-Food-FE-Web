@@ -1,4 +1,5 @@
 import type {
+  GetPendingRegistrationsParams,
   GetPendingRegistrationsResponse,
   RejectRegistrationRequest,
   RejectRegistrationResponse,
@@ -15,10 +16,9 @@ export class BranchApi {
     this.apiClient = apiClient;
   }
 
-  async getPendingRegistrations(params: {
-    pageNumber: number;
-    pageSize: number;
-  }): Promise<GetPendingRegistrationsResponse> {
+  async getPendingRegistrations(
+    params: GetPendingRegistrationsParams
+  ): Promise<GetPendingRegistrationsResponse> {
     const res = await this.apiClient.get<GetPendingRegistrationsResponse>({
       url: apiUrl.vendor.getPendingRegistrations,
       params,

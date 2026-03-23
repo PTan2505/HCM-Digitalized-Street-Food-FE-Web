@@ -20,6 +20,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RateReviewIcon from '@mui/icons-material/RateReview';
+import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -32,6 +34,7 @@ import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
 import WorkScheduleModal from '@features/vendor/components/WorkScheduleModal';
 import DayOffModal from '@features/vendor/components/DayOffModal';
 import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetailsModal';
+import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 
 const StatusBadge = ({
   label,
@@ -73,6 +76,7 @@ function BranchPage(): JSX.Element {
   const [scheduleBranch, setScheduleBranch] = useState<Branch | null>(null);
   const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
+  const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -115,24 +119,21 @@ function BranchPage(): JSX.Element {
   }, [onGetMyVendor]);
 
   const branches: Branch[] = myVendor?.branches ?? [];
+  const vendorId: number | undefined = myVendor?.vendorId;
   const verifiedBranches: Branch[] = branches.filter(
     (b) => b.licenseStatus === 'Accept'
   );
 
   const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
 
-  // const pendingBranches = branches.filter((b) => b.licenseStatus === 'Pending');
-  // const hasSinglePending = pendingBranches.length === 1;
-  // const vendorId: number | undefined = myVendor?.vendorId;
-
-  // const handleOpenCreateModal = (): void => {
-  //   if (branches.length === 0) {
-  //     setFormMode({ type: 'createVendor' });
-  //   } else if (vendorId !== undefined) {
-  //     setFormMode({ type: 'addBranch', vendorId });
-  //   }
-  //   setFormModalOpen(true);
-  // };
+  const handleOpenCreateModal = (): void => {
+    if (branches.length === 0) {
+      setFormMode({ type: 'createVendor' });
+    } else if (vendorId !== undefined) {
+      setFormMode({ type: 'addBranch', vendorId });
+    }
+    setFormModalOpen(true);
+  };
 
   const handleOpenEditModal = (branch: Branch): void => {
     setFormMode({ type: 'editBranch', branch });
@@ -263,8 +264,16 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      label: <RateReviewIcon fontSize="small" />,
+      menuLabel: 'Phản hồi về chi nhánh',
+      onClick: (branch: Branch): void => {
+        setFeedbackBranch(branch);
+      },
+      color: 'info' as const,
+    },
+    {
       label: <ImageIcon fontSize="small" />,
-      menuLabel: 'Xem ảnh',
+      menuLabel: 'Cập nhật ảnh quán',
       onClick: (branch: Branch): void => {
         setImagesBranch(branch);
       },
@@ -346,17 +355,13 @@ function BranchPage(): JSX.Element {
             )}
           </p>
         </div>
-        {/* {!hasSinglePending && (
-          <button
-            // onClick={() => handleOpenDialog()}
-            className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-          >
-            <AddIcon fontSize="small" />
-            {verifiedBranches.length === 0
-              ? 'Tạo cửa hàng mới'
-              : 'Thêm chi nhánh'}
-          </button>
-        )} */}
+        <button
+          onClick={handleOpenCreateModal}
+          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+        >
+          <AddIcon fontSize="small" />
+          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
+        </button>
       </div>
 
       <Table
@@ -406,6 +411,12 @@ function BranchPage(): JSX.Element {
         onClose={() => setDishBranch(null)}
         branch={dishBranch}
         vendorId={myVendor?.vendorId}
+      />
+
+      <BranchFeedbackModal
+        isOpen={feedbackBranch !== null}
+        onClose={() => setFeedbackBranch(null)}
+        branch={feedbackBranch}
       />
 
       <Dialog

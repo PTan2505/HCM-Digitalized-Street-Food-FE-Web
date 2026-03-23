@@ -6,6 +6,7 @@ import type {
 } from '@features/home/types/branch';
 import type {
   BranchRegisterRequest,
+  GetPendingRegistrationsParams,
   GetPendingRegistrationsResponse,
   VerifyRegistrationRequest,
   RejectRegistrationRequest,
@@ -64,10 +65,7 @@ export const getActiveBranches = createAppAsyncThunk(
 
 export const getPendingRegistrations = createAppAsyncThunk(
   'vendor/getPendingRegistrations',
-  async (
-    params: { pageNumber: number; pageSize: number },
-    { rejectWithValue }
-  ) => {
+  async (params: GetPendingRegistrationsParams, { rejectWithValue }) => {
     try {
       const response: GetPendingRegistrationsResponse =
         await axiosApi.branchApi.getPendingRegistrations(params);
@@ -117,7 +115,9 @@ export const rejectBranchRegistration = createAppAsyncThunk(
 const branchSlice = createSlice({
   name: 'branch',
   initialState,
-  reducers: {},
+  reducers: {
+    resetBranchState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getActiveBranches.fulfilled, (state, action) => {
@@ -185,6 +185,8 @@ const branchSlice = createSlice({
       );
   },
 });
+
+export const { resetBranchState } = branchSlice.actions;
 
 export default branchSlice.reducer;
 

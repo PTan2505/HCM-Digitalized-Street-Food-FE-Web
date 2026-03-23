@@ -1,11 +1,15 @@
 import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
 import Pagination from '@features/moderator/components/Pagination';
+import PendingTypeFilterSection from '@features/moderator/components/PendingTypeFilterSection';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
 import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
 import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
 import useBranch from '@features/moderator/hooks/useBranch';
-import type { BranchRegisterRequest } from '@features/moderator/types/branch';
+import type {
+  BranchRegisterRequest,
+  PendingRegistrationType,
+} from '@features/moderator/types/branch';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
@@ -34,6 +38,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [pendingType, setPendingType] = useState<PendingRegistrationType>(1);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
@@ -58,8 +63,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
   >({});
 
   useEffect(() => {
-    void onGetPendingRegistrations({ pageNumber, pageSize });
-  }, [onGetPendingRegistrations, pageNumber, pageSize]);
+    void onGetPendingRegistrations({ pageNumber, pageSize, type: pendingType });
+  }, [onGetPendingRegistrations, pageNumber, pageSize, pendingType]);
 
   useEffect(() => {
     const uniqueVendorIds = [
@@ -112,6 +117,14 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setPageSize(newPageSize);
     setPageNumber(1);
   }, []);
+
+  const handlePendingTypeChange = useCallback(
+    (type: PendingRegistrationType): void => {
+      setPendingType(type);
+      setPageNumber(1);
+    },
+    []
+  );
 
   const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
     try {
@@ -180,7 +193,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const columns = [
     {
-      key: 'branchRegisterRequestId',
+      key: 'branchRequestId',
       label: 'STT',
       render: (
         _: unknown,
@@ -379,11 +392,17 @@ export default function VendorVerificationPage(): React.JSX.Element {
       </div>
 
       {/* Table */}
+      <PendingTypeFilterSection
+        value={pendingType}
+        onFilterChange={handlePendingTypeChange}
+      />
+
+      {/* Table */}
       <Table
         columns={columns}
         data={pendingRegistrations as unknown as Record<string, unknown>[]}
         loading={status === 'pending'}
-        rowKey="branchRegisterRequestId"
+        rowKey="branchRequestId"
         actions={actions}
         emptyMessage="Chưa có yêu cầu xác minh nào"
         loadingMessage="Đang tải danh sách..."

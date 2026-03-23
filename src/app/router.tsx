@@ -1,3 +1,4 @@
+import ManagerLayout from '@app/routes/ManagerLayout';
 import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
 import VendorLayout from '@app/routes/VendorLayout';
@@ -19,11 +20,15 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
+import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
 import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage';
 import VendorDishPage from '@features/vendor/pages/DishPage';
+import VendorOrderPage from '@features/vendor/pages/OrderPage';
+import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
+import GhostPinPage from '@features/vendor/pages/GhostPinPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -99,6 +104,20 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        path: ROUTES.MANAGER.BASE,
+        element: <ManagerLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.MANAGER.PATHS.ORDER} replace />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.ORDER,
+            element: <OrderManagementPage />,
+          },
+        ],
+      },
+      {
         path: ROUTES.VENDOR.BASE,
         element: <VendorLayout />,
         children: [
@@ -125,6 +144,18 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.DISH,
             element: <VendorDishPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.ORDER,
+            element: <VendorOrderPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.DIETARY,
+            element: <VendorDietaryPreferencesPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.GHOST_PIN,
+            element: <GhostPinPage />,
           },
         ],
       },

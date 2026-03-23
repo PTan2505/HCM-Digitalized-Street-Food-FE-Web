@@ -3,4 +3,5 @@ export const ROLES: Record<string, number> = {
   ADMIN: 1,
   MODERATOR: 2,
   VENDOR: 3,
+  MANAGER: 4,
 };
