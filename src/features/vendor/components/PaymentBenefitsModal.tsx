@@ -6,7 +6,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import PaymentIcon from '@mui/icons-material/Payment';
 
 interface PaymentBenefitsModalProps {

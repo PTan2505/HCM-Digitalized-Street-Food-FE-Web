@@ -22,6 +22,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RateReviewIcon from '@mui/icons-material/RateReview';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -37,6 +38,7 @@ import DayOffModal from '@features/vendor/components/DayOffModal';
 import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetailsModal';
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
+import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
 
 const StatusBadge = ({
   label,
@@ -63,7 +65,8 @@ const StatusBadge = ({
 function BranchPage(): JSX.Element {
   const myVendor = useAppSelector(selectMyVendor);
   const status = useAppSelector(selectVendorStatus);
-  const { onGetMyVendor, onUpdateVendorName, onDeleteBranch } = useVendor();
+  const { onGetMyVendor, onUpdateVendorName, onDeleteBranch, onGetUserById } =
+    useVendor();
   const location = useLocation();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formModalOpen, setFormModalOpen] = useState(false);
@@ -80,6 +83,11 @@ function BranchPage(): JSX.Element {
   const [dayOffBranch, setDayOffBranch] = useState<Branch | null>(null);
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
+  const [managerBranch, setManagerBranch] = useState<Branch | null>(null);
+  const [managerNameById, setManagerNameById] = useState<
+    Record<number, string>
+  >({});
+  const requestedManagerIdsRef = useRef<Set<number>>(new Set());
   const [showOnboardingGuide, setShowOnboardingGuide] = useState(() => {
     return (
       (location.state as { fromEditProfile?: boolean } | null)
@@ -132,6 +140,67 @@ function BranchPage(): JSX.Element {
   const verifiedBranches: Branch[] = branches.filter(
     (b) => b.licenseStatus === 'Accept'
   );
+
+  const getValidManagerId = (managerId: unknown): number | null => {
+    if (typeof managerId !== 'number') return null;
+    if (!Number.isInteger(managerId) || managerId <= 0) return null;
+    return managerId;
+  };
+
+  useEffect(() => {
+    const managerIds = Array.from(
+      new Set(
+        branches
+          .map((branch) => getValidManagerId(branch.managerId))
+          .filter((managerId): managerId is number => managerId !== null)
+      )
+    ).filter((managerId) => !requestedManagerIdsRef.current.has(managerId));
+
+    if (managerIds.length === 0) return;
+
+    managerIds.forEach((managerId) => {
+      requestedManagerIdsRef.current.add(managerId);
+    });
+
+    const fetchManagerNames = async (): Promise<void> => {
+      const resolved = await Promise.all(
+        managerIds.map(async (managerId) => {
+          try {
+            const user = await onGetUserById(managerId);
+            const trimmedUserName = user.userName?.trim();
+            const trimmedUsername = user.username?.trim();
+            const fullName = [user.firstName, user.lastName]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+
+            const managerName =
+              trimmedUserName && trimmedUserName.length > 0
+                ? trimmedUserName
+                : trimmedUsername && trimmedUsername.length > 0
+                  ? trimmedUsername
+                  : fullName.length > 0
+                    ? fullName
+                    : undefined;
+
+            return [managerId, managerName ?? `ID ${managerId}`] as const;
+          } catch {
+            return [managerId, `ID ${managerId}`] as const;
+          }
+        })
+      );
+
+      setManagerNameById((prev) => {
+        const next = { ...prev };
+        resolved.forEach(([managerId, managerName]) => {
+          next[managerId] = managerName;
+        });
+        return next;
+      });
+    };
+
+    void fetchManagerNames();
+  }, [branches, onGetUserById]);
 
   const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
 
@@ -186,6 +255,23 @@ function BranchPage(): JSX.Element {
       key: 'city',
       label: 'Thành phố',
       style: { width: '140px' },
+    },
+    {
+      key: 'managerId',
+      label: 'Quản lý chi nhánh',
+      style: { width: '180px' },
+      render: (value: unknown): React.ReactNode => {
+        const managerId = getValidManagerId(value);
+        if (managerId === null) {
+          return '-';
+        }
+
+        return (
+          <Box className="text-table-text-primary font-medium">
+            {managerNameById[managerId] ?? `ID ${managerId}`}
+          </Box>
+        );
+      },
     },
     {
       key: 'isVerified',
@@ -255,6 +341,14 @@ function BranchPage(): JSX.Element {
         handleOpenEditModal(branch);
       },
       color: 'primary' as const,
+    },
+    {
+      label: <ManageAccountsIcon fontSize="small" />,
+      menuLabel: 'Cập nhật người quản lý',
+      onClick: (branch: Branch): void => {
+        setManagerBranch(branch);
+      },
+      color: 'info' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
@@ -386,6 +480,13 @@ function BranchPage(): JSX.Element {
         isOpen={selectedBranch !== null}
         onClose={() => setSelectedBranch(null)}
         branch={selectedBranch}
+        managerName={
+          selectedBranch
+            ? getValidManagerId(selectedBranch.managerId) === null
+              ? '-'
+              : managerNameById[selectedBranch.managerId]
+            : null
+        }
         hasAnySubscribedBranch={hasAnySubscribedBranch}
         showPayment={true}
       />
@@ -426,6 +527,15 @@ function BranchPage(): JSX.Element {
         isOpen={feedbackBranch !== null}
         onClose={() => setFeedbackBranch(null)}
         branch={feedbackBranch}
+      />
+
+      <BranchManagerModal
+        isOpen={managerBranch !== null}
+        onClose={() => setManagerBranch(null)}
+        branch={managerBranch}
+        onAssigned={() => {
+          void onGetMyVendor();
+        }}
       />
 
       <OnboardingGuideModal
