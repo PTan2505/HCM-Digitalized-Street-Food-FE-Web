@@ -174,13 +174,19 @@ function VendorLayout(): JSX.Element {
     });
 
   useEffect(() => {
-    if (pendingOnboardingModal === 'branch' && location.pathname === vendorBranchPath) {
+    if (
+      pendingOnboardingModal === 'branch' &&
+      location.pathname === vendorBranchPath
+    ) {
       setIsBranchModalOpen(true);
       setPendingOnboardingModal(null);
       return;
     }
 
-    if (pendingOnboardingModal === 'dish' && location.pathname === vendorDishPath) {
+    if (
+      pendingOnboardingModal === 'dish' &&
+      location.pathname === vendorDishPath
+    ) {
       setIsDishModalOpen(true);
       setPendingOnboardingModal(null);
       return;

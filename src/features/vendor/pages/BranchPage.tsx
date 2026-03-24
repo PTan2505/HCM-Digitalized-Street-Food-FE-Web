@@ -404,7 +404,7 @@ function BranchPage(): JSX.Element {
     <div className="font-[var(--font-nunito)]">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <div> 
+        <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
             Quản lý chi nhánh
           </h1>
