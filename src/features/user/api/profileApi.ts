@@ -2,6 +2,14 @@ import type { User } from '@custom-types/user';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
+export interface UserLookupResponse {
+  id?: number;
+  userName?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 export class UserProfileApi {
   private apiClient: ApiClient;
 
@@ -28,5 +36,12 @@ export class UserProfileApi {
     await this.apiClient.put<void, null>({
       url: apiUrl.user.userSetup.userinfo,
     });
+  }
+
+  async getUserById(id: number): Promise<UserLookupResponse> {
+    const res = await this.apiClient.get<UserLookupResponse>({
+      url: apiUrl.user.getUserById(id),
+    });
+    return res.data;
   }
 }

@@ -57,6 +57,8 @@ export const apiUrl = {
     },
   },
   user: {
+    getUserById: (id: number): string => `/User/${id}`,
+    search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
       dietary: '/UserSetup/dietary-setup',
@@ -81,6 +83,8 @@ export const apiUrl = {
     createOrGetBranchesOfAVendor: (vendorId: number): string =>
       `/Branch/vendor/${vendorId}`,
     updateOrDeleteBranch: (branchId: number): string => `/Branch/${branchId}`,
+    updateBranchManager: (branchId: number): string =>
+      `/Branch/${branchId}/manager`,
     //WorkSchedules
     createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
