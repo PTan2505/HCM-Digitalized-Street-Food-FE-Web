@@ -14,6 +14,8 @@ import type {
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
   ClaimBranchRequest,
   GhostPin,
+  SearchUsersResponse,
+  AssignBranchManagerRequest,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -32,6 +34,7 @@ import type {
   GetAllVendorsParams,
   VendorDetail,
 } from '@features/admin/types/vendor';
+import type { UserLookupResponse } from '@features/user/api/profileApi';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -154,6 +157,19 @@ export const getMyVendor = createAppAsyncThunk(
     try {
       const response: GetMyVendorResponse =
         await axiosApi.vendorApi.getMyVendor();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getUserById = createAppAsyncThunk(
+  'vendor/getUserById',
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      const response: UserLookupResponse =
+        await axiosApi.userProfileApi.getUserById(userId);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -442,6 +458,40 @@ export const claimBranch = createAppAsyncThunk(
         payload.branchId,
         payload.licenseImages
       );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateBranchManager = createAppAsyncThunk(
+  'vendor/updateBranchManager',
+  async (
+    payload: { branchId: number; data: AssignBranchManagerRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.vendorApi.updateBranchManager(
+        payload.branchId,
+        payload.data
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const searchUsers = createAppAsyncThunk(
+  'vendor/searchUsers',
+  async (
+    params: { query: string; pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: SearchUsersResponse =
+        await axiosApi.vendorApi.searchUsers(params);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -750,7 +800,9 @@ export const vendorSlice = createSlice({
           getDietaryPreferencesOfMyVendor,
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
-          claimBranch
+          claimBranch,
+          updateBranchManager,
+          searchUsers
         ),
         (state) => {
           state.status = 'pending';
@@ -779,7 +831,9 @@ export const vendorSlice = createSlice({
           getDietaryPreferencesOfMyVendor,
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
-          claimBranch
+          claimBranch,
+          updateBranchManager,
+          searchUsers
         ),
         (state, action) => {
           state.status = 'failed';
@@ -810,7 +864,9 @@ export const vendorSlice = createSlice({
           getDietaryPreferencesOfMyVendor,
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
-          claimBranch
+          claimBranch,
+          updateBranchManager,
+          searchUsers
         ),
         (state) => {
           state.status = 'succeeded';

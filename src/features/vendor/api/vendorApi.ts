@@ -14,6 +14,8 @@ import type {
   GetAllGhostPinsResponse,
   ClaimBranchRequest,
   ClaimBranchResponse,
+  AssignBranchManagerRequest,
+  SearchUsersResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -279,6 +281,29 @@ export class VendorApi {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    });
+    return res.data;
+  }
+
+  async updateBranchManager(
+    branchId: number,
+    data: AssignBranchManagerRequest
+  ): Promise<boolean> {
+    const res = await this.apiClient.put<boolean, AssignBranchManagerRequest>({
+      url: apiUrl.vendor.updateBranchManager(branchId),
+      data,
+    });
+    return res.data;
+  }
+
+  async searchUsers(params: {
+    query: string;
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<SearchUsersResponse> {
+    const res = await this.apiClient.get<SearchUsersResponse>({
+      url: apiUrl.user.search,
+      params,
     });
     return res.data;
   }
