@@ -19,6 +19,8 @@ export interface NavigationItem {
     style?: React.CSSProperties;
   }>;
   children?: NavigationItem[];
+  badgeText?: string;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 interface SidebarContentProps {
@@ -193,7 +195,11 @@ const SidebarContent = ({
                 placement="right"
                 disableHoverListener={!collapsed}
               >
-                <Link to={item.href ?? '#'} className="no-underline">
+                <Link
+                  to={item.href ?? '#'}
+                  onClick={item.onClick}
+                  className="no-underline"
+                >
                   <Box
                     className={`mb-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
                       isActive
@@ -214,6 +220,11 @@ const SidebarContent = ({
                     >
                       {item.name}
                     </Typography>
+                    {!collapsed && item.badgeText && (
+                      <Box className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                        {item.badgeText}
+                      </Box>
+                    )}
                   </Box>
                 </Link>
               </Tooltip>

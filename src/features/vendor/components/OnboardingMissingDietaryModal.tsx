@@ -7,11 +7,13 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 interface OnboardingMissingDietaryModalProps {
   open: boolean;
   onClose: () => void;
+  onSkip: () => void;
 }
 
 export default function OnboardingMissingDietaryModal({
   open,
   onClose,
+  onSkip,
 }: OnboardingMissingDietaryModalProps): JSX.Element {
   return (
     <Dialog
@@ -33,7 +35,8 @@ export default function OnboardingMissingDietaryModal({
             Cập nhật chế độ ăn của cửa hàng
           </h2>
           <p className="text-opacity-90 text-sm text-white">
-            Hãy hoàn thành bước quan trọng này để mở khóa đầy đủ tính năng
+            Hãy hoàn thành bước quan trọng này để cập nhật đầy đủ thông tin,
+            giúp người dùng tìm kiếm dễ dàng hơn
           </p>
         </div>
 
@@ -92,7 +95,7 @@ export default function OnboardingMissingDietaryModal({
             Cập nhật ngay
           </Link>
           <button
-            onClick={onClose}
+            onClick={onSkip}
             className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
           >
             Có thể để sau
