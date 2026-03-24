@@ -3,9 +3,13 @@ import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
 import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
+import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMissingDishModal';
+import useDish from '@features/vendor/hooks/useDish';
 import usePayment from '@features/vendor/hooks/usePayment';
 import useVendor from '@features/vendor/hooks/useVendor';
+import type { Branch } from '@features/vendor/types/vendor';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
 import {
   Menu as Bars3Icon,
@@ -23,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import MoneyIcon from '@mui/icons-material/Money';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography, Button } from '@mui/material';
@@ -84,24 +89,123 @@ const navigation = [
 ];
 
 function VendorLayout(): JSX.Element {
+  type PendingOnboardingModal = 'branch' | 'dish' | 'dietary' | null;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
+  const [isDishModalOpen, setIsDishModalOpen] = useState(false);
+  const [missingScheduleBranches, setMissingScheduleBranches] = useState<
+    Branch[]
+  >([]);
+  const [isBranchScheduleMissing, setIsBranchScheduleMissing] = useState(false);
+  const [isDietaryMissing, setIsDietaryMissing] = useState(false);
+  const [isDishMissing, setIsDishMissing] = useState(false);
+  const [pendingOnboardingModal, setPendingOnboardingModal] =
+    useState<PendingOnboardingModal>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
   const { onGetVendorBalance, onVendorRequestTransfer } = usePayment();
-  const { onGetMyVendor, onGetDietaryPreferencesOfMyVendor } = useVendor();
-  const hasCheckedDietaryRef = useRef(false);
+  const { onGetDishesOfAVendor } = useDish();
+  const {
+    onGetMyVendor,
+    onGetDietaryPreferencesOfMyVendor,
+    onGetWorkSchedules,
+  } = useVendor();
+  const hasShownDietaryModalRef = useRef(false);
   const user = useAppSelector(selectUser);
   const accountBalance = useAppSelector(selectVendorAccountBalance);
   const isVendor = user?.role === ROLES.VENDOR;
-  const filteredNavigation = navigation.filter(
-    (item) => !item.isForVendor || isVendor
-  );
+  const vendorBranchPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`;
+  const vendorDietaryPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DIETARY}`;
+  const vendorDishPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DISH}`;
+
+  const filteredNavigation = navigation
+    .filter((item) => !item.isForVendor || isVendor)
+    .map((item) => {
+      if (item.href === vendorBranchPath) {
+        return {
+          ...item,
+          badgeText: isBranchScheduleMissing ? 'Cập nhật' : undefined,
+          onClick: (): void => {
+            if (!isBranchScheduleMissing) {
+              return;
+            }
+
+            setPendingOnboardingModal('branch');
+          },
+        };
+      }
+
+      if (item.href !== vendorDietaryPath) {
+        if (item.href !== vendorDishPath) {
+          return item;
+        }
+
+        return {
+          ...item,
+          badgeText: isDishMissing ? 'Mới' : undefined,
+          onClick: (): void => {
+            if (!isDishMissing) {
+              return;
+            }
+
+            setPendingOnboardingModal('dish');
+          },
+        };
+      }
+
+      return {
+        ...item,
+        badgeText: isDietaryMissing ? 'Mới' : undefined,
+        onClick: (): void => {
+          if (!isDietaryMissing) {
+            return;
+          }
+
+          setPendingOnboardingModal('dietary');
+        },
+      };
+    });
+
+  useEffect(() => {
+    if (
+      pendingOnboardingModal === 'branch' &&
+      location.pathname === vendorBranchPath
+    ) {
+      setIsBranchModalOpen(true);
+      setPendingOnboardingModal(null);
+      return;
+    }
+
+    if (
+      pendingOnboardingModal === 'dish' &&
+      location.pathname === vendorDishPath
+    ) {
+      setIsDishModalOpen(true);
+      setPendingOnboardingModal(null);
+      return;
+    }
+
+    if (
+      pendingOnboardingModal === 'dietary' &&
+      location.pathname === vendorDietaryPath
+    ) {
+      setIsDietaryModalOpen(true);
+      setPendingOnboardingModal(null);
+    }
+  }, [
+    location.pathname,
+    pendingOnboardingModal,
+    vendorBranchPath,
+    vendorDishPath,
+    vendorDietaryPath,
+  ]);
 
   useEffect(() => {
     if (!isVendor) {
@@ -112,7 +216,111 @@ function VendorLayout(): JSX.Element {
   }, [isVendor, onGetVendorBalance]);
 
   useEffect(() => {
-    if (!isVendor || hasCheckedDietaryRef.current) {
+    if (!isVendor) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkBranchWorkSchedules = async (): Promise<void> => {
+      try {
+        const vendor = await onGetMyVendor();
+
+        if (!vendor?.vendorId) {
+          return;
+        }
+
+        const branches = (vendor.branches ?? []).filter(
+          (branch) => branch.licenseStatus === 'Accept'
+        );
+
+        if (branches.length === 0) {
+          if (!isCancelled) {
+            setMissingScheduleBranches([]);
+            setIsBranchScheduleMissing(false);
+          }
+          return;
+        }
+
+        const missingScheduleResults = await Promise.all(
+          branches.map(async (branch) => {
+            try {
+              const workSchedules = await onGetWorkSchedules(branch.branchId);
+              return workSchedules.length === 0 ? branch : null;
+            } catch (error) {
+              console.error(
+                `Error checking work schedules for branch ${branch.branchId}:`,
+                error
+              );
+              return null;
+            }
+          })
+        );
+
+        if (isCancelled) {
+          return;
+        }
+
+        const missingBranches = missingScheduleResults.filter(
+          (branch): branch is Branch => branch !== null
+        );
+
+        setMissingScheduleBranches(missingBranches);
+        setIsBranchScheduleMissing(missingBranches.length > 0);
+      } catch (error) {
+        console.error('Error checking branch work schedules:', error);
+      }
+    };
+
+    void checkBranchWorkSchedules();
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isVendor, location.pathname, onGetMyVendor, onGetWorkSchedules]);
+
+  useEffect(() => {
+    if (!isVendor) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkDishes = async (): Promise<void> => {
+      try {
+        const vendor = await onGetMyVendor();
+
+        if (!vendor?.vendorId) {
+          return;
+        }
+
+        const dishesResponse = await onGetDishesOfAVendor({
+          vendorId: vendor.vendorId,
+          params: {
+            pageNumber: 1,
+            pageSize: 1,
+          },
+        });
+
+        if (isCancelled) {
+          return;
+        }
+
+        setIsDishMissing(dishesResponse.totalCount === 0);
+      } catch (error) {
+        console.error('Error checking dishes:', error);
+      }
+    };
+
+    void checkDishes();
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isVendor, location.pathname, onGetDishesOfAVendor, onGetMyVendor]);
+
+  useEffect(() => {
+    if (!isVendor) {
       return;
     }
 
@@ -130,13 +338,19 @@ function VendorLayout(): JSX.Element {
           vendorId: vendor.vendorId,
         });
 
-        if (!isCancelled && dietaryPreferences.length === 0) {
+        if (isCancelled) {
+          return;
+        }
+
+        const isMissingDietary = dietaryPreferences.length === 0;
+        setIsDietaryMissing(isMissingDietary);
+
+        if (isMissingDietary && !hasShownDietaryModalRef.current) {
           setIsDietaryModalOpen(true);
+          hasShownDietaryModalRef.current = true;
         }
       } catch (error) {
         console.error('Error checking dietary preferences:', error);
-      } finally {
-        hasCheckedDietaryRef.current = true;
       }
     };
 
@@ -145,7 +359,12 @@ function VendorLayout(): JSX.Element {
     return (): void => {
       isCancelled = true;
     };
-  }, [isVendor, onGetMyVendor, onGetDietaryPreferencesOfMyVendor]);
+  }, [
+    isVendor,
+    location.pathname,
+    onGetMyVendor,
+    onGetDietaryPreferencesOfMyVendor,
+  ]);
 
   const handleLogoClick = (): void => {
     navigate('/vendor');
@@ -325,9 +544,30 @@ function VendorLayout(): JSX.Element {
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
       />
+      <OnboardingMissingBranchModal
+        open={isBranchModalOpen}
+        missingBranches={missingScheduleBranches}
+        onClose={() => setIsBranchModalOpen(false)}
+        onSkip={() => {
+          setIsBranchModalOpen(false);
+          navigate(vendorBranchPath);
+        }}
+      />
       <OnboardingMissingDietaryModal
         open={isDietaryModalOpen}
         onClose={() => setIsDietaryModalOpen(false)}
+        onSkip={() => {
+          setIsDietaryModalOpen(false);
+          navigate(vendorDietaryPath);
+        }}
+      />
+      <OnboardingMissingDishModal
+        open={isDishModalOpen}
+        onClose={() => setIsDishModalOpen(false)}
+        onSkip={() => {
+          setIsDishModalOpen(false);
+          navigate(vendorDishPath);
+        }}
       />
     </Box>
   );
