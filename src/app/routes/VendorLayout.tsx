@@ -9,7 +9,6 @@ import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMi
 import useDish from '@features/vendor/hooks/useDish';
 import usePayment from '@features/vendor/hooks/usePayment';
 import useVendor from '@features/vendor/hooks/useVendor';
-import type { Branch } from '@features/vendor/types/vendor';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
 import {
   Menu as Bars3Icon,
@@ -33,8 +32,14 @@ import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography, Button } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import { selectVendorAccountBalance } from '@slices/payment';
+import {
+  selectMyVendorDietaryPreferences,
+  selectMyVendor,
+  selectBranchScheduleMap,
+} from '@slices/vendor';
+import { selectVendorDishesPagination } from '@slices/dish';
 import type { JSX } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
@@ -99,12 +104,8 @@ function VendorLayout(): JSX.Element {
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
-  const [missingScheduleBranches, setMissingScheduleBranches] = useState<
-    Branch[]
-  >([]);
-  const [isBranchScheduleMissing, setIsBranchScheduleMissing] = useState(false);
-  const [isDietaryMissing, setIsDietaryMissing] = useState(false);
-  const [isDishMissing, setIsDishMissing] = useState(false);
+  // isInitialCheckDone: tránh hiển thị badge trước khi fetch lần đầu xong
+  const [isInitialCheckDone, setIsInitialCheckDone] = useState(false);
   const [pendingOnboardingModal, setPendingOnboardingModal] =
     useState<PendingOnboardingModal>(null);
   const location = useLocation();
@@ -120,7 +121,42 @@ function VendorLayout(): JSX.Element {
   const hasShownDietaryModalRef = useRef(false);
   const user = useAppSelector(selectUser);
   const accountBalance = useAppSelector(selectVendorAccountBalance);
+  // Đọc reactive từ Redux store - tự cập nhật khi trang con thay đổi dữ liệu
+  const myVendorDietaryPreferences = useAppSelector(
+    selectMyVendorDietaryPreferences
+  );
+  const vendorDishesPagination = useAppSelector(selectVendorDishesPagination);
+  const myVendor = useAppSelector(selectMyVendor);
+  const branchScheduleMap = useAppSelector(selectBranchScheduleMap);
   const isVendor = user?.role === ROLES.VENDOR;
+
+  // Badge được tính reactive từ Redux state (không cần re-fetch khi navigate)
+  const isDishMissing =
+    isInitialCheckDone && vendorDishesPagination.totalCount === 0;
+  const isDietaryMissing =
+    isInitialCheckDone && myVendorDietaryPreferences.length === 0;
+
+  // Branch schedule badge: reactive từ branchScheduleMap trong Redux store
+  const acceptedBranches = useMemo(
+    () =>
+      (myVendor?.branches ?? []).filter(
+        (branch) => branch.licenseStatus === 'Accept'
+      ),
+    [myVendor]
+  );
+
+  const missingScheduleBranches = useMemo(
+    () =>
+      isInitialCheckDone
+        ? acceptedBranches.filter(
+            (branch) => branchScheduleMap[branch.branchId] === false
+          )
+        : [],
+    [isInitialCheckDone, acceptedBranches, branchScheduleMap]
+  );
+
+  const isBranchScheduleMissing = missingScheduleBranches.length > 0;
+
   const vendorBranchPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`;
   const vendorDietaryPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DIETARY}`;
   const vendorDishPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DISH}`;
@@ -207,6 +243,18 @@ function VendorLayout(): JSX.Element {
     vendorDietaryPath,
   ]);
 
+  // Hiển thị dietary modal 1 lần nếu thiếu chế độ ăn (reactive theo Redux state)
+  useEffect(() => {
+    if (
+      isInitialCheckDone &&
+      isDietaryMissing &&
+      !hasShownDietaryModalRef.current
+    ) {
+      setIsDietaryModalOpen(true);
+      hasShownDietaryModalRef.current = true;
+    }
+  }, [isInitialCheckDone, isDietaryMissing]);
+
   useEffect(() => {
     if (!isVendor) {
       return;
@@ -215,6 +263,8 @@ function VendorLayout(): JSX.Element {
     void onGetVendorBalance();
   }, [isVendor, onGetVendorBalance]);
 
+  // Fetch toàn bộ dữ liệu onboarding 1 lần duy nhất khi mount (không phụ thuộc pathname)
+  // Badge sau đó được tính reactive từ Redux state → cập nhật ngay khi trang con thay đổi dữ liệu
   useEffect(() => {
     if (!isVendor) {
       return;
@@ -222,149 +272,63 @@ function VendorLayout(): JSX.Element {
 
     let isCancelled = false;
 
-    const checkBranchWorkSchedules = async (): Promise<void> => {
+    const runInitialChecks = async (): Promise<void> => {
       try {
-        const vendor = await onGetMyVendor();
+        // Dùng myVendor từ store nếu đã có, tránh gọi API thừa
+        const vendor = myVendor ?? (await onGetMyVendor());
 
-        if (!vendor?.vendorId) {
+        if (!vendor?.vendorId || isCancelled) {
           return;
         }
 
-        const branches = (vendor.branches ?? []).filter(
+        const acceptedBranches = (vendor.branches ?? []).filter(
           (branch) => branch.licenseStatus === 'Accept'
         );
 
-        if (branches.length === 0) {
-          if (!isCancelled) {
-            setMissingScheduleBranches([]);
-            setIsBranchScheduleMissing(false);
-          }
-          return;
+        // Chạy song song: fetch dish, dietary, và work schedules cho tất cả branches
+        await Promise.all([
+          // Fetch dishes để cập nhật vendorDishesPagination vào store
+          onGetDishesOfAVendor({
+            vendorId: vendor.vendorId,
+            params: { pageNumber: 1, pageSize: 1 },
+          }),
+          // Fetch dietary preferences để cập nhật myVendorDietaryPreferences vào store
+          onGetDietaryPreferencesOfMyVendor({ vendorId: vendor.vendorId }),
+          // Kiểm tra work schedules cho từng branch được chấp thuận
+          // (kết quả lưu vào branchScheduleMap trong Redux - VendorLayout tự reactive)
+          (async (): Promise<void> => {
+            await Promise.all(
+              acceptedBranches.map(async (branch) => {
+                try {
+                  await onGetWorkSchedules(branch.branchId);
+                } catch (error) {
+                  console.error(
+                    `Error checking work schedules for branch ${branch.branchId}:`,
+                    error
+                  );
+                }
+              })
+            );
+          })(),
+        ]);
+
+        if (!isCancelled) {
+          setIsInitialCheckDone(true);
         }
-
-        const missingScheduleResults = await Promise.all(
-          branches.map(async (branch) => {
-            try {
-              const workSchedules = await onGetWorkSchedules(branch.branchId);
-              return workSchedules.length === 0 ? branch : null;
-            } catch (error) {
-              console.error(
-                `Error checking work schedules for branch ${branch.branchId}:`,
-                error
-              );
-              return null;
-            }
-          })
-        );
-
-        if (isCancelled) {
-          return;
-        }
-
-        const missingBranches = missingScheduleResults.filter(
-          (branch): branch is Branch => branch !== null
-        );
-
-        setMissingScheduleBranches(missingBranches);
-        setIsBranchScheduleMissing(missingBranches.length > 0);
       } catch (error) {
-        console.error('Error checking branch work schedules:', error);
+        console.error('Error during onboarding checks:', error);
+        if (!isCancelled) {
+          setIsInitialCheckDone(true);
+        }
       }
     };
 
-    void checkBranchWorkSchedules();
+    void runInitialChecks();
 
     return (): void => {
       isCancelled = true;
     };
-  }, [isVendor, location.pathname, onGetMyVendor, onGetWorkSchedules]);
-
-  useEffect(() => {
-    if (!isVendor) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    const checkDishes = async (): Promise<void> => {
-      try {
-        const vendor = await onGetMyVendor();
-
-        if (!vendor?.vendorId) {
-          return;
-        }
-
-        const dishesResponse = await onGetDishesOfAVendor({
-          vendorId: vendor.vendorId,
-          params: {
-            pageNumber: 1,
-            pageSize: 1,
-          },
-        });
-
-        if (isCancelled) {
-          return;
-        }
-
-        setIsDishMissing(dishesResponse.totalCount === 0);
-      } catch (error) {
-        console.error('Error checking dishes:', error);
-      }
-    };
-
-    void checkDishes();
-
-    return (): void => {
-      isCancelled = true;
-    };
-  }, [isVendor, location.pathname, onGetDishesOfAVendor, onGetMyVendor]);
-
-  useEffect(() => {
-    if (!isVendor) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    const checkDietaryPreferences = async (): Promise<void> => {
-      try {
-        const vendor = await onGetMyVendor();
-
-        if (!vendor?.vendorId) {
-          return;
-        }
-
-        const dietaryPreferences = await onGetDietaryPreferencesOfMyVendor({
-          vendorId: vendor.vendorId,
-        });
-
-        if (isCancelled) {
-          return;
-        }
-
-        const isMissingDietary = dietaryPreferences.length === 0;
-        setIsDietaryMissing(isMissingDietary);
-
-        if (isMissingDietary && !hasShownDietaryModalRef.current) {
-          setIsDietaryModalOpen(true);
-          hasShownDietaryModalRef.current = true;
-        }
-      } catch (error) {
-        console.error('Error checking dietary preferences:', error);
-      }
-    };
-
-    void checkDietaryPreferences();
-
-    return (): void => {
-      isCancelled = true;
-    };
-  }, [
-    isVendor,
-    location.pathname,
-    onGetMyVendor,
-    onGetDietaryPreferencesOfMyVendor,
-  ]);
+  }, [isVendor]); // chỉ chạy 1 lần khi mount - intentionally omit các callback dependencies
 
   const handleLogoClick = (): void => {
     navigate('/vendor');
