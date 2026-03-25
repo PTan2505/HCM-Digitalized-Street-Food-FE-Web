@@ -6,6 +6,7 @@ import {
 import { MapPinIcon } from '@heroicons/react/24/solid';
 import type { JSX } from 'react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ENV } from '@config/env';
 
 interface OpenMapAutocompletePrediction {
   description: string;
@@ -146,7 +147,7 @@ export default function AddressAutocomplete({
   const containerRef = useRef<HTMLDivElement>(null);
   const justSelectedRef = useRef(false);
   const latestSelectionRef = useRef(0);
-  const apiKey = import.meta.env.VITE_OPENMAP_API_KEY as string | undefined;
+  const apiKey = ENV.maps.openMapApiKey;
 
   useEffect(() => {
     if (!justSelectedRef.current) {

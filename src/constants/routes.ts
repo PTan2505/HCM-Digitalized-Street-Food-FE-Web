@@ -51,6 +51,8 @@ export const ROUTES = {
       USER_WITH_DIETARY: 'users-with-dietary',
       CATEGORY: 'category',
       TASTE: 'taste',
+      FEEDBACK_TAG: 'feedback-tag',
+      CAMPAIGN: 'campaign',
     },
   },
 

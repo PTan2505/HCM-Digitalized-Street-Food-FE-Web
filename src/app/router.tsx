@@ -6,6 +6,7 @@ import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
 import AdminTastePage from '@features/admin/pages/TastePage';
+import AdminFeedbackTagPage from '@features/admin/pages/FeedbackTagPage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
@@ -13,6 +14,7 @@ import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
+import AdminCampaignPage from '@features/admin/pages/CampaignPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -189,6 +191,14 @@ export const router = createBrowserRouter([
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
           { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },
+          {
+            path: ROUTES.ADMIN.PATHS.FEEDBACK_TAG,
+            element: <AdminFeedbackTagPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.CAMPAIGN,
+            element: <AdminCampaignPage />,
+          },
         ],
       },
     ],

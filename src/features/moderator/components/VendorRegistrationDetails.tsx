@@ -37,7 +37,7 @@ export default function VendorRegistrationDetails({
   const infoRows: { label: string; value: string }[] = [
     {
       label: 'Mã yêu cầu',
-      value: String(registration.branchRegisterRequestId),
+      value: String(registration.branchRequestId),
     },
     { label: 'Mã chi nhánh', value: String(registration.branchId) },
     ...(registration.rejectReason

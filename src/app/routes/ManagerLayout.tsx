@@ -1,13 +1,15 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
+import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import {
-  Bars3Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ShoppingBagIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Menu as Bars3Icon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ShoppingCart as ShoppingBagIcon,
+  Close as XMarkIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -26,6 +28,7 @@ const navigation = [
 function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -130,6 +133,12 @@ function ManagerLayout(): JSX.Element {
                 </Typography>
               </Box>
             </Box>
+
+            <Box className="flex items-center gap-4">
+              <NotificationBell
+                onFeedbackNotificationClick={setFeedbackModalId}
+              />
+            </Box>
           </Box>
         </Box>
 
@@ -139,6 +148,12 @@ function ManagerLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+
+      <FeedbackDetailsModal
+        isOpen={feedbackModalId !== null}
+        onClose={() => setFeedbackModalId(null)}
+        feedbackId={feedbackModalId}
+      />
     </Box>
   );
 }

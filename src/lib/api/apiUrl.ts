@@ -57,6 +57,8 @@ export const apiUrl = {
     },
   },
   user: {
+    getUserById: (id: number): string => `/User/${id}`,
+    search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
       dietary: '/UserSetup/dietary-setup',
@@ -81,6 +83,8 @@ export const apiUrl = {
     createOrGetBranchesOfAVendor: (vendorId: number): string =>
       `/Branch/vendor/${vendorId}`,
     updateOrDeleteBranch: (branchId: number): string => `/Branch/${branchId}`,
+    updateBranchManager: (branchId: number): string =>
+      `/Branch/${branchId}/manager`,
     //WorkSchedules
     createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
@@ -135,6 +139,18 @@ export const apiUrl = {
       `/Feedback/branch/${branchId}`,
     CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
       `/Feedback/${feedbackId}/reply`,
+    GetFeedbackDetails: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}`,
+  },
+  feedbackTag: {
+    getAllOrPostFeedbackTag: '/FeedbackTag',
+    updateOrDeleteFeedbackTag: (id: number): string => `/FeedbackTag/${id}`,
+  },
+  notification: {
+    getNotifications: '/notifications',
+    getUnreadCount: '/notifications/unread-count',
+    markAsRead: (id: number): string => `/notifications/${id}/read`,
+    markAllAsRead: '/notifications/read-all',
   },
   order: {
     getVendorBranchOrders: (branchId: number): string =>
@@ -146,5 +162,9 @@ export const apiUrl = {
     getManagerOrders: '/order/manager/orders',
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
+  },
+  campaign: {
+    GetOrPostSystemCampaign: '/Campaign/system',
+    UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
   },
 };
