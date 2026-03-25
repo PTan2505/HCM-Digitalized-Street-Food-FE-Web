@@ -52,6 +52,7 @@ export const ROUTES = {
       CATEGORY: 'category',
       TASTE: 'taste',
       FEEDBACK_TAG: 'feedback-tag',
+      CAMPAIGN: 'campaign',
     },
   },
 

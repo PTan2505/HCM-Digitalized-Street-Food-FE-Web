@@ -17,6 +17,7 @@ import {
   Close as XMarkIcon,
   Loyalty as ShoppingBagIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
+  Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
@@ -62,6 +63,11 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý tag phản hồi',
     href: '/admin/feedback-tag',
     icon: ChatBubbleOutlineIcon,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    href: '/admin/campaign',
+    icon: CampaignIcon,
   },
   {
     name: 'Chế độ ăn',
