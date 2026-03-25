@@ -7,13 +7,11 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 interface OnboardingMissingDishModalProps {
   open: boolean;
   onClose: () => void;
-  onSkip: () => void;
 }
 
 export default function OnboardingMissingDishModal({
   open,
   onClose,
-  onSkip,
 }: OnboardingMissingDishModalProps): JSX.Element {
   return (
     <Dialog
@@ -87,10 +85,10 @@ export default function OnboardingMissingDishModal({
             Thêm món ngay
           </Link>
           <button
-            onClick={onSkip}
+            onClick={onClose}
             className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
           >
-            Có thể để sau
+            Đã hiểu
           </button>
         </div>
       </DialogContent>
