@@ -70,6 +70,8 @@ export default function CamPaignFormModal({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<CampaignFormData>({
     resolver: zodResolver(CampaignSchema),
@@ -83,6 +85,11 @@ export default function CamPaignFormModal({
       endDate: '',
     },
   });
+
+  const registrationStartDate = watch('registrationStartDate');
+  const registrationEndDate = watch('registrationEndDate');
+  const startDate = watch('startDate');
+  const endDate = watch('endDate');
 
   useEffect(() => {
     if (isOpen) {
@@ -113,6 +120,37 @@ export default function CamPaignFormModal({
       }
     }
   }, [isOpen, campaign, reset]);
+
+  // Handle clearing/invalidating dependent dates when a preceding date changes
+  useEffect(() => {
+    if (!registrationStartDate) {
+      setValue('registrationEndDate', '');
+      setValue('startDate', '');
+      setValue('endDate', '');
+    } else if (
+      registrationEndDate &&
+      registrationStartDate >= registrationEndDate
+    ) {
+      setValue('registrationEndDate', '');
+    }
+  }, [registrationStartDate, registrationEndDate, setValue]);
+
+  useEffect(() => {
+    if (!registrationEndDate) {
+      setValue('startDate', '');
+      setValue('endDate', '');
+    } else if (startDate && registrationEndDate >= startDate) {
+      setValue('startDate', '');
+    }
+  }, [registrationEndDate, startDate, setValue]);
+
+  useEffect(() => {
+    if (!startDate) {
+      setValue('endDate', '');
+    } else if (endDate && startDate >= endDate) {
+      setValue('endDate', '');
+    }
+  }, [startDate, endDate, setValue]);
 
   const handleFormSubmit = async (data: CampaignFormData): Promise<void> => {
     const payload: CampaignFormData = {
@@ -202,8 +240,19 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('registrationStartDate')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                  max={registrationEndDate ?? undefined}
+                  step="60"
+                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+                    errors.registrationStartDate
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-amber-200'
+                  }`}
                 />
+                {errors.registrationStartDate && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.registrationStartDate.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -212,8 +261,23 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('registrationEndDate')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                  disabled={!registrationStartDate}
+                  min={registrationStartDate ?? undefined}
+                  max={startDate ?? undefined}
+                  step="60"
+                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+                    errors.registrationEndDate
+                      ? 'border-red-500 focus:ring-red-200'
+                      : !registrationStartDate
+                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
+                        : 'border-gray-300 focus:ring-amber-200'
+                  }`}
                 />
+                {errors.registrationEndDate && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.registrationEndDate.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -223,10 +287,16 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('startDate')}
+                  disabled={!registrationEndDate}
+                  min={registrationEndDate ?? undefined}
+                  max={endDate ?? undefined}
+                  step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.startDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
+                      : !registrationEndDate
+                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
+                        : 'border-gray-300 focus:ring-amber-200'
                   }`}
                 />
                 {errors.startDate && (
@@ -243,10 +313,15 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('endDate')}
+                  disabled={!startDate}
+                  min={startDate ?? undefined}
+                  step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.endDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
+                      : !startDate
+                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
+                        : 'border-gray-300 focus:ring-amber-200'
                   }`}
                 />
                 {errors.endDate && (
