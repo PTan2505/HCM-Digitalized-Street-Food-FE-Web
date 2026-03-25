@@ -6,6 +6,7 @@ import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
 import AdminTastePage from '@features/admin/pages/TastePage';
+import AdminFeedbackTagPage from '@features/admin/pages/FeedbackTagPage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
@@ -189,6 +190,10 @@ export const router = createBrowserRouter([
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
           { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },
+          {
+            path: ROUTES.ADMIN.PATHS.FEEDBACK_TAG,
+            element: <AdminFeedbackTagPage />,
+          },
         ],
       },
     ],
