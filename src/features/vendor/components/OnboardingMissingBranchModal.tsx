@@ -9,14 +9,12 @@ interface OnboardingMissingBranchModalProps {
   open: boolean;
   missingBranches: Branch[];
   onClose: () => void;
-  onSkip: () => void;
 }
 
 export default function OnboardingMissingBranchModal({
   open,
   missingBranches,
   onClose,
-  onSkip,
 }: OnboardingMissingBranchModalProps): JSX.Element {
   return (
     <Dialog
@@ -84,10 +82,10 @@ export default function OnboardingMissingBranchModal({
             Cập nhật ngay
           </Link>
           <button
-            onClick={onSkip}
+            onClick={onClose}
             className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
           >
-            Có thể để sau
+            Đã hiểu
           </button>
         </div>
       </DialogContent>
