@@ -244,10 +244,10 @@ export default function FeedbackDetailsModal({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {feedback.tags.map((tag) => (
                       <span
-                        key={tag}
+                        key={tag.id}
                         className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-xs text-blue-700"
                       >
-                        #{tag}
+                        #{tag.name}
                       </span>
                     ))}
                   </div>
