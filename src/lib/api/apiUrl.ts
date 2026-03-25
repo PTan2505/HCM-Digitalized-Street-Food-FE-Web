@@ -163,4 +163,8 @@ export const apiUrl = {
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
   },
+  campaign: {
+    GetOrPostSystemCampaign: '/Campaign/system',
+    UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+  },
 };
