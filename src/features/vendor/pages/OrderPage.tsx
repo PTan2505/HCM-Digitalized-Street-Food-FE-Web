@@ -25,6 +25,7 @@ import Pagination from '@features/vendor/components/Pagination';
 import useOrder from '@features/vendor/hooks/useOrder';
 import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorOrder } from '@features/vendor/types/order';
+import type { Branch } from '@features/vendor/types/vendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectOrderStatus,
@@ -45,6 +46,7 @@ type SelectedBranch = number | 'all';
 export default function OrderPage(): JSX.Element {
   const { onGetMyVendor } = useVendor();
   const {
+    onGetVendorOrders,
     onGetVendorBranchOrders,
     onDecideVendorOrder,
     onCompleteVendorOrder,
@@ -60,13 +62,15 @@ export default function OrderPage(): JSX.Element {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [detailOrder, setDetailOrder] = useState<VendorOrder | null>(null);
-  const [allBranchOrders, setAllBranchOrders] = useState<VendorOrder[]>([]);
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);
   const [completeMessage, setCompleteMessage] = useState('');
 
-  const branches = useMemo(
-    () => (myVendor?.branches ?? []).filter((branch) => branch.isActive),
+  const branches: Branch[] = useMemo(
+    () =>
+      (myVendor?.branches ?? []).filter(
+        (branch) => branch.isActive && branch.licenseStatus === 'Accept'
+      ),
     [myVendor?.branches]
   );
 
@@ -75,70 +79,26 @@ export default function OrderPage(): JSX.Element {
   }, [onGetMyVendor]);
 
   useEffect(() => {
-    if (branches.length === 0) return;
-
-    setSelectedBranchId((prev) => {
-      if (prev === 'all') {
-        return prev;
-      }
-
-      if (branches.some((b) => b.branchId === prev)) {
-        return prev;
-      }
-
-      return 'all';
-    });
-  }, [branches]);
-
-  useEffect(() => {
-    if (branches.length === 0) return;
-
     if (selectedBranchId === 'all') {
-      const fetchAllBranchesOrders = async (): Promise<void> => {
-        const responses = await Promise.all(
-          branches.map((branch) =>
-            onGetVendorBranchOrders({
-              branchId: branch.branchId,
-              params: {
-                pageNumber: 1,
-                pageSize: 200,
-              },
-            })
-          )
-        );
-
-        const mergedOrders = responses
-          .flatMap((response) => response.items)
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-
-        setAllBranchOrders(mergedOrders);
-      };
-
-      void fetchAllBranchesOrders();
+      void onGetVendorOrders({ pageNumber, pageSize });
       return;
     }
 
     void onGetVendorBranchOrders({
       branchId: selectedBranchId,
-      params: {
-        pageNumber,
-        pageSize,
-      },
+      params: { pageNumber, pageSize },
     });
   }, [
     selectedBranchId,
     pageNumber,
     pageSize,
-    branches,
+    onGetVendorOrders,
     onGetVendorBranchOrders,
   ]);
 
   const handleBranchChange = (event: SelectChangeEvent<string>): void => {
-    const nextValue = event.target.value;
-    setSelectedBranchId(nextValue === 'all' ? 'all' : Number(nextValue));
+    const val = event.target.value;
+    setSelectedBranchId(val === 'all' ? 'all' : Number(val));
     setPageNumber(1);
   };
 
@@ -158,27 +118,13 @@ export default function OrderPage(): JSX.Element {
     await onDecideVendorOrder({ orderId, approve });
 
     if (selectedBranchId === 'all') {
-      setAllBranchOrders((prev) =>
-        prev.map((order) => {
-          if (order.orderId !== orderId) return order;
-
-          return {
-            ...order,
-            status: approve ? 2 : 3,
-            updatedAt: new Date().toISOString(),
-          };
-        })
-      );
-      return;
+      await onGetVendorOrders({ pageNumber, pageSize });
+    } else {
+      await onGetVendorBranchOrders({
+        branchId: selectedBranchId,
+        params: { pageNumber, pageSize },
+      });
     }
-
-    await onGetVendorBranchOrders({
-      branchId: selectedBranchId,
-      params: {
-        pageNumber,
-        pageSize,
-      },
-    });
   };
 
   const handleVerificationCodeChange = (
@@ -199,9 +145,7 @@ export default function OrderPage(): JSX.Element {
     setIsCompletingByCode(true);
     setCompleteMessage('');
 
-    const candidateOrders = (
-      selectedBranchId === 'all' ? allBranchOrders : orders
-    ).filter((order) => order.status === 2);
+    const candidateOrders = orders.filter((order) => order.status === 2);
 
     if (candidateOrders.length === 0) {
       setCompleteMessage('Không có đơn đã chấp nhận để hoàn tất.');
@@ -235,14 +179,6 @@ export default function OrderPage(): JSX.Element {
         status: 4,
         updatedAt: new Date().toISOString(),
       };
-
-      if (selectedBranchId === 'all') {
-        setAllBranchOrders((prev) =>
-          prev.map((order) =>
-            order.orderId === completedOrder.orderId ? completedOrder : order
-          )
-        );
-      }
 
       setDetailOrder(completedOrder);
       setVerificationCode('');
@@ -376,40 +312,6 @@ export default function OrderPage(): JSX.Element {
     },
   ];
 
-  const allBranchPagination = useMemo(() => {
-    const totalCount = allBranchOrders.length;
-    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-    const currentPage = Math.min(pageNumber, totalPages);
-
-    return {
-      currentPage,
-      pageSize,
-      totalPages,
-      totalCount,
-      hasPrevious: currentPage > 1,
-      hasNext: currentPage < totalPages,
-    };
-  }, [allBranchOrders.length, pageNumber, pageSize]);
-
-  const displayedOrders = useMemo(() => {
-    if (selectedBranchId !== 'all') {
-      return orders;
-    }
-
-    const start = (allBranchPagination.currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    return allBranchOrders.slice(start, end);
-  }, [
-    selectedBranchId,
-    orders,
-    allBranchOrders,
-    allBranchPagination.currentPage,
-    pageSize,
-  ]);
-
-  const displayedPagination =
-    selectedBranchId === 'all' ? allBranchPagination : pagination;
-
   return (
     <div className="font-(--font-nunito)">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -436,7 +338,7 @@ export default function OrderPage(): JSX.Element {
           </InputLabel>
           <Select
             labelId="vendor-order-branch-label"
-            value={String(selectedBranchId)}
+            value={selectedBranchId !== null ? String(selectedBranchId) : 'all'}
             label="Chi nhánh"
             onChange={handleBranchChange}
             disabled={branches.length === 0}
@@ -483,7 +385,7 @@ export default function OrderPage(): JSX.Element {
 
       <Table
         columns={columns}
-        data={displayedOrders}
+        data={orders}
         rowKey="orderId"
         actions={actions}
         loading={status === 'pending'}
@@ -495,12 +397,12 @@ export default function OrderPage(): JSX.Element {
       />
 
       <Pagination
-        currentPage={displayedPagination.currentPage}
-        totalPages={displayedPagination.totalPages}
-        totalCount={displayedPagination.totalCount}
-        pageSize={displayedPagination.pageSize}
-        hasPrevious={displayedPagination.hasPrevious}
-        hasNext={displayedPagination.hasNext}
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={pagination.totalCount}
+        pageSize={pagination.pageSize}
+        hasPrevious={pagination.hasPrevious}
+        hasNext={pagination.hasNext}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
