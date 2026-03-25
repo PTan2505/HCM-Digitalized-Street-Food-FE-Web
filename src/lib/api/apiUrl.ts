@@ -142,6 +142,10 @@ export const apiUrl = {
     GetFeedbackDetails: (feedbackId: number): string =>
       `/Feedback/${feedbackId}`,
   },
+  feedbackTag: {
+    getAllOrPostFeedbackTag: '/FeedbackTag',
+    updateOrDeleteFeedbackTag: (id: number): string => `/FeedbackTag/${id}`,
+  },
   notification: {
     getNotifications: '/notifications',
     getUnreadCount: '/notifications/unread-count',

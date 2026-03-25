@@ -10,6 +10,7 @@ import paymentReducer from '@slices/payment';
 import dishReducer from '@slices/dish';
 import feedbackReducer from '@slices/feedback';
 import orderReducer from '@slices/order';
+import feedbackTagReducer from '@slices/feedbackTag';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     dish: dishReducer,
     feedback: feedbackReducer,
     order: orderReducer,
+    feedbackTag: feedbackTagReducer,
   },
 });
 
