@@ -108,6 +108,7 @@ export default function ClaimBranchModal({
             licenseImages={licenseImages}
             onFileChange={handleFileChange}
             title="Giấy phép kinh doanh"
+            required={true}
           />
         </Box>
 

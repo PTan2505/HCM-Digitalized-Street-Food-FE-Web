@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { signalRService } from '@config/signalIRService';
+import { signalRService } from '@config/signalRService';
 import { axiosApi } from '@lib/api/apiInstance';
 import { toast } from 'react-toastify';
 import CustomNotification from '@components/CustomNotification';
 import type { NotificationDto } from '@custom-types/notification';
+import { playNotificationSound } from '@utils/notificationSound';
 
 export type { NotificationDto } from '@custom-types/notification';
 
@@ -116,6 +117,7 @@ export const useNotifications = (
         if (data.type !== 'NewFeedback') return;
 
         console.log('📬 New notification:', data);
+        playNotificationSound();
         toast.info(CustomNotification, {
           data: {
             title: data.title,

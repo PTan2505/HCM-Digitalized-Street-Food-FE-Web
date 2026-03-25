@@ -85,7 +85,7 @@ export default function DishFilterSection({
 
   return (
     <Box
-      className="mb-6 flex flex-col gap-4 rounded-xl border border-gray-100 p-5 shadow-sm"
+      className="flex flex-col gap-4 rounded-xl border border-gray-100 p-5 shadow-sm"
       sx={{
         background: 'linear-gradient(to right, #ffffff, #f8fafc)',
       }}

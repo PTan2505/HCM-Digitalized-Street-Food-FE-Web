@@ -3,13 +3,13 @@ import NotificationBell from '@components/NotificationBell';
 import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
-  Bars3Icon,
-  ChartBarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ShoppingBagIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Menu as Bars3Icon,
+  BarChart as ChartBarIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Verified as ShoppingBagIcon,
+  Close as XMarkIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -19,23 +19,11 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
-  // {
-  //   name: 'Quản lý giao dịch',
-  //   href: '/moderator/transactions',
-  //   icon: HomeIcon,
-  // },
   {
     name: 'Xác minh người bán',
     href: '/moderator/verification',
     icon: ShoppingBagIcon,
   },
-  // { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
-  // { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
-  // {
-  //   name: 'Yêu cầu rút tiền',
-  //   href: '/moderator/cashout',
-  //   icon: CurrencyDollarIcon,
-  // },
 ];
 
 function ModeratorLayout(): JSX.Element {

@@ -4,19 +4,21 @@ import type { NavigationItem } from '@components/layout/SidebarContent';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
-  Bars3Icon,
-  BuildingStorefrontIcon,
-  ChartBarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  RectangleStackIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  StarIcon,
-  UserCircleIcon,
-  UserGroupIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  BarChart as ChartBarIcon,
+  Storefront as BuildingStorefrontIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Category as RectangleStackIcon,
+  EmojiEvents as StarIcon,
+  LocalDining as SparklesIcon,
+  Group as UserGroupIcon,
+  Person as UserCircleIcon,
+  Menu as Bars3Icon,
+  Close as XMarkIcon,
+  Loyalty as ShoppingBagIcon,
+  ChatBubbleOutline as ChatBubbleOutlineIcon,
+  Campaign as CampaignIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -26,12 +28,6 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
-  // {
-  //   name: 'Quản lý giao dịch',
-  //   href: '/admin/transactions',
-  //   icon: HomeIcon,
-  // },
-  // { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
     name: 'Quản lý cửa hàng',
     href: '/admin/vendors',
@@ -62,6 +58,16 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý khẩu vị',
     href: '/admin/taste',
     icon: SparklesIcon,
+  },
+  {
+    name: 'Quản lý tag phản hồi',
+    href: '/admin/feedback-tag',
+    icon: ChatBubbleOutlineIcon,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    href: '/admin/campaign',
+    icon: CampaignIcon,
   },
   {
     name: 'Chế độ ăn',

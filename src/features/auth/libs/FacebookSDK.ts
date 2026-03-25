@@ -23,6 +23,8 @@ declare global {
   }
 }
 
+import { ENV } from '@config/env';
+
 export const initFacebookSDK = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (window.FB) {
@@ -32,7 +34,7 @@ export const initFacebookSDK = (): Promise<boolean> => {
     // Initialize the SDK when it loads
     window.fbAsyncInit = function (): void {
       window.FB.init({
-        appId: import.meta.env.VITE_FACEBOOK_APP_ID ?? '702936619420508',
+        appId: ENV.oauth.facebookAppId,
         cookie: true,
         xfbml: true,
         version: 'v21.0',

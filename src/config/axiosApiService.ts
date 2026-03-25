@@ -1,5 +1,6 @@
 import { apiUrl } from '@lib/api/apiUrl';
 import { tokenManagement } from '@utils/tokenManagement';
+import { ENV } from './env';
 import axios, {
   AxiosError,
   AxiosHeaders,
@@ -30,7 +31,7 @@ export interface ApiService {
 }
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: ENV.api.baseUrl,
 });
 
 axiosInstance.interceptors.request.use(
@@ -97,7 +98,7 @@ axiosInstance.interceptors.response.use(
     //     try {
     //       // Refresh the access token
     //       const response = await axios.post(
-    //         `${import.meta.env.VITE_API_URL}${apiUrl.token.refresh}`,
+    //         `${ENV.api.baseUrl}${apiUrl.token.refresh}`,
     //         {
     //           refresh: tokenManagement.getRefreshToken(),
     //         }

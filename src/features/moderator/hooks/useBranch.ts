@@ -1,4 +1,5 @@
 import type {
+  GetPendingRegistrationsParams,
   GetPendingRegistrationsResponse,
   VerifyRegistrationRequest,
   RejectRegistrationRequest,
@@ -12,10 +13,9 @@ import {
 import { useCallback } from 'react';
 
 export default function useBranch(): {
-  onGetPendingRegistrations: (params: {
-    pageNumber: number;
-    pageSize: number;
-  }) => Promise<GetPendingRegistrationsResponse>;
+  onGetPendingRegistrations: (
+    params: GetPendingRegistrationsParams
+  ) => Promise<GetPendingRegistrationsResponse>;
   onVerifyBranchRegistration: (payload: {
     branchId: number;
     data: VerifyRegistrationRequest;
@@ -28,10 +28,9 @@ export default function useBranch(): {
   const dispatch = useAppDispatch();
 
   const onGetPendingRegistrations = useCallback(
-    async (params: {
-      pageNumber: number;
-      pageSize: number;
-    }): Promise<GetPendingRegistrationsResponse> => {
+    async (
+      params: GetPendingRegistrationsParams
+    ): Promise<GetPendingRegistrationsResponse> => {
       const response = await dispatch(getPendingRegistrations(params)).unwrap();
       return response;
     },
