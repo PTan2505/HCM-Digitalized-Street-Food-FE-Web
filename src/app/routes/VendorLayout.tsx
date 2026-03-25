@@ -512,26 +512,14 @@ function VendorLayout(): JSX.Element {
         open={isBranchModalOpen}
         missingBranches={missingScheduleBranches}
         onClose={() => setIsBranchModalOpen(false)}
-        onSkip={() => {
-          setIsBranchModalOpen(false);
-          navigate(vendorBranchPath);
-        }}
       />
       <OnboardingMissingDietaryModal
         open={isDietaryModalOpen}
         onClose={() => setIsDietaryModalOpen(false)}
-        onSkip={() => {
-          setIsDietaryModalOpen(false);
-          navigate(vendorDietaryPath);
-        }}
       />
       <OnboardingMissingDishModal
         open={isDishModalOpen}
         onClose={() => setIsDishModalOpen(false)}
-        onSkip={() => {
-          setIsDishModalOpen(false);
-          navigate(vendorDishPath);
-        }}
       />
     </Box>
   );
