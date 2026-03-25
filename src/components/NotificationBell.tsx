@@ -90,14 +90,23 @@ export default function NotificationBell({
 
   return (
     <Box>
-      <IconButton color="inherit" onClick={handleClick} className="relative">
+      <IconButton
+        color="inherit"
+        onClick={handleClick}
+        className="relative"
+        title={isConnected ? 'Đã kết nối' : 'Đã ngắt kết nối'}
+      >
         <Badge badgeContent={unreadCount} color="error">
-          <NotificationsIcon />
-          <span
-            className={`absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-              isConnected ? 'bg-green-500' : 'bg-red-500'
-            }`}
-            title={isConnected ? 'Đã kết nối' : 'Đã ngắt kết nối'}
+          <NotificationsIcon
+            sx={{
+              ...(isConnected
+                ? {
+                    color: 'primary.main',
+                  }
+                : {
+                    color: 'error.main',
+                  }),
+            }}
           />
         </Badge>
       </IconButton>
