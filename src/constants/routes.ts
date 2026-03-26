@@ -28,6 +28,7 @@ export const ROUTES = {
     PATHS: {
       ORDER: 'orders',
       BRANCH: 'branches',
+      WORK_SCHEDULE: 'work-schedule',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       VERIFICATION: 'verification',
