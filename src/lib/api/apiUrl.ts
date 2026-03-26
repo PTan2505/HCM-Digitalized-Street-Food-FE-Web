@@ -179,4 +179,9 @@ export const apiUrl = {
       `/Campaign/join/system/${campaignId}/branch/${branchId}`,
     UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
   },
+  voucher: {
+    GetOrPostVouchers: '/vouchers',
+    UpdateOrDeleteVoucher: (voucherId: number): string =>
+      `/vouchers/${voucherId}`,
+  },
 };
