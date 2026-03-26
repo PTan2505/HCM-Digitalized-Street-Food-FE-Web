@@ -8,6 +8,7 @@ import type {
   VendorCampaign,
   VendorCampaignCreate,
   VendorCampaignUpdate,
+  JoinSystemCampaignResponse,
 } from '@features/vendor/types/campaign';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -25,6 +26,12 @@ export interface CampaignState {
   // Vendor campaigns
   vendorCampaigns: VendorCampaign[];
   vendorTotalCount: number;
+  // Branch campaigns
+  branchCampaigns: VendorCampaign[];
+  branchTotalCount: number;
+  // Joinable system campaigns for vendor branches
+  joinableSystemCampaigns: VendorCampaign[];
+  joinableSystemTotalCount: number;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -34,6 +41,10 @@ const initialState: CampaignState = {
   totalCount: 0,
   vendorCampaigns: [],
   vendorTotalCount: 0,
+  branchCampaigns: [],
+  branchTotalCount: 0,
+  joinableSystemCampaigns: [],
+  joinableSystemTotalCount: 0,
   status: 'idle',
   error: null,
 };
@@ -136,6 +147,84 @@ export const updateVendorCampaign = createAppAsyncThunk(
   }
 );
 
+export const getBranchCampaigns = createAppAsyncThunk(
+  'campaign/getBranchCampaigns',
+  async (
+    payload: { branchId: number; pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.vendorCampaignApi.getBranchCampaigns(
+        payload.branchId,
+        payload.pageNumber,
+        payload.pageSize
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const createBranchCampaign = createAppAsyncThunk(
+  'campaign/createBranchCampaign',
+  async (
+    payload: { branchId: number } & VendorCampaignCreate,
+    { rejectWithValue }
+  ) => {
+    try {
+      const { branchId, ...data } = payload;
+      const response = await axiosApi.vendorCampaignApi.createBranchCampaign(
+        branchId,
+        data
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getJoinableSystemCampaigns = createAppAsyncThunk(
+  'campaign/getJoinableSystemCampaigns',
+  async (
+    payload: { pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response =
+        await axiosApi.vendorCampaignApi.getJoinableSystemCampaigns(
+          payload.pageNumber,
+          payload.pageSize
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const joinBranchToSystemCampaign = createAppAsyncThunk(
+  'campaign/joinBranchToSystemCampaign',
+  async (
+    payload: { branchId: number; campaignId: number },
+    { rejectWithValue }
+  ): Promise<
+    JoinSystemCampaignResponse | ReturnType<typeof rejectWithValue>
+  > => {
+    try {
+      const response =
+        await axiosApi.vendorCampaignApi.joinBranchToSystemCampaign(
+          payload.branchId,
+          payload.campaignId
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const campaignSlice = createSlice({
   name: 'campaign',
   initialState,
@@ -188,6 +277,51 @@ export const campaignSlice = createSlice({
           }
         }
       })
+      .addCase(getBranchCampaigns.fulfilled, (state, action) => {
+        state.branchCampaigns = action.payload.items;
+        state.branchTotalCount = action.payload.totalCount;
+      })
+      .addCase(createBranchCampaign.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.branchCampaigns.unshift(action.payload);
+          state.branchTotalCount += 1;
+        }
+      })
+      .addCase(getJoinableSystemCampaigns.fulfilled, (state, action) => {
+        state.joinableSystemCampaigns = action.payload.items;
+        state.joinableSystemTotalCount = action.payload.totalCount;
+      })
+      .addCase(joinBranchToSystemCampaign.fulfilled, (state, action) => {
+        if (!action.payload?.success) {
+          return;
+        }
+
+        const joinedCampaignId = action.meta.arg.campaignId;
+        const joinedCampaign = state.joinableSystemCampaigns.find(
+          (campaign) => campaign.campaignId === joinedCampaignId
+        );
+
+        state.joinableSystemCampaigns = state.joinableSystemCampaigns.filter(
+          (campaign) => campaign.campaignId !== joinedCampaignId
+        );
+        state.joinableSystemTotalCount = Math.max(
+          0,
+          state.joinableSystemTotalCount - 1
+        );
+
+        if (!joinedCampaign) {
+          return;
+        }
+
+        const existedIndex = state.branchCampaigns.findIndex(
+          (campaign) => campaign.campaignId === joinedCampaignId
+        );
+
+        if (existedIndex === -1) {
+          state.branchCampaigns.unshift(joinedCampaign);
+          state.branchTotalCount += 1;
+        }
+      })
       .addMatcher(
         isPending(
           getAllCampaigns,
@@ -195,7 +329,11 @@ export const campaignSlice = createSlice({
           updateCampaign,
           getVendorCampaigns,
           createVendorCampaign,
-          updateVendorCampaign
+          updateVendorCampaign,
+          getBranchCampaigns,
+          createBranchCampaign,
+          getJoinableSystemCampaigns,
+          joinBranchToSystemCampaign
         ),
         (state) => {
           state.status = 'pending';
@@ -208,7 +346,11 @@ export const campaignSlice = createSlice({
           updateCampaign,
           getVendorCampaigns,
           createVendorCampaign,
-          updateVendorCampaign
+          updateVendorCampaign,
+          getBranchCampaigns,
+          createBranchCampaign,
+          getJoinableSystemCampaigns,
+          joinBranchToSystemCampaign
         ),
         (state) => {
           state.status = 'succeeded';
@@ -222,7 +364,11 @@ export const campaignSlice = createSlice({
           updateCampaign,
           getVendorCampaigns,
           createVendorCampaign,
-          updateVendorCampaign
+          updateVendorCampaign,
+          getBranchCampaigns,
+          createBranchCampaign,
+          getJoinableSystemCampaigns,
+          joinBranchToSystemCampaign
         ),
         (state, action) => {
           state.status = 'failed';
@@ -251,5 +397,19 @@ export const selectVendorCampaigns = (state: RootState): VendorCampaign[] =>
 
 export const selectVendorCampaignTotalCount = (state: RootState): number =>
   state.campaign.vendorTotalCount;
+
+export const selectBranchCampaigns = (state: RootState): VendorCampaign[] =>
+  state.campaign.branchCampaigns;
+
+export const selectBranchCampaignTotalCount = (state: RootState): number =>
+  state.campaign.branchTotalCount;
+
+export const selectJoinableSystemCampaigns = (
+  state: RootState
+): VendorCampaign[] => state.campaign.joinableSystemCampaigns;
+
+export const selectJoinableSystemCampaignTotalCount = (
+  state: RootState
+): number => state.campaign.joinableSystemTotalCount;
 
 export default campaignSlice.reducer;

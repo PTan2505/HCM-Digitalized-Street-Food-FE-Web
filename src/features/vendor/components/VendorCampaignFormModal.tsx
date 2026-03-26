@@ -79,6 +79,8 @@ export default function VendorCampaignFormModal({
   campaign,
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
+  const isEditMode = campaign !== null;
+
   const {
     register,
     handleSubmit,
@@ -94,6 +96,7 @@ export default function VendorCampaignFormModal({
       targetSegment: '',
       startDate: '',
       endDate: '',
+      isActive: true,
     },
   });
 
@@ -109,6 +112,7 @@ export default function VendorCampaignFormModal({
           targetSegment: campaign.targetSegment ?? '',
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
+          isActive: campaign.isActive,
         });
       } else {
         reset({
@@ -117,6 +121,7 @@ export default function VendorCampaignFormModal({
           targetSegment: '',
           startDate: '',
           endDate: '',
+          isActive: true,
         });
       }
     }
@@ -139,6 +144,7 @@ export default function VendorCampaignFormModal({
       ...data,
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
+      isActive: data.isActive,
     };
     await onSubmit(payload);
   };
@@ -211,6 +217,20 @@ export default function VendorCampaignFormModal({
               />
             </div>
 
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                Trạng thái hoạt động
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  {...register('isActive')}
+                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                />
+                Kích hoạt chiến dịch
+              </label>
+            </div>
+
             {/* Dates Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -221,7 +241,7 @@ export default function VendorCampaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('startDate')}
-                  min={getTodayMinVN()}
+                  min={isEditMode ? undefined : getTodayMinVN()}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.startDate
@@ -243,13 +263,13 @@ export default function VendorCampaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('endDate')}
-                  disabled={!campaign && !startDate}
-                  min={startDate ?? undefined}
+                  disabled={!isEditMode && !startDate}
+                  min={isEditMode ? undefined : (startDate ?? undefined)}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.endDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !campaign && !startDate
+                      : !isEditMode && !startDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}

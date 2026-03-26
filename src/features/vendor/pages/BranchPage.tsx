@@ -23,6 +23,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -39,6 +40,7 @@ import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetail
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
+import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
 
 const StatusBadge = ({
   label,
@@ -84,6 +86,7 @@ function BranchPage(): JSX.Element {
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
   const [managerBranch, setManagerBranch] = useState<Branch | null>(null);
+  const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
   const [managerNameById, setManagerNameById] = useState<
     Record<number, string>
   >({});
@@ -351,6 +354,14 @@ function BranchPage(): JSX.Element {
       color: 'info' as const,
     },
     {
+      label: <CampaignIcon fontSize="small" />,
+      menuLabel: 'Quản lý chiến dịch',
+      onClick: (branch: Branch): void => {
+        setCampaignBranch(branch);
+      },
+      color: 'warning' as const,
+    },
+    {
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
       onClick: (branch: Branch): void => {
@@ -536,6 +547,12 @@ function BranchPage(): JSX.Element {
         onAssigned={() => {
           void onGetMyVendor();
         }}
+      />
+
+      <BranchCampaignManagementModal
+        isOpen={campaignBranch !== null}
+        onClose={() => setCampaignBranch(null)}
+        branch={campaignBranch}
       />
 
       <OnboardingGuideModal

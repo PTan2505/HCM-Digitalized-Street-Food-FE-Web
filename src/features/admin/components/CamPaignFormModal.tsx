@@ -85,6 +85,8 @@ export default function CamPaignFormModal({
   campaign,
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
+  const isEditMode = campaign !== null;
+
   const {
     register,
     handleSubmit,
@@ -102,6 +104,7 @@ export default function CamPaignFormModal({
       registrationEndDate: '',
       startDate: '',
       endDate: '',
+      isActive: true,
     },
   });
 
@@ -125,6 +128,7 @@ export default function CamPaignFormModal({
           ),
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
+          isActive: campaign.isActive,
         });
       } else {
         reset({
@@ -135,6 +139,7 @@ export default function CamPaignFormModal({
           registrationEndDate: '',
           startDate: '',
           endDate: '',
+          isActive: true,
         });
       }
     }
@@ -181,6 +186,7 @@ export default function CamPaignFormModal({
       registrationEndDate: toIsoZulu(data.registrationEndDate),
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
+      isActive: data.isActive,
     };
     await onSubmit(payload);
   };
@@ -253,6 +259,20 @@ export default function CamPaignFormModal({
               />
             </div>
 
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                Trạng thái hoạt động
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  {...register('isActive')}
+                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                />
+                Kích hoạt chiến dịch
+              </label>
+            </div>
+
             {/* Dates Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -262,7 +282,7 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('registrationStartDate')}
-                  min={getTodayMinVN()}
+                  min={isEditMode ? undefined : getTodayMinVN()}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.registrationStartDate
@@ -283,13 +303,17 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('registrationEndDate')}
-                  disabled={!campaign && !registrationStartDate}
-                  min={registrationStartDate ?? undefined}
+                  disabled={!isEditMode && !registrationStartDate}
+                  min={
+                    isEditMode
+                      ? undefined
+                      : (registrationStartDate ?? undefined)
+                  }
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.registrationEndDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !campaign && !registrationStartDate
+                      : !isEditMode && !registrationStartDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}
@@ -308,13 +332,15 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('startDate')}
-                  disabled={!campaign && !registrationEndDate}
-                  min={registrationEndDate ?? undefined}
+                  disabled={!isEditMode && !registrationEndDate}
+                  min={
+                    isEditMode ? undefined : (registrationEndDate ?? undefined)
+                  }
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.startDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !campaign && !registrationEndDate
+                      : !isEditMode && !registrationEndDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}
@@ -333,13 +359,13 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('endDate')}
-                  disabled={!campaign && !startDate}
-                  min={startDate ?? undefined}
+                  disabled={!isEditMode && !startDate}
+                  min={isEditMode ? undefined : (startDate ?? undefined)}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.endDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !campaign && !startDate
+                      : !isEditMode && !startDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}

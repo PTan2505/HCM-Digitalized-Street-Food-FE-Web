@@ -9,7 +9,7 @@ export interface Campaign {
   registrationEndDate: string | null;
   startDate: string;
   endDate: string;
-  status?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
@@ -23,6 +23,7 @@ export interface CampaignCreate {
   registrationEndDate: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
 }
 
 export interface CampaignUpdate {
@@ -33,6 +34,7 @@ export interface CampaignUpdate {
   registrationEndDate: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
 }
 
 export interface CampaignListResponse {

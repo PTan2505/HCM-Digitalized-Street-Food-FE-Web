@@ -3,6 +3,7 @@ import type {
   VendorCampaignCreate,
   VendorCampaignUpdate,
   VendorCampaignListResponse,
+  JoinSystemCampaignResponse,
 } from '@features/vendor/types/campaign';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -44,6 +45,53 @@ export class VendorCampaignApi {
     const res = await this.apiClient.put<VendorCampaign, VendorCampaignUpdate>({
       url: apiUrl.campaign.UpdateCampaign(id),
       data,
+    });
+    return res.data;
+  }
+
+  async getBranchCampaigns(
+    branchId: number,
+    pageNumber: number,
+    pageSize: number
+  ): Promise<VendorCampaignListResponse> {
+    const res = await this.apiClient.get<VendorCampaignListResponse>({
+      url: apiUrl.campaign.GetOrPostBranchCampaign(branchId),
+      params: { pageNumber, pageSize },
+    });
+    return res.data;
+  }
+
+  async createBranchCampaign(
+    branchId: number,
+    data: VendorCampaignCreate
+  ): Promise<VendorCampaign> {
+    const res = await this.apiClient.post<VendorCampaign, VendorCampaignCreate>(
+      {
+        url: apiUrl.campaign.GetOrPostBranchCampaign(branchId),
+        data,
+      }
+    );
+    return res.data;
+  }
+
+  async getJoinableSystemCampaigns(
+    pageNumber: number,
+    pageSize: number
+  ): Promise<VendorCampaignListResponse> {
+    const res = await this.apiClient.get<VendorCampaignListResponse>({
+      url: apiUrl.campaign.GetJoinableSystemCampaigns,
+      params: { pageNumber, pageSize },
+    });
+    return res.data;
+  }
+
+  async joinBranchToSystemCampaign(
+    branchId: number,
+    campaignId: number
+  ): Promise<JoinSystemCampaignResponse> {
+    const res = await this.apiClient.post<JoinSystemCampaignResponse, null>({
+      url: apiUrl.campaign.BranchJoinASystemCampaign(branchId, campaignId),
+      data: null,
     });
     return res.data;
   }
