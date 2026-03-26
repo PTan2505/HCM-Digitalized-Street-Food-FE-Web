@@ -15,6 +15,7 @@ import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
 import AdminCampaignPage from '@features/admin/pages/CampaignPage';
+import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -228,6 +229,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.CAMPAIGN,
             element: <AdminCampaignPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.VOUCHER,
+            element: <AdminVoucherPage />,
           },
         ],
       },
