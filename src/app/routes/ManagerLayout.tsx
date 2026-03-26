@@ -10,6 +10,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ShoppingCart as ShoppingBagIcon,
   Store as StoreIcon,
+  Schedule as ScheduleIcon,
   Close as XMarkIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -30,6 +31,11 @@ const navigation = [
     href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
     icon: StoreIcon,
   },
+  {
+    name: 'Quản lý thời gian hoạt động',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.WORK_SCHEDULE}`,
+    icon: ScheduleIcon,
+  },
 ];
 
 function ManagerLayout(): JSX.Element {
@@ -43,7 +49,7 @@ function ManagerLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/manager');
+    navigate(ROUTES.MANAGER.BASE);
   };
 
   const sidebarUserInfo = {
@@ -81,7 +87,7 @@ function ManagerLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/manager/settings"
+            settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
           />
@@ -97,7 +103,7 @@ function ManagerLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/manager/settings"
+          settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
