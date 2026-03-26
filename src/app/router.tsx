@@ -23,6 +23,7 @@ import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPag
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
+import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
@@ -117,6 +118,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.MANAGER.PATHS.ORDER,
             element: <OrderManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.BRANCH,
+            element: <BranchManagementPage />,
           },
         ],
       },

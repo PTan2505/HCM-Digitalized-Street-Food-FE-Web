@@ -27,6 +27,7 @@ export const ROUTES = {
     // Child paths
     PATHS: {
       ORDER: 'orders',
+      BRANCH: 'branches',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       VERIFICATION: 'verification',

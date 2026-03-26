@@ -1,5 +1,6 @@
 import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
+import { ROUTES } from '@constants/routes';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
@@ -8,6 +9,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   ShoppingCart as ShoppingBagIcon,
+  Store as StoreIcon,
   Close as XMarkIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -20,8 +22,13 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const navigation = [
   {
     name: 'Quản lý đơn hàng',
-    href: '/manager/orders',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.ORDER}`,
     icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
+    icon: StoreIcon,
   },
 ];
 
