@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { JSX } from 'react';
 import {
   Dialog,
@@ -12,6 +13,9 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Voucher } from '@features/admin/types/voucher';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { selectCampaigns } from '@slices/campaign';
+import useCampaign from '@features/admin/hooks/useCampaign';
 
 interface VoucherDetailsModalProps {
   isOpen: boolean;
@@ -43,7 +47,20 @@ export default function VoucherDetailsModal({
   onClose,
   voucher,
 }: VoucherDetailsModalProps): JSX.Element | null {
+  const { onGetCampaigns } = useCampaign();
+  const campaigns = useAppSelector(selectCampaigns);
+
+  useEffect(() => {
+    if (isOpen && campaigns.length === 0) {
+      void onGetCampaigns(1, 100);
+    }
+  }, [isOpen, campaigns.length, onGetCampaigns]);
+
   if (!isOpen || !voucher) return null;
+
+  const campaignName =
+    campaigns.find((c) => c.campaignId === voucher.campaignId)?.name ??
+    (voucher.campaignId ? `ID: ${voucher.campaignId}` : '-');
 
   const DetailItem = ({
     label,
@@ -62,7 +79,7 @@ export default function VoucherDetailsModal({
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
+      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
         Chi tiết voucher: {voucher.name}
         <IconButton
           aria-label="close"
@@ -161,7 +178,7 @@ export default function VoucherDetailsModal({
             <DetailItem label="Số lượng phát hành" value={voucher.quantity} />
           </div>
           <div>
-            <DetailItem label="Campaign ID" value={voucher.campaignId ?? '-'} />
+            <DetailItem label="Chiến dịch" value={campaignName} />
           </div>
 
           <div>

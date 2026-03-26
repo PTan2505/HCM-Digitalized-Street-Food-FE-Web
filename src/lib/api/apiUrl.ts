@@ -183,5 +183,7 @@ export const apiUrl = {
     GetOrPostVouchers: '/vouchers',
     UpdateOrDeleteVoucher: (voucherId: number): string =>
       `/vouchers/${voucherId}`,
+    GetVouchersOfACampaign: (campaignId: number): string =>
+      `/vouchers/campaign/${campaignId}`,
   },
 };

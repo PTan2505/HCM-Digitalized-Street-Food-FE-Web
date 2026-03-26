@@ -2,6 +2,7 @@ import { useAppDispatch } from '@hooks/reduxHooks';
 import { useCallback } from 'react';
 import {
   getAllVouchers,
+  getVouchersByCampaignId,
   createVoucher,
   updateVoucher,
   deleteVoucher,
@@ -14,6 +15,7 @@ import type {
 
 const useVoucher = (): {
   onGetVouchers: () => Promise<Voucher[]>;
+  onGetVouchersByCampaignId: (campaignId: number) => Promise<Voucher[]>;
   onCreateVoucher: (data: VoucherCreate) => Promise<Voucher>;
   onUpdateVoucher: (id: number, data: VoucherUpdate) => Promise<Voucher>;
   onDeleteVoucher: (id: number) => Promise<number>;
@@ -23,6 +25,13 @@ const useVoucher = (): {
   const onGetVouchers = useCallback(async (): Promise<Voucher[]> => {
     return await dispatch(getAllVouchers()).unwrap();
   }, [dispatch]);
+
+  const onGetVouchersByCampaignId = useCallback(
+    async (campaignId: number): Promise<Voucher[]> => {
+      return await dispatch(getVouchersByCampaignId(campaignId)).unwrap();
+    },
+    [dispatch]
+  );
 
   const onCreateVoucher = useCallback(
     async (data: VoucherCreate): Promise<Voucher> => {
@@ -47,6 +56,7 @@ const useVoucher = (): {
 
   return {
     onGetVouchers,
+    onGetVouchersByCampaignId,
     onCreateVoucher,
     onUpdateVoucher,
     onDeleteVoucher,

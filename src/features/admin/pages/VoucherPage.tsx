@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
-import { Box, Chip } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Box,
+  Chip,
+} from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -65,6 +74,9 @@ export default function VoucherPage(): JSX.Element {
   const [openModal, setOpenModal] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
 
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deletingVoucher, setDeletingVoucher] = useState<Voucher | null>(null);
+
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [viewingVoucher, setViewingVoucher] = useState<Voucher | null>(null);
 
@@ -113,14 +125,26 @@ export default function VoucherPage(): JSX.Element {
     }
   };
 
-  const handleDelete = async (voucher: Voucher): Promise<void> => {
-    if (!window.confirm(`Bạn có chắc muốn xóa voucher "${voucher.name}"?`))
-      return;
-    try {
-      await onDeleteVoucher(voucher.voucherId);
-    } catch (err) {
-      console.error('Failed to delete voucher', err);
+  const handleDelete = (voucher: Voucher): void => {
+    setDeletingVoucher(voucher);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (deletingVoucher) {
+      try {
+        await onDeleteVoucher(deletingVoucher.voucherId);
+        setOpenDeleteDialog(false);
+        setDeletingVoucher(null);
+      } catch (err) {
+        console.error('Failed to delete voucher', err);
+      }
     }
+  };
+
+  const handleCancelDelete = (): void => {
+    setOpenDeleteDialog(false);
+    setDeletingVoucher(null);
   };
 
   const columns = [
@@ -282,6 +306,40 @@ export default function VoucherPage(): JSX.Element {
         onClose={handleCloseDetailsModal}
         voucher={viewingVoucher}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Xác nhận xóa voucher</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa voucher &quot;
+            {deletingVoucher?.name}&quot;? Hành động này không thể hoàn tác.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCancelDelete}
+            color="primary"
+            className="font-[var(--font-nunito)]"
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={() => void handleConfirmDelete()}
+            color="error"
+            variant="contained"
+            className="font-[var(--font-nunito)]"
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

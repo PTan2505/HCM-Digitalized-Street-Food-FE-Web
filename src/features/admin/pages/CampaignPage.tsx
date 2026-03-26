@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  ConfirmationNumber as VoucherIcon,
+} from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
+import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
 import type { Campaign } from '@features/admin/types/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -62,7 +67,11 @@ export default function CampaignPage(): JSX.Element {
 
   const [page, setPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
+  const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
+    null
+  );
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -164,6 +173,15 @@ export default function CampaignPage(): JSX.Element {
 
   const actions = [
     {
+      label: <VoucherIcon fontSize="small" />,
+      onClick: (row: Campaign): void => {
+        setSelectedCampaign(row);
+        setOpenVoucherModal(true);
+      },
+      color: 'warning' as const,
+      variant: 'outlined' as const,
+    },
+    {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Campaign): void => handleOpenModal(row),
       color: 'primary' as const,
@@ -224,6 +242,13 @@ export default function CampaignPage(): JSX.Element {
         onSubmit={handleSubmit}
         campaign={editingCampaign}
         status={status}
+      />
+
+      {/* Campaign Voucher Modal */}
+      <CampaignVoucherModal
+        isOpen={openVoucherModal}
+        onClose={() => setOpenVoucherModal(false)}
+        campaign={selectedCampaign}
       />
     </div>
   );
