@@ -3,7 +3,6 @@ import DayOffDeleteConfirmDialog from '@features/manager/components/DayOffDelete
 import DayOffFormFields from '@features/manager/components/DayOffFormFields';
 import useBranchManagement from '@features/manager/hooks/useBranchManagement';
 import useVendor from '@features/vendor/hooks/useVendor';
-import type { DayOffResponse } from '@features/vendor/types/workSchedule';
 import {
   AddDayOffSchema,
   type AddDayOffFormData,

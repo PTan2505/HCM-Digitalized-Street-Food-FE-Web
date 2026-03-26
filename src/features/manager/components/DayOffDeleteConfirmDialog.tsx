@@ -1,4 +1,3 @@
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {
   Box,
   Button,
