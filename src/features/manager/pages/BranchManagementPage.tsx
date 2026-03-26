@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import BranchAddressMapSection from '@features/manager/components/BranchAddressMapSection';
+import BranchImagesSection from '@features/manager/components/BranchImagesSection';
 import type { AddressDraft } from '@features/manager/components/BranchAddressMapSection';
 import BranchDetailRow from '@features/manager/components/BranchDetailRow';
 import type { EditableField } from '@features/manager/components/BranchDetailRow';
@@ -361,6 +362,8 @@ export default function BranchManagementPage(): JSX.Element {
             }}
             disableEditButton={editingField !== null}
           />
+
+          <BranchImagesSection branch={currentBranch} />
 
           {statusInfoRows.map((row) => (
             <BranchDetailRow
