@@ -1,12 +1,10 @@
-export interface Campaign {
+export interface VendorCampaign {
   campaignId: number;
   createdByBranchId: number | null;
   createdByVendorId: number | null;
   name: string;
   description: string | null;
   targetSegment: string | null;
-  registrationStartDate: string | null;
-  registrationEndDate: string | null;
   startDate: string;
   endDate: string;
   status?: string;
@@ -15,27 +13,23 @@ export interface Campaign {
   isSystemCampaign: boolean;
 }
 
-export interface CampaignCreate {
+export interface VendorCampaignCreate {
   name: string;
   description: string | null;
   targetSegment: string | null;
-  registrationStartDate: string | null;
-  registrationEndDate: string | null;
   startDate: string;
   endDate: string;
 }
 
-export interface CampaignUpdate {
+export interface VendorCampaignUpdate {
   name: string;
   description: string | null;
   targetSegment: string | null;
-  registrationStartDate: string | null;
-  registrationEndDate: string | null;
   startDate: string;
   endDate: string;
 }
 
-export interface CampaignListResponse {
+export interface VendorCampaignListResponse {
   totalCount: number;
-  items: Campaign[];
+  items: VendorCampaign[];
 }

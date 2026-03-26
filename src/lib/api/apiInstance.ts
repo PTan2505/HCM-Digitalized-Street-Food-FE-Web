@@ -17,6 +17,7 @@ import { OrderApi } from '@features/vendor/api/orderApi';
 import { NotificationApi } from '@features/notification/api/notificationApi';
 import { FeedbackTagApi } from '@features/admin/api/feedbackTagApi';
 import { CampaignApi } from '@features/admin/api/campaignApi';
+import { VendorCampaignApi } from '@features/vendor/api/campaignApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -41,4 +42,5 @@ export const axiosApi = {
   notificationApi: new NotificationApi(axiosClient),
   feedbackTagApi: new FeedbackTagApi(axiosClient),
   campaignApi: new CampaignApi(axiosClient),
+  vendorCampaignApi: new VendorCampaignApi(axiosClient),
 };
