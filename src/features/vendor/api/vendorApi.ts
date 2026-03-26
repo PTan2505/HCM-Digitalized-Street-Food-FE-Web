@@ -177,7 +177,7 @@ export class VendorApi {
 
   async deleteDayOff(dayOffId: number): Promise<void> {
     await this.apiClient.delete({
-      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+      url: apiUrl.vendor.deleteOrUpdateDayOffOfABranch(dayOffId),
     });
   }
 

@@ -29,6 +29,7 @@ export const ROUTES = {
       ORDER: 'orders',
       BRANCH: 'branches',
       WORK_SCHEDULE: 'work-schedule',
+      DAY_OFF: 'day-offs',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       VERIFICATION: 'verification',
