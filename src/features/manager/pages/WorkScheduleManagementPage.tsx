@@ -10,21 +10,14 @@ import {
   EditWorkScheduleSchema,
   type EditWorkScheduleFormData,
 } from '@features/vendor/utils/workScheduleSchema';
+import WorkScheduleDeleteConfirmDialog from '@features/manager/components/WorkScheduleDeleteConfirmDialog';
+import WorkScheduleRow from '@features/manager/components/WorkScheduleRow';
 import useBranchManagement from '@features/manager/hooks/useBranchManagement';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVendorStatus, selectWorkSchedules } from '@slices/vendor';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import CloseIcon from '@mui/icons-material/Close';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Alert,
-} from '@mui/material';
+import { Box, CircularProgress, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 
 const WEEKDAY_MAP: Record<number, WeekdayName> = {
@@ -51,7 +44,8 @@ const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export default function WorkScheduleManagementPage(): JSX.Element {
   const { onGetManagerMyBranch } = useBranchManagement();
-  const { onGetWorkSchedules, onUpdateWorkSchedule } = useVendor();
+  const { onGetWorkSchedules, onUpdateWorkSchedule, onDeleteWorkSchedule } =
+    useVendor();
 
   const schedules = useAppSelector(selectWorkSchedules);
   const status = useAppSelector(selectVendorStatus);
@@ -60,6 +54,10 @@ export default function WorkScheduleManagementPage(): JSX.Element {
   const [isLoadingBranch, setIsLoadingBranch] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [sortedSchedules, setSortedSchedules] = useState<GetWorkScheduleItem[]>(
+    []
+  );
 
   const {
     setValue: setEditValue,
@@ -126,16 +124,35 @@ export default function WorkScheduleManagementPage(): JSX.Element {
     }
   };
 
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (confirmDeleteId === null) {
+      return;
+    }
+
+    const deletingId = confirmDeleteId;
+    setConfirmDeleteId(null);
+    try {
+      await onDeleteWorkSchedule(deletingId);
+      const nextSchedules = sortedSchedulesRef.current.filter(
+        (item) => item.workScheduleId !== deletingId
+      );
+      sortedSchedulesRef.current = nextSchedules;
+      setSortedSchedules(nextSchedules);
+    } catch {
+      // Toast is handled by api interceptor.
+    }
+  };
+
   const sortedSchedulesRef = useRef<GetWorkScheduleItem[]>([]);
 
   useEffect(() => {
-    sortedSchedulesRef.current = [...schedules].sort(
+    const nextSchedules = [...schedules].sort(
       (a, b) =>
         WEEKDAY_ORDER.indexOf(a.weekday) - WEEKDAY_ORDER.indexOf(b.weekday)
     );
+    sortedSchedulesRef.current = nextSchedules;
+    setSortedSchedules(nextSchedules);
   }, [schedules]);
-
-  const sortedSchedules = sortedSchedulesRef.current;
 
   const formatTime = (time: string): string => time.slice(0, 5);
 
@@ -194,143 +211,55 @@ export default function WorkScheduleManagementPage(): JSX.Element {
                   item.weekdayName;
 
                 return (
-                  <div
+                  <WorkScheduleRow
                     key={item.workScheduleId}
-                    className={`flex items-center gap-4 rounded-xl border p-4 transition ${
-                      isEditing
-                        ? 'border-blue-300 bg-blue-50/50'
-                        : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm'
-                    }`}
-                  >
-                    <div className="flex min-w-22.5 items-center justify-center">
-                      <span className="inline-block rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
-                        {dayName}
-                      </span>
-                    </div>
-
-                    {isEditing ? (
-                      <div className="flex flex-1 items-center gap-3">
-                        <div>
-                          <input
-                            type="time"
-                            value={editForm.openTime}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditValue('openTime', val, {
-                                shouldValidate: true,
-                              });
-                              if (
-                                editForm.closeTime &&
-                                val >= editForm.closeTime
-                              ) {
-                                setEditValue('closeTime', '', {
-                                  shouldValidate: true,
-                                });
-                              }
-                            }}
-                            className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
-                              editErrors.openTime
-                                ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
-                                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                            }`}
-                          />
-                          {editErrors.openTime && (
-                            <p className="mt-1 text-xs text-red-500">
-                              {editErrors.openTime.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <span className="text-sm text-gray-400">-</span>
-
-                        <div>
-                          <input
-                            type="time"
-                            value={editForm.closeTime}
-                            min={editForm.openTime || undefined}
-                            onChange={(e) =>
-                              setEditValue('closeTime', e.target.value, {
-                                shouldValidate: true,
-                              })
-                            }
-                            className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
-                              editErrors.closeTime
-                                ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
-                                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                            }`}
-                          />
-                          {editErrors.closeTime && (
-                            <p className="mt-1 text-xs text-red-500">
-                              {editErrors.closeTime.message}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-1 items-center gap-2">
-                        <span className="rounded-md bg-green-50 px-2.5 py-1 text-sm font-semibold text-green-700">
-                          {formatTime(item.openTime)}
-                        </span>
-                        <span className="text-sm text-gray-400">-</span>
-                        <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-semibold text-red-700">
-                          {formatTime(item.closeTime)}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-1">
-                      {isEditing ? (
-                        <>
-                          <Tooltip title="Lưu">
-                            <span>
-                              <IconButton
-                                size="small"
-                                onClick={() => {
-                                  void handleSaveEdit(item);
-                                }}
-                                disabled={status === 'pending' || !isEditValid}
-                                sx={{ color: '#16a34a' }}
-                              >
-                                {status === 'pending' ? (
-                                  <CircularProgress
-                                    size={16}
-                                    sx={{ color: '#16a34a' }}
-                                  />
-                                ) : (
-                                  <SaveIcon fontSize="small" />
-                                )}
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                          <Tooltip title="Hủy">
-                            <IconButton
-                              size="small"
-                              onClick={handleCancelEdit}
-                              disabled={status === 'pending'}
-                            >
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      ) : (
-                        <Tooltip title="Chỉnh sửa giờ">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleStartEdit(item)}
-                            disabled={editingId !== null}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </div>
+                    item={item}
+                    dayName={dayName}
+                    isEditing={isEditing}
+                    status={status}
+                    isEditValid={isEditValid}
+                    editForm={editForm}
+                    editErrors={editErrors}
+                    formatTime={formatTime}
+                    onOpenTimeChange={(val) => {
+                      setEditValue('openTime', val, {
+                        shouldValidate: true,
+                      });
+                      if (editForm.closeTime && val >= editForm.closeTime) {
+                        setEditValue('closeTime', '', {
+                          shouldValidate: true,
+                        });
+                      }
+                    }}
+                    onCloseTimeChange={(val) => {
+                      setEditValue('closeTime', val, {
+                        shouldValidate: true,
+                      });
+                    }}
+                    onSave={() => {
+                      void handleSaveEdit(item);
+                    }}
+                    onCancel={handleCancelEdit}
+                    onStartEdit={() => handleStartEdit(item)}
+                    onRequestDelete={() =>
+                      setConfirmDeleteId(item.workScheduleId)
+                    }
+                    disableEdit={editingId !== null}
+                  />
                 );
               })}
             </div>
           )}
         </Box>
       )}
+
+      <WorkScheduleDeleteConfirmDialog
+        open={confirmDeleteId !== null}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          void handleConfirmDelete();
+        }}
+      />
     </div>
   );
 }

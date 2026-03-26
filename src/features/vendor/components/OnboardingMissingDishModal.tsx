@@ -1,7 +1,5 @@
 import type { JSX } from 'react';
 import { Dialog, DialogContent } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@constants/routes';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface OnboardingMissingDishModalProps {
