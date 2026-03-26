@@ -7,7 +7,7 @@ export interface VendorCampaign {
   targetSegment: string | null;
   startDate: string;
   endDate: string;
-  status?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
@@ -19,6 +19,7 @@ export interface VendorCampaignCreate {
   targetSegment: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
 }
 
 export interface VendorCampaignUpdate {
@@ -27,9 +28,19 @@ export interface VendorCampaignUpdate {
   targetSegment: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
 }
 
 export interface VendorCampaignListResponse {
   totalCount: number;
   items: VendorCampaign[];
+}
+
+export interface JoinSystemCampaignResponse {
+  success: boolean;
+  message: string | null;
+  paymentUrl: string | null;
+  orderCode: number;
+  paymentLinkId: string;
+  requiresConfirmation: boolean;
 }

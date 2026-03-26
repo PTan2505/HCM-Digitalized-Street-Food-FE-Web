@@ -31,6 +31,29 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
+const StatusBadge = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default';
+}): JSX.Element => {
+  const colors = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
+  return (
+    <span
+      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+    >
+      {label}
+    </span>
+  );
+};
+
 export default function VendorCampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectVendorCampaigns);
   const status = useAppSelector(selectCampaignStatus);
@@ -77,6 +100,7 @@ export default function VendorCampaignPage(): JSX.Element {
         targetSegment: data.targetSegment ?? null,
         startDate: data.startDate,
         endDate: data.endDate,
+        isActive: data.isActive,
       };
 
       if (editingCampaign) {
@@ -126,28 +150,16 @@ export default function VendorCampaignPage(): JSX.Element {
         />
       ),
     },
-    // {
-    //   key: 'status',
-    //   label: 'Trạng thái',
-    //   render: (value: unknown): JSX.Element => {
-    //     const s = typeof value === 'string' ? value : '';
-    //     const colorMap: Record<
-    //       string,
-    //       'success' | 'warning' | 'error' | 'default'
-    //     > = {
-    //       Active: 'success',
-    //       Upcoming: 'warning',
-    //       Ended: 'error',
-    //     };
-    //     return (
-    //       <Chip
-    //         label={s || 'Không rõ'}
-    //         size="small"
-    //         color={colorMap[s] ?? 'default'}
-    //       />
-    //     );
-    //   },
-    // },
+    {
+      key: 'isActive',
+      label: 'Hoạt động',
+      render: (value: unknown): JSX.Element => (
+        <StatusBadge
+          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          type={value === true ? 'success' : 'error'}
+        />
+      ),
+    },
   ];
 
   const actions = [

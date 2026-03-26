@@ -31,6 +31,29 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
+const StatusBadge = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default';
+}): JSX.Element => {
+  const colors = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
+  return (
+    <span
+      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+    >
+      {label}
+    </span>
+  );
+};
+
 export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
   const status = useAppSelector(selectCampaignStatus);
@@ -124,6 +147,16 @@ export default function CampaignPage(): JSX.Element {
           label={typeof value === 'string' ? value : 'Tất cả'}
           size="small"
           variant="outlined"
+        />
+      ),
+    },
+    {
+      key: 'isActive',
+      label: 'Hoạt động',
+      render: (value: unknown): JSX.Element => (
+        <StatusBadge
+          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          type={value === true ? 'success' : 'error'}
         />
       ),
     },
