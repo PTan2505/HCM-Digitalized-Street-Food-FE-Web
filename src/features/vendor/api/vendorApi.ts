@@ -12,7 +12,6 @@ import type {
   UpdateDietaryPreferencesOfMyVendorRequest,
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
   GetAllGhostPinsResponse,
-  ClaimBranchRequest,
   ClaimBranchResponse,
   AssignBranchManagerRequest,
   SearchUsersResponse,
