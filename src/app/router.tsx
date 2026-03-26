@@ -31,6 +31,7 @@ import VendorDishPage from '@features/vendor/pages/DishPage';
 import VendorOrderPage from '@features/vendor/pages/OrderPage';
 import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
 import GhostPinPage from '@features/vendor/pages/GhostPinPage';
+import VendorCampaignPage from '@features/vendor/pages/VendorCampaignPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -158,6 +159,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.GHOST_PIN,
             element: <GhostPinPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.CAMPAIGN,
+            element: <VendorCampaignPage />,
           },
         ],
       },

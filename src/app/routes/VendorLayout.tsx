@@ -23,6 +23,7 @@ import {
   LocalDining as SparklesIcon,
   ShoppingCart as QueueListIcon,
   LocationOn as MapPinIcon,
+  Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import MoneyIcon from '@mui/icons-material/Money';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -89,6 +90,12 @@ const navigation = [
     name: 'Chế độ ăn',
     href: '/vendor/dietary-preferences',
     icon: SparklesIcon,
+    isForVendor: true,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    href: '/vendor/campaign',
+    icon: CampaignIcon,
     isForVendor: true,
   },
 ];

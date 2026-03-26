@@ -69,6 +69,7 @@ export const ROUTES = {
       ORDER: 'orders',
       DIETARY: 'dietary-preferences',
       GHOST_PIN: 'ghost-pin',
+      CAMPAIGN: 'campaign',
     },
   },
 

@@ -11,20 +11,19 @@ import {
   CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import type { Campaign } from '@features/admin/types/campaign';
-import { CampaignSchema } from '@features/admin/utils/campaignSchema';
-import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import type { VendorCampaign } from '@features/vendor/types/campaign';
+import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
+import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
 
-interface CamPaignFormModalProps {
+interface VendorCampaignFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CampaignFormData) => Promise<void>;
-  campaign: Campaign | null;
+  onSubmit: (data: VendorCampaignFormData) => Promise<void>;
+  campaign: VendorCampaign | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
 
-/** Convert ISO 8601 string to YYYY-MM-DDTHH:mm for datetime-local input, in VN timezone */
-/** Get the current datetime in VN timezone formatted as YYYY-MM-DDTHH:mm (for use as `min`) */
+/** Get the current datetime in VN timezone formatted as YYYY-MM-DDTHH:mm */
 const getTodayMinVN = (): string => {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('sv-SE', {
@@ -42,6 +41,7 @@ const getTodayMinVN = (): string => {
   return `${findPart('year')}-${findPart('month')}-${findPart('day')}T${findPart('hour')}:${findPart('minute')}`;
 };
 
+/** Convert ISO string to YYYY-MM-DDTHH:mm in VN timezone */
 const toLocalDatetimeValue = (isoStr: string | null): string => {
   if (!isoStr) return '';
   const date = new Date(isoStr);
@@ -61,13 +61,7 @@ const toLocalDatetimeValue = (isoStr: string | null): string => {
   const findPart = (type: string): string | undefined =>
     parts.find((p) => p.type === type)?.value;
 
-  const y = findPart('year');
-  const m = findPart('month');
-  const d = findPart('day');
-  const h = findPart('hour');
-  const min = findPart('minute');
-
-  return `${y}-${m}-${d}T${h}:${min}`;
+  return `${findPart('year')}-${findPart('month')}-${findPart('day')}T${findPart('hour')}:${findPart('minute')}`;
 };
 
 /** Convert local datetime string to ISO 8601 Zulu string */
@@ -78,13 +72,13 @@ const toIsoZulu = (localStr: string | null): string | null => {
   return date.toISOString();
 };
 
-export default function CamPaignFormModal({
+export default function VendorCampaignFormModal({
   isOpen,
   onClose,
   onSubmit,
   campaign,
   status,
-}: CamPaignFormModalProps): React.JSX.Element | null {
+}: VendorCampaignFormModalProps): React.JSX.Element | null {
   const {
     register,
     handleSubmit,
@@ -92,21 +86,17 @@ export default function CamPaignFormModal({
     watch,
     setValue,
     formState: { errors },
-  } = useForm<CampaignFormData>({
-    resolver: zodResolver(CampaignSchema),
+  } = useForm<VendorCampaignFormData>({
+    resolver: zodResolver(VendorCampaignSchema),
     defaultValues: {
       name: '',
       description: '',
       targetSegment: '',
-      registrationStartDate: '',
-      registrationEndDate: '',
       startDate: '',
       endDate: '',
     },
   });
 
-  const registrationStartDate = watch('registrationStartDate');
-  const registrationEndDate = watch('registrationEndDate');
   const startDate = watch('startDate');
   const endDate = watch('endDate');
 
@@ -117,12 +107,6 @@ export default function CamPaignFormModal({
           name: campaign.name,
           description: campaign.description ?? '',
           targetSegment: campaign.targetSegment ?? '',
-          registrationStartDate: toLocalDatetimeValue(
-            campaign.registrationStartDate
-          ),
-          registrationEndDate: toLocalDatetimeValue(
-            campaign.registrationEndDate
-          ),
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
         });
@@ -131,8 +115,6 @@ export default function CamPaignFormModal({
           name: '',
           description: '',
           targetSegment: '',
-          registrationStartDate: '',
-          registrationEndDate: '',
           startDate: '',
           endDate: '',
         });
@@ -143,30 +125,6 @@ export default function CamPaignFormModal({
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
     if (campaign) return;
-    if (!registrationStartDate) {
-      setValue('registrationEndDate', '');
-      setValue('startDate', '');
-      setValue('endDate', '');
-    } else if (
-      registrationEndDate &&
-      registrationStartDate >= registrationEndDate
-    ) {
-      setValue('registrationEndDate', '');
-    }
-  }, [campaign, registrationStartDate, registrationEndDate, setValue]);
-
-  useEffect(() => {
-    if (campaign) return;
-    if (!registrationEndDate) {
-      setValue('startDate', '');
-      setValue('endDate', '');
-    } else if (startDate && registrationEndDate >= startDate) {
-      setValue('startDate', '');
-    }
-  }, [campaign, registrationEndDate, startDate, setValue]);
-
-  useEffect(() => {
-    if (campaign) return;
     if (!startDate) {
       setValue('endDate', '');
     } else if (endDate && startDate >= endDate) {
@@ -174,11 +132,11 @@ export default function CamPaignFormModal({
     }
   }, [campaign, startDate, endDate, setValue]);
 
-  const handleFormSubmit = async (data: CampaignFormData): Promise<void> => {
-    const payload: CampaignFormData = {
+  const handleFormSubmit = async (
+    data: VendorCampaignFormData
+  ): Promise<void> => {
+    const payload: VendorCampaignFormData = {
       ...data,
-      registrationStartDate: toIsoZulu(data.registrationStartDate),
-      registrationEndDate: toIsoZulu(data.registrationEndDate),
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
     };
@@ -257,66 +215,18 @@ export default function CamPaignFormModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu đăng ký
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('registrationStartDate')}
-                  min={getTodayMinVN()}
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.registrationStartDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.registrationStartDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.registrationStartDate.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc đăng ký
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('registrationEndDate')}
-                  disabled={!campaign && !registrationStartDate}
-                  min={registrationStartDate ?? undefined}
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.registrationEndDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : !campaign && !registrationStartDate
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
-                        : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.registrationEndDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.registrationEndDate.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Ngày bắt đầu chiến dịch{' '}
                   <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="datetime-local"
                   {...register('startDate')}
-                  disabled={!campaign && !registrationEndDate}
-                  min={registrationEndDate ?? undefined}
+                  min={getTodayMinVN()}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.startDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !campaign && !registrationEndDate
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
-                        : 'border-gray-300 focus:ring-amber-200'
+                      : 'border-gray-300 focus:ring-amber-200'
                   }`}
                 />
                 {errors.startDate && (
