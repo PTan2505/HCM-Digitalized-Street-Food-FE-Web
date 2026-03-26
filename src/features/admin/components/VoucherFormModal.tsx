@@ -24,6 +24,7 @@ interface VoucherFormModalProps {
   onSubmit: (data: VoucherCreate) => Promise<void>;
   voucher: Voucher | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
+  fixedCampaignId?: number | null;
 }
 
 const toLocalDatetimeValue = (isoStr: string | null): string => {
@@ -58,6 +59,7 @@ export default function VoucherFormModal({
   onSubmit,
   voucher,
   status,
+  fixedCampaignId,
 }: VoucherFormModalProps): React.JSX.Element | null {
   const {
     register,
@@ -115,7 +117,10 @@ export default function VoucherFormModal({
           endDate: toLocalDatetimeValue(voucher.endDate),
           expiredDate: toLocalDatetimeValue(voucher.expiredDate),
           isActive: voucher.isActive,
-          campaignId: voucher.campaignId,
+          campaignId:
+            fixedCampaignId !== undefined
+              ? fixedCampaignId
+              : voucher.campaignId,
         });
       } else {
         reset({
@@ -132,7 +137,7 @@ export default function VoucherFormModal({
           endDate: '',
           expiredDate: null,
           isActive: true,
-          campaignId: null,
+          campaignId: fixedCampaignId !== undefined ? fixedCampaignId : null,
         });
       }
     }
@@ -163,7 +168,7 @@ export default function VoucherFormModal({
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
+      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
         {voucher ? 'Cập nhật voucher' : 'Thêm voucher mới'}
         <IconButton
           aria-label="close"
@@ -440,38 +445,40 @@ export default function VoucherFormModal({
                   className={inputClass(!!errors.expiredDate)}
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Campaign ID (tùy chọn)
-                </label>
-                <Controller
-                  control={control}
-                  name="campaignId"
-                  render={({ field }) => (
-                    <select
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === ''
-                            ? null
-                            : parseInt(e.target.value)
-                        )
-                      }
-                      className={inputClass(!!errors.campaignId)}
-                    >
-                      <option value="" className="font-bold text-amber-600">
-                        --- KHÔNG CHỌN CHIẾN DỊCH ---
-                      </option>
-                      {campaigns.map((c) => (
-                        <option key={c.campaignId} value={c.campaignId}>
-                          {c.campaignId} - {c.name}
+              {!fixedCampaignId && (
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Campaign ID (tùy chọn)
+                  </label>
+                  <Controller
+                    control={control}
+                    name="campaignId"
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ''
+                              ? null
+                              : parseInt(e.target.value)
+                          )
+                        }
+                        className={inputClass(!!errors.campaignId)}
+                      >
+                        <option value="" className="font-bold text-amber-600">
+                          --- KHÔNG CHỌN CHIẾN DỊCH ---
                         </option>
-                      ))}
-                    </select>
-                  )}
-                />
-              </div>
+                        {campaigns.map((c) => (
+                          <option key={c.campaignId} value={c.campaignId}>
+                            {c.campaignId} - {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Description */}

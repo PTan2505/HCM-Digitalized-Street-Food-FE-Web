@@ -20,6 +20,13 @@ export class VoucherApi {
     return res.data;
   }
 
+  async getVouchersByCampaignId(campaignId: number): Promise<Voucher[]> {
+    const res = await this.apiClient.get<Voucher[]>({
+      url: apiUrl.voucher.GetVouchersOfACampaign(campaignId),
+    });
+    return res.data;
+  }
+
   async createVoucher(data: VoucherCreate): Promise<Voucher> {
     const res = await this.apiClient.post<Voucher, VoucherCreate>({
       url: apiUrl.voucher.GetOrPostVouchers,

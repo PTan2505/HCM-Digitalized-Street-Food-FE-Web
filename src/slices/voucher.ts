@@ -39,6 +39,19 @@ export const getAllVouchers = createAppAsyncThunk(
   }
 );
 
+export const getVouchersByCampaignId = createAppAsyncThunk(
+  'voucher/getVouchersByCampaignId',
+  async (campaignId: number, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.voucherApi.getVouchersByCampaignId(campaignId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const createVoucher = createAppAsyncThunk(
   'voucher/createVoucher',
   async (payload: VoucherCreate, { rejectWithValue }) => {
@@ -89,6 +102,9 @@ export const voucherSlice = createSlice({
       .addCase(getAllVouchers.fulfilled, (state, action) => {
         state.vouchers = action.payload;
       })
+      .addCase(getVouchersByCampaignId.fulfilled, (state, action) => {
+        state.vouchers = action.payload;
+      })
       .addCase(createVoucher.fulfilled, (state, action) => {
         if (action.payload) {
           state.vouchers.unshift(action.payload);
@@ -111,7 +127,13 @@ export const voucherSlice = createSlice({
         );
       })
       .addMatcher(
-        isPending(getAllVouchers, createVoucher, updateVoucher, deleteVoucher),
+        isPending(
+          getAllVouchers,
+          getVouchersByCampaignId,
+          createVoucher,
+          updateVoucher,
+          deleteVoucher
+        ),
         (state) => {
           state.status = 'pending';
         }
@@ -119,6 +141,7 @@ export const voucherSlice = createSlice({
       .addMatcher(
         isFulfilled(
           getAllVouchers,
+          getVouchersByCampaignId,
           createVoucher,
           updateVoucher,
           deleteVoucher
@@ -129,7 +152,13 @@ export const voucherSlice = createSlice({
         }
       )
       .addMatcher(
-        isRejected(getAllVouchers, createVoucher, updateVoucher, deleteVoucher),
+        isRejected(
+          getAllVouchers,
+          getVouchersByCampaignId,
+          createVoucher,
+          updateVoucher,
+          deleteVoucher
+        ),
         (state, action) => {
           state.status = 'failed';
           state.error = action.payload;
