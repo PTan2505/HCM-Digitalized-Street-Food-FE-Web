@@ -10,6 +10,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ShoppingCart as ShoppingBagIcon,
   Store as StoreIcon,
+  RateReview as RateReviewIcon,
   Schedule as ScheduleIcon,
   EventBusy as EventBusyIcon,
   Close as XMarkIcon,
@@ -31,6 +32,11 @@ const navigation = [
     name: 'Quản lý chi nhánh',
     href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
     icon: StoreIcon,
+  },
+  {
+    name: 'Quản lý phản hồi chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.FEEDBACK}`,
+    icon: RateReviewIcon,
   },
   {
     name: 'Quản lý thời gian hoạt động',
