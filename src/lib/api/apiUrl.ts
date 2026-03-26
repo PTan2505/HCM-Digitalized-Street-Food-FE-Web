@@ -93,6 +93,8 @@ export const apiUrl = {
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/day-offs`,
+    deleteOrUpdateDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
     deleteDayOffOfABranch: (dayOffId: number): string =>
       `/Branch/day-offs/${dayOffId}`,
     //Images
@@ -163,6 +165,9 @@ export const apiUrl = {
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
     getVendorOrders: 'order/vendor/orders',
+  },
+  manager: {
+    getMyBranch: '/Branch/manager/my-branch',
   },
   campaign: {
     GetOrPostSystemCampaign: '/Campaign/system',

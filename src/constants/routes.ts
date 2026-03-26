@@ -27,6 +27,10 @@ export const ROUTES = {
     // Child paths
     PATHS: {
       ORDER: 'orders',
+      BRANCH: 'branches',
+      FEEDBACK: 'feedbacks',
+      WORK_SCHEDULE: 'work-schedule',
+      DAY_OFF: 'day-offs',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       VERIFICATION: 'verification',

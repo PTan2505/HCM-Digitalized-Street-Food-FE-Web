@@ -1,5 +1,6 @@
 import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
+import { ROUTES } from '@constants/routes';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
@@ -8,6 +9,10 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   ShoppingCart as ShoppingBagIcon,
+  Store as StoreIcon,
+  RateReview as RateReviewIcon,
+  Schedule as ScheduleIcon,
+  EventBusy as EventBusyIcon,
   Close as XMarkIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -20,8 +25,28 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const navigation = [
   {
     name: 'Quản lý đơn hàng',
-    href: '/manager/orders',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.ORDER}`,
     icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
+    icon: StoreIcon,
+  },
+  {
+    name: 'Quản lý phản hồi chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.FEEDBACK}`,
+    icon: RateReviewIcon,
+  },
+  {
+    name: 'Quản lý thời gian hoạt động',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.WORK_SCHEDULE}`,
+    icon: ScheduleIcon,
+  },
+  {
+    name: 'Quản lý thời gian nghỉ',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DAY_OFF}`,
+    icon: EventBusyIcon,
   },
 ];
 
@@ -36,7 +61,7 @@ function ManagerLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/manager');
+    navigate(ROUTES.MANAGER.BASE);
   };
 
   const sidebarUserInfo = {
@@ -74,7 +99,7 @@ function ManagerLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/manager/settings"
+            settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
           />
@@ -90,7 +115,7 @@ function ManagerLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/manager/settings"
+          settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
