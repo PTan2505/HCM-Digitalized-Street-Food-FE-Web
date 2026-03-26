@@ -11,6 +11,7 @@ import {
   ShoppingCart as ShoppingBagIcon,
   Store as StoreIcon,
   Schedule as ScheduleIcon,
+  EventBusy as EventBusyIcon,
   Close as XMarkIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -35,6 +36,11 @@ const navigation = [
     name: 'Quản lý thời gian hoạt động',
     href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.WORK_SCHEDULE}`,
     icon: ScheduleIcon,
+  },
+  {
+    name: 'Quản lý thời gian nghỉ',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DAY_OFF}`,
+    icon: EventBusyIcon,
   },
 ];
 

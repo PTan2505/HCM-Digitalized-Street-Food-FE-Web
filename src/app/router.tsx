@@ -25,6 +25,7 @@ import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVer
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import WorkScheduleManagementPage from '@features/manager/pages/WorkScheduleManagementPage';
+import DayOffManagementPage from '@features/manager/pages/DayOffManagementPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
@@ -127,6 +128,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.MANAGER.PATHS.WORK_SCHEDULE,
             element: <WorkScheduleManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.DAY_OFF,
+            element: <DayOffManagementPage />,
           },
         ],
       },

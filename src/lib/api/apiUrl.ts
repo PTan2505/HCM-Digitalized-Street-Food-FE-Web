@@ -93,6 +93,8 @@ export const apiUrl = {
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/day-offs`,
+    deleteOrUpdateDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
     deleteDayOffOfABranch: (dayOffId: number): string =>
       `/Branch/day-offs/${dayOffId}`,
     //Images
