@@ -10,6 +10,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ShoppingCart as ShoppingBagIcon,
   Store as StoreIcon,
+  RestaurantMenu as RestaurantMenuIcon,
   RateReview as RateReviewIcon,
   Schedule as ScheduleIcon,
   EventBusy as EventBusyIcon,
@@ -32,6 +33,11 @@ const navigation = [
     name: 'Quản lý chi nhánh',
     href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
     icon: StoreIcon,
+  },
+  {
+    name: 'Quản lý thực đơn',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DISH}`,
+    icon: RestaurantMenuIcon,
   },
   {
     name: 'Quản lý phản hồi chi nhánh',

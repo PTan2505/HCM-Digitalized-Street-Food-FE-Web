@@ -24,6 +24,7 @@ import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
+import DishManagementPage from '@features/manager/pages/DishManagementPage';
 import FeedbackManagementPage from '@features/manager/pages/FeedbackManagementPage';
 import WorkScheduleManagementPage from '@features/manager/pages/WorkScheduleManagementPage';
 import DayOffManagementPage from '@features/manager/pages/DayOffManagementPage';
@@ -125,6 +126,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.MANAGER.PATHS.BRANCH,
             element: <BranchManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.DISH,
+            element: <DishManagementPage />,
           },
           {
             path: ROUTES.MANAGER.PATHS.FEEDBACK,

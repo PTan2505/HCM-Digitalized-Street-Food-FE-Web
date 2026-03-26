@@ -1,14 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import lowcaLogo from '@assets/logos/lowcaLogo.svg';
-import {
-  Box,
-  Button,
-  Container,
-  Drawer,
-  IconButton,
-  TextField,
-} from '@mui/material';
+import { Box, Button, Container, Drawer, IconButton } from '@mui/material';
 import {
   Search as SearchIcon,
   Menu as MenuIcon,
