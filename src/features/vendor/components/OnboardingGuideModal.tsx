@@ -90,7 +90,7 @@ export default function OnboardingGuideModal({
         <div className="border-t border-gray-100 bg-gray-50 px-6 py-6">
           <button
             onClick={onClose}
-            className="w-full rounded-lg bg-gradient-to-r from-[#7ab82d] to-[#9fd356] px-4 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:from-[#5f9324] hover:to-[#7ab82d] hover:shadow-md active:scale-95"
+            className="w-full cursor-pointer rounded-lg bg-gradient-to-r from-[#7ab82d] to-[#9fd356] px-4 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:from-[#5f9324] hover:to-[#7ab82d] hover:shadow-md active:scale-95"
           >
             Đã hiểu
           </button>
