@@ -93,6 +93,8 @@ export const apiUrl = {
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/day-offs`,
+    deleteOrUpdateDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
     deleteDayOffOfABranch: (dayOffId: number): string =>
       `/Branch/day-offs/${dayOffId}`,
     //Images
@@ -162,9 +164,26 @@ export const apiUrl = {
     getManagerOrders: '/order/manager/orders',
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
+    getVendorOrders: 'order/vendor/orders',
+  },
+  manager: {
+    getMyBranch: '/Branch/manager/my-branch',
   },
   campaign: {
     GetOrPostSystemCampaign: '/Campaign/system',
+    GetOrPostVendorCampaign: '/Campaign/vendor',
+    GetOrPostBranchCampaign: (branchId: number): string =>
+      `/Campaign/branch/${branchId}`,
+    GetJoinableSystemCampaigns: '/Campaign/system/joinable',
+    BranchJoinASystemCampaign: (branchId: number, campaignId: number): string =>
+      `/Campaign/join/system/${campaignId}/branch/${branchId}`,
     UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+  },
+  voucher: {
+    GetOrPostVouchers: '/vouchers',
+    UpdateOrDeleteVoucher: (voucherId: number): string =>
+      `/vouchers/${voucherId}`,
+    GetVouchersOfACampaign: (campaignId: number): string =>
+      `/vouchers/campaign/${campaignId}`,
   },
 };

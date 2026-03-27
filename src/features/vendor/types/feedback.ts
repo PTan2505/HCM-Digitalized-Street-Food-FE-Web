@@ -8,6 +8,11 @@ export interface ReplyFeedbackRequest {
   content: string;
 }
 
+export interface FeedbackTag {
+  id: number;
+  name: string;
+}
+
 export interface FeedbackUser {
   id: number;
   name: string;
@@ -31,7 +36,7 @@ export interface RawBranchFeedbackResponse {
   createdAt: string;
   updatedAt: string | null;
   images?: string[];
-  tags?: string[];
+  tags?: FeedbackTag[];
   upVotes?: number;
   downVotes?: number;
   netScore?: number;
@@ -77,12 +82,13 @@ export interface GetFeedbackDetailsResponse {
     id: number;
     name: string;
   } | null;
+  branchId: number;
   rating: number;
   comment: string;
   createdAt: string;
   updatedAt: string | null;
   images: string[] | null;
-  tags: string[] | null;
+  tags: FeedbackTag[] | null;
   upVotes: number;
   downVotes: number;
   netScore: number;

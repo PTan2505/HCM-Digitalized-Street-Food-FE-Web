@@ -27,6 +27,11 @@ export const ROUTES = {
     // Child paths
     PATHS: {
       ORDER: 'orders',
+      BRANCH: 'branches',
+      DISH: 'dishes',
+      FEEDBACK: 'feedbacks',
+      WORK_SCHEDULE: 'work-schedule',
+      DAY_OFF: 'day-offs',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       VERIFICATION: 'verification',
@@ -53,6 +58,7 @@ export const ROUTES = {
       TASTE: 'taste',
       FEEDBACK_TAG: 'feedback-tag',
       CAMPAIGN: 'campaign',
+      VOUCHER: 'voucher',
     },
   },
 
@@ -69,6 +75,7 @@ export const ROUTES = {
       ORDER: 'orders',
       DIETARY: 'dietary-preferences',
       GHOST_PIN: 'ghost-pin',
+      CAMPAIGN: 'campaign',
     },
   },
 

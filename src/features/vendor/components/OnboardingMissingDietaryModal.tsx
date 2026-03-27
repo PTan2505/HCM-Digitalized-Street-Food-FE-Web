@@ -1,7 +1,5 @@
 import type { JSX } from 'react';
 import { Dialog, DialogContent } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@constants/routes';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface OnboardingMissingDietaryModalProps {
@@ -85,16 +83,16 @@ export default function OnboardingMissingDietaryModal({
 
         {/* Footer with button */}
         <div className="border-t border-gray-100 bg-gray-50 px-6 py-6">
-          <Link
+          {/* <Link
             to={`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DIETARY}`}
             onClick={onClose}
             className="mb-3 block w-full rounded-lg bg-gradient-to-r from-[#f59e0b] to-[#f97316] px-4 py-3 text-center font-semibold text-white shadow-sm transition-all duration-200 hover:from-[#d97706] hover:to-[#ea580c] hover:shadow-md active:scale-95"
           >
             Cập nhật ngay
-          </Link>
+          </Link> */}
           <button
             onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            className="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
           >
             Đã hiểu
           </button>

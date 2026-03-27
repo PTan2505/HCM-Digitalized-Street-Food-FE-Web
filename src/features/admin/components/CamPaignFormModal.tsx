@@ -24,6 +24,24 @@ interface CamPaignFormModalProps {
 }
 
 /** Convert ISO 8601 string to YYYY-MM-DDTHH:mm for datetime-local input, in VN timezone */
+/** Get the current datetime in VN timezone formatted as YYYY-MM-DDTHH:mm (for use as `min`) */
+const getTodayMinVN = (): string => {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const findPart = (type: string): string | undefined =>
+    parts.find((p) => p.type === type)?.value;
+  return `${findPart('year')}-${findPart('month')}-${findPart('day')}T${findPart('hour')}:${findPart('minute')}`;
+};
+
 const toLocalDatetimeValue = (isoStr: string | null): string => {
   if (!isoStr) return '';
   const date = new Date(isoStr);
@@ -40,7 +58,8 @@ const toLocalDatetimeValue = (isoStr: string | null): string => {
   });
 
   const parts = formatter.formatToParts(date);
-  const findPart = (type: string) => parts.find((p) => p.type === type)?.value;
+  const findPart = (type: string): string | undefined =>
+    parts.find((p) => p.type === type)?.value;
 
   const y = findPart('year');
   const m = findPart('month');
@@ -66,6 +85,8 @@ export default function CamPaignFormModal({
   campaign,
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
+  const isEditMode = campaign !== null;
+
   const {
     register,
     handleSubmit,
@@ -83,6 +104,7 @@ export default function CamPaignFormModal({
       registrationEndDate: '',
       startDate: '',
       endDate: '',
+      isActive: true,
     },
   });
 
@@ -106,6 +128,7 @@ export default function CamPaignFormModal({
           ),
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
+          isActive: campaign.isActive,
         });
       } else {
         reset({
@@ -116,13 +139,15 @@ export default function CamPaignFormModal({
           registrationEndDate: '',
           startDate: '',
           endDate: '',
+          isActive: true,
         });
       }
     }
   }, [isOpen, campaign, reset]);
 
-  // Handle clearing/invalidating dependent dates when a preceding date changes
+  // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
+    if (campaign) return;
     if (!registrationStartDate) {
       setValue('registrationEndDate', '');
       setValue('startDate', '');
@@ -133,24 +158,26 @@ export default function CamPaignFormModal({
     ) {
       setValue('registrationEndDate', '');
     }
-  }, [registrationStartDate, registrationEndDate, setValue]);
+  }, [campaign, registrationStartDate, registrationEndDate, setValue]);
 
   useEffect(() => {
+    if (campaign) return;
     if (!registrationEndDate) {
       setValue('startDate', '');
       setValue('endDate', '');
     } else if (startDate && registrationEndDate >= startDate) {
       setValue('startDate', '');
     }
-  }, [registrationEndDate, startDate, setValue]);
+  }, [campaign, registrationEndDate, startDate, setValue]);
 
   useEffect(() => {
+    if (campaign) return;
     if (!startDate) {
       setValue('endDate', '');
     } else if (endDate && startDate >= endDate) {
       setValue('endDate', '');
     }
-  }, [startDate, endDate, setValue]);
+  }, [campaign, startDate, endDate, setValue]);
 
   const handleFormSubmit = async (data: CampaignFormData): Promise<void> => {
     const payload: CampaignFormData = {
@@ -159,6 +186,7 @@ export default function CamPaignFormModal({
       registrationEndDate: toIsoZulu(data.registrationEndDate),
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
+      isActive: data.isActive,
     };
     await onSubmit(payload);
   };
@@ -231,6 +259,20 @@ export default function CamPaignFormModal({
               />
             </div>
 
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                Trạng thái hoạt động
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  {...register('isActive')}
+                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                />
+                Kích hoạt chiến dịch
+              </label>
+            </div>
+
             {/* Dates Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -240,7 +282,7 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('registrationStartDate')}
-                  max={registrationEndDate ?? undefined}
+                  min={isEditMode ? undefined : getTodayMinVN()}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.registrationStartDate
@@ -261,14 +303,17 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('registrationEndDate')}
-                  disabled={!registrationStartDate}
-                  min={registrationStartDate ?? undefined}
-                  max={startDate ?? undefined}
+                  disabled={!isEditMode && !registrationStartDate}
+                  min={
+                    isEditMode
+                      ? undefined
+                      : (registrationStartDate ?? undefined)
+                  }
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.registrationEndDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !registrationStartDate
+                      : !isEditMode && !registrationStartDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}
@@ -287,14 +332,15 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('startDate')}
-                  disabled={!registrationEndDate}
-                  min={registrationEndDate ?? undefined}
-                  max={endDate ?? undefined}
+                  disabled={!isEditMode && !registrationEndDate}
+                  min={
+                    isEditMode ? undefined : (registrationEndDate ?? undefined)
+                  }
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.startDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !registrationEndDate
+                      : !isEditMode && !registrationEndDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}
@@ -313,13 +359,13 @@ export default function CamPaignFormModal({
                 <input
                   type="datetime-local"
                   {...register('endDate')}
-                  disabled={!startDate}
-                  min={startDate ?? undefined}
+                  disabled={!isEditMode && !startDate}
+                  min={isEditMode ? undefined : (startDate ?? undefined)}
                   step="60"
                   className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
                     errors.endDate
                       ? 'border-red-500 focus:ring-red-200'
-                      : !startDate
+                      : !isEditMode && !startDate
                         ? 'cursor-not-allowed border-gray-200 bg-gray-100'
                         : 'border-gray-300 focus:ring-amber-200'
                   }`}

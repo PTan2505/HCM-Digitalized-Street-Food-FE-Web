@@ -18,6 +18,7 @@ import {
   Loyalty as ShoppingBagIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
   Campaign as CampaignIcon,
+  LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
@@ -68,6 +69,11 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý chiến dịch',
     href: '/admin/campaign',
     icon: CampaignIcon,
+  },
+  {
+    name: 'Quản lý voucher',
+    href: '/admin/voucher',
+    icon: LocalOfferIcon,
   },
   {
     name: 'Chế độ ăn',

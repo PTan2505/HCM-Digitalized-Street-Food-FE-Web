@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  ConfirmationNumber as VoucherIcon,
+} from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
+import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
 import type { Campaign } from '@features/admin/types/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -31,6 +36,29 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
+const StatusBadge = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default';
+}): JSX.Element => {
+  const colors = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
+  return (
+    <span
+      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+    >
+      {label}
+    </span>
+  );
+};
+
 export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
   const status = useAppSelector(selectCampaignStatus);
@@ -39,7 +67,11 @@ export default function CampaignPage(): JSX.Element {
 
   const [page, setPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
+  const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
+    null
+  );
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -127,9 +159,28 @@ export default function CampaignPage(): JSX.Element {
         />
       ),
     },
+    {
+      key: 'isActive',
+      label: 'Hoạt động',
+      render: (value: unknown): JSX.Element => (
+        <StatusBadge
+          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          type={value === true ? 'success' : 'error'}
+        />
+      ),
+    },
   ];
 
   const actions = [
+    {
+      label: <VoucherIcon fontSize="small" />,
+      onClick: (row: Campaign): void => {
+        setSelectedCampaign(row);
+        setOpenVoucherModal(true);
+      },
+      color: 'warning' as const,
+      variant: 'outlined' as const,
+    },
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Campaign): void => handleOpenModal(row),
@@ -191,6 +242,13 @@ export default function CampaignPage(): JSX.Element {
         onSubmit={handleSubmit}
         campaign={editingCampaign}
         status={status}
+      />
+
+      {/* Campaign Voucher Modal */}
+      <CampaignVoucherModal
+        isOpen={openVoucherModal}
+        onClose={() => setOpenVoucherModal(false)}
+        campaign={selectedCampaign}
       />
     </div>
   );

@@ -15,6 +15,7 @@ import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
 import AdminCampaignPage from '@features/admin/pages/CampaignPage';
+import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -23,6 +24,11 @@ import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPag
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
+import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
+import DishManagementPage from '@features/manager/pages/DishManagementPage';
+import FeedbackManagementPage from '@features/manager/pages/FeedbackManagementPage';
+import WorkScheduleManagementPage from '@features/manager/pages/WorkScheduleManagementPage';
+import DayOffManagementPage from '@features/manager/pages/DayOffManagementPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
@@ -31,6 +37,7 @@ import VendorDishPage from '@features/vendor/pages/DishPage';
 import VendorOrderPage from '@features/vendor/pages/OrderPage';
 import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
 import GhostPinPage from '@features/vendor/pages/GhostPinPage';
+import VendorCampaignPage from '@features/vendor/pages/VendorCampaignPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -117,6 +124,26 @@ export const router = createBrowserRouter([
             path: ROUTES.MANAGER.PATHS.ORDER,
             element: <OrderManagementPage />,
           },
+          {
+            path: ROUTES.MANAGER.PATHS.BRANCH,
+            element: <BranchManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.DISH,
+            element: <DishManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.FEEDBACK,
+            element: <FeedbackManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.WORK_SCHEDULE,
+            element: <WorkScheduleManagementPage />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.DAY_OFF,
+            element: <DayOffManagementPage />,
+          },
         ],
       },
       {
@@ -159,6 +186,10 @@ export const router = createBrowserRouter([
             path: ROUTES.VENDOR.PATHS.GHOST_PIN,
             element: <GhostPinPage />,
           },
+          {
+            path: ROUTES.VENDOR.PATHS.CAMPAIGN,
+            element: <VendorCampaignPage />,
+          },
         ],
       },
       {
@@ -198,6 +229,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.CAMPAIGN,
             element: <AdminCampaignPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.VOUCHER,
+            element: <AdminVoucherPage />,
           },
         ],
       },
