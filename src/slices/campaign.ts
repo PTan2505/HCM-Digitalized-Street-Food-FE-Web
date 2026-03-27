@@ -128,7 +128,7 @@ export const deleteCampaignImage = createAppAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       await axiosApi.campaignApi.deleteCampaignImage(id);
-      return id;
+      return undefined;
     } catch (error) {
       return rejectWithValue(error);
     }
