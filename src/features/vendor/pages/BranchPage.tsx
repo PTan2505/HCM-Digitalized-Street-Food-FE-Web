@@ -384,6 +384,7 @@ function BranchPage(): JSX.Element {
         setDishBranch(branch);
       },
       color: 'primary' as const,
+      show: (branch: Branch): boolean => branch.isSubscribed,
     },
     {
       label: <ManageAccountsIcon fontSize="small" />,
