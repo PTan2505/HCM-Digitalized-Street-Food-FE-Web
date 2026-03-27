@@ -346,44 +346,12 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
-      label: <ManageAccountsIcon fontSize="small" />,
-      menuLabel: 'Cập nhật người quản lý',
-      onClick: (branch: Branch): void => {
-        setManagerBranch(branch);
-      },
-      color: 'info' as const,
-    },
-    {
-      label: <CampaignIcon fontSize="small" />,
-      menuLabel: 'Quản lý chiến dịch',
-      onClick: (branch: Branch): void => {
-        setCampaignBranch(branch);
-      },
-      color: 'warning' as const,
-    },
-    {
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
       onClick: (branch: Branch): void => {
         handleDeleteBranch(branch);
       },
       color: 'error' as const,
-    },
-    {
-      label: <RestaurantMenuIcon fontSize="small" />,
-      menuLabel: 'Quản lý menu',
-      onClick: (branch: Branch): void => {
-        setDishBranch(branch);
-      },
-      color: 'primary' as const,
-    },
-    {
-      label: <RateReviewIcon fontSize="small" />,
-      menuLabel: 'Phản hồi về chi nhánh',
-      onClick: (branch: Branch): void => {
-        setFeedbackBranch(branch);
-      },
-      color: 'info' as const,
     },
     {
       label: <ImageIcon fontSize="small" />,
@@ -408,6 +376,39 @@ function BranchPage(): JSX.Element {
         setDayOffBranch(branch);
       },
       color: 'error' as const,
+    },
+    {
+      label: <RestaurantMenuIcon fontSize="small" />,
+      menuLabel: 'Quản lý menu',
+      onClick: (branch: Branch): void => {
+        setDishBranch(branch);
+      },
+      color: 'primary' as const,
+    },
+    {
+      label: <ManageAccountsIcon fontSize="small" />,
+      menuLabel: 'Cập nhật người quản lý',
+      onClick: (branch: Branch): void => {
+        setManagerBranch(branch);
+      },
+      color: 'info' as const,
+    },
+    {
+      label: <CampaignIcon fontSize="small" />,
+      menuLabel: 'Quản lý chiến dịch',
+      onClick: (branch: Branch): void => {
+        setCampaignBranch(branch);
+      },
+      color: 'warning' as const,
+      show: (branch: Branch): boolean => branch.isSubscribed,
+    },
+    {
+      label: <RateReviewIcon fontSize="small" />,
+      menuLabel: 'Phản hồi về chi nhánh',
+      onClick: (branch: Branch): void => {
+        setFeedbackBranch(branch);
+      },
+      color: 'info' as const,
     },
   ];
 
