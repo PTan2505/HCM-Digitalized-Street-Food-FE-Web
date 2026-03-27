@@ -1,5 +1,6 @@
 import type {
   VendorCampaign,
+  CampaignDetailsResponse,
   VendorCampaignCreate,
   VendorCampaignUpdate,
   VendorCampaignListResponse,
@@ -92,6 +93,15 @@ export class VendorCampaignApi {
     const res = await this.apiClient.post<JoinSystemCampaignResponse, null>({
       url: apiUrl.campaign.BranchJoinASystemCampaign(branchId, campaignId),
       data: null,
+    });
+    return res.data;
+  }
+
+  async getSystemCampaignDetails(
+    campaignId: number
+  ): Promise<CampaignDetailsResponse> {
+    const res = await this.apiClient.get<CampaignDetailsResponse>({
+      url: apiUrl.campaign.GetDetailsOfASystemCampaign(campaignId),
     });
     return res.data;
   }

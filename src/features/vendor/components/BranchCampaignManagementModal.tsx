@@ -83,8 +83,15 @@ export default function BranchCampaignManagementModal({
   const [page, setPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinableModalOpen, setIsJoinableModalOpen] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
 
   const branchId = branch?.branchId ?? null;
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedBranchId(branchId);
+    }
+  }, [isOpen, branchId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -186,7 +193,10 @@ export default function BranchCampaignManagementModal({
               Tạo chiến dịch
             </button>
             <button
-              onClick={() => setIsJoinableModalOpen(true)}
+              onClick={() => {
+                setSelectedBranchId(branchId);
+                setIsJoinableModalOpen(true);
+              }}
               className="flex items-center gap-2 rounded-lg border border-[var(--color-primary-600)] bg-white px-4 py-2 font-semibold text-[var(--color-primary-700)] transition-colors hover:bg-[var(--color-primary-50)]"
             >
               <GroupAddIcon fontSize="small" />
@@ -234,7 +244,9 @@ export default function BranchCampaignManagementModal({
       <JoinableSystemCampaignModal
         isOpen={isJoinableModalOpen}
         onClose={() => setIsJoinableModalOpen(false)}
-        branchId={branchId}
+        branchId={selectedBranchId}
+        mode="join"
+        joinedCampaignIds={campaigns.map((campaign) => campaign.campaignId)}
       />
     </>
   );

@@ -45,3 +45,17 @@ export interface JoinSystemCampaignResponse {
   paymentLinkId: string;
   requiresConfirmation: boolean;
 }
+
+export interface CampaignDetailsResponse {
+  campaignId: number;
+  name: string;
+  description: string | null;
+  targetSegment: string | null;
+  startDate: string;
+  endDate: string;
+  registrationStartDate: string;
+  registrationEndDate: string;
+  isActive: boolean;
+  imageUrl?: string | null;
+  joinableBranch: number[];
+}
