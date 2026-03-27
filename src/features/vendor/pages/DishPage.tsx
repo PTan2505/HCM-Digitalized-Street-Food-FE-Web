@@ -160,11 +160,11 @@ export default function DishPage(): JSX.Element {
   // ─── Table config ──────────────────────────────────────
 
   const columns = [
-    {
-      key: 'dishId',
-      label: 'ID',
-      style: { width: '60px' },
-    },
+    // {
+    //   key: 'dishId',
+    //   label: 'ID',
+    //   style: { width: '60px' },
+    // },
     {
       key: 'imageUrl',
       label: 'Ảnh',
