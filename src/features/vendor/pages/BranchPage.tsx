@@ -226,11 +226,11 @@ function BranchPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'branchId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'branchId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên chi nhánh',
@@ -254,11 +254,11 @@ function BranchPage(): JSX.Element {
       label: 'Phường/Xã',
       style: { width: '140px' },
     },
-    {
-      key: 'city',
-      label: 'Thành phố',
-      style: { width: '140px' },
-    },
+    // {
+    //   key: 'city',
+    //   label: 'Thành phố',
+    //   style: { width: '140px' },
+    // },
     {
       key: 'managerId',
       label: 'Quản lý chi nhánh',
@@ -276,28 +276,28 @@ function BranchPage(): JSX.Element {
         );
       },
     },
-    {
-      key: 'isVerified',
-      label: 'Xác thực',
-      style: { width: '120px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value ? 'Đã xác thực' : 'Chưa xác thực'}
-          type={value ? 'success' : 'default'}
-        />
-      ),
-    },
-    {
-      key: 'isActive',
-      label: 'Tình trạng hoạt động',
-      style: { width: '120px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value ? 'Đang hoạt động' : 'Không hoạt động'}
-          type={value ? 'success' : 'error'}
-        />
-      ),
-    },
+    // {
+    //   key: 'isVerified',
+    //   label: 'Xác thực',
+    //   style: { width: '120px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <StatusBadge
+    //       label={value ? 'Đã xác thực' : 'Chưa xác thực'}
+    //       type={value ? 'success' : 'default'}
+    //     />
+    //   ),
+    // },
+    // {
+    //   key: 'isActive',
+    //   label: 'Tình trạng hoạt động',
+    //   style: { width: '120px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <StatusBadge
+    //       label={value ? 'Đang hoạt động' : 'Không hoạt động'}
+    //       type={value ? 'success' : 'error'}
+    //     />
+    //   ),
+    // },
     {
       key: 'isSubscribed',
       label: 'Tình trạng đăng ký',
