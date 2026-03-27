@@ -28,6 +28,7 @@ export const ROUTES = {
     PATHS: {
       ORDER: 'orders',
       BRANCH: 'branches',
+      DISH: 'dishes',
       FEEDBACK: 'feedbacks',
       WORK_SCHEDULE: 'work-schedule',
       DAY_OFF: 'day-offs',
@@ -57,6 +58,7 @@ export const ROUTES = {
       TASTE: 'taste',
       FEEDBACK_TAG: 'feedback-tag',
       CAMPAIGN: 'campaign',
+      VOUCHER: 'voucher',
     },
   },
 

@@ -96,6 +96,45 @@ export const updateCampaign = createAppAsyncThunk(
   }
 );
 
+export const getCampaignImage = createAppAsyncThunk(
+  'campaign/getCampaignImage',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await axiosApi.campaignApi.getCampaignImage(id);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const postCampaignImage = createAppAsyncThunk(
+  'campaign/postCampaignImage',
+  async (payload: { id: number; data: FormData }, { rejectWithValue }) => {
+    try {
+      const response = await axiosApi.campaignApi.postCampaignImage(
+        payload.id,
+        payload.data
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteCampaignImage = createAppAsyncThunk(
+  'campaign/deleteCampaignImage',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await axiosApi.campaignApi.deleteCampaignImage(id);
+      return undefined;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ── Vendor Campaign Thunks ───────────────────────────────────────────────────
 
 export const getVendorCampaigns = createAppAsyncThunk(
@@ -232,6 +271,24 @@ export const campaignSlice = createSlice({
     resetCampaignState: () => initialState,
   },
   extraReducers: (builder) => {
+    const updateImageInLists = (
+      state: CampaignState,
+      campaignId: number,
+      imageUrl: string | null
+    ): void => {
+      const lists: (Campaign[] | VendorCampaign[])[] = [
+        state.campaigns,
+        state.vendorCampaigns,
+        state.branchCampaigns,
+      ];
+      lists.forEach((list) => {
+        const index = list.findIndex((c) => c.campaignId === campaignId);
+        if (index !== -1) {
+          list[index].imageUrl = imageUrl;
+        }
+      });
+    };
+
     builder
       // ── Admin cases ────────────────────────────────────────────────────────
       .addCase(getAllCampaigns.fulfilled, (state, action) => {
@@ -254,6 +311,20 @@ export const campaignSlice = createSlice({
             state.campaigns[index] = campaign;
           }
         }
+      })
+      .addCase(getCampaignImage.fulfilled, (state, action) => {
+        const campaignId = action.meta.arg;
+        const imageUrl = action.payload.length > 0 ? action.payload[0] : null;
+        updateImageInLists(state, campaignId, imageUrl);
+      })
+      .addCase(postCampaignImage.fulfilled, (state, action) => {
+        const { id: campaignId } = action.meta.arg;
+        const imageUrl = action.payload;
+        updateImageInLists(state, campaignId, imageUrl);
+      })
+      .addCase(deleteCampaignImage.fulfilled, (state, action) => {
+        const campaignId = action.meta.arg;
+        updateImageInLists(state, campaignId, null);
       })
       // ── Vendor cases ───────────────────────────────────────────────────────
       .addCase(getVendorCampaigns.fulfilled, (state, action) => {
@@ -333,7 +404,10 @@ export const campaignSlice = createSlice({
           getBranchCampaigns,
           createBranchCampaign,
           getJoinableSystemCampaigns,
-          joinBranchToSystemCampaign
+          joinBranchToSystemCampaign,
+          getCampaignImage,
+          postCampaignImage,
+          deleteCampaignImage
         ),
         (state) => {
           state.status = 'pending';
@@ -350,7 +424,10 @@ export const campaignSlice = createSlice({
           getBranchCampaigns,
           createBranchCampaign,
           getJoinableSystemCampaigns,
-          joinBranchToSystemCampaign
+          joinBranchToSystemCampaign,
+          getCampaignImage,
+          postCampaignImage,
+          deleteCampaignImage
         ),
         (state) => {
           state.status = 'succeeded';
@@ -368,7 +445,10 @@ export const campaignSlice = createSlice({
           getBranchCampaigns,
           createBranchCampaign,
           getJoinableSystemCampaigns,
-          joinBranchToSystemCampaign
+          joinBranchToSystemCampaign,
+          getCampaignImage,
+          postCampaignImage,
+          deleteCampaignImage
         ),
         (state, action) => {
           state.status = 'failed';

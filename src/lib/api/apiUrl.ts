@@ -177,6 +177,20 @@ export const apiUrl = {
     GetJoinableSystemCampaigns: '/Campaign/system/joinable',
     BranchJoinASystemCampaign: (branchId: number, campaignId: number): string =>
       `/Campaign/join/system/${campaignId}/branch/${branchId}`,
+    VendorJoinASystemCampaign: '/Campaign/vendor/join​',
+    GetDetailsOfASystemCampaign: (campaignId: number): string =>
+      `/Campaign/system/${campaignId}`,
     UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+    GetOrPostAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/images`,
+    DeleteAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/image`,
+  },
+  voucher: {
+    GetOrPostVouchers: '/vouchers',
+    UpdateOrDeleteVoucher: (voucherId: number): string =>
+      `/vouchers/${voucherId}`,
+    GetVouchersOfACampaign: (campaignId: number): string =>
+      `/vouchers/campaign/${campaignId}`,
   },
 };

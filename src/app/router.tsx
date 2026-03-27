@@ -15,6 +15,7 @@ import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
 import AdminCampaignPage from '@features/admin/pages/CampaignPage';
+import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -24,6 +25,7 @@ import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
+import DishManagementPage from '@features/manager/pages/DishManagementPage';
 import FeedbackManagementPage from '@features/manager/pages/FeedbackManagementPage';
 import WorkScheduleManagementPage from '@features/manager/pages/WorkScheduleManagementPage';
 import DayOffManagementPage from '@features/manager/pages/DayOffManagementPage';
@@ -127,6 +129,10 @@ export const router = createBrowserRouter([
             element: <BranchManagementPage />,
           },
           {
+            path: ROUTES.MANAGER.PATHS.DISH,
+            element: <DishManagementPage />,
+          },
+          {
             path: ROUTES.MANAGER.PATHS.FEEDBACK,
             element: <FeedbackManagementPage />,
           },
@@ -223,6 +229,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.CAMPAIGN,
             element: <AdminCampaignPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.VOUCHER,
+            element: <AdminVoucherPage />,
           },
         ],
       },

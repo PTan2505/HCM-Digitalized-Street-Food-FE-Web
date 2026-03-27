@@ -40,4 +40,28 @@ export class CampaignApi {
     });
     return res.data;
   }
+
+  async getCampaignImage(id: number): Promise<string[]> {
+    const res = await this.apiClient.get<string[]>({
+      url: apiUrl.campaign.GetOrPostAImageOfACampaign(id),
+    });
+    return res.data;
+  }
+
+  async postCampaignImage(id: number, data: FormData): Promise<string> {
+    const res = await this.apiClient.post<string, FormData>({
+      url: apiUrl.campaign.GetOrPostAImageOfACampaign(id),
+      data,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  }
+
+  async deleteCampaignImage(id: number): Promise<void> {
+    await this.apiClient.delete({
+      url: apiUrl.campaign.DeleteAImageOfACampaign(id),
+    });
+  }
 }

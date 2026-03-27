@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import BranchAddressMapSection from '@features/manager/components/BranchAddressMapSection';
+import BranchImagesSection from '@features/manager/components/BranchImagesSection';
 import type { AddressDraft } from '@features/manager/components/BranchAddressMapSection';
 import BranchDetailRow from '@features/manager/components/BranchDetailRow';
 import type { EditableField } from '@features/manager/components/BranchDetailRow';
@@ -315,7 +316,8 @@ export default function BranchManagementPage(): JSX.Element {
           Quản lý chi nhánh
         </h1>
         <p className="text-table-text-secondary text-sm">
-          Xem và cập nhật thông tin chi nhánh của bạn
+          Xem và cập nhật thông tin của {branch?.name ?? 'chi nhánh'} cũng như
+          theo dõi tình trạng xác thực, đăng ký và đánh giá của chi nhánh
         </p>
       </div>
 
@@ -360,6 +362,8 @@ export default function BranchManagementPage(): JSX.Element {
             }}
             disableEditButton={editingField !== null}
           />
+
+          <BranchImagesSection branch={currentBranch} />
 
           {statusInfoRows.map((row) => (
             <BranchDetailRow
