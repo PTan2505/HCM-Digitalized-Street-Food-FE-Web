@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Alert,
-} from '@mui/material';
+import { Box, Button, Snackbar, Alert, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
+import SystemCampaignDetailsModal from '@features/vendor/components/SystemCampaignDetailsModal';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -20,11 +13,16 @@ import {
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
 } from '@slices/campaign';
+import type { Branch } from '@features/vendor/types/vendor';
 
 interface JoinableSystemCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  branchId: number | null;
+  branchId?: number | null;
+  mode?: 'join' | 'detail';
+  vendorBranchIds?: number[];
+  vendorBranches?: Branch[];
+  joinedCampaignIds?: number[];
 }
 
 const PAGE_SIZE = 10;
@@ -70,7 +68,11 @@ const StatusBadge = ({
 export default function JoinableSystemCampaignModal({
   isOpen,
   onClose,
-  branchId,
+  branchId = null,
+  mode = 'join',
+  vendorBranchIds = [],
+  vendorBranches = [],
+  joinedCampaignIds = [],
 }: JoinableSystemCampaignModalProps): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
@@ -82,6 +84,10 @@ export default function JoinableSystemCampaignModal({
   const [joiningCampaignIds, setJoiningCampaignIds] = useState<Set<number>>(
     new Set()
   );
+  const [detailsCampaignId, setDetailsCampaignId] = useState<number | null>(
+    null
+  );
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -102,6 +108,11 @@ export default function JoinableSystemCampaignModal({
     const pages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
     return pages > 0 ? pages : 1;
   }, [totalCount]);
+
+  const joinedCampaignIdSet = useMemo(
+    () => new Set(joinedCampaignIds),
+    [joinedCampaignIds]
+  );
 
   const handleJoinCampaign = async (campaignId: number): Promise<void> => {
     if (branchId === null) return;
@@ -179,24 +190,44 @@ export default function JoinableSystemCampaignModal({
       ),
     },
     {
-      key: 'joinAction',
-      label: 'Tham gia',
+      key: mode === 'join' ? 'joinAction' : 'detailsAction',
+      label: 'Hành động',
       style: { width: '160px' },
       render: (_: unknown, row: VendorCampaign): React.ReactNode => {
         const isJoining = joiningCampaignIds.has(row.campaignId);
+        const isAlreadyJoined = joinedCampaignIdSet.has(row.campaignId);
+
+        if (mode === 'detail') {
+          return (
+            <button
+              onClick={() => {
+                setDetailsCampaignId(row.campaignId);
+                setIsDetailsModalOpen(true);
+              }}
+              className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+            >
+              Chi tiết
+            </button>
+          );
+        }
+
         return (
           <button
             onClick={() => {
               void handleJoinCampaign(row.campaignId);
             }}
-            disabled={isJoining || branchId === null}
+            disabled={isJoining || branchId === null || isAlreadyJoined}
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
-              isJoining || branchId === null
+              isJoining || branchId === null || isAlreadyJoined
                 ? 'cursor-not-allowed bg-gray-200 text-gray-500'
                 : 'bg-[var(--color-primary-600)] text-white hover:bg-[var(--color-primary-700)]'
             }`}
           >
-            {isJoining ? 'Đang tham gia...' : 'Tham gia'}
+            {isAlreadyJoined
+              ? 'Đã tham gia'
+              : isJoining
+                ? 'Đang tham gia...'
+                : 'Tham gia'}
           </button>
         );
       },
@@ -204,37 +235,83 @@ export default function JoinableSystemCampaignModal({
   ];
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>Tham gia chiến dịch hệ thống</DialogTitle>
+    <>
+      <div
+        className={`fixed inset-0 z-[1400] flex items-center justify-center p-4 transition-opacity ${
+          isOpen
+            ? 'bg-black/60 opacity-100'
+            : 'pointer-events-none bg-transparent opacity-0'
+        }`}
+        onClick={onClose}
+      >
+        <div
+          className="mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Modal Header */}
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
+                {mode === 'join'
+                  ? 'Tham gia chiến dịch hệ thống'
+                  : 'Chiến dịch hệ thống khả dụng'}
+              </h2>
+            </div>
+            <IconButton
+              aria-label="close"
+              onClick={onClose}
+              sx={{
+                color: 'text.secondary',
+                '&:hover': { backgroundColor: 'action.hover' },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
 
-      <DialogContent dividers>
-        <Table
-          columns={columns}
-          data={campaigns}
-          rowKey="campaignId"
-          loading={status === 'pending'}
-          emptyMessage="Không có chiến dịch hệ thống khả dụng"
-          maxHeight="none"
-        />
+          {/* Modal Content */}
+          <div className="flex-1 overflow-y-auto p-8">
+            <Table
+              columns={columns}
+              data={campaigns}
+              rowKey="campaignId"
+              loading={status === 'pending'}
+              emptyMessage="Không có chiến dịch hệ thống khả dụng"
+              maxHeight="none"
+            />
 
-        <Box sx={{ mt: 2 }}>
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            totalCount={totalCount ?? 0}
-            pageSize={PAGE_SIZE}
-            hasPrevious={page > 1}
-            hasNext={page < totalPages}
-            onPageChange={setPage}
-          />
-        </Box>
-      </DialogContent>
+            <Box sx={{ mt: 3 }}>
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalCount={totalCount ?? 0}
+                pageSize={PAGE_SIZE}
+                hasPrevious={page > 1}
+                hasNext={page < totalPages}
+                onPageChange={setPage}
+              />
+            </Box>
+          </div>
 
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
-          Đóng
-        </Button>
-      </DialogActions>
+          {/* Modal Footer */}
+          <div className="flex justify-end border-t border-gray-100 bg-gray-50/50 px-8 py-4">
+            <Button onClick={onClose} variant="outlined" color="inherit">
+              Đóng
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <SystemCampaignDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setDetailsCampaignId(null);
+        }}
+        campaignId={detailsCampaignId}
+        vendorBranchIds={vendorBranchIds}
+        vendorBranches={vendorBranches}
+      />
 
       <Snackbar
         open={errorMsg !== null}
@@ -246,6 +323,6 @@ export default function JoinableSystemCampaignModal({
           {errorMsg}
         </Alert>
       </Snackbar>
-    </Dialog>
+    </>
   );
 }

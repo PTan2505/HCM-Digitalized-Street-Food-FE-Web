@@ -6,6 +6,7 @@ import type {
 } from '@features/admin/types/campaign';
 import type {
   VendorCampaign,
+  CampaignDetailsResponse,
   VendorCampaignCreate,
   VendorCampaignUpdate,
   JoinSystemCampaignResponse,
@@ -264,6 +265,19 @@ export const joinBranchToSystemCampaign = createAppAsyncThunk(
   }
 );
 
+export const getSystemCampaignDetails = createAppAsyncThunk(
+  'campaign/getSystemCampaignDetails',
+  async (campaignId: number, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.vendorCampaignApi.getSystemCampaignDetails(campaignId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const campaignSlice = createSlice({
   name: 'campaign',
   initialState,
@@ -405,6 +419,7 @@ export const campaignSlice = createSlice({
           createBranchCampaign,
           getJoinableSystemCampaigns,
           joinBranchToSystemCampaign,
+          getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
           deleteCampaignImage
@@ -425,6 +440,7 @@ export const campaignSlice = createSlice({
           createBranchCampaign,
           getJoinableSystemCampaigns,
           joinBranchToSystemCampaign,
+          getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
           deleteCampaignImage
@@ -446,6 +462,7 @@ export const campaignSlice = createSlice({
           createBranchCampaign,
           getJoinableSystemCampaigns,
           joinBranchToSystemCampaign,
+          getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
           deleteCampaignImage
