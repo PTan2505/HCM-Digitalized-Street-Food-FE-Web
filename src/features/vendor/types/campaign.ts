@@ -11,6 +11,7 @@ export interface VendorCampaign {
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
+  imageUrl?: string | null;
 }
 
 export interface VendorCampaignCreate {
