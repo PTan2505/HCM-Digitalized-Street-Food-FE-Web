@@ -6,12 +6,16 @@ interface LicenseUploadSectionProps {
   licenseImages: File[];
   onFileChange: (files: FileList | null) => void;
   readonly?: boolean;
+  required?: boolean;
+  title?: string;
 }
 
 export default function LicenseUploadSection({
   licenseImages,
   onFileChange,
   readonly = false,
+  required = false,
+  title = '4. Giấy phép kinh doanh',
 }: LicenseUploadSectionProps): JSX.Element {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [fullViewImage, setFullViewImage] = useState<string | null>(null);
@@ -45,15 +49,17 @@ export default function LicenseUploadSection({
 
   return (
     <div className="mb-12">
-      <h2 className="mb-6 text-lg font-semibold text-gray-800">
-        4. Giấy phép kinh doanh
-      </h2>
+      <h2 className="mb-6 text-lg font-semibold text-gray-800">{title}</h2>
 
       {!readonly && (
         <>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Hình ảnh giấy phép kinh doanh{' '}
-            <span className="text-gray-400">(Không bắt buộc)</span>
+            {required ? (
+              <span className="text-red-500">*</span>
+            ) : (
+              <span className="text-gray-400">(Không bắt buộc)</span>
+            )}
           </label>
 
           <div className="mb-4">

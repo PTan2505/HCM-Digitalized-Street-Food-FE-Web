@@ -11,6 +11,10 @@ import type {
   UpdateVendorNameResponse,
   UpdateDietaryPreferencesOfMyVendorRequest,
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
+  GetAllGhostPinsResponse,
+  ClaimBranchResponse,
+  AssignBranchManagerRequest,
+  SearchUsersResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -172,7 +176,7 @@ export class VendorApi {
 
   async deleteDayOff(dayOffId: number): Promise<void> {
     await this.apiClient.delete({
-      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+      url: apiUrl.vendor.deleteOrUpdateDayOffOfABranch(dayOffId),
     });
   }
 
@@ -246,6 +250,59 @@ export class VendorApi {
     >({
       url: apiUrl.vendor.updateDietaryPreferencesOfMyVendor,
       data,
+    });
+    return res.data;
+  }
+
+  async getAllGhostPins(params: {
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<GetAllGhostPinsResponse> {
+    const res = await this.apiClient.get<GetAllGhostPinsResponse>({
+      url: apiUrl.vendor.getAllGhostPins,
+      params,
+    });
+    return res.data;
+  }
+
+  async claimBranch(
+    branchId: number,
+    licenseImages: File[]
+  ): Promise<ClaimBranchResponse> {
+    const formData = new FormData();
+    licenseImages.forEach((file) => {
+      formData.append('licenseImages', file);
+    });
+    formData.append('branchId', branchId.toString());
+    const res = await this.apiClient.post<ClaimBranchResponse, FormData>({
+      url: apiUrl.vendor.claimBranch,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  }
+
+  async updateBranchManager(
+    branchId: number,
+    data: AssignBranchManagerRequest
+  ): Promise<boolean> {
+    const res = await this.apiClient.put<boolean, AssignBranchManagerRequest>({
+      url: apiUrl.vendor.updateBranchManager(branchId),
+      data,
+    });
+    return res.data;
+  }
+
+  async searchUsers(params: {
+    query: string;
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<SearchUsersResponse> {
+    const res = await this.apiClient.get<SearchUsersResponse>({
+      url: apiUrl.user.search,
+      params,
     });
     return res.data;
   }

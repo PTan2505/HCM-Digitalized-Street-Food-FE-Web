@@ -57,6 +57,8 @@ export const apiUrl = {
     },
   },
   user: {
+    getUserById: (id: number): string => `/User/${id}`,
+    search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
       dietary: '/UserSetup/dietary-setup',
@@ -65,6 +67,8 @@ export const apiUrl = {
   vendor: {
     //For vendor
     register: '/Vendor',
+    getAllGhostPins: '/Branch/all-ghost-pins',
+    claimBranch: '/Vendor/claim-branch',
     updateVendorName: '/Vendor',
     getMyVendor: '/Vendor/my-vendor',
     getDietaryPreferencesOfAVendor(vendorId: number): string {
@@ -79,6 +83,8 @@ export const apiUrl = {
     createOrGetBranchesOfAVendor: (vendorId: number): string =>
       `/Branch/vendor/${vendorId}`,
     updateOrDeleteBranch: (branchId: number): string => `/Branch/${branchId}`,
+    updateBranchManager: (branchId: number): string =>
+      `/Branch/${branchId}/manager`,
     //WorkSchedules
     createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
@@ -87,6 +93,8 @@ export const apiUrl = {
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/day-offs`,
+    deleteOrUpdateDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
     deleteDayOffOfABranch: (dayOffId: number): string =>
       `/Branch/day-offs/${dayOffId}`,
     //Images
@@ -133,6 +141,18 @@ export const apiUrl = {
       `/Feedback/branch/${branchId}`,
     CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
       `/Feedback/${feedbackId}/reply`,
+    GetFeedbackDetails: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}`,
+  },
+  feedbackTag: {
+    getAllOrPostFeedbackTag: '/FeedbackTag',
+    updateOrDeleteFeedbackTag: (id: number): string => `/FeedbackTag/${id}`,
+  },
+  notification: {
+    getNotifications: '/notifications',
+    getUnreadCount: '/notifications/unread-count',
+    markAsRead: (id: number): string => `/notifications/${id}/read`,
+    markAllAsRead: '/notifications/read-all',
   },
   order: {
     getVendorBranchOrders: (branchId: number): string =>
@@ -141,7 +161,29 @@ export const apiUrl = {
       `/order/vendor/orders/${orderId}/decision`,
     getOrderPickupCode: (orderId: number): string =>
       `/order/${orderId}/pickup-code`,
+    getManagerOrders: '/order/manager/orders',
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
+    getVendorOrders: 'order/vendor/orders',
+  },
+  manager: {
+    getMyBranch: '/Branch/manager/my-branch',
+  },
+  campaign: {
+    GetOrPostSystemCampaign: '/Campaign/system',
+    GetOrPostVendorCampaign: '/Campaign/vendor',
+    GetOrPostBranchCampaign: (branchId: number): string =>
+      `/Campaign/branch/${branchId}`,
+    GetJoinableSystemCampaigns: '/Campaign/system/joinable',
+    BranchJoinASystemCampaign: (branchId: number, campaignId: number): string =>
+      `/Campaign/join/system/${campaignId}/branch/${branchId}`,
+    UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+  },
+  voucher: {
+    GetOrPostVouchers: '/vouchers',
+    UpdateOrDeleteVoucher: (voucherId: number): string =>
+      `/vouchers/${voucherId}`,
+    GetVouchersOfACampaign: (campaignId: number): string =>
+      `/vouchers/campaign/${campaignId}`,
   },
 };

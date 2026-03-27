@@ -1,14 +1,21 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
+import { ROUTES } from '@constants/routes';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
+import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import {
-  Bars3Icon,
-  ChartBarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ShoppingBagIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Menu as Bars3Icon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ShoppingCart as ShoppingBagIcon,
+  Store as StoreIcon,
+  RestaurantMenu as RestaurantMenuIcon,
+  RateReview as RateReviewIcon,
+  Schedule as ScheduleIcon,
+  EventBusy as EventBusyIcon,
+  Close as XMarkIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -17,17 +24,42 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Dashboard', href: '/manager/revenue', icon: ChartBarIcon },
   {
-    name: 'Xác minh người bán',
-    href: '/manager/verification',
+    name: 'Quản lý đơn hàng',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.ORDER}`,
     icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
+    icon: StoreIcon,
+  },
+  {
+    name: 'Quản lý thực đơn',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DISH}`,
+    icon: RestaurantMenuIcon,
+  },
+  {
+    name: 'Quản lý phản hồi chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.FEEDBACK}`,
+    icon: RateReviewIcon,
+  },
+  {
+    name: 'Quản lý thời gian hoạt động',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.WORK_SCHEDULE}`,
+    icon: ScheduleIcon,
+  },
+  {
+    name: 'Quản lý thời gian nghỉ',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DAY_OFF}`,
+    icon: EventBusyIcon,
   },
 ];
 
 function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -35,7 +67,7 @@ function ManagerLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/manager');
+    navigate(ROUTES.MANAGER.BASE);
   };
 
   const sidebarUserInfo = {
@@ -73,7 +105,7 @@ function ManagerLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/manager/settings"
+            settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
           />
@@ -89,7 +121,7 @@ function ManagerLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/manager/settings"
+          settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
@@ -132,6 +164,12 @@ function ManagerLayout(): JSX.Element {
                 </Typography>
               </Box>
             </Box>
+
+            <Box className="flex items-center gap-4">
+              <NotificationBell
+                onFeedbackNotificationClick={setFeedbackModalId}
+              />
+            </Box>
           </Box>
         </Box>
 
@@ -141,6 +179,12 @@ function ManagerLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+
+      <FeedbackDetailsModal
+        isOpen={feedbackModalId !== null}
+        onClose={() => setFeedbackModalId(null)}
+        feedbackId={feedbackModalId}
+      />
     </Box>
   );
 }

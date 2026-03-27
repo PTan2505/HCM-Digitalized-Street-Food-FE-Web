@@ -6,6 +6,7 @@ import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
 import AdminTastePage from '@features/admin/pages/TastePage';
+import AdminFeedbackTagPage from '@features/admin/pages/FeedbackTagPage';
 import AdminDietaryPage from '@features/admin/pages/DietaryPage';
 import AdminRevenuePage from '@features/admin/pages/RevenuePage';
 import AdminTransactionsPage from '@features/admin/pages/TransactionsPage';
@@ -13,6 +14,8 @@ import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
+import AdminCampaignPage from '@features/admin/pages/CampaignPage';
+import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -20,6 +23,12 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
+import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
+import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
+import DishManagementPage from '@features/manager/pages/DishManagementPage';
+import FeedbackManagementPage from '@features/manager/pages/FeedbackManagementPage';
+import WorkScheduleManagementPage from '@features/manager/pages/WorkScheduleManagementPage';
+import DayOffManagementPage from '@features/manager/pages/DayOffManagementPage';
 import VendorDashboardPage from '@features/vendor/pages/DashboardPage';
 import VendorBranchPage from '@features/vendor/pages/BranchPage';
 import VendorRegistrationHistoryPage from '@features/vendor/pages/RegistrationHistoryPage';
@@ -27,6 +36,8 @@ import VendorPaymentHistoryPage from '@features/vendor/pages/PaymentHistoryPage'
 import VendorDishPage from '@features/vendor/pages/DishPage';
 import VendorOrderPage from '@features/vendor/pages/OrderPage';
 import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
+import GhostPinPage from '@features/vendor/pages/GhostPinPage';
+import VendorCampaignPage from '@features/vendor/pages/VendorCampaignPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -107,31 +118,31 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.MANAGER.PATHS.REVENUE} replace />,
+            element: <Navigate to={ROUTES.MANAGER.PATHS.ORDER} replace />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.REVENUE,
-            element: <ModeratorRevenuePage />,
+            path: ROUTES.MANAGER.PATHS.ORDER,
+            element: <OrderManagementPage />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.TRANSACTIONS,
-            element: <ModeratorTransactionsPage />,
+            path: ROUTES.MANAGER.PATHS.BRANCH,
+            element: <BranchManagementPage />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.VERIFICATION,
-            element: <ModeratorVendorVerificationPage />,
+            path: ROUTES.MANAGER.PATHS.DISH,
+            element: <DishManagementPage />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.POSTS,
-            element: <ModeratorPostsPage />,
+            path: ROUTES.MANAGER.PATHS.FEEDBACK,
+            element: <FeedbackManagementPage />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.USERS,
-            element: <ModeratorUsersPage />,
+            path: ROUTES.MANAGER.PATHS.WORK_SCHEDULE,
+            element: <WorkScheduleManagementPage />,
           },
           {
-            path: ROUTES.MANAGER.PATHS.CASHOUT,
-            element: <ModeratorCashoutPage />,
+            path: ROUTES.MANAGER.PATHS.DAY_OFF,
+            element: <DayOffManagementPage />,
           },
         ],
       },
@@ -171,6 +182,14 @@ export const router = createBrowserRouter([
             path: ROUTES.VENDOR.PATHS.DIETARY,
             element: <VendorDietaryPreferencesPage />,
           },
+          {
+            path: ROUTES.VENDOR.PATHS.GHOST_PIN,
+            element: <GhostPinPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.CAMPAIGN,
+            element: <VendorCampaignPage />,
+          },
         ],
       },
       {
@@ -203,6 +222,18 @@ export const router = createBrowserRouter([
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
           { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },
+          {
+            path: ROUTES.ADMIN.PATHS.FEEDBACK_TAG,
+            element: <AdminFeedbackTagPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.CAMPAIGN,
+            element: <AdminCampaignPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.VOUCHER,
+            element: <AdminVoucherPage />,
+          },
         ],
       },
     ],

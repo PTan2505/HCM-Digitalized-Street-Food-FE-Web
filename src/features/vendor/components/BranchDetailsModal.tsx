@@ -12,6 +12,7 @@ interface BranchDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   branch: Branch | null;
+  managerName?: string | null;
   hasAnySubscribedBranch?: boolean;
   showPayment?: boolean;
 }
@@ -63,6 +64,7 @@ export default function BranchDetailsModal({
   isOpen,
   onClose,
   branch,
+  managerName,
   hasAnySubscribedBranch = false,
   showPayment = false,
 }: BranchDetailsModalProps): JSX.Element | null {
@@ -115,6 +117,18 @@ export default function BranchDetailsModal({
     return 'default';
   };
 
+  const managerDisplayName = (() => {
+    if (managerName && managerName.trim().length > 0) {
+      return managerName;
+    }
+
+    if (typeof branch.managerId === 'number' && branch.managerId > 0) {
+      return `ID ${branch.managerId}`;
+    }
+
+    return '-';
+  })();
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity"
@@ -164,6 +178,10 @@ export default function BranchDetailsModal({
                   label="Email"
                   value={branch.email}
                   className="sm:col-span-2 lg:col-span-1"
+                />
+                <InfoField
+                  label="Quản lý chi nhánh"
+                  value={managerDisplayName}
                 />
                 <InfoField label="Số điện thoại" value={branch.phoneNumber} />
                 <InfoField

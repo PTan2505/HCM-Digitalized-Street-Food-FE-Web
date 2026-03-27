@@ -1,4 +1,5 @@
 import type { RootState } from '@app/store';
+import type { GetManagerOrdersResponse } from '@features/manager/types/orderManagement';
 import type {
   CompleteVendorOrderResponse,
   DecideVendorOrderResponse,
@@ -46,6 +47,25 @@ const initialState: OrderState = {
   error: null,
 };
 
+export const getVendorOrders = createAppAsyncThunk(
+  'order/getVendorOrders',
+  async (
+    params: {
+      pageNumber: number;
+      pageSize: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: GetVendorBranchOrdersResponse =
+        await axiosApi.orderApi.getVendorOrders(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const getVendorBranchOrders = createAppAsyncThunk(
   'order/getVendorBranchOrders',
   async (
@@ -64,6 +84,25 @@ export const getVendorBranchOrders = createAppAsyncThunk(
           payload.branchId,
           payload.params
         );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getManagerOrders = createAppAsyncThunk(
+  'order/getManagerOrders',
+  async (
+    params: {
+      pageNumber: number;
+      pageSize: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: GetManagerOrdersResponse =
+        await axiosApi.orderManagementApi.getManagerOrders(params);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -123,7 +162,9 @@ export const completeVendorOrder = createAppAsyncThunk(
 );
 
 const allThunks = [
+  getVendorOrders,
   getVendorBranchOrders,
+  getManagerOrders,
   decideVendorOrder,
   getOrderPickupCode,
   completeVendorOrder,
@@ -137,7 +178,29 @@ export const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getVendorOrders.fulfilled, (state, action) => {
+        state.orders = action.payload.items;
+        state.pagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
       .addCase(getVendorBranchOrders.fulfilled, (state, action) => {
+        state.orders = action.payload.items;
+        state.pagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
+      .addCase(getManagerOrders.fulfilled, (state, action) => {
         state.orders = action.payload.items;
         state.pagination = {
           currentPage: action.payload.currentPage,

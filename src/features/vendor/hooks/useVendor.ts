@@ -11,7 +11,13 @@ import type {
   UpdateVendorNameResponse,
   UpdateDietaryPreferencesOfMyVendorRequest,
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
+  GetAllGhostPinsResponse,
+  ClaimBranchRequest,
+  ClaimBranchResponse,
+  SearchUsersResponse,
+  AssignBranchManagerRequest,
 } from '@features/vendor/types/vendor';
+import type { UserLookupResponse } from '@features/user/api/profileApi';
 
 import type {
   WorkSchedule,
@@ -45,6 +51,11 @@ import {
   updateVendorName,
   getDietaryPreferencesOfMyVendor,
   updateDietaryPreferencesOfMyVendor,
+  getAllGhostPins,
+  claimBranch,
+  getUserById,
+  updateBranchManager,
+  searchUsers,
 } from '@slices/vendor';
 import { useCallback } from 'react';
 
@@ -103,6 +114,21 @@ export default function useVendor(): {
   onUpdateDietaryPreferencesOfMyVendor: (
     payload: UpdateDietaryPreferencesOfMyVendorRequest
   ) => Promise<UpdateOrGetDietaryPreferencesOfMyVendorResponse>;
+  onGetAllGhostPins: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetAllGhostPinsResponse>;
+  onClaimBranch: (payload: ClaimBranchRequest) => Promise<ClaimBranchResponse>;
+  onGetUserById: (userId: number) => Promise<UserLookupResponse>;
+  onUpdateBranchManager: (payload: {
+    branchId: number;
+    data: AssignBranchManagerRequest;
+  }) => Promise<boolean>;
+  onSearchUsers: (params: {
+    query: string;
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<SearchUsersResponse>;
 } {
   const dispatch = useAppDispatch();
 
@@ -286,6 +312,51 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onGetAllGhostPins = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetAllGhostPinsResponse> => {
+      return await dispatch(getAllGhostPins(params)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onClaimBranch = useCallback(
+    async (payload: ClaimBranchRequest): Promise<ClaimBranchResponse> => {
+      return await dispatch(claimBranch(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onGetUserById = useCallback(
+    async (userId: number): Promise<UserLookupResponse> => {
+      return await dispatch(getUserById(userId)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onUpdateBranchManager = useCallback(
+    async (payload: {
+      branchId: number;
+      data: AssignBranchManagerRequest;
+    }): Promise<boolean> => {
+      return await dispatch(updateBranchManager(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onSearchUsers = useCallback(
+    async (params: {
+      query: string;
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<SearchUsersResponse> => {
+      return await dispatch(searchUsers(params)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onRegisterVendor,
     onSubmitLicense,
@@ -307,5 +378,10 @@ export default function useVendor(): {
     onUpdateVendorName,
     onGetDietaryPreferencesOfMyVendor,
     onUpdateDietaryPreferencesOfMyVendor,
+    onGetAllGhostPins,
+    onClaimBranch,
+    onGetUserById,
+    onUpdateBranchManager,
+    onSearchUsers,
   };
 }

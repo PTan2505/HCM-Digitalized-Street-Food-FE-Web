@@ -10,11 +10,16 @@ import {
   decideVendorOrder,
   getOrderPickupCode,
   getVendorBranchOrders,
+  getVendorOrders,
   resetOrderState,
 } from '@slices/order';
 import { useCallback } from 'react';
 
 export default function useOrder(): {
+  onGetVendorOrders: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetVendorBranchOrdersResponse>;
   onGetVendorBranchOrders: (payload: {
     branchId: number;
     params: {
@@ -36,6 +41,16 @@ export default function useOrder(): {
   onResetOrderState: () => void;
 } {
   const dispatch = useAppDispatch();
+
+  const onGetVendorOrders = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetVendorBranchOrdersResponse> => {
+      return await dispatch(getVendorOrders(params)).unwrap();
+    },
+    [dispatch]
+  );
 
   const onGetVendorBranchOrders = useCallback(
     async (payload: {
@@ -82,6 +97,7 @@ export default function useOrder(): {
   }, [dispatch]);
 
   return {
+    onGetVendorOrders,
     onGetVendorBranchOrders,
     onDecideVendorOrder,
     onGetOrderPickupCode,
