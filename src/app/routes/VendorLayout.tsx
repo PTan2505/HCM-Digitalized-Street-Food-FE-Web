@@ -513,7 +513,7 @@ function VendorLayout(): JSX.Element {
                     color="primary"
                     onClick={() => setIsTransferModalOpen(true)}
                     disabled={accountBalance?.balance === 0}
-                    startIcon={<MoneyIcon />}
+                    // startIcon={<MoneyIcon />}
                     className="bg-primary-600 hover:bg-primary-700 h-10 rounded-lg px-4 text-sm font-bold whitespace-nowrap text-white shadow-sm"
                     disableElevation
                   >

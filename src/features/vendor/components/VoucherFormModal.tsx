@@ -170,6 +170,16 @@ export default function VoucherFormModal({
       maxWidth="md"
       fullWidth
       scroll="body"
+      sx={{
+        '& .MuiDialog-container': {
+          overflowY: 'hidden',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        },
+      }}
     >
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
         {voucher ? 'Cập nhật voucher' : 'Thêm voucher mới'}
@@ -188,7 +198,17 @@ export default function VoucherFormModal({
       </DialogTitle>
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
+        <DialogContent
+          dividers
+          sx={{
+            overflowY: 'hidden',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+          }}
+        >
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>

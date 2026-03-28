@@ -229,7 +229,18 @@ export default function VendorCampaignFormModal({
   const displayImageUrl = imagePreviewUrl ?? existingImageUrl;
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      scroll="body"
+      PaperProps={{
+        sx: {
+          maxHeight: 'unset',
+        },
+      }}
+    >
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
         {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
         <IconButton
@@ -246,30 +257,55 @@ export default function VendorCampaignFormModal({
         </IconButton>
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ overflowY: 'visible' }}>
           <div className="flex flex-col gap-4">
-            {/* Name */}
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Tên chiến dịch <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register('name')}
-                className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                  errors.name
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-gray-300 focus:ring-amber-200'
-                }`}
-                placeholder="Nhập tên chiến dịch"
-              />
-              {errors.name && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.name.message}
-                </p>
-              )}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Tên chiến dịch <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register('name')}
+                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+                    errors.name
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-amber-200'
+                  }`}
+                  placeholder="Nhập tên chiến dịch"
+                />
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Phân khúc mục tiêu
+                </label>
+                <input
+                  {...register('targetSegment')}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                  placeholder="Học sinh, Sinh viên..."
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Trạng thái hoạt động
+                </label>
+                <label className="inline-flex h-[42px] items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    {...register('isActive')}
+                    className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                  />
+                  Kích hoạt chiến dịch
+                </label>
+              </div>
             </div>
 
-            {/* Description */}
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">
                 Mô tả
@@ -279,18 +315,6 @@ export default function VendorCampaignFormModal({
                 rows={3}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
                 placeholder="Nhập mô tả chiến dịch"
-              />
-            </div>
-
-            {/* Target Segment */}
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Phân khúc mục tiêu
-              </label>
-              <input
-                {...register('targetSegment')}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                placeholder="Nhập phân khúc (ví dụ: Học sinh, Sinh viên)"
               />
             </div>
 
@@ -347,20 +371,6 @@ export default function VendorCampaignFormModal({
                   onChange={handleFileChange}
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Trạng thái hoạt động
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  {...register('isActive')}
-                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
-                />
-                Kích hoạt chiến dịch
-              </label>
             </div>
 
             {!isEditMode && !hideApplyScope && (
@@ -443,7 +453,7 @@ export default function VendorCampaignFormModal({
             )}
 
             {/* Dates Grid */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Ngày bắt đầu chiến dịch{' '}
@@ -491,6 +501,7 @@ export default function VendorCampaignFormModal({
                   </p>
                 )}
               </div>
+              <div className="hidden xl:block" />
             </div>
           </div>
         </DialogContent>
