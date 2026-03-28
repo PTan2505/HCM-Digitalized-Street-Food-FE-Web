@@ -1,17 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import type { JSX, MouseEvent } from 'react';
+import { Box, Button } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  GroupAdd as GroupAddIcon,
-  Image as ImageIcon,
+  ConfirmationNumber as VoucherIcon,
 } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
-import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSystemCampaignModal';
-import VendorCampaignImageModal from '@features/vendor/components/VendorCampaignImageModal';
+import VendorCampaignVoucherModal from '@features/vendor/components/VendorCampaignVoucherModal';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -74,19 +72,19 @@ export default function VendorCampaignPage(): JSX.Element {
     onCreateVendorCampaign,
     onCreateBranchCampaign,
     onUpdateVendorCampaign,
+    onPostCampaignImage,
   } = useVendorCampaign();
   const { onGetBranchesByVendor } = useVendor();
 
   const [page, setPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
-  const [openImageModal, setOpenImageModal] = useState(false);
-  const [isJoinableModalOpen, setIsJoinableModalOpen] = useState(false);
+  const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<VendorCampaign | null>(
     null
   );
-  const [branchOptions, setBranchOptions] = useState<Branch[]>([]);
   const [selectedCampaign, setSelectedCampaign] =
     useState<VendorCampaign | null>(null);
+  const [branchOptions, setBranchOptions] = useState<Branch[]>([]);
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -129,12 +127,20 @@ export default function VendorCampaignPage(): JSX.Element {
     setEditingCampaign(null);
   };
 
-  const handleCloseImageModal = (): void => {
-    setOpenImageModal(false);
-    setSelectedCampaign(null);
+  const storeCampaigns = campaigns.filter(
+    (campaign) => !campaign.isSystemCampaign
+  );
+
+  const createImageFormData = (file: File): FormData => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return formData;
   };
 
-  const handleSubmit = async (data: VendorCampaignFormData): Promise<void> => {
+  const handleSubmit = async (
+    data: VendorCampaignFormData,
+    imageFile: File | null
+  ): Promise<void> => {
     try {
       const payload = {
         name: data.name,
@@ -146,16 +152,41 @@ export default function VendorCampaignPage(): JSX.Element {
       };
 
       if (editingCampaign) {
-        await onUpdateVendorCampaign(editingCampaign.campaignId, payload);
+        const updatedCampaign = await onUpdateVendorCampaign(
+          editingCampaign.campaignId,
+          payload
+        );
+        if (imageFile) {
+          await onPostCampaignImage(
+            updatedCampaign.campaignId,
+            createImageFormData(imageFile)
+          );
+        }
       } else {
         if (data.applyScope === 'VENDOR') {
-          await onCreateVendorCampaign(payload);
+          const createdCampaign = await onCreateVendorCampaign(payload);
+          if (imageFile) {
+            await onPostCampaignImage(
+              createdCampaign.campaignId,
+              createImageFormData(imageFile)
+            );
+          }
         } else {
-          await Promise.all(
+          const createdCampaigns = await Promise.all(
             data.branchIds.map((branchId) =>
               onCreateBranchCampaign(branchId, payload)
             )
           );
+          if (imageFile) {
+            await Promise.all(
+              createdCampaigns.map((campaign) =>
+                onPostCampaignImage(
+                  campaign.campaignId,
+                  createImageFormData(imageFile)
+                )
+              )
+            );
+          }
           await fetchCampaigns();
         }
       }
@@ -236,25 +267,42 @@ export default function VendorCampaignPage(): JSX.Element {
         />
       ),
     },
-  ];
+    {
+      key: 'actions',
+      label: 'Thao tác',
+      render: (_: unknown, row: VendorCampaign): JSX.Element => {
+        if (row.isSystemCampaign) {
+          return <span className="text-xs text-gray-400">-</span>;
+        }
 
-  const actions = [
-    {
-      label: <ImageIcon fontSize="small" />,
-      menuLabel: 'Quản lý ảnh chiến dịch',
-      onClick: (row: VendorCampaign): void => {
-        setSelectedCampaign(row);
-        setOpenImageModal(true);
+        return (
+          <Box className="flex items-center gap-2">
+            <Button
+              size="small"
+              color="warning"
+              variant="outlined"
+              onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                setSelectedCampaign(row);
+                setOpenVoucherModal(true);
+              }}
+            >
+              <VoucherIcon fontSize="small" />
+            </Button>
+            <Button
+              size="small"
+              color="primary"
+              variant="outlined"
+              onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                handleOpenModal(row);
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </Button>
+          </Box>
+        );
       },
-      color: 'info' as const,
-      show: (row: VendorCampaign): boolean => row.isSystemCampaign === false,
-    },
-    {
-      label: <EditIcon fontSize="small" />,
-      menuLabel: 'Cập nhật chiến dịch',
-      onClick: (row: VendorCampaign): void => handleOpenModal(row),
-      color: 'primary' as const,
-      show: (row: VendorCampaign): boolean => row.isSystemCampaign === false,
     },
   ];
 
@@ -272,13 +320,6 @@ export default function VendorCampaignPage(): JSX.Element {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsJoinableModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-[var(--color-primary-600)] bg-white px-4 py-2 font-semibold text-[var(--color-primary-700)] transition-colors hover:bg-[var(--color-primary-50)]"
-          >
-            <GroupAddIcon fontSize="small" />
-            Tham gia chiến dịch hệ thống
-          </button>
-          <button
             onClick={() => handleOpenModal()}
             className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
           >
@@ -292,11 +333,11 @@ export default function VendorCampaignPage(): JSX.Element {
       <Box sx={{ flex: 1, minHeight: 0 }}>
         <Table
           columns={columns}
-          data={campaigns}
+          maxHeight="none"
+          data={storeCampaigns}
           rowKey="campaignId"
-          actions={actions}
           loading={status === 'pending'}
-          emptyMessage="Chưa có chiến dịch nào"
+          emptyMessage="Chưa có chiến dịch cửa hàng nào"
         />
       </Box>
 
@@ -323,20 +364,13 @@ export default function VendorCampaignPage(): JSX.Element {
         status={status}
       />
 
-      <VendorCampaignImageModal
-        isOpen={openImageModal}
-        onClose={handleCloseImageModal}
+      <VendorCampaignVoucherModal
+        isOpen={openVoucherModal}
+        onClose={() => {
+          setOpenVoucherModal(false);
+          setSelectedCampaign(null);
+        }}
         campaign={selectedCampaign}
-      />
-
-      <JoinableSystemCampaignModal
-        isOpen={isJoinableModalOpen}
-        onClose={() => setIsJoinableModalOpen(false)}
-        mode="detail"
-        vendorBranchIds={
-          myVendor?.branches.map((branch) => branch.branchId) ?? []
-        }
-        vendorBranches={myVendor?.branches ?? []}
       />
     </div>
   );

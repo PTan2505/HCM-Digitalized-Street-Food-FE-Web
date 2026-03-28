@@ -6,25 +6,25 @@ export const theme = createTheme({
   },
   palette: {
     primary: {
-      main: '#9fd356', // Updated to match index.css --color-primary-500
-      light: '#b8e986',
-      dark: '#7ab82d',
+      main: '#8bcf3f', // Slightly deeper for stronger contrast
+      light: '#a9e06e',
+      dark: '#6ead2a',
       contrastText: '#ffffff', // White text on green buttons
     },
     secondary: {
-      main: '#7FAE9B',
+      main: '#6f9f8a',
       contrastText: '#F6F6F6',
     },
     success: {
-      main: '#00b37466',
+      main: '#00a764',
       contrastText: '#F6F6F6',
     },
     error: {
-      main: '#f5342566',
+      main: '#e53935',
       contrastText: '#F53425',
     },
     warning: {
-      main: '#e394004d',
+      main: '#d88900',
       contrastText: '#F6F6F6',
     },
   },

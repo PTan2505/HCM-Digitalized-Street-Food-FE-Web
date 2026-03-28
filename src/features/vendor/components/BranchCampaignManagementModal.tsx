@@ -78,7 +78,8 @@ export default function BranchCampaignManagementModal({
   const campaigns = useAppSelector(selectBranchCampaigns);
   const totalCount = useAppSelector(selectBranchCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
-  const { onGetBranchCampaigns, onCreateBranchCampaign } = useVendorCampaign();
+  const { onGetBranchCampaigns, onCreateBranchCampaign, onPostCampaignImage } =
+    useVendorCampaign();
 
   const [page, setPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -112,12 +113,19 @@ export default function BranchCampaignManagementModal({
     return pages > 0 ? pages : 1;
   }, [totalCount]);
 
+  const createImageFormData = (file: File): FormData => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return formData;
+  };
+
   const handleCreateBranchCampaign = async (
-    data: VendorCampaignFormData
+    data: VendorCampaignFormData,
+    imageFile: File | null
   ): Promise<void> => {
     if (branchId === null) return;
 
-    await onCreateBranchCampaign(branchId, {
+    const createdCampaign = await onCreateBranchCampaign(branchId, {
       name: data.name,
       description: data.description ?? null,
       targetSegment: data.targetSegment ?? null,
@@ -125,6 +133,13 @@ export default function BranchCampaignManagementModal({
       endDate: data.endDate,
       isActive: data.isActive,
     });
+
+    if (imageFile) {
+      await onPostCampaignImage(
+        createdCampaign.campaignId,
+        createImageFormData(imageFile)
+      );
+    }
 
     setIsCreateModalOpen(false);
   };

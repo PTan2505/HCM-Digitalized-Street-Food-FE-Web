@@ -1,5 +1,5 @@
-import { useAppDispatch } from '@hooks/reduxHooks';
 import { useCallback } from 'react';
+import { useAppDispatch } from '@hooks/reduxHooks';
 import {
   getAllVouchers,
   getVouchersByCampaignId,
@@ -9,9 +9,9 @@ import {
   deleteVoucher,
 } from '@slices/voucher';
 import type {
+  Voucher,
   VoucherCreate,
   VoucherUpdate,
-  Voucher,
 } from '@custom-types/voucher';
 
 const useVoucher = (): {

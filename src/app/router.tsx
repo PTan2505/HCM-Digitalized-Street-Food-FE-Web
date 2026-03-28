@@ -38,6 +38,7 @@ import VendorOrderPage from '@features/vendor/pages/OrderPage';
 import VendorDietaryPreferencesPage from '@features/vendor/pages/DietaryPreferencesPage';
 import GhostPinPage from '@features/vendor/pages/GhostPinPage';
 import VendorCampaignPage from '@features/vendor/pages/VendorCampaignPage';
+import VendorSystemCampaignPage from '@features/vendor/pages/VendorSystemCampaignPage';
 import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
@@ -189,6 +190,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.VENDOR.PATHS.CAMPAIGN,
             element: <VendorCampaignPage />,
+          },
+          {
+            path: ROUTES.VENDOR.PATHS.CAMPAIGN_SYSTEM,
+            element: <VendorSystemCampaignPage />,
           },
         ],
       },

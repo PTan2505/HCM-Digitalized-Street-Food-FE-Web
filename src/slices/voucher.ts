@@ -3,7 +3,7 @@ import type {
   Voucher,
   VoucherCreate,
   VoucherUpdate,
-} from '@features/admin/types/voucher';
+} from '@custom-types/voucher';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -45,6 +45,18 @@ export const getVouchersByCampaignId = createAppAsyncThunk(
     try {
       const response =
         await axiosApi.voucherApi.getVouchersByCampaignId(campaignId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getVoucherById = createAppAsyncThunk(
+  'voucher/getVoucherById',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await axiosApi.voucherApi.getVoucherById(id);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -130,6 +142,7 @@ export const voucherSlice = createSlice({
         isPending(
           getAllVouchers,
           getVouchersByCampaignId,
+          getVoucherById,
           createVoucher,
           updateVoucher,
           deleteVoucher
@@ -142,6 +155,7 @@ export const voucherSlice = createSlice({
         isFulfilled(
           getAllVouchers,
           getVouchersByCampaignId,
+          getVoucherById,
           createVoucher,
           updateVoucher,
           deleteVoucher
@@ -155,6 +169,7 @@ export const voucherSlice = createSlice({
         isRejected(
           getAllVouchers,
           getVouchersByCampaignId,
+          getVoucherById,
           createVoucher,
           updateVoucher,
           deleteVoucher

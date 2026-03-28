@@ -1,11 +1,8 @@
-import { useEffect } from 'react';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
   IconButton,
   Box,
   Typography,
@@ -13,14 +10,13 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import type { Voucher } from '@custom-types/voucher';
-import { useAppSelector } from '@hooks/reduxHooks';
-import { selectCampaigns } from '@slices/campaign';
-import useCampaign from '@features/admin/hooks/useCampaign';
+import type { VendorCampaign } from '@features/vendor/types/campaign';
 
 interface VoucherDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   voucher: Voucher | null;
+  campaign: VendorCampaign | null;
 }
 
 const formatVNDatetime = (isoStr: string | null): string => {
@@ -46,28 +42,19 @@ export default function VoucherDetailsModal({
   isOpen,
   onClose,
   voucher,
+  campaign,
 }: VoucherDetailsModalProps): JSX.Element | null {
-  const { onGetCampaigns } = useCampaign();
-  const campaigns = useAppSelector(selectCampaigns);
-
-  useEffect(() => {
-    if (isOpen && campaigns.length === 0) {
-      void onGetCampaigns(1, 100);
-    }
-  }, [isOpen, campaigns.length, onGetCampaigns]);
-
   if (!isOpen || !voucher) return null;
 
   const campaignName =
-    campaigns.find((c) => c.campaignId === voucher.campaignId)?.name ??
-    (voucher.campaignId ? `ID: ${voucher.campaignId}` : '-');
+    campaign?.name ?? (voucher.campaignId ? `ID: ${voucher.campaignId}` : '-');
 
   const DetailItem = ({
     label,
     value,
   }: {
     label: string;
-    value: React.ReactNode;
+    value: ReactNode;
   }): JSX.Element => (
     <Box sx={{ mb: 2 }}>
       <Typography variant="body2" color="text.secondary" fontWeight="bold">
@@ -78,7 +65,13 @@ export default function VoucherDetailsModal({
   );
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      scroll="body"
+    >
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
         Chi tiết voucher: {voucher.name}
         <IconButton
@@ -95,9 +88,9 @@ export default function VoucherDetailsModal({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <DetailItem label="ID Voucher" value={voucher.voucherId} />
+            <DetailItem label="Tên voucher" value={voucher.name} />
           </div>
           <div>
             <DetailItem
@@ -178,6 +171,9 @@ export default function VoucherDetailsModal({
             <DetailItem label="Số lượng phát hành" value={voucher.quantity} />
           </div>
           <div>
+            <DetailItem label="Số lượng đã dùng" value={voucher.usedQuantity} />
+          </div>
+          <div>
             <DetailItem label="Chiến dịch" value={campaignName} />
           </div>
 
@@ -228,11 +224,11 @@ export default function VoucherDetailsModal({
           </div>
         </div>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
+      {/* <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} variant="contained" color="primary">
           Đóng
         </Button>
-      </DialogActions>
+      </DialogActions> */}
     </Dialog>
   );
 }
