@@ -30,8 +30,6 @@ interface BranchCampaignManagementModalProps {
   branch: Branch | null;
 }
 
-const PAGE_SIZE = 10;
-
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
   const date = new Date(isoStr);
@@ -82,6 +80,7 @@ export default function BranchCampaignManagementModal({
     useVendorCampaign();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinableModalOpen, setIsJoinableModalOpen] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
@@ -101,17 +100,17 @@ export default function BranchCampaignManagementModal({
 
   const fetchBranchCampaigns = useCallback(async (): Promise<void> => {
     if (!isOpen || branchId === null) return;
-    await onGetBranchCampaigns(branchId, page, PAGE_SIZE);
-  }, [isOpen, branchId, onGetBranchCampaigns, page]);
+    await onGetBranchCampaigns(branchId, page, pageSize);
+  }, [isOpen, branchId, onGetBranchCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchBranchCampaigns();
   }, [fetchBranchCampaigns]);
 
   const totalPages = useMemo(() => {
-    const pages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
+    const pages = Math.ceil((totalCount ?? 0) / pageSize);
     return pages > 0 ? pages : 1;
-  }, [totalCount]);
+  }, [totalCount, pageSize]);
 
   const createImageFormData = (file: File): FormData => {
     const formData = new FormData();
@@ -228,17 +227,19 @@ export default function BranchCampaignManagementModal({
             maxHeight="none"
           />
 
-          <Box sx={{ mt: 2 }}>
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              totalCount={totalCount ?? 0}
-              pageSize={PAGE_SIZE}
-              hasPrevious={page > 1}
-              hasNext={page < totalPages}
-              onPageChange={setPage}
-            />
-          </Box>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalCount={totalCount ?? 0}
+            pageSize={pageSize}
+            hasPrevious={page > 1}
+            hasNext={page < totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={(newPageSize) => {
+              setPageSize(newPageSize);
+              setPage(1);
+            }}
+          />
         </DialogContent>
 
         <DialogActions>

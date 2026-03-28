@@ -158,7 +158,7 @@ function PaymentHistoryPage(): JSX.Element {
         rowKey="id"
         loading={status === 'pending'}
         emptyMessage="Chưa có giao dịch nào"
-        maxHeight="none"
+        maxHeight="calc(100vh - 240px)"
       />
     </div>
   );

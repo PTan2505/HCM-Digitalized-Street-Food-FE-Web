@@ -217,6 +217,7 @@ export default function DietaryPreferencesPage(): JSX.Element {
         rowKey="dietaryPreferenceId"
         loading={loading}
         emptyMessage="Chưa có chế độ ăn nào"
+        maxHeight="calc(100vh - 240px)"
       />
     </div>
   );
