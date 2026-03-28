@@ -27,7 +27,6 @@ import {
   Group as UserGroupIcon,
 } from '@mui/icons-material';
 import MoneyIcon from '@mui/icons-material/Money';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';

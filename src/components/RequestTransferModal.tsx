@@ -4,7 +4,6 @@ import {
   type RequestTransferFormValues,
 } from '@utils/transferSchema';
 import CloseIcon from '@mui/icons-material/Close';
-import MoneyIcon from '@mui/icons-material/Money';
 import {
   Box,
   Typography,
