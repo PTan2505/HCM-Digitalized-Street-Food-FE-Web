@@ -212,12 +212,8 @@ export default function VendorCampaignFormModal({
     }
   };
 
-  const handleToggleBranch = (branchId: number): void => {
-    const nextSelected = selectedBranchIds.includes(branchId)
-      ? selectedBranchIds.filter((id) => id !== branchId)
-      : [...selectedBranchIds, branchId];
-
-    setValue('branchIds', nextSelected, {
+  const handleSelectSingleBranch = (branchId: number): void => {
+    setValue('branchIds', [branchId], {
       shouldDirty: true,
       shouldValidate: true,
     });
@@ -426,12 +422,13 @@ export default function VendorCampaignFormModal({
                               className="flex items-center gap-2 rounded-md bg-white px-2 py-1.5 text-sm text-gray-700"
                             >
                               <input
-                                type="checkbox"
-                                checked={selectedBranchIds.includes(
-                                  branch.branchId
-                                )}
+                                type="radio"
+                                name="campaign-single-branch"
+                                checked={
+                                  selectedBranchIds[0] === branch.branchId
+                                }
                                 onChange={() =>
-                                  handleToggleBranch(branch.branchId)
+                                  handleSelectSingleBranch(branch.branchId)
                                 }
                                 className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
                               />
