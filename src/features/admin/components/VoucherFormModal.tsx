@@ -53,6 +53,16 @@ const toIsoZulu = (localStr: string | null): string | null => {
   return date.toISOString();
 };
 
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
+};
+
 export default function VoucherFormModal({
   isOpen,
   onClose,
@@ -95,10 +105,10 @@ export default function VoucherFormModal({
   const campaigns = useAppSelector(selectCampaigns);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && fixedCampaignId === undefined) {
       void onGetCampaigns(1, 100);
     }
-  }, [isOpen, onGetCampaigns]);
+  }, [isOpen, onGetCampaigns, fixedCampaignId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -141,7 +151,7 @@ export default function VoucherFormModal({
         });
       }
     }
-  }, [isOpen, voucher, reset]);
+  }, [isOpen, voucher, reset, fixedCampaignId]);
 
   const handleFormSubmit = async (data: VoucherFormData): Promise<void> => {
     const payload: VoucherCreate = {
@@ -167,7 +177,23 @@ export default function VoucherFormModal({
     }`;
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      scroll="body"
+      sx={{
+        '& .MuiDialog-container': {
+          overflowY: 'hidden',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        },
+      }}
+    >
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
         {voucher ? 'Cập nhật voucher' : 'Thêm voucher mới'}
         <IconButton
@@ -185,10 +211,19 @@ export default function VoucherFormModal({
       </DialogTitle>
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
+        <DialogContent
+          dividers
+          sx={{
+            overflowY: 'hidden',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+          }}
+        >
           <div className="flex flex-col gap-4">
-            {/* Row 1: Name & Code */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Tên voucher <span className="text-red-500">*</span>
@@ -219,10 +254,6 @@ export default function VoucherFormModal({
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Row 2: Type & Discount Value */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Loại giảm giá <span className="text-red-500">*</span>
@@ -240,6 +271,9 @@ export default function VoucherFormModal({
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Giá trị giảm <span className="text-red-500">*</span>
@@ -252,15 +286,28 @@ export default function VoucherFormModal({
                   name="discountValue"
                   render={({ field }) => (
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={0}
                       max={watchedType === 'PERCENT' ? 100 : undefined}
                       step="0.01"
                       className={inputClass(!!errors.discountValue)}
-                      value={field.value}
-                      onChange={(e) =>
-                        field.onChange(parseFloat(e.target.value) || 0)
+                      value={
+                        watchedType === 'PERCENT'
+                          ? String(field.value ?? 0)
+                          : formatNumberWithDots(field.value)
                       }
+                      onChange={(e) => {
+                        const nextValue =
+                          watchedType === 'PERCENT'
+                            ? Number(e.target.value.replace(/[^0-9]/g, ''))
+                            : parseNumberInput(e.target.value);
+                        const clamped =
+                          watchedType === 'PERCENT'
+                            ? Math.min(nextValue, 100)
+                            : nextValue;
+                        field.onChange(clamped);
+                      }}
                     />
                   )}
                 />
@@ -270,10 +317,6 @@ export default function VoucherFormModal({
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Row 3: Max Discount & Min Amount */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Giảm tối đa (VNĐ)
@@ -286,21 +329,23 @@ export default function VoucherFormModal({
                   name="maxDiscountValue"
                   render={({ field }) => (
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={0}
                       step="0.01"
                       disabled={watchedType === 'AMOUNT'}
                       className={`${inputClass(!!errors.maxDiscountValue)} ${watchedType === 'AMOUNT' ? 'cursor-not-allowed bg-gray-100' : ''}`}
                       value={
-                        watchedType === 'AMOUNT' ? '' : (field.value ?? '')
+                        watchedType === 'AMOUNT'
+                          ? ''
+                          : formatNumberWithDots(field.value)
                       }
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const nextValue = parseNumberInput(e.target.value);
                         field.onChange(
-                          e.target.value === ''
-                            ? null
-                            : parseFloat(e.target.value)
-                        )
-                      }
+                          e.target.value === '' ? null : nextValue
+                        );
+                      }}
                     />
                   )}
                 />
@@ -320,14 +365,15 @@ export default function VoucherFormModal({
                   name="minAmountRequired"
                   render={({ field }) => (
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={0}
                       step="0.01"
                       className={inputClass(!!errors.minAmountRequired)}
-                      value={field.value}
-                      onChange={(e) =>
-                        field.onChange(parseFloat(e.target.value) || 0)
-                      }
+                      value={formatNumberWithDots(field.value)}
+                      onChange={(e) => {
+                        field.onChange(parseNumberInput(e.target.value));
+                      }}
                     />
                   )}
                 />
@@ -339,8 +385,7 @@ export default function VoucherFormModal({
               </div>
             </div>
 
-            {/* Row 4: Quantity & Redeem Point */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Số lượng <span className="text-red-500">*</span>
@@ -350,14 +395,15 @@ export default function VoucherFormModal({
                   name="quantity"
                   render={({ field }) => (
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={0}
                       step={1}
                       className={inputClass(!!errors.quantity)}
-                      value={field.value}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value) || 0)
-                      }
+                      value={formatNumberWithDots(field.value)}
+                      onChange={(e) => {
+                        field.onChange(parseNumberInput(e.target.value));
+                      }}
                     />
                   )}
                 />
@@ -376,14 +422,15 @@ export default function VoucherFormModal({
                   name="redeemPoint"
                   render={({ field }) => (
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min={0}
                       step={1}
                       className={inputClass(!!errors.redeemPoint)}
-                      value={field.value}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value) || 0)
-                      }
+                      value={formatNumberWithDots(field.value)}
+                      onChange={(e) => {
+                        field.onChange(parseNumberInput(e.target.value));
+                      }}
                     />
                   )}
                 />
@@ -392,58 +439,6 @@ export default function VoucherFormModal({
                     {errors.redeemPoint.message}
                   </p>
                 )}
-              </div>
-            </div>
-
-            {/* Row 5: Start Date & End Date */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('startDate')}
-                  step="60"
-                  className={inputClass(!!errors.startDate)}
-                />
-                {errors.startDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.startDate.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('endDate')}
-                  min={startDate || undefined}
-                  step="60"
-                  className={inputClass(!!errors.endDate)}
-                />
-                {errors.endDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.endDate.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Row 6: Expired Date & Campaign ID */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày hết hạn (tùy chọn)
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('expiredDate')}
-                  step="60"
-                  className={inputClass(!!errors.expiredDate)}
-                />
               </div>
               {!fixedCampaignId && (
                 <div>
@@ -479,6 +474,53 @@ export default function VoucherFormModal({
                   />
                 </div>
               )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Ngày bắt đầu <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  {...register('startDate')}
+                  step="60"
+                  className={inputClass(!!errors.startDate)}
+                />
+                {errors.startDate && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.startDate.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Ngày kết thúc <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  {...register('endDate')}
+                  min={startDate || undefined}
+                  step="60"
+                  className={inputClass(!!errors.endDate)}
+                />
+                {errors.endDate && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.endDate.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Ngày hết hạn (tùy chọn)
+                </label>
+                <input
+                  type="datetime-local"
+                  {...register('expiredDate')}
+                  step="60"
+                  className={inputClass(!!errors.expiredDate)}
+                />
+              </div>
             </div>
 
             {/* Description */}
