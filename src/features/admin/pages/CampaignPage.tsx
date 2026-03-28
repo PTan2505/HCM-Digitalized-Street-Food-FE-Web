@@ -5,13 +5,11 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   ConfirmationNumber as VoucherIcon,
-  Image as ImageIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
-import CampaignImageModal from '@features/admin/components/CampaignImageModal';
 import type { Campaign } from '@features/admin/types/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -65,12 +63,16 @@ export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
   const status = useAppSelector(selectCampaignStatus);
   const totalCount = useAppSelector(selectCampaignTotalCount);
-  const { onGetCampaigns, onCreateCampaign, onUpdateCampaign } = useCampaign();
+  const {
+    onGetCampaigns,
+    onCreateCampaign,
+    onUpdateCampaign,
+    onPostCampaignImage,
+  } = useCampaign();
 
   const [page, setPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
-  const [openImageModal, setOpenImageModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
@@ -102,12 +104,27 @@ export default function CampaignPage(): JSX.Element {
     setEditingCampaign(null);
   };
 
-  const handleSubmit = async (data: CampaignFormData): Promise<void> => {
+  const handleSubmit = async (
+    data: CampaignFormData,
+    imageFile: File | null
+  ): Promise<void> => {
     try {
       if (editingCampaign) {
         await onUpdateCampaign(editingCampaign.campaignId, data);
+
+        if (imageFile) {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          await onPostCampaignImage(editingCampaign.campaignId, formData);
+        }
       } else {
-        await onCreateCampaign(data);
+        const createdCampaign = await onCreateCampaign(data);
+
+        if (imageFile) {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          await onPostCampaignImage(createdCampaign.campaignId, formData);
+        }
       }
       handleCloseModal();
       // void fetchCampaigns();
@@ -185,15 +202,6 @@ export default function CampaignPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      label: <ImageIcon fontSize="small" />,
-      onClick: (row: Campaign): void => {
-        setSelectedCampaign(row);
-        setOpenImageModal(true);
-      },
-      color: 'info' as const,
-      variant: 'outlined' as const,
-    },
-    {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Campaign): void => handleOpenModal(row),
       color: 'primary' as const,
@@ -260,13 +268,6 @@ export default function CampaignPage(): JSX.Element {
       <CampaignVoucherModal
         isOpen={openVoucherModal}
         onClose={() => setOpenVoucherModal(false)}
-        campaign={selectedCampaign}
-      />
-
-      {/* Campaign Image Modal */}
-      <CampaignImageModal
-        isOpen={openImageModal}
-        onClose={() => setOpenImageModal(false)}
         campaign={selectedCampaign}
       />
     </div>

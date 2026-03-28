@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -7,10 +8,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  IconButton,
   CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import type { Campaign } from '@features/admin/types/campaign';
 import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
@@ -18,7 +17,7 @@ import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 interface CamPaignFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CampaignFormData) => Promise<void>;
+  onSubmit: (data: CampaignFormData, imageFile: File | null) => Promise<void>;
   campaign: Campaign | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
@@ -86,6 +85,9 @@ export default function CamPaignFormModal({
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -142,8 +144,22 @@ export default function CamPaignFormModal({
           isActive: true,
         });
       }
+
+      setImageFile(null);
+      setImagePreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   }, [isOpen, campaign, reset]);
+
+  useEffect((): (() => void) => {
+    return (): void => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
 
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
@@ -188,16 +204,49 @@ export default function CamPaignFormModal({
       endDate: toIsoZulu(data.endDate) ?? '',
       isActive: data.isActive,
     };
-    await onSubmit(payload);
+    await onSubmit(payload, imageFile);
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleClearSelectedImage = (): void => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      scroll="body"
+      PaperProps={{
+        sx: {
+          maxHeight: 'unset',
+        },
+      }}
+    >
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
         {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
-        <IconButton
+        {/* <IconButton
           aria-label="close"
           onClick={onClose}
           sx={(theme) => ({
@@ -208,33 +257,58 @@ export default function CamPaignFormModal({
           })}
         >
           <CloseIcon />
-        </IconButton>
+        </IconButton> */}
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ overflowY: 'visible' }}>
           <div className="flex flex-col gap-4">
-            {/* Name */}
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Tên chiến dịch <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register('name')}
-                className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                  errors.name
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-gray-300 focus:ring-amber-200'
-                }`}
-                placeholder="Nhập tên chiến dịch"
-              />
-              {errors.name && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.name.message}
-                </p>
-              )}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Tên chiến dịch <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register('name')}
+                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+                    errors.name
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-amber-200'
+                  }`}
+                  placeholder="Nhập tên chiến dịch"
+                />
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Phân khúc mục tiêu
+                </label>
+                <input
+                  {...register('targetSegment')}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                  placeholder="Nhập phân khúc (ví dụ: Học sinh, Sinh viên)"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Trạng thái hoạt động
+                </label>
+                <label className="inline-flex h-10.5 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    {...register('isActive')}
+                    className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                  />
+                  Kích hoạt chiến dịch
+                </label>
+              </div>
             </div>
 
-            {/* Description */}
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">
                 Mô tả
@@ -247,34 +321,61 @@ export default function CamPaignFormModal({
               />
             </div>
 
-            {/* Target Segment */}
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Phân khúc mục tiêu
+                Ảnh chiến dịch
               </label>
-              <input
-                {...register('targetSegment')}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                placeholder="Nhập phân khúc (ví dụ: Học sinh, Sinh viên)"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Trạng thái hoạt động
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div className="flex min-h-40 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-white">
+                  {(imagePreviewUrl ?? campaign?.imageUrl) ? (
+                    <img
+                      src={imagePreviewUrl ?? campaign?.imageUrl ?? ''}
+                      alt="Campaign"
+                      className="h-40 w-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-center text-sm text-gray-500">
+                      Chưa có ảnh chiến dịch
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-primary-600 hover:bg-primary-700 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
+                  >
+                    {imageFile
+                      ? 'Đổi ảnh'
+                      : (imagePreviewUrl ?? campaign?.imageUrl)
+                        ? 'Cập nhật ảnh'
+                        : 'Tải ảnh'}
+                  </button>
+                  {imageFile && (
+                    <button
+                      type="button"
+                      onClick={handleClearSelectedImage}
+                      className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100"
+                    >
+                      Bỏ ảnh đã chọn
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Định dạng hỗ trợ: JPG, PNG, WEBP. Kích thước khuyên dùng:
+                  1200x675 (16:9).
+                </p>
                 <input
-                  type="checkbox"
-                  {...register('isActive')}
-                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
                 />
-                Kích hoạt chiến dịch
-              </label>
+              </div>
             </div>
 
-            {/* Dates Grid */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Ngày bắt đầu đăng ký
@@ -324,6 +425,11 @@ export default function CamPaignFormModal({
                   </p>
                 )}
               </div>
+
+              <div className="hidden xl:block" />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Ngày bắt đầu chiến dịch{' '}
@@ -351,6 +457,7 @@ export default function CamPaignFormModal({
                   </p>
                 )}
               </div>
+
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Ngày kết thúc chiến dịch{' '}
@@ -376,6 +483,8 @@ export default function CamPaignFormModal({
                   </p>
                 )}
               </div>
+
+              <div className="hidden xl:block" />
             </div>
           </div>
         </DialogContent>
