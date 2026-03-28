@@ -147,11 +147,11 @@ export default function JoinableSystemCampaignModal({
   };
 
   const columns = [
-    {
-      key: 'campaignId',
-      label: 'ID',
-      style: { width: '70px' },
-    },
+    // {
+    //   key: 'campaignId',
+    //   label: 'ID',
+    //   style: { width: '70px' },
+    // },
     {
       key: 'name',
       label: 'Tên chiến dịch hệ thống',
@@ -261,7 +261,7 @@ export default function JoinableSystemCampaignModal({
                   : 'Chiến dịch hệ thống khả dụng'}
               </h2>
             </div>
-            <IconButton
+            {/* <IconButton
               aria-label="close"
               onClick={onClose}
               sx={{
@@ -270,7 +270,7 @@ export default function JoinableSystemCampaignModal({
               }}
             >
               <CloseIcon />
-            </IconButton>
+            </IconButton> */}
           </div>
 
           {/* Modal Content */}

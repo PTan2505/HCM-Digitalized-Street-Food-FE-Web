@@ -14,6 +14,7 @@ import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSys
 import VendorCampaignImageModal from '@features/vendor/components/VendorCampaignImageModal';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
+import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectVendorCampaigns,
@@ -22,6 +23,7 @@ import {
 } from '@slices/campaign';
 import { selectMyVendor } from '@slices/vendor';
 import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
+import type { Branch } from '@features/vendor/types/vendor';
 
 const PAGE_SIZE = 10;
 
@@ -70,8 +72,10 @@ export default function VendorCampaignPage(): JSX.Element {
   const {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
+    onCreateBranchCampaign,
     onUpdateVendorCampaign,
   } = useVendorCampaign();
+  const { onGetBranchesByVendor } = useVendor();
 
   const [page, setPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
@@ -80,6 +84,7 @@ export default function VendorCampaignPage(): JSX.Element {
   const [editingCampaign, setEditingCampaign] = useState<VendorCampaign | null>(
     null
   );
+  const [branchOptions, setBranchOptions] = useState<Branch[]>([]);
   const [selectedCampaign, setSelectedCampaign] =
     useState<VendorCampaign | null>(null);
 
@@ -94,6 +99,25 @@ export default function VendorCampaignPage(): JSX.Element {
   useEffect(() => {
     void fetchCampaigns();
   }, [fetchCampaigns]);
+
+  const fetchBranchOptions = useCallback(async (): Promise<void> => {
+    if (!myVendor?.vendorId) {
+      setBranchOptions([]);
+      return;
+    }
+
+    try {
+      const branches = await onGetBranchesByVendor(myVendor.vendorId);
+      setBranchOptions(branches);
+    } catch (err) {
+      console.error('Failed to fetch vendor branches', err);
+      setBranchOptions([]);
+    }
+  }, [myVendor?.vendorId, onGetBranchesByVendor]);
+
+  useEffect(() => {
+    void fetchBranchOptions();
+  }, [fetchBranchOptions]);
 
   const handleOpenModal = (campaign?: VendorCampaign): void => {
     setEditingCampaign(campaign ?? null);
@@ -124,7 +148,16 @@ export default function VendorCampaignPage(): JSX.Element {
       if (editingCampaign) {
         await onUpdateVendorCampaign(editingCampaign.campaignId, payload);
       } else {
-        await onCreateVendorCampaign(payload);
+        if (data.applyScope === 'VENDOR') {
+          await onCreateVendorCampaign(payload);
+        } else {
+          await Promise.all(
+            data.branchIds.map((branchId) =>
+              onCreateBranchCampaign(branchId, payload)
+            )
+          );
+          await fetchCampaigns();
+        }
       }
       handleCloseModal();
     } catch (err) {
@@ -286,6 +319,7 @@ export default function VendorCampaignPage(): JSX.Element {
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
         campaign={editingCampaign}
+        branches={branchOptions}
         status={status}
       />
 

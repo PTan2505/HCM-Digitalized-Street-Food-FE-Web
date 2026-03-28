@@ -8,6 +8,8 @@ export interface Voucher {
   maxDiscountValue: number | null;
   minAmountRequired: number;
   quantity: number;
+  usedQuantity: number;
+  remain?: number;
   redeemPoint: number;
   startDate: string;
   endDate: string;

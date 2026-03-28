@@ -85,11 +85,11 @@ export default function UserBadgeManagement(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'userId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'userId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'userName',
       label: 'Tên người dùng',

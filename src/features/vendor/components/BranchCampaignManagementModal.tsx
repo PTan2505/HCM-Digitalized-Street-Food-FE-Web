@@ -238,6 +238,7 @@ export default function BranchCampaignManagementModal({
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateBranchCampaign}
         campaign={null}
+        hideApplyScope
         status={status}
       />
 

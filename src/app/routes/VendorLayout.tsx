@@ -472,7 +472,7 @@ function VendorLayout(): JSX.Element {
               {isVendor && (
                 <Box className="flex items-center gap-3">
                   <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
-                    <AccountBalanceIcon fontSize="small" />
+                    {/* <AccountBalanceIcon fontSize="small" /> */}
                     Số dư: {formatCurrencyVnd(accountBalance?.balance)}
                   </Box>
                   <Button

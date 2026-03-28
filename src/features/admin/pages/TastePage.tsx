@@ -106,11 +106,11 @@ export default function TastePage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'tasteId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'tasteId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên Khẩu vị',

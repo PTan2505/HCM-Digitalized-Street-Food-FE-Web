@@ -148,11 +148,11 @@ export default function VoucherPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'voucherId',
-      label: 'ID',
-      style: { width: '60px' },
-    },
+    // {
+    //   key: 'voucherId',
+    //   label: 'ID',
+    //   style: { width: '60px' },
+    // },
     {
       key: 'name',
       label: 'Tên voucher',
@@ -169,7 +169,7 @@ export default function VoucherPage(): JSX.Element {
     },
     {
       key: 'type',
-      label: 'Loại',
+      label: 'Loại voucher',
       render: (value: unknown): JSX.Element => (
         <Chip
           label={value === 'PERCENT' ? 'Phần trăm' : 'Giá tiền'}
@@ -179,30 +179,46 @@ export default function VoucherPage(): JSX.Element {
         />
       ),
     },
+    // {
+    //   key: 'discountValue',
+    //   label: 'Giá trị giảm',
+    //   render: (_: unknown, row: Voucher): JSX.Element => (
+    //     <Box className="text-sm text-[var(--color-table-text-primary)]">
+    //       {row.type === 'PERCENT'
+    //         ? `${row.discountValue}%`
+    //         : formatCurrency(row.discountValue)}
+    //       {row.maxDiscountValue !== null && row.type === 'PERCENT' && (
+    //         <div className="text-xs text-[var(--color-table-text-secondary)]">
+    //           Tối đa: {formatCurrency(row.maxDiscountValue)}
+    //         </div>
+    //       )}
+    //     </Box>
+    //   ),
+    // },
+    // {
+    //   key: 'minAmountRequired',
+    //   label: 'Đơn tối thiểu',
+    //   render: (value: unknown): JSX.Element => (
+    //     <span className="text-sm text-[var(--color-table-text-secondary)]">
+    //       {formatCurrency(value as number)}
+    //     </span>
+    //   ),
+    // },
     {
-      key: 'discountValue',
-      label: 'Giá trị giảm',
-      render: (_: unknown, row: Voucher): JSX.Element => (
-        <Box className="text-sm text-[var(--color-table-text-primary)]">
-          {row.type === 'PERCENT'
-            ? `${row.discountValue}%`
-            : formatCurrency(row.discountValue)}
-          {row.maxDiscountValue !== null && row.type === 'PERCENT' && (
-            <div className="text-xs text-[var(--color-table-text-secondary)]">
-              Tối đa: {formatCurrency(row.maxDiscountValue)}
-            </div>
-          )}
-        </Box>
-      ),
-    },
-    {
-      key: 'minAmountRequired',
-      label: 'Đơn tối thiểu',
-      render: (value: unknown): JSX.Element => (
-        <span className="text-sm text-[var(--color-table-text-secondary)]">
-          {formatCurrency(value as number)}
-        </span>
-      ),
+      key: 'availableQuantity',
+      label: 'Số lượng còn lại',
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const remainingQuantity = Math.max(
+          row.quantity - (row.usedQuantity ?? 0),
+          0
+        );
+
+        return (
+          <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+            {remainingQuantity}
+          </span>
+        );
+      },
     },
     {
       key: 'quantity',

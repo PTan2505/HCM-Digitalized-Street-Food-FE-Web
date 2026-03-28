@@ -10,8 +10,8 @@ import {
   IconButton,
   CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
+import type { Branch } from '@features/vendor/types/vendor';
 import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
 import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
 
@@ -20,6 +20,8 @@ interface VendorCampaignFormModalProps {
   onClose: () => void;
   onSubmit: (data: VendorCampaignFormData) => Promise<void>;
   campaign: VendorCampaign | null;
+  branches?: Branch[];
+  hideApplyScope?: boolean;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
 
@@ -77,9 +79,14 @@ export default function VendorCampaignFormModal({
   onClose,
   onSubmit,
   campaign,
+  branches = [],
+  hideApplyScope = false,
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
+  const subscribedBranches = (Array.isArray(branches) ? branches : []).filter(
+    (branch) => branch.isSubscribed
+  );
 
   const {
     register,
@@ -97,11 +104,15 @@ export default function VendorCampaignFormModal({
       startDate: '',
       endDate: '',
       isActive: true,
+      applyScope: 'VENDOR',
+      branchIds: [],
     },
   });
 
   const startDate = watch('startDate');
   const endDate = watch('endDate');
+  const applyScope = watch('applyScope');
+  const selectedBranchIds = watch('branchIds');
 
   useEffect(() => {
     if (isOpen) {
@@ -113,6 +124,8 @@ export default function VendorCampaignFormModal({
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
           isActive: campaign.isActive,
+          applyScope: 'VENDOR',
+          branchIds: [],
         });
       } else {
         reset({
@@ -122,10 +135,18 @@ export default function VendorCampaignFormModal({
           startDate: '',
           endDate: '',
           isActive: true,
+          applyScope: 'VENDOR',
+          branchIds: [],
         });
       }
     }
   }, [isOpen, campaign, reset]);
+
+  useEffect(() => {
+    if (applyScope === 'VENDOR' && selectedBranchIds.length > 0) {
+      setValue('branchIds', [], { shouldValidate: true });
+    }
+  }, [applyScope, selectedBranchIds.length, setValue]);
 
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
@@ -149,10 +170,21 @@ export default function VendorCampaignFormModal({
     await onSubmit(payload);
   };
 
+  const handleToggleBranch = (branchId: number): void => {
+    const nextSelected = selectedBranchIds.includes(branchId)
+      ? selectedBranchIds.filter((id) => id !== branchId)
+      : [...selectedBranchIds, branchId];
+
+    setValue('branchIds', nextSelected, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
   if (!isOpen) return null;
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
         {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
         <IconButton
@@ -165,7 +197,7 @@ export default function VendorCampaignFormModal({
             color: theme.palette.grey[500],
           })}
         >
-          <CloseIcon />
+          {/* <CloseIcon /> */}
         </IconButton>
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -230,6 +262,85 @@ export default function VendorCampaignFormModal({
                 Kích hoạt chiến dịch
               </label>
             </div>
+
+            {!isEditMode && !hideApplyScope && (
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Phạm vi áp dụng
+                </label>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="radio"
+                        checked={applyScope === 'VENDOR'}
+                        onChange={() =>
+                          setValue('applyScope', 'VENDOR', {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          })
+                        }
+                        className="h-4 w-4 border-gray-300 text-amber-600 focus:ring-amber-300"
+                      />
+                      Áp dụng cho tất cả chi nhánh đã đăng ký gói
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="radio"
+                        checked={applyScope === 'BRANCHES'}
+                        onChange={() =>
+                          setValue('applyScope', 'BRANCHES', {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          })
+                        }
+                        className="h-4 w-4 border-gray-300 text-amber-600 focus:ring-amber-300"
+                      />
+                      Chọn chi nhánh cụ thể
+                    </label>
+                  </div>
+
+                  {applyScope === 'BRANCHES' && (
+                    <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                      {subscribedBranches.length === 0 ? (
+                        <p className="text-sm text-gray-500">
+                          Không có chi nhánh nào đang đăng ký gói để áp dụng.
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {subscribedBranches.map((branch) => (
+                            <label
+                              key={branch.branchId}
+                              className="flex items-center gap-2 rounded-md bg-white px-2 py-1.5 text-sm text-gray-700"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedBranchIds.includes(
+                                  branch.branchId
+                                )}
+                                onChange={() =>
+                                  handleToggleBranch(branch.branchId)
+                                }
+                                className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                              />
+                              {branch.name}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {errors.branchIds?.message && (
+                        <p className="mt-2 text-xs text-red-500">
+                          {errors.branchIds.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Dates Grid */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

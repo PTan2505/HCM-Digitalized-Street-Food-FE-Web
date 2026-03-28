@@ -361,6 +361,18 @@ export const createBranch = createAppAsyncThunk(
   }
 );
 
+export const getBranchesByVendor = createAppAsyncThunk(
+  'vendor/getBranchesByVendor',
+  async (vendorId: number, { rejectWithValue }) => {
+    try {
+      const response: Branch[] = await axiosApi.vendorApi.getBranches(vendorId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const updateBranch = createAppAsyncThunk(
   'vendor/updateBranch',
   async (
@@ -637,6 +649,11 @@ export const vendorSlice = createSlice({
       .addCase(createBranch.fulfilled, (state, action) => {
         if (state.myVendor && action.payload) {
           state.myVendor.branches.push(action.payload as unknown as Branch);
+        }
+      })
+      .addCase(getBranchesByVendor.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.branches = action.payload;
         }
       })
       .addCase(updateBranch.fulfilled, (state, action) => {
