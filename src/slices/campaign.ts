@@ -6,7 +6,6 @@ import type {
 } from '@features/admin/types/campaign';
 import type {
   VendorCampaign,
-  CampaignDetailsResponse,
   VendorCampaignCreate,
   VendorCampaignUpdate,
   JoinSystemCampaignResponse,
@@ -247,7 +246,7 @@ export const getJoinableSystemCampaigns = createAppAsyncThunk(
 export const joinBranchToSystemCampaign = createAppAsyncThunk(
   'campaign/joinBranchToSystemCampaign',
   async (
-    payload: { branchId: number; campaignId: number },
+    payload: { campaignId: number; branchIds: number[] },
     { rejectWithValue }
   ): Promise<
     JoinSystemCampaignResponse | ReturnType<typeof rejectWithValue>
@@ -255,8 +254,8 @@ export const joinBranchToSystemCampaign = createAppAsyncThunk(
     try {
       const response =
         await axiosApi.vendorCampaignApi.joinBranchToSystemCampaign(
-          payload.branchId,
-          payload.campaignId
+          payload.campaignId,
+          payload.branchIds
         );
       return response;
     } catch (error) {
@@ -377,10 +376,6 @@ export const campaignSlice = createSlice({
         state.joinableSystemTotalCount = action.payload.totalCount;
       })
       .addCase(joinBranchToSystemCampaign.fulfilled, (state, action) => {
-        if (!action.payload?.success) {
-          return;
-        }
-
         const joinedCampaignId = action.meta.arg.campaignId;
         const joinedCampaign = state.joinableSystemCampaigns.find(
           (campaign) => campaign.campaignId === joinedCampaignId

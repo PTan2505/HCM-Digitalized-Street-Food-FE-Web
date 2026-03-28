@@ -51,8 +51,8 @@ const useVendorCampaign = (): {
     pageSize: number
   ) => Promise<VendorCampaignListResponse>;
   onJoinBranchToSystemCampaign: (
-    branchId: number,
-    campaignId: number
+    campaignId: number,
+    branchIds: number[]
   ) => Promise<JoinSystemCampaignResponse>;
   onGetSystemCampaignDetails: (
     campaignId: number
@@ -146,11 +146,11 @@ const useVendorCampaign = (): {
 
   const onJoinBranchToSystemCampaign = useCallback(
     async (
-      branchId: number,
-      campaignId: number
+      campaignId: number,
+      branchIds: number[]
     ): Promise<JoinSystemCampaignResponse> => {
       return await dispatch(
-        joinBranchToSystemCampaign({ branchId, campaignId })
+        joinBranchToSystemCampaign({ campaignId, branchIds })
       ).unwrap();
     },
     [dispatch]
