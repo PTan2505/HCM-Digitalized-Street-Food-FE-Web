@@ -4,7 +4,6 @@ import {
   type RequestTransferFormValues,
 } from '@utils/transferSchema';
 import CloseIcon from '@mui/icons-material/Close';
-import MoneyIcon from '@mui/icons-material/Money';
 import {
   Box,
   Typography,
@@ -107,9 +106,9 @@ export default function RequestTransferModal({
         {/* Modal Header */}
         <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5">
           <Box className="flex items-center gap-3">
-            <Box className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            {/* <Box className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
               <MoneyIcon />
-            </Box>
+            </Box> */}
             <Box>
               <Typography
                 variant="h2"

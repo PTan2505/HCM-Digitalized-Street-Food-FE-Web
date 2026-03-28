@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -18,7 +19,10 @@ import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSche
 interface VendorCampaignFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: VendorCampaignFormData) => Promise<void>;
+  onSubmit: (
+    data: VendorCampaignFormData,
+    imageFile: File | null
+  ) => Promise<void>;
   campaign: VendorCampaign | null;
   branches?: Branch[];
   hideApplyScope?: boolean;
@@ -113,6 +117,9 @@ export default function VendorCampaignFormModal({
   const endDate = watch('endDate');
   const applyScope = watch('applyScope');
   const selectedBranchIds = watch('branchIds');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -139,8 +146,21 @@ export default function VendorCampaignFormModal({
           branchIds: [],
         });
       }
+      setImageFile(null);
+      setImagePreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   }, [isOpen, campaign, reset]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
 
   useEffect(() => {
     if (applyScope === 'VENDOR' && selectedBranchIds.length > 0) {
@@ -167,7 +187,29 @@ export default function VendorCampaignFormModal({
       endDate: toIsoZulu(data.endDate) ?? '',
       isActive: data.isActive,
     };
-    await onSubmit(payload);
+    await onSubmit(payload, imageFile);
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleClearSelectedImage = (): void => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleToggleBranch = (branchId: number): void => {
@@ -182,6 +224,9 @@ export default function VendorCampaignFormModal({
   };
 
   if (!isOpen) return null;
+
+  const existingImageUrl = campaign?.imageUrl ?? null;
+  const displayImageUrl = imagePreviewUrl ?? existingImageUrl;
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
@@ -247,6 +292,61 @@ export default function VendorCampaignFormModal({
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
                 placeholder="Nhập phân khúc (ví dụ: Học sinh, Sinh viên)"
               />
+            </div>
+
+            {/* Campaign Image */}
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                Ảnh chiến dịch
+              </label>
+              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div className="flex min-h-[160px] items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-white">
+                  {displayImageUrl ? (
+                    <img
+                      src={displayImageUrl}
+                      alt="Campaign"
+                      className="h-40 w-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-center text-sm text-gray-500">
+                      Chưa có ảnh chiến dịch
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+                  >
+                    {imageFile
+                      ? 'Đổi ảnh'
+                      : displayImageUrl
+                        ? 'Cập nhật ảnh'
+                        : 'Tải ảnh'}
+                  </button>
+                  {imageFile && (
+                    <button
+                      type="button"
+                      onClick={handleClearSelectedImage}
+                      className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100"
+                    >
+                      Bỏ ảnh đã chọn
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Định dạng hỗ trợ: JPG, PNG, WEBP. Kích thước khuyên dùng:
+                  1200x675 (16:9).
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
             </div>
 
             <div>

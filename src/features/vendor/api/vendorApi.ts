@@ -134,24 +134,13 @@ export class VendorApi {
       return res.data as Branch[];
     }
 
-    if (isBranchListResponse(res.data)) {
-      const { currentPage, pageSize, totalPages } = res.data;
-      const branches = [...res.data.items];
-
-      for (let page = currentPage + 1; page <= totalPages; page += 1) {
-        const pageRes = await this.apiClient.get<unknown>({
-          url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
-          params: { pageNumber: page, pageSize },
-        });
-
-        if (isBranchListResponse(pageRes.data)) {
-          branches.push(...pageRes.data.items);
-        } else if (Array.isArray(pageRes.data)) {
-          branches.push(...(pageRes.data as Branch[]));
-        }
-      }
-
-      return branches;
+    if (
+      res.data &&
+      typeof res.data === 'object' &&
+      'items' in res.data &&
+      Array.isArray((res.data as { items: unknown }).items)
+    ) {
+      return (res.data as { items: Branch[] }).items;
     }
 
     return [];

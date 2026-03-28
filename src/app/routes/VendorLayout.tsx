@@ -20,13 +20,13 @@ import {
   Description as DocumentTextIcon,
   Close as XMarkIcon,
   RestaurantMenu as ShoppingBagIcon,
-  LocalDining as SparklesIcon,
   ShoppingCart as QueueListIcon,
   LocationOn as MapPinIcon,
   Campaign as CampaignIcon,
+  Public as PublicIcon,
+  Group as UserGroupIcon,
 } from '@mui/icons-material';
 import MoneyIcon from '@mui/icons-material/Money';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -43,60 +43,74 @@ import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
+const vendorBase = ROUTES.VENDOR.BASE;
+const vendorPaths = ROUTES.VENDOR.PATHS;
+
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/vendor/dashboard',
+    href: `${vendorBase}/${vendorPaths.DASHBOARD}`,
     icon: HomeIcon,
     isForVendor: true,
   },
   {
     name: 'Xác nhận sở hữu quán',
-    href: '/vendor/ghost-pin',
+    href: `${vendorBase}/${vendorPaths.GHOST_PIN}`,
     icon: MapPinIcon,
     isForVendor: false,
   },
   {
     name: 'Chi nhánh',
-    href: '/vendor/branch',
+    href: `${vendorBase}/${vendorPaths.BRANCH}`,
     icon: BuildingStorefrontIcon,
     isForVendor: false,
   },
   {
     name: 'Lịch sử đăng ký',
-    href: '/vendor/registration-history',
+    href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
     icon: DocumentTextIcon,
     isForVendor: false,
   },
   {
     name: 'Lịch sử thanh toán',
-    href: '/vendor/payment-history',
+    href: `${vendorBase}/${vendorPaths.PAYMENT_HISTORY}`,
     icon: ClipboardDocumentListIcon,
     isForVendor: true,
   },
   {
     name: 'Quản lý món ăn',
-    href: '/vendor/dish',
+    href: `${vendorBase}/${vendorPaths.DISH}`,
     icon: ShoppingBagIcon,
     isForVendor: true,
   },
   {
     name: 'Quản lý đơn hàng',
-    href: '/vendor/orders',
+    href: `${vendorBase}/${vendorPaths.ORDER}`,
     icon: QueueListIcon,
     isForVendor: true,
   },
   {
     name: 'Chế độ ăn',
-    href: '/vendor/dietary-preferences',
-    icon: SparklesIcon,
+    href: `${vendorBase}/${vendorPaths.DIETARY}`,
+    icon: UserGroupIcon,
     isForVendor: true,
   },
   {
     name: 'Quản lý chiến dịch',
-    href: '/vendor/campaign',
     icon: CampaignIcon,
     isForVendor: true,
+    children: [
+      {
+        name: 'Cửa hàng',
+        href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
+        icon: BuildingStorefrontIcon,
+      },
+      {
+        name: 'Hệ thống',
+        href: `${vendorBase}/${vendorPaths.CAMPAIGN_SYSTEM}`,
+        icon: PublicIcon,
+      },
+    ],
   },
 ];
 
@@ -164,9 +178,9 @@ function VendorLayout(): JSX.Element {
 
   const isBranchScheduleMissing = missingScheduleBranches.length > 0;
 
-  const vendorBranchPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`;
-  const vendorDietaryPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DIETARY}`;
-  const vendorDishPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DISH}`;
+  const vendorBranchPath = `${vendorBase}/${vendorPaths.BRANCH}`;
+  const vendorDietaryPath = `${vendorBase}/${vendorPaths.DIETARY}`;
+  const vendorDishPath = `${vendorBase}/${vendorPaths.DISH}`;
 
   const filteredNavigation = navigation
     .filter((item) => !item.isForVendor || isVendor)
@@ -215,6 +229,27 @@ function VendorLayout(): JSX.Element {
         },
       };
     });
+
+  const pageTitle = useMemo(() => {
+    const directMatch = filteredNavigation.find(
+      (item) => item.href === location.pathname
+    );
+
+    if (directMatch) {
+      return directMatch.name;
+    }
+
+    for (const item of filteredNavigation) {
+      const childMatch = item.children?.find(
+        (child) => child.href === location.pathname
+      );
+      if (childMatch) {
+        return childMatch.name;
+      }
+    }
+
+    return 'Dashboard';
+  }, [filteredNavigation, location.pathname]);
 
   useEffect(() => {
     if (
@@ -461,9 +496,7 @@ function VendorLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {filteredNavigation.find(
-                    (item) => item.href === location.pathname
-                  )?.name ?? 'Dashboard'}
+                  {pageTitle}
                 </Typography>
               </Box>
             </Box>
