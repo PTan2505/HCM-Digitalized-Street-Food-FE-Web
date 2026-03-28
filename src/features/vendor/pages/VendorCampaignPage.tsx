@@ -133,11 +133,11 @@ export default function VendorCampaignPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'campaignId',
-      label: 'ID',
-      style: { width: '60px' },
-    },
+    // {
+    //   key: 'campaignId',
+    //   label: 'ID',
+    //   style: { width: '60px' },
+    // },
     {
       key: 'name',
       label: 'Tên chiến dịch',
@@ -146,6 +146,31 @@ export default function VendorCampaignPage(): JSX.Element {
           {typeof value === 'string' ? value : String(value)}
         </Box>
       ),
+    },
+    {
+      key: 'creator',
+      label: 'Nguồn tạo',
+      render: (_: unknown, row: VendorCampaign): JSX.Element => {
+        if (!row.createdByBranchId && !row.createdByVendorId) {
+          return (
+            <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 shadow-sm">
+              Từ hệ thống
+            </span>
+          );
+        }
+        if (row.createdByBranchId) {
+          return (
+            <span className="inline-flex items-center justify-center rounded-full border border-teal-200 bg-teal-100 px-2.5 py-0.5 text-xs font-bold text-teal-700 shadow-sm">
+              Từ chi nhánh
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center justify-center rounded-full border border-purple-200 bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-700 shadow-sm">
+            Từ vendor
+          </span>
+        );
+      },
     },
     {
       key: 'startDate',
@@ -157,17 +182,17 @@ export default function VendorCampaignPage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'targetSegment',
-      label: 'Phân khúc',
-      render: (value: unknown): JSX.Element => (
-        <Chip
-          label={typeof value === 'string' && value ? value : 'Tất cả'}
-          size="small"
-          variant="outlined"
-        />
-      ),
-    },
+    // {
+    //   key: 'targetSegment',
+    //   label: 'Phân khúc',
+    //   render: (value: unknown): JSX.Element => (
+    //     <Chip
+    //       label={typeof value === 'string' && value ? value : 'Tất cả'}
+    //       size="small"
+    //       variant="outlined"
+    //     />
+    //   ),
+    // },
     {
       key: 'isActive',
       label: 'Hoạt động',
@@ -189,12 +214,14 @@ export default function VendorCampaignPage(): JSX.Element {
         setOpenImageModal(true);
       },
       color: 'info' as const,
+      show: (row: VendorCampaign): boolean => row.isSystemCampaign === false,
     },
     {
       label: <EditIcon fontSize="small" />,
       menuLabel: 'Cập nhật chiến dịch',
       onClick: (row: VendorCampaign): void => handleOpenModal(row),
       color: 'primary' as const,
+      show: (row: VendorCampaign): boolean => row.isSystemCampaign === false,
     },
   ];
 

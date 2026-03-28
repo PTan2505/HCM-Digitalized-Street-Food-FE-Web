@@ -124,10 +124,14 @@ export default function JoinableSystemCampaignModal({
     });
 
     try {
-      const response = await onJoinBranchToSystemCampaign(branchId, campaignId);
+      const response = await onJoinBranchToSystemCampaign(campaignId, [
+        branchId,
+      ]);
 
-      if (response.success && response.paymentUrl) {
-        window.location.href = response.paymentUrl;
+      if (response.payment?.paymentUrl) {
+        window.location.href = response.payment.paymentUrl;
+      } else if (response.branches && response.branches.length > 0) {
+        // Successfully joined and no payment link needed, do nothing as Redux state handles UI updates
       } else {
         setErrorMsg('Không thể tạo link thanh toán. Vui lòng thử lại.');
       }

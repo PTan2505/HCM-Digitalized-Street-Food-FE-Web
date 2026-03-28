@@ -5,6 +5,7 @@ import type {
   VendorCampaignUpdate,
   VendorCampaignListResponse,
   JoinSystemCampaignResponse,
+  JoinSystemCampaignRequest,
 } from '@features/vendor/types/campaign';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -87,12 +88,15 @@ export class VendorCampaignApi {
   }
 
   async joinBranchToSystemCampaign(
-    branchId: number,
-    campaignId: number
+    campaignId: number,
+    branchIds: number[]
   ): Promise<JoinSystemCampaignResponse> {
-    const res = await this.apiClient.post<JoinSystemCampaignResponse, null>({
-      url: apiUrl.campaign.BranchJoinASystemCampaign(branchId, campaignId),
-      data: null,
+    const res = await this.apiClient.post<
+      JoinSystemCampaignResponse,
+      JoinSystemCampaignRequest
+    >({
+      url: apiUrl.campaign.BranchJoinASystemCampaign(campaignId),
+      data: { branchIds },
     });
     return res.data;
   }
