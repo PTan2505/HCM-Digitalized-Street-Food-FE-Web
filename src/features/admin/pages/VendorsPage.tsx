@@ -136,16 +136,16 @@ export default function VendorsPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'vendorId',
-      label: 'ID',
-      style: { width: '60px', maxWidth: '60px' },
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-medium">
-          {String(value)}
-        </Box>
-      ),
-    },
+    // {
+    //   key: 'vendorId',
+    //   label: 'ID',
+    //   style: { width: '60px', maxWidth: '60px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <Box className="text-table-text-primary font-medium">
+    //       {String(value)}
+    //     </Box>
+    //   ),
+    // },
     {
       key: 'name',
       label: 'Tên cửa hàng',

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, Button, Snackbar, Alert, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Box, Button, Snackbar, Alert } from '@mui/material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import SystemCampaignDetailsModal from '@features/vendor/components/SystemCampaignDetailsModal';
@@ -147,11 +146,11 @@ export default function JoinableSystemCampaignModal({
   };
 
   const columns = [
-    {
-      key: 'campaignId',
-      label: 'ID',
-      style: { width: '70px' },
-    },
+    // {
+    //   key: 'campaignId',
+    //   label: 'ID',
+    //   style: { width: '70px' },
+    // },
     {
       key: 'name',
       label: 'Tên chiến dịch hệ thống',
@@ -261,7 +260,7 @@ export default function JoinableSystemCampaignModal({
                   : 'Chiến dịch hệ thống khả dụng'}
               </h2>
             </div>
-            <IconButton
+            {/* <IconButton
               aria-label="close"
               onClick={onClose}
               sx={{
@@ -270,7 +269,7 @@ export default function JoinableSystemCampaignModal({
               }}
             >
               <CloseIcon />
-            </IconButton>
+            </IconButton> */}
           </div>
 
           {/* Modal Content */}

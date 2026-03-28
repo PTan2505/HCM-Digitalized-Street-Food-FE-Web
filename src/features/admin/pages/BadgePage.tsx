@@ -118,11 +118,11 @@ export default function BadgePage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'badgeId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'badgeId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'iconUrl',
       label: 'Icon',

@@ -114,11 +114,11 @@ export default function CategoryPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'categoryId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'categoryId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên Danh mục',

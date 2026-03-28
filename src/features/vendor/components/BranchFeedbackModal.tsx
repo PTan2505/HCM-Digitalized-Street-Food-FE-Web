@@ -223,9 +223,9 @@ export default function BranchFeedbackModal({
             <h2 className="text-table-text-primary truncate text-lg leading-tight font-bold">
               {branch.name}
             </h2>
-            <div className="mt-1 inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs text-gray-600">
+            {/* <div className="mt-1 inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs text-gray-600">
               Mã chi nhánh: #{branch.branchId}
-            </div>
+            </div> */}
           </div>
           <IconButton
             size="small"

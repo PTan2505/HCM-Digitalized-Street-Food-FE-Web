@@ -121,11 +121,11 @@ export default function DietaryPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'dietaryPreferenceId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'dietaryPreferenceId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên chế độ ăn',

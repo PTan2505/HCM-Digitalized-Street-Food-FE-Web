@@ -117,11 +117,11 @@ export default function CampaignPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'campaignId',
-      label: 'ID',
-      style: { width: '60px' },
-    },
+    // {
+    //   key: 'campaignId',
+    //   label: 'ID',
+    //   style: { width: '60px' },
+    // },
     {
       key: 'name',
       label: 'Tên chiến dịch',
