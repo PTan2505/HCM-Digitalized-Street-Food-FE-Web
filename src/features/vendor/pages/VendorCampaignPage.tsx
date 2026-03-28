@@ -23,8 +23,6 @@ import { selectMyVendor } from '@slices/vendor';
 import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
 import type { Branch } from '@features/vendor/types/vendor';
 
-const PAGE_SIZE = 10;
-
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
   const date = new Date(isoStr);
@@ -73,10 +71,12 @@ export default function VendorCampaignPage(): JSX.Element {
     onCreateBranchCampaign,
     onUpdateVendorCampaign,
     onPostCampaignImage,
+    onDeleteCampaignImage,
   } = useVendorCampaign();
   const { onGetBranchesByVendor } = useVendor();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<VendorCampaign | null>(
@@ -88,11 +88,11 @@ export default function VendorCampaignPage(): JSX.Element {
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
-      await onGetVendorCampaigns(page, PAGE_SIZE);
+      await onGetVendorCampaigns(page, pageSize);
     } catch (err) {
       console.error('Failed to fetch vendor campaigns', err);
     }
-  }, [onGetVendorCampaigns, page]);
+  }, [onGetVendorCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchCampaigns();
@@ -139,7 +139,8 @@ export default function VendorCampaignPage(): JSX.Element {
 
   const handleSubmit = async (
     data: VendorCampaignFormData,
-    imageFile: File | null
+    imageFile: File | null,
+    isImageRemoved?: boolean
   ): Promise<void> => {
     try {
       const payload = {
@@ -156,6 +157,9 @@ export default function VendorCampaignPage(): JSX.Element {
           editingCampaign.campaignId,
           payload
         );
+        if (isImageRemoved && !imageFile) {
+          await onDeleteCampaignImage(updatedCampaign.campaignId);
+        }
         if (imageFile) {
           await onPostCampaignImage(
             updatedCampaign.campaignId,
@@ -342,17 +346,19 @@ export default function VendorCampaignPage(): JSX.Element {
       </Box>
 
       {/* Pagination */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-        <Pagination
-          currentPage={page}
-          totalPages={Math.ceil((totalCount ?? 0) / PAGE_SIZE)}
-          totalCount={totalCount ?? 0}
-          pageSize={PAGE_SIZE}
-          hasPrevious={page > 1}
-          hasNext={page < Math.ceil((totalCount ?? 0) / PAGE_SIZE)}
-          onPageChange={setPage}
-        />
-      </Box>
+      <Pagination
+        currentPage={page}
+        totalPages={Math.ceil((totalCount ?? 0) / pageSize)}
+        totalCount={totalCount ?? 0}
+        pageSize={pageSize}
+        hasPrevious={page > 1}
+        hasNext={page < Math.ceil((totalCount ?? 0) / pageSize)}
+        onPageChange={setPage}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(1);
+        }}
+      />
 
       {/* Form Modal */}
       <VendorCampaignFormModal

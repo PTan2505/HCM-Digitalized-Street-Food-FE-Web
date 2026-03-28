@@ -487,6 +487,7 @@ function BranchPage(): JSX.Element {
         loading={status === 'pending'}
         emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
         actions={actions}
+        maxHeight="calc(100vh - 240px)"
       />
 
       <BranchDetailsModal

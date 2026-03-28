@@ -10,7 +10,12 @@ import {
   Button,
   IconButton,
   CircularProgress,
+  Tooltip,
 } from '@mui/material';
+import {
+  AddPhotoAlternate as AddPhotoAlternateIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
@@ -21,7 +26,8 @@ interface VendorCampaignFormModalProps {
   onClose: () => void;
   onSubmit: (
     data: VendorCampaignFormData,
-    imageFile: File | null
+    imageFile: File | null,
+    isImageRemoved?: boolean
   ) => Promise<void>;
   campaign: VendorCampaign | null;
   branches?: Branch[];
@@ -119,6 +125,7 @@ export default function VendorCampaignFormModal({
   const selectedBranchIds = watch('branchIds');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -148,6 +155,7 @@ export default function VendorCampaignFormModal({
       }
       setImageFile(null);
       setImagePreviewUrl(null);
+      setIsImageRemoved(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -187,7 +195,7 @@ export default function VendorCampaignFormModal({
       endDate: toIsoZulu(data.endDate) ?? '',
       isActive: data.isActive,
     };
-    await onSubmit(payload, imageFile);
+    await onSubmit(payload, imageFile, isImageRemoved);
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -199,6 +207,7 @@ export default function VendorCampaignFormModal({
     }
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
+    setIsImageRemoved(false);
   };
 
   const handleClearSelectedImage = (): void => {
@@ -207,6 +216,7 @@ export default function VendorCampaignFormModal({
     }
     setImageFile(null);
     setImagePreviewUrl(null);
+    setIsImageRemoved(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -222,7 +232,8 @@ export default function VendorCampaignFormModal({
   if (!isOpen) return null;
 
   const existingImageUrl = campaign?.imageUrl ?? null;
-  const displayImageUrl = imagePreviewUrl ?? existingImageUrl;
+  const displayImageUrl =
+    imagePreviewUrl ?? (isImageRemoved ? null : existingImageUrl);
 
   return (
     <Dialog
@@ -320,44 +331,76 @@ export default function VendorCampaignFormModal({
                 Ảnh chiến dịch
               </label>
               <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div className="flex min-h-[160px] items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-white">
-                  {displayImageUrl ? (
+                {displayImageUrl ? (
+                  <div className="group relative flex min-h-[160px] w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-300 bg-white shadow-sm transition-colors hover:border-[var(--color-primary-400)]">
                     <img
                       src={displayImageUrl}
                       alt="Campaign"
-                      className="h-40 w-full object-contain"
+                      className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
                     />
-                  ) : (
-                    <div className="text-center text-sm text-gray-500">
-                      Chưa có ảnh chiến dịch
+
+                    {/* Actions Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
+                      <Tooltip title="Đổi ảnh khác" arrow>
+                        <IconButton
+                          onClick={() => fileInputRef.current?.click()}
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.95)',
+                            color: 'var(--color-primary-600)',
+                            '&:hover': {
+                              bgcolor: 'white',
+                              transform: 'scale(1.1)',
+                            },
+                            transition: 'all 0.2s',
+                            width: 44,
+                            height: 44,
+                          }}
+                        >
+                          <AddPhotoAlternateIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Xoá ảnh hiện tại" arrow>
+                        <IconButton
+                          onClick={handleClearSelectedImage}
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.95)',
+                            color: '#ef4444',
+                            '&:hover': {
+                              bgcolor: '#fee2e2',
+                              color: '#b91c1c',
+                              transform: 'scale(1.1)',
+                            },
+                            transition: 'all 0.2s',
+                            width: 44,
+                            height: 44,
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </div>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
+                  </div>
+                ) : (
+                  <div
+                    className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:border-[var(--color-primary-400)] hover:bg-gray-50/50"
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
                   >
-                    {imageFile
-                      ? 'Đổi ảnh'
-                      : displayImageUrl
-                        ? 'Cập nhật ảnh'
-                        : 'Tải ảnh'}
-                  </button>
-                  {imageFile && (
-                    <button
-                      type="button"
-                      onClick={handleClearSelectedImage}
-                      className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100"
-                    >
-                      Bỏ ảnh đã chọn
-                    </button>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  Định dạng hỗ trợ: JPG, PNG, WEBP. Kích thước khuyên dùng:
-                  1200x675 (16:9).
+                    <div className="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors group-hover:text-[var(--color-primary-600)]">
+                      <AddPhotoAlternateIcon fontSize="medium" />
+                    </div>
+                    <div className="mt-3 text-center">
+                      <p className="text-sm font-semibold text-gray-700">
+                        Nhấn để tải ảnh lên
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Kích thước khuyên dùng: 1200x675 (16:9)
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-center text-xs text-gray-500">
+                  Định dạng hỗ trợ: JPG, PNG, WEBP.
                 </p>
                 <input
                   ref={fileInputRef}
