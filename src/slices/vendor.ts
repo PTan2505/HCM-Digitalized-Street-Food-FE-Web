@@ -829,8 +829,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state) => {
           state.status = 'pending';
@@ -860,8 +859,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state, action) => {
           state.status = 'failed';
@@ -893,8 +891,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state) => {
           state.status = 'succeeded';

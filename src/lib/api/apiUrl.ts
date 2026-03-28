@@ -175,9 +175,16 @@ export const apiUrl = {
     GetOrPostBranchCampaign: (branchId: number): string =>
       `/Campaign/branch/${branchId}`,
     GetJoinableSystemCampaigns: '/Campaign/system/joinable',
-    BranchJoinASystemCampaign: (branchId: number, campaignId: number): string =>
-      `/Campaign/join/system/${campaignId}/branch/${branchId}`,
+    BranchJoinASystemCampaign: (campaignId: number): string =>
+      `/Campaign/join/system/${campaignId}/branch`,
+    VendorJoinASystemCampaign: '/Campaign/vendor/join​',
+    GetDetailsOfASystemCampaign: (campaignId: number): string =>
+      `/Campaign/system/${campaignId}`,
     UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+    GetOrPostAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/images`,
+    DeleteAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/image`,
   },
   voucher: {
     GetOrPostVouchers: '/vouchers',

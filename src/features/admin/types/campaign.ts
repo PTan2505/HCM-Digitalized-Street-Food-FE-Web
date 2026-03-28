@@ -13,6 +13,7 @@ export interface Campaign {
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
+  imageUrl?: string | null;
 }
 
 export interface CampaignCreate {
@@ -41,3 +42,11 @@ export interface CampaignListResponse {
   totalCount: number;
   items: Campaign[];
 }
+
+export interface PostCampaignImage {
+  image: File;
+}
+
+export type PostCampaignImageResponse = string;
+
+export type GetCampaignImageResponse = string;

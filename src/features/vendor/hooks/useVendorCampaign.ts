@@ -4,13 +4,18 @@ import {
   getVendorCampaigns,
   createVendorCampaign,
   updateVendorCampaign,
+  getCampaignImage,
+  postCampaignImage,
+  deleteCampaignImage,
   getBranchCampaigns,
   createBranchCampaign,
   getJoinableSystemCampaigns,
   joinBranchToSystemCampaign,
+  getSystemCampaignDetails,
 } from '@slices/campaign';
 import type {
   VendorCampaign,
+  CampaignDetailsResponse,
   VendorCampaignCreate,
   VendorCampaignUpdate,
   VendorCampaignListResponse,
@@ -29,6 +34,9 @@ const useVendorCampaign = (): {
     id: number,
     data: VendorCampaignUpdate
   ) => Promise<VendorCampaign>;
+  onGetCampaignImage: (id: number) => Promise<string[]>;
+  onPostCampaignImage: (id: number, data: FormData) => Promise<string>;
+  onDeleteCampaignImage: (id: number) => Promise<void>;
   onGetBranchCampaigns: (
     branchId: number,
     pageNumber: number,
@@ -43,9 +51,12 @@ const useVendorCampaign = (): {
     pageSize: number
   ) => Promise<VendorCampaignListResponse>;
   onJoinBranchToSystemCampaign: (
-    branchId: number,
-    campaignId: number
+    campaignId: number,
+    branchIds: number[]
   ) => Promise<JoinSystemCampaignResponse>;
+  onGetSystemCampaignDetails: (
+    campaignId: number
+  ) => Promise<CampaignDetailsResponse>;
 } => {
   const dispatch = useAppDispatch();
 
@@ -71,6 +82,27 @@ const useVendorCampaign = (): {
   const onUpdateVendorCampaign = useCallback(
     async (id: number, data: VendorCampaignUpdate): Promise<VendorCampaign> => {
       return await dispatch(updateVendorCampaign({ id, ...data })).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onGetCampaignImage = useCallback(
+    async (id: number): Promise<string[]> => {
+      return await dispatch(getCampaignImage(id)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onPostCampaignImage = useCallback(
+    async (id: number, data: FormData): Promise<string> => {
+      return await dispatch(postCampaignImage({ id, data })).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onDeleteCampaignImage = useCallback(
+    async (id: number): Promise<void> => {
+      return await dispatch(deleteCampaignImage(id)).unwrap();
     },
     [dispatch]
   );
@@ -114,12 +146,19 @@ const useVendorCampaign = (): {
 
   const onJoinBranchToSystemCampaign = useCallback(
     async (
-      branchId: number,
-      campaignId: number
+      campaignId: number,
+      branchIds: number[]
     ): Promise<JoinSystemCampaignResponse> => {
       return await dispatch(
-        joinBranchToSystemCampaign({ branchId, campaignId })
+        joinBranchToSystemCampaign({ campaignId, branchIds })
       ).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onGetSystemCampaignDetails = useCallback(
+    async (campaignId: number): Promise<CampaignDetailsResponse> => {
+      return await dispatch(getSystemCampaignDetails(campaignId)).unwrap();
     },
     [dispatch]
   );
@@ -128,10 +167,14 @@ const useVendorCampaign = (): {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
     onUpdateVendorCampaign,
+    onGetCampaignImage,
+    onPostCampaignImage,
+    onDeleteCampaignImage,
     onGetBranchCampaigns,
     onCreateBranchCampaign,
     onGetJoinableSystemCampaigns,
     onJoinBranchToSystemCampaign,
+    onGetSystemCampaignDetails,
   };
 };
 
