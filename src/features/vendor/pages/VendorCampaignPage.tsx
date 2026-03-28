@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,

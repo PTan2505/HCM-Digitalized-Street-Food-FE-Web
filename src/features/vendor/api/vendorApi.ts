@@ -42,7 +42,10 @@ type BranchListResponse = {
 
 const isBranchListResponse = (data: unknown): data is BranchListResponse => {
   if (!data || typeof data !== 'object') return false;
-  if (!('items' in data) || !Array.isArray((data as { items: unknown }).items)) {
+  if (
+    !('items' in data) ||
+    !Array.isArray((data as { items: unknown }).items)
+  ) {
     return false;
   }
   return (
