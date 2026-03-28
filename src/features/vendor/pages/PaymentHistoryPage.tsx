@@ -72,11 +72,11 @@ function PaymentHistoryPage(): JSX.Element {
     //   label: 'ID',
     //   style: { width: '60px' },
     // },
-    {
-      key: 'branchId',
-      label: 'Chi nhánh',
-      style: { width: '100px' },
-    },
+    // {
+    //   key: 'branchId',
+    //   label: 'Chi nhánh',
+    //   style: { width: '100px' },
+    // },
     {
       key: 'description',
       label: 'Mô tả',
@@ -158,7 +158,7 @@ function PaymentHistoryPage(): JSX.Element {
         rowKey="id"
         loading={status === 'pending'}
         emptyMessage="Chưa có giao dịch nào"
-        maxHeight="calc(100vh - 240px)"
+        maxHeight="none"
       />
     </div>
   );

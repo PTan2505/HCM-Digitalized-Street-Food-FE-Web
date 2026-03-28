@@ -19,7 +19,7 @@ import {
 import Table from '@features/admin/components/Table';
 import VoucherFormModal from '@features/admin/components/VoucherFormModal';
 import VoucherDetailsModal from '@features/admin/components/VoucherDetailsModal';
-import type { Voucher, VoucherCreate } from '@features/admin/types/voucher';
+import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVouchers, selectVoucherStatus } from '@slices/voucher';

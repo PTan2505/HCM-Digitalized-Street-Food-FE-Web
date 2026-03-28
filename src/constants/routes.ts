@@ -76,6 +76,7 @@ export const ROUTES = {
       DIETARY: 'dietary-preferences',
       GHOST_PIN: 'ghost-pin',
       CAMPAIGN: 'campaign',
+      CAMPAIGN_SYSTEM: 'campaign/system',
     },
   },
 
