@@ -143,12 +143,14 @@ export default function CategoryPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Category): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa danh mục',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Category): void => handleDelete(row),
+      tooltip: 'Xóa danh mục',
       color: 'error' as const,
       variant: 'outlined' as const,
     },

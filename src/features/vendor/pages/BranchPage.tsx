@@ -23,7 +23,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
-import CampaignIcon from '@mui/icons-material/Campaign';
 import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -86,7 +85,7 @@ function BranchPage(): JSX.Element {
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
   const [managerBranch, setManagerBranch] = useState<Branch | null>(null);
-  const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
+  // const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
   const [managerNameById, setManagerNameById] = useState<
     Record<number, string>
   >({});

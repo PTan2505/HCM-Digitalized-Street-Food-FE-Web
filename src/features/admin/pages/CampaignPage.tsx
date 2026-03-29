@@ -203,12 +203,14 @@ export default function CampaignPage(): JSX.Element {
         setSelectedCampaign(row);
         setOpenVoucherModal(true);
       },
+      tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
     },
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Campaign): void => handleOpenModal(row),
+      tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },

@@ -153,12 +153,14 @@ export default function DietaryPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: UserDietaryPreference): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa chế độ ăn',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: UserDietaryPreference): void => handleDelete(row),
+      tooltip: 'Xóa chế độ ăn',
       color: 'error' as const,
       variant: 'outlined' as const,
     },

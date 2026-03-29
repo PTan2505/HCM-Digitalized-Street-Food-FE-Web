@@ -202,6 +202,7 @@ export default function VendorsPage(): JSX.Element {
       onClick: (row: AdminVendor): void => {
         void handleViewDetail(row);
       },
+      tooltip: 'Xem chi tiết cửa hàng',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
@@ -214,12 +215,14 @@ export default function VendorsPage(): JSX.Element {
           handleReactivate(row);
         }
       },
+      tooltip: 'Tạm ngưng hoặc kích hoạt lại',
       color: 'warning' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => handleDelete(row),
+      tooltip: 'Xóa cửa hàng',
       color: 'error' as const,
       variant: 'outlined' as const,
     },

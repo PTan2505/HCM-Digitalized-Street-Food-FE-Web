@@ -38,10 +38,10 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const formatCurrency = (value: number): string =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-    value
-  );
+// const formatCurrency = (value: number): string =>
+//   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+//     value
+//   );
 
 const StatusBadge = ({
   label,
@@ -255,12 +255,14 @@ export default function VoucherPage(): JSX.Element {
     {
       label: <VisibilityIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenDetailsModal(row),
+      tooltip: 'Xem chi tiết voucher',
       color: 'info' as const,
       variant: 'outlined' as const,
     },
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenModal(row),
+      tooltip: 'Chỉnh sửa voucher',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
@@ -269,6 +271,7 @@ export default function VoucherPage(): JSX.Element {
       onClick: (row: Voucher): void => {
         void handleDelete(row);
       },
+      tooltip: 'Xóa voucher',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
