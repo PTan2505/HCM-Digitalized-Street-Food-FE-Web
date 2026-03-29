@@ -1,7 +1,5 @@
 import type { JSX } from 'react';
 import { Dialog, DialogContent } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@constants/routes';
 import type { Branch } from '@features/vendor/types/vendor';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
@@ -74,16 +72,16 @@ export default function OnboardingMissingBranchModal({
         </div>
 
         <div className="border-t border-gray-100 bg-gray-50 px-6 py-6">
-          <Link
+          {/* <Link
             to={`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`}
             onClick={onClose}
             className="mb-3 block w-full rounded-lg bg-linear-to-r from-[#14b8a6] to-[#0f766e] px-4 py-3 text-center font-semibold text-white shadow-sm transition-all duration-200 hover:from-[#0d9488] hover:to-[#115e59] hover:shadow-md active:scale-95"
           >
             Cập nhật ngay
-          </Link>
+          </Link> */}
           <button
             onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            className="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
           >
             Đã hiểu
           </button>

@@ -116,10 +116,13 @@ export default function DishFilterSection({
               bgcolor: 'white',
               borderRadius: '0.5rem',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#e5e7eb',
+                borderColor: 'var(--color-primary-600)',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#d1d5db',
+                borderColor: 'var(--color-primary-700)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--color-primary-600)',
               },
             }}
             startAdornment={
@@ -160,10 +163,13 @@ export default function DishFilterSection({
               bgcolor: 'white',
               borderRadius: '0.5rem',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#e5e7eb',
+                borderColor: 'var(--color-primary-600)',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#d1d5db',
+                borderColor: 'var(--color-primary-700)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--color-primary-600)',
               },
             }}
           >
@@ -182,7 +188,7 @@ export default function DishFilterSection({
         <Box className="mt-5 flex self-end">
           <button
             onClick={() => emitFilter(keyword, categoryId)}
-            className="flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-[var(--color-primary-700)] hover:shadow-md"
+            className="bg-primary-600 hover:bg-primary-700 flex items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all hover:shadow-md"
           >
             Áp dụng
           </button>

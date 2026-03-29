@@ -20,12 +20,12 @@ import {
   Description as DocumentTextIcon,
   Close as XMarkIcon,
   RestaurantMenu as ShoppingBagIcon,
-  LocalDining as SparklesIcon,
   ShoppingCart as QueueListIcon,
   LocationOn as MapPinIcon,
+  Campaign as CampaignIcon,
+  Public as PublicIcon,
+  Group as UserGroupIcon,
 } from '@mui/icons-material';
-import MoneyIcon from '@mui/icons-material/Money';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -42,54 +42,79 @@ import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
+const vendorBase = ROUTES.VENDOR.BASE;
+const vendorPaths = ROUTES.VENDOR.PATHS;
+
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/vendor/dashboard',
+    href: `${vendorBase}/${vendorPaths.DASHBOARD}`,
     icon: HomeIcon,
     isForVendor: true,
   },
   {
-    name: 'Xác nhận sở hữu quán',
-    href: '/vendor/ghost-pin',
-    icon: MapPinIcon,
-    isForVendor: false,
-  },
-  {
     name: 'Chi nhánh',
-    href: '/vendor/branch',
+    href: `${vendorBase}/${vendorPaths.BRANCH}`,
     icon: BuildingStorefrontIcon,
     isForVendor: false,
   },
   {
-    name: 'Lịch sử đăng ký',
-    href: '/vendor/registration-history',
-    icon: DocumentTextIcon,
-    isForVendor: false,
-  },
-  {
-    name: 'Lịch sử thanh toán',
-    href: '/vendor/payment-history',
-    icon: ClipboardDocumentListIcon,
-    isForVendor: true,
-  },
-  {
     name: 'Quản lý món ăn',
-    href: '/vendor/dish',
+    href: `${vendorBase}/${vendorPaths.DISH}`,
     icon: ShoppingBagIcon,
     isForVendor: true,
   },
   {
     name: 'Quản lý đơn hàng',
-    href: '/vendor/orders',
+    href: `${vendorBase}/${vendorPaths.ORDER}`,
     icon: QueueListIcon,
     isForVendor: true,
   },
   {
     name: 'Chế độ ăn',
-    href: '/vendor/dietary-preferences',
-    icon: SparklesIcon,
+    href: `${vendorBase}/${vendorPaths.DIETARY}`,
+    icon: UserGroupIcon,
     isForVendor: true,
+  },
+  {
+    name: 'Xác nhận sở hữu quán',
+    href: `${vendorBase}/${vendorPaths.GHOST_PIN}`,
+    icon: MapPinIcon,
+    isForVendor: false,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    icon: CampaignIcon,
+    isForVendor: true,
+    children: [
+      {
+        name: 'Cửa hàng',
+        href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
+        icon: BuildingStorefrontIcon,
+      },
+      {
+        name: 'Hệ thống',
+        href: `${vendorBase}/${vendorPaths.CAMPAIGN_SYSTEM}`,
+        icon: PublicIcon,
+      },
+    ],
+  },
+  {
+    name: 'Lịch sử',
+    icon: DocumentTextIcon,
+    isForVendor: true,
+    children: [
+      {
+        name: 'Lịch sử đăng ký',
+        href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
+        icon: DocumentTextIcon,
+      },
+      {
+        name: 'Lịch sử thanh toán',
+        href: `${vendorBase}/${vendorPaths.PAYMENT_HISTORY}`,
+        icon: ClipboardDocumentListIcon,
+      },
+    ],
   },
 ];
 
@@ -157,9 +182,9 @@ function VendorLayout(): JSX.Element {
 
   const isBranchScheduleMissing = missingScheduleBranches.length > 0;
 
-  const vendorBranchPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`;
-  const vendorDietaryPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DIETARY}`;
-  const vendorDishPath = `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DISH}`;
+  const vendorBranchPath = `${vendorBase}/${vendorPaths.BRANCH}`;
+  const vendorDietaryPath = `${vendorBase}/${vendorPaths.DIETARY}`;
+  const vendorDishPath = `${vendorBase}/${vendorPaths.DISH}`;
 
   const filteredNavigation = navigation
     .filter((item) => !item.isForVendor || isVendor)
@@ -208,6 +233,27 @@ function VendorLayout(): JSX.Element {
         },
       };
     });
+
+  const pageTitle = useMemo(() => {
+    const directMatch = filteredNavigation.find(
+      (item) => item.href === location.pathname
+    );
+
+    if (directMatch) {
+      return directMatch.name;
+    }
+
+    for (const item of filteredNavigation) {
+      const childMatch = item.children?.find(
+        (child) => child.href === location.pathname
+      );
+      if (childMatch) {
+        return childMatch.name;
+      }
+    }
+
+    return 'Dashboard';
+  }, [filteredNavigation, location.pathname]);
 
   useEffect(() => {
     if (
@@ -382,7 +428,7 @@ function VendorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+        <div className="relative flex h-full w-full max-w-xs flex-col bg-white">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
@@ -454,9 +500,7 @@ function VendorLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {filteredNavigation.find(
-                    (item) => item.href === location.pathname
-                  )?.name ?? 'Dashboard'}
+                  {pageTitle}
                 </Typography>
               </Box>
             </Box>
@@ -465,7 +509,7 @@ function VendorLayout(): JSX.Element {
               {isVendor && (
                 <Box className="flex items-center gap-3">
                   <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
-                    <AccountBalanceIcon fontSize="small" />
+                    {/* <AccountBalanceIcon fontSize="small" /> */}
                     Số dư: {formatCurrencyVnd(accountBalance?.balance)}
                   </Box>
                   <Button
@@ -473,7 +517,7 @@ function VendorLayout(): JSX.Element {
                     color="primary"
                     onClick={() => setIsTransferModalOpen(true)}
                     disabled={accountBalance?.balance === 0}
-                    startIcon={<MoneyIcon />}
+                    // startIcon={<MoneyIcon />}
                     className="bg-primary-600 hover:bg-primary-700 h-10 rounded-lg px-4 text-sm font-bold whitespace-nowrap text-white shadow-sm"
                     disableElevation
                   >

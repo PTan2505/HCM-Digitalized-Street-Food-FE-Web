@@ -93,6 +93,8 @@ export const apiUrl = {
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/day-offs`,
+    deleteOrUpdateDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
     deleteDayOffOfABranch: (dayOffId: number): string =>
       `/Branch/day-offs/${dayOffId}`,
     //Images
@@ -162,5 +164,39 @@ export const apiUrl = {
     getManagerOrders: '/order/manager/orders',
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
+    getVendorOrders: 'order/vendor/orders',
+  },
+  manager: {
+    getMyBranch: '/Branch/manager/my-branch',
+  },
+  campaign: {
+    GetOrPostSystemCampaign: '/Campaign/system',
+    GetOrPostVendorCampaign: '/Campaign/vendor',
+    GetOrPostBranchCampaign: (branchId: number): string =>
+      `/Campaign/branch/${branchId}`,
+    GetJoinableSystemCampaigns: '/Campaign/system/joinable',
+    BranchJoinASystemCampaign: (campaignId: number): string =>
+      `/Campaign/join/system/${campaignId}/branch`,
+    VendorJoinASystemCampaign: '/Campaign/vendor/join​',
+    GetDetailsOfASystemCampaign: (campaignId: number): string =>
+      `/Campaign/system/${campaignId}`,
+    UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+    GetOrPostAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/images`,
+    DeleteAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/image`,
+    GetBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches`,
+    AddBranchesToACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/add`,
+    RemoveBranchesFromACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/remove`,
+  },
+  voucher: {
+    GetOrPostVouchers: '/vouchers',
+    UpdateOrDeleteVoucher: (voucherId: number): string =>
+      `/vouchers/${voucherId}`,
+    GetVouchersOfACampaign: (campaignId: number): string =>
+      `/vouchers/campaign/${campaignId}`,
   },
 };

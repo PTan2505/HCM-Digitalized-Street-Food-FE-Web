@@ -361,6 +361,18 @@ export const createBranch = createAppAsyncThunk(
   }
 );
 
+export const getBranchesByVendor = createAppAsyncThunk(
+  'vendor/getBranchesByVendor',
+  async (vendorId: number, { rejectWithValue }) => {
+    try {
+      const response: Branch[] = await axiosApi.vendorApi.getBranches(vendorId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const updateBranch = createAppAsyncThunk(
   'vendor/updateBranch',
   async (
@@ -639,6 +651,11 @@ export const vendorSlice = createSlice({
           state.myVendor.branches.push(action.payload as unknown as Branch);
         }
       })
+      .addCase(getBranchesByVendor.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.branches = action.payload;
+        }
+      })
       .addCase(updateBranch.fulfilled, (state, action) => {
         if (state.myVendor && action.payload) {
           const branchIndex = state.myVendor.branches.findIndex(
@@ -829,8 +846,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state) => {
           state.status = 'pending';
@@ -860,8 +876,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state, action) => {
           state.status = 'failed';
@@ -893,8 +908,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state) => {
           state.status = 'succeeded';

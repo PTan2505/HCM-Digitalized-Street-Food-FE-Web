@@ -11,6 +11,8 @@ import dishReducer from '@slices/dish';
 import feedbackReducer from '@slices/feedback';
 import orderReducer from '@slices/order';
 import feedbackTagReducer from '@slices/feedbackTag';
+import campaignReducer from '@slices/campaign';
+import voucherReducer from '@slices/voucher';
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +28,8 @@ export const store = configureStore({
     feedback: feedbackReducer,
     order: orderReducer,
     feedbackTag: feedbackTagReducer,
+    campaign: campaignReducer,
+    voucher: voucherReducer,
   },
 });
 

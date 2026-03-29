@@ -85,11 +85,11 @@ export default function UserBadgeManagement(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'userId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'userId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'userName',
       label: 'Tên người dùng',
@@ -163,6 +163,7 @@ export default function UserBadgeManagement(): JSX.Element {
       ),
       onClick: (row: Record<string, unknown>): void =>
         handleOpenDialog(row as unknown as UserWithBadges),
+      tooltip: 'Thêm hoặc thu hồi huy hiệu',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },

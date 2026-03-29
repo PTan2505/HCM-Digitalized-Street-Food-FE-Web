@@ -17,6 +17,8 @@ import {
   Close as XMarkIcon,
   Loyalty as ShoppingBagIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
+  Campaign as CampaignIcon,
+  LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
@@ -38,30 +40,9 @@ const navigation: NavigationItem[] = [
     icon: RectangleStackIcon,
   },
   {
-    name: 'Huy hiệu',
-    icon: StarIcon,
-    children: [
-      {
-        name: 'Quản lý huy hiệu',
-        href: '/admin/badge',
-        icon: StarIcon,
-      },
-      {
-        name: 'Huy hiệu của người dùng',
-        href: '/admin/badge-users',
-        icon: ShoppingBagIcon,
-      },
-    ],
-  },
-  {
     name: 'Quản lý khẩu vị',
     href: '/admin/taste',
     icon: SparklesIcon,
-  },
-  {
-    name: 'Quản lý tag phản hồi',
-    href: '/admin/feedback-tag',
-    icon: ChatBubbleOutlineIcon,
   },
   {
     name: 'Chế độ ăn',
@@ -78,6 +59,48 @@ const navigation: NavigationItem[] = [
         icon: UserCircleIcon,
       },
     ],
+  },
+  {
+    name: 'Huy hiệu',
+    icon: StarIcon,
+    children: [
+      {
+        name: 'Quản lý huy hiệu',
+        href: '/admin/badge',
+        icon: StarIcon,
+      },
+      {
+        name: 'Huy hiệu của người dùng',
+        href: '/admin/badge-users',
+        icon: ShoppingBagIcon,
+      },
+    ],
+  },
+  {
+    name: 'Quản lý tag phản hồi',
+    href: '/admin/feedback-tag',
+    icon: ChatBubbleOutlineIcon,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    icon: CampaignIcon,
+    children: [
+      {
+        name: 'Từ hệ thống',
+        href: '/admin/campaign',
+        icon: CampaignIcon,
+      },
+      {
+        name: 'Từ cửa hàng',
+        href: '/admin/campaign/vendor',
+        icon: BuildingStorefrontIcon,
+      },
+    ],
+  },
+  {
+    name: 'Quản lý voucher',
+    href: '/admin/voucher',
+    icon: LocalOfferIcon,
   },
 ];
 
@@ -123,7 +146,7 @@ function AdminLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+        <div className="relative flex h-full w-full max-w-xs flex-col bg-white">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
@@ -208,7 +231,7 @@ function AdminLayout(): JSX.Element {
 
         {/* Page content */}
         <Box component="main" className="py-6">
-          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <Box className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />
           </Box>
         </Box>

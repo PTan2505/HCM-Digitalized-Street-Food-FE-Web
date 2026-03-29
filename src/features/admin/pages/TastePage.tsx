@@ -106,11 +106,11 @@ export default function TastePage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'tasteId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'tasteId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên Khẩu vị',
@@ -135,12 +135,14 @@ export default function TastePage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Taste): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa khẩu vị',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Taste): void => handleDelete(row),
+      tooltip: 'Xóa khẩu vị',
       color: 'error' as const,
       variant: 'outlined' as const,
     },

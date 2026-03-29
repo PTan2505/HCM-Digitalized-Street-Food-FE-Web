@@ -113,14 +113,14 @@ export default function FeedbackTagPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'tagId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'tagId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'tagName',
-      label: 'Tên Tag',
+      label: 'Tên Tag phản hồi',
       render: (value: unknown): React.ReactNode => (
         <Box className="text-table-text-primary font-semibold">
           {String(value)}
@@ -142,12 +142,14 @@ export default function FeedbackTagPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: FeedbackTag): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa tag phản hồi',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: FeedbackTag): void => handleDelete(row),
+      tooltip: 'Xóa tag phản hồi',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -159,7 +161,7 @@ export default function FeedbackTagPage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý feedback tag
+            Quản lý tag phản hồi
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý các nhãn phản hồi từ người dùng
@@ -170,7 +172,7 @@ export default function FeedbackTagPage(): JSX.Element {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm feedback tag
+          Thêm tag phản hồi
         </button>
       </div>
 
@@ -181,7 +183,7 @@ export default function FeedbackTagPage(): JSX.Element {
         rowKey="tagId"
         actions={actions}
         loading={status === 'pending'}
-        emptyMessage="Chưa có feedback tag nào"
+        emptyMessage="Chưa có tag phản hồi nào"
       />
 
       {/* Modal Form */}
@@ -202,11 +204,11 @@ export default function FeedbackTagPage(): JSX.Element {
         aria-describedby="delete-dialog-description"
       >
         <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa feedback tag
+          Xác nhận xóa tag phản hồi
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa feedback tag &quot;
+            Bạn có chắc chắn muốn xóa tag phản hồi &quot;
             {deletingTag?.tagName}&quot;? Hành động này không thể hoàn tác.
           </DialogContentText>
         </DialogContent>

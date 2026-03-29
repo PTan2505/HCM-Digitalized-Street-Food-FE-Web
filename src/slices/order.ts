@@ -47,6 +47,25 @@ const initialState: OrderState = {
   error: null,
 };
 
+export const getVendorOrders = createAppAsyncThunk(
+  'order/getVendorOrders',
+  async (
+    params: {
+      pageNumber: number;
+      pageSize: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: GetVendorBranchOrdersResponse =
+        await axiosApi.orderApi.getVendorOrders(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const getVendorBranchOrders = createAppAsyncThunk(
   'order/getVendorBranchOrders',
   async (
@@ -143,6 +162,7 @@ export const completeVendorOrder = createAppAsyncThunk(
 );
 
 const allThunks = [
+  getVendorOrders,
   getVendorBranchOrders,
   getManagerOrders,
   decideVendorOrder,
@@ -158,6 +178,17 @@ export const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getVendorOrders.fulfilled, (state, action) => {
+        state.orders = action.payload.items;
+        state.pagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
       .addCase(getVendorBranchOrders.fulfilled, (state, action) => {
         state.orders = action.payload.items;
         state.pagination = {
