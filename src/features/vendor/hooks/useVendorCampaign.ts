@@ -12,6 +12,9 @@ import {
   getJoinableSystemCampaigns,
   joinBranchToSystemCampaign,
   getSystemCampaignDetails,
+  getBranchesOfACampaign,
+  addBranchesToACampaign,
+  removeBranchesFromACampaign,
 } from '@slices/campaign';
 import type {
   VendorCampaign,
@@ -20,6 +23,7 @@ import type {
   VendorCampaignUpdate,
   VendorCampaignListResponse,
   JoinSystemCampaignResponse,
+  CampaignBranchesResponse,
 } from '@features/vendor/types/campaign';
 
 const useVendorCampaign = (): {
@@ -57,6 +61,17 @@ const useVendorCampaign = (): {
   onGetSystemCampaignDetails: (
     campaignId: number
   ) => Promise<CampaignDetailsResponse>;
+  onGetBranchesOfACampaign: (
+    campaignId: number
+  ) => Promise<CampaignBranchesResponse>;
+  onAddBranchesToACampaign: (
+    campaignId: number,
+    branchIds: number[]
+  ) => Promise<CampaignBranchesResponse>;
+  onRemoveBranchesFromACampaign: (
+    campaignId: number,
+    branchIds: number[]
+  ) => Promise<CampaignBranchesResponse>;
 } => {
   const dispatch = useAppDispatch();
 
@@ -163,6 +178,37 @@ const useVendorCampaign = (): {
     [dispatch]
   );
 
+  const onGetBranchesOfACampaign = useCallback(
+    async (campaignId: number): Promise<CampaignBranchesResponse> => {
+      return await dispatch(getBranchesOfACampaign(campaignId)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onAddBranchesToACampaign = useCallback(
+    async (
+      campaignId: number,
+      branchIds: number[]
+    ): Promise<CampaignBranchesResponse> => {
+      return await dispatch(
+        addBranchesToACampaign({ campaignId, branchIds })
+      ).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onRemoveBranchesFromACampaign = useCallback(
+    async (
+      campaignId: number,
+      branchIds: number[]
+    ): Promise<CampaignBranchesResponse> => {
+      return await dispatch(
+        removeBranchesFromACampaign({ campaignId, branchIds })
+      ).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
@@ -175,6 +221,9 @@ const useVendorCampaign = (): {
     onGetJoinableSystemCampaigns,
     onJoinBranchToSystemCampaign,
     onGetSystemCampaignDetails,
+    onGetBranchesOfACampaign,
+    onAddBranchesToACampaign,
+    onRemoveBranchesFromACampaign,
   };
 };
 

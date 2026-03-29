@@ -9,6 +9,7 @@ import type {
   VendorCampaignCreate,
   VendorCampaignUpdate,
   JoinSystemCampaignResponse,
+  CampaignBranchesResponse,
 } from '@features/vendor/types/campaign';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -277,6 +278,56 @@ export const getSystemCampaignDetails = createAppAsyncThunk(
   }
 );
 
+export const getBranchesOfACampaign = createAppAsyncThunk(
+  'campaign/getBranchesOfACampaign',
+  async (campaignId: number, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.vendorCampaignApi.getBranchesOfACampaign(campaignId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const addBranchesToACampaign = createAppAsyncThunk(
+  'campaign/addBranchesToACampaign',
+  async (
+    payload: { campaignId: number; branchIds: number[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.vendorCampaignApi.addBranchesToACampaign(
+        payload.campaignId,
+        payload.branchIds
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const removeBranchesFromACampaign = createAppAsyncThunk(
+  'campaign/removeBranchesFromACampaign',
+  async (
+    payload: { campaignId: number; branchIds: number[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response =
+        await axiosApi.vendorCampaignApi.removeBranchesFromACampaign(
+          payload.campaignId,
+          payload.branchIds
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const campaignSlice = createSlice({
   name: 'campaign',
   initialState,
@@ -402,6 +453,28 @@ export const campaignSlice = createSlice({
           state.branchTotalCount += 1;
         }
       })
+      .addCase(addBranchesToACampaign.fulfilled, (state, action) => {
+        const payload = action.payload;
+        if (payload) {
+          const index = state.vendorCampaigns.findIndex(
+            (c) => c.campaignId === payload.campaignId
+          );
+          if (index !== -1) {
+            state.vendorCampaigns[index].branchIds = payload.branchIds;
+          }
+        }
+      })
+      .addCase(removeBranchesFromACampaign.fulfilled, (state, action) => {
+        const payload = action.payload;
+        if (payload) {
+          const index = state.vendorCampaigns.findIndex(
+            (c) => c.campaignId === payload.campaignId
+          );
+          if (index !== -1) {
+            state.vendorCampaigns[index].branchIds = payload.branchIds;
+          }
+        }
+      })
       .addMatcher(
         isPending(
           getAllCampaigns,
@@ -417,7 +490,10 @@ export const campaignSlice = createSlice({
           getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
-          deleteCampaignImage
+          deleteCampaignImage,
+          getBranchesOfACampaign,
+          addBranchesToACampaign,
+          removeBranchesFromACampaign
         ),
         (state) => {
           state.status = 'pending';
@@ -438,7 +514,10 @@ export const campaignSlice = createSlice({
           getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
-          deleteCampaignImage
+          deleteCampaignImage,
+          getBranchesOfACampaign,
+          addBranchesToACampaign,
+          removeBranchesFromACampaign
         ),
         (state) => {
           state.status = 'succeeded';
@@ -460,7 +539,10 @@ export const campaignSlice = createSlice({
           getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
-          deleteCampaignImage
+          deleteCampaignImage,
+          getBranchesOfACampaign,
+          addBranchesToACampaign,
+          removeBranchesFromACampaign
         ),
         (state, action) => {
           state.status = 'failed';

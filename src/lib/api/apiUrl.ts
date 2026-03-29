@@ -185,6 +185,12 @@ export const apiUrl = {
       `/Campaign/${campaignId}/images`,
     DeleteAImageOfACampaign: (campaignId: number): string =>
       `/Campaign/${campaignId}/image`,
+    GetBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches`,
+    AddBranchesToACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/add`,
+    RemoveBranchesFromACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/remove`,
   },
   voucher: {
     GetOrPostVouchers: '/vouchers',

@@ -40,7 +40,7 @@ import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetail
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
-import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
+// import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
 
 const StatusBadge = ({
   label,
@@ -394,15 +394,15 @@ function BranchPage(): JSX.Element {
       },
       color: 'info' as const,
     },
-    {
-      label: <CampaignIcon fontSize="small" />,
-      menuLabel: 'Quản lý chiến dịch',
-      onClick: (branch: Branch): void => {
-        setCampaignBranch(branch);
-      },
-      color: 'warning' as const,
-      show: (branch: Branch): boolean => branch.isSubscribed,
-    },
+    // {
+    //   label: <CampaignIcon fontSize="small" />,
+    //   menuLabel: 'Quản lý chiến dịch',
+    //   onClick: (branch: Branch): void => {
+    //     setCampaignBranch(branch);
+    //   },
+    //   color: 'warning' as const,
+    //   show: (branch: Branch): boolean => branch.isSubscribed,
+    // },
     {
       label: <RateReviewIcon fontSize="small" />,
       menuLabel: 'Phản hồi về chi nhánh',
@@ -552,11 +552,11 @@ function BranchPage(): JSX.Element {
         }}
       />
 
-      <BranchCampaignManagementModal
+      {/* <BranchCampaignManagementModal
         isOpen={campaignBranch !== null}
         onClose={() => setCampaignBranch(null)}
         branch={campaignBranch}
-      />
+      /> */}
 
       <OnboardingGuideModal
         open={showOnboardingGuide}
