@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX, MouseEvent } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -269,41 +269,47 @@ export default function VendorCampaignPage(): JSX.Element {
 
         return (
           <Box className="flex items-center gap-2">
-            <Button
-              size="small"
-              color="info"
-              variant="outlined"
-              onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                event.stopPropagation();
-                setSelectedCampaign(row);
-                setOpenBranchModal(true);
-              }}
-            >
-              <StorefrontIcon fontSize="small" />
-            </Button>
-            <Button
-              size="small"
-              color="warning"
-              variant="outlined"
-              onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                event.stopPropagation();
-                setSelectedCampaign(row);
-                setOpenVoucherModal(true);
-              }}
-            >
-              <VoucherIcon fontSize="small" />
-            </Button>
-            <Button
-              size="small"
-              color="primary"
-              variant="outlined"
-              onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                event.stopPropagation();
-                handleOpenModal(row);
-              }}
-            >
-              <EditIcon fontSize="small" />
-            </Button>
+            <Tooltip title="Quản lý chi nhánh" arrow>
+              <Button
+                size="small"
+                color="info"
+                variant="outlined"
+                onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                  event.stopPropagation();
+                  setSelectedCampaign(row);
+                  setOpenBranchModal(true);
+                }}
+              >
+                <StorefrontIcon fontSize="small" />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Quản lý voucher" arrow>
+              <Button
+                size="small"
+                color="warning"
+                variant="outlined"
+                onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                  event.stopPropagation();
+                  setSelectedCampaign(row);
+                  setOpenVoucherModal(true);
+                }}
+              >
+                <VoucherIcon fontSize="small" />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Chỉnh sửa chiến dịch" arrow>
+              <Button
+                size="small"
+                color="primary"
+                variant="outlined"
+                onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                  event.stopPropagation();
+                  handleOpenModal(row);
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </Button>
+            </Tooltip>
           </Box>
         );
       },

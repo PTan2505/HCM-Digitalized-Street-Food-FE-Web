@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import SaveIcon from '@mui/icons-material/Save';
 import Table from '@features/vendor/components/Table';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -62,8 +61,8 @@ export default function VendorCampaignBranchModal({
     setIsLoading(true);
     try {
       const res = await onGetBranchesOfACampaign(campaign.campaignId);
-      setInitialIds(res.branchIds || []);
-      setSelectedIds(res.branchIds || []);
+      setInitialIds(res.branchIds ?? []);
+      setSelectedIds(res.branchIds ?? []);
     } catch (err) {
       console.error(err);
       setInitialIds([]);
@@ -254,9 +253,7 @@ export default function VendorCampaignBranchModal({
           startIcon={
             isSaving ? (
               <CircularProgress size={20} color="inherit" />
-            ) : (
-              <SaveIcon />
-            )
+            ) : undefined
           }
           className={
             !isDirty || isSaving || isLoading

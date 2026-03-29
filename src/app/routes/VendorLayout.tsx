@@ -53,28 +53,10 @@ const navigation = [
     isForVendor: true,
   },
   {
-    name: 'Xác nhận sở hữu quán',
-    href: `${vendorBase}/${vendorPaths.GHOST_PIN}`,
-    icon: MapPinIcon,
-    isForVendor: false,
-  },
-  {
     name: 'Chi nhánh',
     href: `${vendorBase}/${vendorPaths.BRANCH}`,
     icon: BuildingStorefrontIcon,
     isForVendor: false,
-  },
-  {
-    name: 'Lịch sử đăng ký',
-    href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
-    icon: DocumentTextIcon,
-    isForVendor: false,
-  },
-  {
-    name: 'Lịch sử thanh toán',
-    href: `${vendorBase}/${vendorPaths.PAYMENT_HISTORY}`,
-    icon: ClipboardDocumentListIcon,
-    isForVendor: true,
   },
   {
     name: 'Quản lý món ăn',
@@ -95,6 +77,12 @@ const navigation = [
     isForVendor: true,
   },
   {
+    name: 'Xác nhận sở hữu quán',
+    href: `${vendorBase}/${vendorPaths.GHOST_PIN}`,
+    icon: MapPinIcon,
+    isForVendor: false,
+  },
+  {
     name: 'Quản lý chiến dịch',
     icon: CampaignIcon,
     isForVendor: true,
@@ -108,6 +96,23 @@ const navigation = [
         name: 'Hệ thống',
         href: `${vendorBase}/${vendorPaths.CAMPAIGN_SYSTEM}`,
         icon: PublicIcon,
+      },
+    ],
+  },
+  {
+    name: 'Lịch sử',
+    icon: DocumentTextIcon,
+    isForVendor: true,
+    children: [
+      {
+        name: 'Lịch sử đăng ký',
+        href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
+        icon: DocumentTextIcon,
+      },
+      {
+        name: 'Lịch sử thanh toán',
+        href: `${vendorBase}/${vendorPaths.PAYMENT_HISTORY}`,
+        icon: ClipboardDocumentListIcon,
       },
     ],
   },
@@ -423,7 +428,7 @@ function VendorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+        <div className="relative flex h-full w-full max-w-xs flex-col bg-white">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
