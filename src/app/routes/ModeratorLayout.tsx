@@ -62,7 +62,7 @@ function ModeratorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+        <div className="relative flex h-full w-full max-w-xs flex-col bg-white">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
