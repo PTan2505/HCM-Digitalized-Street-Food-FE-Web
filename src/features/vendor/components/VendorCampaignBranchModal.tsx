@@ -39,7 +39,10 @@ export default function VendorCampaignBranchModal({
   } = useVendorCampaign();
 
   const subscribedBranches = useMemo(
-    () => branches.filter((branch) => branch.isSubscribed),
+    () =>
+      branches.filter(
+        (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+      ),
     [branches]
   );
 
