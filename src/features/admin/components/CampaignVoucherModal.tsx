@@ -9,10 +9,12 @@ import {
   IconButton,
   Box,
   Button,
+  Chip,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Add as AddIcon,
+  Visibility as VisibilityIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
@@ -23,6 +25,7 @@ import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVouchers, selectVoucherStatus } from '@slices/voucher';
 import VoucherFormModal from './VoucherFormModal';
+import VoucherDetailsModal from './VoucherDetailsModal';
 
 interface CampaignVoucherModalProps {
   isOpen: boolean;
@@ -44,6 +47,35 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
+const formatCurrency = (value: number): string =>
+  new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(value);
+
+const StatusBadge = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default';
+}): JSX.Element => {
+  const colors = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
+  return (
+    <span
+      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+    >
+      {label}
+    </span>
+  );
+};
+
 export default function CampaignVoucherModal({
   isOpen,
   onClose,
@@ -63,6 +95,8 @@ export default function CampaignVoucherModal({
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingVoucher, setDeletingVoucher] = useState<Voucher | null>(null);
+  const [openDetailsModal, setOpenDetailsModal] = useState(false);
+  const [viewingVoucher, setViewingVoucher] = useState<Voucher | null>(null);
 
   const fetchVouchers = useCallback(async () => {
     if (campaign) {
@@ -129,53 +163,146 @@ export default function CampaignVoucherModal({
     setDeletingVoucher(null);
   };
 
+  const handleOpenDetails = (voucher: Voucher): void => {
+    setViewingVoucher(voucher);
+    setOpenDetailsModal(true);
+  };
+
+  const handleCloseDetails = (): void => {
+    setOpenDetailsModal(false);
+    setViewingVoucher(null);
+  };
+
   const columns = [
-    { key: 'voucherId', label: 'ID', style: { width: '60px' } },
-    { key: 'name', label: 'Tên Voucher' },
-    { key: 'voucherCode', label: 'Mã Code' },
+    {
+      key: 'name',
+      label: 'Tên voucher',
+      style: { width: '180px', maxWidth: '240px' },
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <Box className="w-[220px] min-w-0">
+          <div
+            className="truncate font-semibold text-[var(--color-table-text-primary)]"
+            title={row.name}
+          >
+            {row.name}
+          </div>
+          <div
+            className="truncate text-xs text-[var(--color-table-text-secondary)]"
+            title={row.voucherCode}
+          >
+            {row.voucherCode}
+          </div>
+        </Box>
+      ),
+    },
     {
       key: 'type',
-      label: 'Loại',
-      render: (value: unknown): JSX.Element | string =>
-        value === 'AMOUNT' ? 'Tiền mặt' : 'Phần trăm',
+      label: 'Loại voucher',
+      render: (value: unknown): JSX.Element => (
+        <Chip
+          label={value === 'PERCENT' ? 'Phần trăm' : 'Giá tiền'}
+          size="small"
+          color={value === 'PERCENT' ? 'info' : 'primary'}
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      key: 'availableQuantity',
+      label: 'Số lượng còn lại',
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const remainingQuantity = Math.max(
+          row.quantity - (row.usedQuantity ?? 0),
+          0
+        );
+
+        return (
+          <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+            {remainingQuantity}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'quantity',
+      label: 'Số lượng',
+      render: (value: unknown): JSX.Element => (
+        <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+          {value as number}
+        </span>
+      ),
+    },
+    {
+      key: 'startDate',
+      label: 'Thời gian hiệu lực',
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+          <div>Từ: {formatVNDatetime(row.startDate)}</div>
+          <div>Đến: {formatVNDatetime(row.endDate)}</div>
+        </Box>
+      ),
     },
     {
       key: 'discountValue',
-      label: 'Giá trị',
-      render: (value: unknown, row: Voucher): JSX.Element | string =>
-        row.type === 'AMOUNT'
-          ? `${(value as number).toLocaleString()} VNĐ`
-          : `${value as number}%`,
-    },
-    { key: 'quantity', label: 'Số lượng' },
-    {
-      key: 'startDate',
-      label: 'Thời gian',
-      render: (_: unknown, row: Voucher): JSX.Element => (
-        <div className="text-xs">
-          <div>Từ: {formatVNDatetime(row.startDate)}</div>
-          <div>Đến: {formatVNDatetime(row.endDate)}</div>
-        </div>
+      label: 'Giá trị giảm',
+      render: (value: unknown, row: Voucher): JSX.Element => (
+        <span className="text-sm font-semibold text-[var(--color-table-text-primary)]">
+          {row.type === 'PERCENT'
+            ? `${value as number}%`
+            : formatCurrency(value as number)}
+        </span>
       ),
     },
-  ];
-
-  const actions = [
     {
-      label: <EditIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        handleOpenForm(row);
-      },
-      color: 'primary' as const,
-      variant: 'outlined' as const,
+      key: 'isActive',
+      label: 'Hoạt động',
+      render: (value: unknown): JSX.Element => (
+        <StatusBadge
+          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          type={value === true ? 'success' : 'error'}
+        />
+      ),
     },
     {
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        handleDelete(row);
-      },
-      color: 'error' as const,
-      variant: 'outlined' as const,
+      key: 'actions',
+      label: 'Thao tác',
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <Box className="flex items-center gap-2">
+          <Button
+            size="small"
+            color="info"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleOpenDetails(row);
+            }}
+          >
+            <VisibilityIcon fontSize="small" />
+          </Button>
+          <Button
+            size="small"
+            color="primary"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleOpenForm(row);
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </Button>
+          <Button
+            size="small"
+            color="error"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleDelete(row);
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </Button>
+        </Box>
+      ),
     },
   ];
 
@@ -211,9 +338,9 @@ export default function CampaignVoucherModal({
           <Box sx={{ minHeight: '400px' }}>
             <Table
               columns={columns}
+              maxHeight="none"
               data={vouchers}
               rowKey="voucherId"
-              actions={actions}
               loading={status === 'pending'}
               emptyMessage="Chiến dịch này chưa có voucher nào"
             />
@@ -265,6 +392,12 @@ export default function CampaignVoucherModal({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <VoucherDetailsModal
+        isOpen={openDetailsModal}
+        onClose={handleCloseDetails}
+        voucher={viewingVoucher}
+      />
     </>
   );
 }
