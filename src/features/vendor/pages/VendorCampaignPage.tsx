@@ -5,11 +5,15 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   ConfirmationNumber as VoucherIcon,
+  Storefront as StorefrontIcon,
+  GroupAdd as GroupAddIcon,
 } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
 import VendorCampaignVoucherModal from '@features/vendor/components/VendorCampaignVoucherModal';
+import VendorCampaignBranchModal from '@features/vendor/components/VendorCampaignBranchModal';
+import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSystemCampaignModal';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -68,7 +72,6 @@ export default function VendorCampaignPage(): JSX.Element {
   const {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
-    onCreateBranchCampaign,
     onUpdateVendorCampaign,
     onPostCampaignImage,
     onDeleteCampaignImage,
@@ -79,6 +82,8 @@ export default function VendorCampaignPage(): JSX.Element {
   const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
+  const [openBranchModal, setOpenBranchModal] = useState(false);
+  const [isJoinableModalOpen, setIsJoinableModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<VendorCampaign | null>(
     null
   );
@@ -150,6 +155,7 @@ export default function VendorCampaignPage(): JSX.Element {
         startDate: data.startDate,
         endDate: data.endDate,
         isActive: data.isActive,
+        branchIds: data.branchIds,
       };
 
       if (editingCampaign) {
@@ -167,32 +173,14 @@ export default function VendorCampaignPage(): JSX.Element {
           );
         }
       } else {
-        if (data.applyScope === 'VENDOR') {
-          const createdCampaign = await onCreateVendorCampaign(payload);
-          if (imageFile) {
-            await onPostCampaignImage(
-              createdCampaign.campaignId,
-              createImageFormData(imageFile)
-            );
-          }
-        } else {
-          const createdCampaigns = await Promise.all(
-            data.branchIds.map((branchId) =>
-              onCreateBranchCampaign(branchId, payload)
-            )
+        const createdCampaign = await onCreateVendorCampaign(payload);
+        if (imageFile) {
+          await onPostCampaignImage(
+            createdCampaign.campaignId,
+            createImageFormData(imageFile)
           );
-          if (imageFile) {
-            await Promise.all(
-              createdCampaigns.map((campaign) =>
-                onPostCampaignImage(
-                  campaign.campaignId,
-                  createImageFormData(imageFile)
-                )
-              )
-            );
-          }
-          await fetchCampaigns();
         }
+        await fetchCampaigns();
       }
       handleCloseModal();
     } catch (err) {
@@ -283,6 +271,18 @@ export default function VendorCampaignPage(): JSX.Element {
           <Box className="flex items-center gap-2">
             <Button
               size="small"
+              color="info"
+              variant="outlined"
+              onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                setSelectedCampaign(row);
+                setOpenBranchModal(true);
+              }}
+            >
+              <StorefrontIcon fontSize="small" />
+            </Button>
+            <Button
+              size="small"
               color="warning"
               variant="outlined"
               onClick={(event: MouseEvent<HTMLButtonElement>) => {
@@ -329,6 +329,15 @@ export default function VendorCampaignPage(): JSX.Element {
           >
             <AddIcon fontSize="small" />
             Thêm chiến dịch
+          </button>
+          <button
+            onClick={() => {
+              setIsJoinableModalOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-lg border border-[var(--color-primary-600)] bg-white px-4 py-2 font-semibold text-[var(--color-primary-700)] transition-colors hover:bg-[var(--color-primary-50)]"
+          >
+            <GroupAddIcon fontSize="small" />
+            Tham gia chiến dịch hệ thống
           </button>
         </div>
       </div>
@@ -377,6 +386,24 @@ export default function VendorCampaignPage(): JSX.Element {
           setSelectedCampaign(null);
         }}
         campaign={selectedCampaign}
+      />
+
+      <VendorCampaignBranchModal
+        isOpen={openBranchModal}
+        onClose={() => {
+          setOpenBranchModal(false);
+          setSelectedCampaign(null);
+        }}
+        campaign={selectedCampaign}
+        branches={branchOptions}
+      />
+
+      <JoinableSystemCampaignModal
+        isOpen={isJoinableModalOpen}
+        onClose={() => setIsJoinableModalOpen(false)}
+        mode="detail"
+        vendorBranchIds={branchOptions.map((branch) => branch.branchId)}
+        vendorBranches={branchOptions}
       />
     </div>
   );

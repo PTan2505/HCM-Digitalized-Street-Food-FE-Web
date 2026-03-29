@@ -11,6 +11,7 @@ import {
   IconButton,
   CircularProgress,
   Tooltip,
+  Chip,
 } from '@mui/material';
 import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
@@ -114,14 +115,12 @@ export default function VendorCampaignFormModal({
       startDate: '',
       endDate: '',
       isActive: true,
-      applyScope: 'VENDOR',
-      branchIds: [],
+      branchIds: null,
     },
   });
 
   const startDate = watch('startDate');
   const endDate = watch('endDate');
-  const applyScope = watch('applyScope');
   const selectedBranchIds = watch('branchIds');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -138,8 +137,7 @@ export default function VendorCampaignFormModal({
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
           isActive: campaign.isActive,
-          applyScope: 'VENDOR',
-          branchIds: [],
+          branchIds: campaign.branchIds ?? null,
         });
       } else {
         reset({
@@ -149,8 +147,7 @@ export default function VendorCampaignFormModal({
           startDate: '',
           endDate: '',
           isActive: true,
-          applyScope: 'VENDOR',
-          branchIds: [],
+          branchIds: null,
         });
       }
       setImageFile(null);
@@ -169,12 +166,6 @@ export default function VendorCampaignFormModal({
       }
     };
   }, [imagePreviewUrl]);
-
-  useEffect(() => {
-    if (applyScope === 'VENDOR' && selectedBranchIds.length > 0) {
-      setValue('branchIds', [], { shouldValidate: true });
-    }
-  }, [applyScope, selectedBranchIds.length, setValue]);
 
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
@@ -220,13 +211,6 @@ export default function VendorCampaignFormModal({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  const handleSelectSingleBranch = (branchId: number): void => {
-    setValue('branchIds', [branchId], {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
   };
 
   if (!isOpen) return null;
@@ -414,81 +398,95 @@ export default function VendorCampaignFormModal({
 
             {!isEditMode && !hideApplyScope && (
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Phạm vi áp dụng
-                </label>
-
-                <div className="rounded-lg border border-gray-200 p-3">
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="radio"
-                        checked={applyScope === 'VENDOR'}
-                        onChange={() =>
-                          setValue('applyScope', 'VENDOR', {
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">
+                    Chi nhánh áp dụng chiến dịch{' '}
+                    <span className="text-xs font-normal text-red-500 italic">
+                      (Phải chọn ít nhất 1 chi nhánh)
+                    </span>
+                  </p>
+                  {subscribedBranches.length > 0 &&
+                    selectedBranchIds !== null &&
+                    selectedBranchIds.length !== subscribedBranches.length && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue('branchIds', null, {
                             shouldDirty: true,
                             shouldValidate: true,
-                          })
-                        }
-                        className="h-4 w-4 border-gray-300 text-amber-600 focus:ring-amber-300"
-                      />
-                      Áp dụng cho tất cả chi nhánh đã đăng ký gói
-                    </label>
-
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="radio"
-                        checked={applyScope === 'BRANCHES'}
-                        onChange={() =>
-                          setValue('applyScope', 'BRANCHES', {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          })
-                        }
-                        className="h-4 w-4 border-gray-300 text-amber-600 focus:ring-amber-300"
-                      />
-                      Chọn chi nhánh cụ thể
-                    </label>
-                  </div>
-
-                  {applyScope === 'BRANCHES' && (
-                    <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                      {subscribedBranches.length === 0 ? (
-                        <p className="text-sm text-gray-500">
-                          Không có chi nhánh nào đang đăng ký gói để áp dụng.
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          {subscribedBranches.map((branch) => (
-                            <label
-                              key={branch.branchId}
-                              className="flex items-center gap-2 rounded-md bg-white px-2 py-1.5 text-sm text-gray-700"
-                            >
-                              <input
-                                type="radio"
-                                name="campaign-single-branch"
-                                checked={
-                                  selectedBranchIds[0] === branch.branchId
-                                }
-                                onChange={() =>
-                                  handleSelectSingleBranch(branch.branchId)
-                                }
-                                className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
-                              />
-                              {branch.name}
-                            </label>
-                          ))}
-                        </div>
-                      )}
-
-                      {errors.branchIds?.message && (
-                        <p className="mt-2 text-xs text-red-500">
-                          {errors.branchIds.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                          });
+                        }}
+                        className="text-xs font-semibold text-[var(--color-primary-600)] transition-colors hover:text-[var(--color-primary-700)] hover:underline"
+                      >
+                        Chọn tất cả
+                      </button>
+                    )}
                 </div>
+                {subscribedBranches.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Không có chi nhánh khả dụng.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {subscribedBranches.map((branch) => {
+                      const isSelected =
+                        selectedBranchIds === null ||
+                        selectedBranchIds.includes(branch.branchId);
+                      return (
+                        <Chip
+                          key={branch.branchId}
+                          label={branch.name}
+                          color={isSelected ? 'primary' : 'default'}
+                          variant={isSelected ? 'filled' : 'outlined'}
+                          onClick={() => {
+                            let newSelected: number[];
+                            if (selectedBranchIds === null) {
+                              newSelected = subscribedBranches
+                                .map((b) => b.branchId)
+                                .filter((id) => id !== branch.branchId);
+                            } else {
+                              if (selectedBranchIds.includes(branch.branchId)) {
+                                newSelected = selectedBranchIds.filter(
+                                  (id) => id !== branch.branchId
+                                );
+                              } else {
+                                newSelected = [
+                                  ...selectedBranchIds,
+                                  branch.branchId,
+                                ];
+                              }
+                            }
+
+                            // Phải bắt buộc chọn ít nhất 1 nhánh
+                            if (newSelected.length === 0) {
+                              return;
+                            }
+
+                            if (
+                              newSelected.length === subscribedBranches.length
+                            ) {
+                              setValue('branchIds', null, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                            } else {
+                              setValue('branchIds', newSelected, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                            }
+                          }}
+                          className="cursor-pointer font-medium transition-all hover:opacity-80"
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+                {errors.branchIds?.message && (
+                  <p className="mt-2 text-xs text-red-500">
+                    {errors.branchIds.message}
+                  </p>
+                )}
               </div>
             )}
 

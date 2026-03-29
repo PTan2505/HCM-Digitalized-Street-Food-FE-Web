@@ -12,6 +12,7 @@ export interface VendorCampaign {
   updatedAt: string | null;
   isSystemCampaign: boolean;
   imageUrl?: string | null;
+  branchIds?: number[] | null;
 }
 
 export interface VendorCampaignCreate {
@@ -21,6 +22,7 @@ export interface VendorCampaignCreate {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  branchIds: number[] | null;
 }
 
 export interface VendorCampaignUpdate {
@@ -30,6 +32,7 @@ export interface VendorCampaignUpdate {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  branchIds: number[] | null;
 }
 
 export interface VendorCampaignListResponse {
@@ -55,6 +58,11 @@ export interface BranchJoinedResponse {
 export interface JoinSystemCampaignResponse {
   payment: PaymentResponse;
   branches: BranchJoinedResponse[];
+}
+
+export interface CampaignBranchesResponse {
+  campaignId: number;
+  branchIds: number[];
 }
 
 export interface CampaignDetailsResponse {

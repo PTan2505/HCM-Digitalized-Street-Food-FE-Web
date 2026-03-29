@@ -3,9 +3,10 @@ import type {
   CampaignDetailsResponse,
   VendorCampaignCreate,
   VendorCampaignUpdate,
-  VendorCampaignListResponse,
   JoinSystemCampaignResponse,
   JoinSystemCampaignRequest,
+  CampaignBranchesResponse,
+  VendorCampaignListResponse,
 } from '@features/vendor/types/campaign';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -106,6 +107,43 @@ export class VendorCampaignApi {
   ): Promise<CampaignDetailsResponse> {
     const res = await this.apiClient.get<CampaignDetailsResponse>({
       url: apiUrl.campaign.GetDetailsOfASystemCampaign(campaignId),
+    });
+    return res.data;
+  }
+
+  async getBranchesOfACampaign(
+    campaignId: number
+  ): Promise<CampaignBranchesResponse> {
+    const res = await this.apiClient.get<CampaignBranchesResponse>({
+      url: apiUrl.campaign.GetBranchesOfACampaign(campaignId),
+    });
+    return res.data;
+  }
+
+  async addBranchesToACampaign(
+    campaignId: number,
+    branchIds: number[]
+  ): Promise<CampaignBranchesResponse> {
+    const res = await this.apiClient.post<
+      CampaignBranchesResponse,
+      { branchIds: number[] }
+    >({
+      url: apiUrl.campaign.AddBranchesToACampaign(campaignId),
+      data: { branchIds },
+    });
+    return res.data;
+  }
+
+  async removeBranchesFromACampaign(
+    campaignId: number,
+    branchIds: number[]
+  ): Promise<CampaignBranchesResponse> {
+    const res = await this.apiClient.post<
+      CampaignBranchesResponse,
+      { branchIds: number[] }
+    >({
+      url: apiUrl.campaign.RemoveBranchesFromACampaign(campaignId),
+      data: { branchIds },
     });
     return res.data;
   }
