@@ -9,7 +9,6 @@ import type {
   VendorCampaignCreate,
   VendorCampaignUpdate,
   JoinSystemCampaignResponse,
-  CampaignBranchesResponse,
 } from '@features/vendor/types/campaign';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -141,13 +140,14 @@ export const deleteCampaignImage = createAppAsyncThunk(
 export const getVendorCampaigns = createAppAsyncThunk(
   'campaign/getVendorCampaigns',
   async (
-    payload: { pageNumber: number; pageSize: number },
+    payload: { pageNumber: number; pageSize: number; vendorId?: number },
     { rejectWithValue }
   ) => {
     try {
       const response = await axiosApi.vendorCampaignApi.getVendorCampaigns(
         payload.pageNumber,
-        payload.pageSize
+        payload.pageSize,
+        payload.vendorId
       );
       return response;
     } catch (error) {

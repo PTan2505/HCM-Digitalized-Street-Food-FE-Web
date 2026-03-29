@@ -58,6 +58,7 @@ export const ROUTES = {
       TASTE: 'taste',
       FEEDBACK_TAG: 'feedback-tag',
       CAMPAIGN: 'campaign',
+      CAMPAIGN_VENDOR: 'campaign/vendor',
       VOUCHER: 'voucher',
     },
   },

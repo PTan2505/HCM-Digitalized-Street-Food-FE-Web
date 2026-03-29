@@ -171,12 +171,14 @@ export default function BadgePage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Badge): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa huy hiệu',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Badge): void => handleDelete(row),
+      tooltip: 'Xóa huy hiệu',
       color: 'error' as const,
       variant: 'outlined' as const,
     },

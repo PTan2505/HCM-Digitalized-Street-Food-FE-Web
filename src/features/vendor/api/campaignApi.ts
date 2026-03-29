@@ -20,11 +20,12 @@ export class VendorCampaignApi {
 
   async getVendorCampaigns(
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    vendorId?: number
   ): Promise<VendorCampaignListResponse> {
     const res = await this.apiClient.get<VendorCampaignListResponse>({
       url: apiUrl.campaign.GetOrPostVendorCampaign,
-      params: { pageNumber, pageSize },
+      params: { pageNumber, pageSize, vendorId },
     });
     return res.data;
   }

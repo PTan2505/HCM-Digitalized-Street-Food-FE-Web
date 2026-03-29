@@ -40,21 +40,21 @@ type BranchListResponse = {
   items: Branch[];
 };
 
-const isBranchListResponse = (data: unknown): data is BranchListResponse => {
-  if (!data || typeof data !== 'object') return false;
-  if (
-    !('items' in data) ||
-    !Array.isArray((data as { items: unknown }).items)
-  ) {
-    return false;
-  }
-  return (
-    'currentPage' in data &&
-    'pageSize' in data &&
-    'totalPages' in data &&
-    'totalCount' in data
-  );
-};
+// const isBranchListResponse = (data: unknown): data is BranchListResponse => {
+//   if (!data || typeof data !== 'object') return false;
+//   if (
+//     !('items' in data) ||
+//     !Array.isArray((data as { items: unknown }).items)
+//   ) {
+//     return false;
+//   }
+//   return (
+//     'currentPage' in data &&
+//     'pageSize' in data &&
+//     'totalPages' in data &&
+//     'totalCount' in data
+//   );
+// };
 
 export class VendorApi {
   private apiClient: ApiClient;

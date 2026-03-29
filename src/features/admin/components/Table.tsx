@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Box,
   Typography,
+  Tooltip,
 } from '@mui/material';
 
 interface Column<T> {
@@ -26,6 +27,7 @@ interface Action<T> {
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
+  tooltip?: string;
 }
 
 interface TableProps<T extends object> {
@@ -151,20 +153,31 @@ const Table = <T extends object>({
                         }}
                       >
                         <Box className="flex gap-2">
-                          {actions.map((action, index) => (
-                            <Button
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                action.onClick(row);
-                              }}
-                              color={action.color ?? 'primary'}
-                              variant={action.variant ?? 'text'}
-                              size="small"
-                            >
-                              {action.label}
-                            </Button>
-                          ))}
+                          {actions.map((action, index) => {
+                            const actionButton = (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  action.onClick(row);
+                                }}
+                                color={action.color ?? 'primary'}
+                                variant={action.variant ?? 'text'}
+                                size="small"
+                              >
+                                {action.label}
+                              </Button>
+                            );
+
+                            if (!action.tooltip) {
+                              return <Box key={index}>{actionButton}</Box>;
+                            }
+
+                            return (
+                              <Tooltip key={index} title={action.tooltip} arrow>
+                                <Box>{actionButton}</Box>
+                              </Tooltip>
+                            );
+                          })}
                         </Box>
                       </TableCell>
                     )}

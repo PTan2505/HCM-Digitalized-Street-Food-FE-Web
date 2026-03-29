@@ -142,12 +142,14 @@ export default function FeedbackTagPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: FeedbackTag): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa tag phản hồi',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: FeedbackTag): void => handleDelete(row),
+      tooltip: 'Xóa tag phản hồi',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -159,7 +161,7 @@ export default function FeedbackTagPage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý Tag phản hồi
+            Quản lý tag phản hồi
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý các nhãn phản hồi từ người dùng
@@ -170,7 +172,7 @@ export default function FeedbackTagPage(): JSX.Element {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm Tag phản hồi
+          Thêm tag phản hồi
         </button>
       </div>
 
