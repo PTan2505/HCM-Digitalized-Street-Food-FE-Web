@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,8 +95,13 @@ export default function VendorCampaignFormModal({
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
-  const subscribedBranches = (Array.isArray(branches) ? branches : []).filter(
-    (branch) => branch.isSubscribed
+
+  const subscribedBranches = useMemo(
+    () =>
+      branches.filter(
+        (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+      ),
+    [branches]
   );
 
   const {
