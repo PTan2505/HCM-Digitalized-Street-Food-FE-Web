@@ -30,15 +30,15 @@ import type {
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
-type BranchListResponse = {
-  currentPage: number;
-  pageSize: number;
-  totalPages: number;
-  totalCount: number;
-  hasPrevious: boolean;
-  hasNext: boolean;
-  items: Branch[];
-};
+// type BranchListResponse = {
+//   currentPage: number;
+//   pageSize: number;
+//   totalPages: number;
+//   totalCount: number;
+//   hasPrevious: boolean;
+//   hasNext: boolean;
+//   items: Branch[];
+// };
 
 // const isBranchListResponse = (data: unknown): data is BranchListResponse => {
 //   if (!data || typeof data !== 'object') return false;
