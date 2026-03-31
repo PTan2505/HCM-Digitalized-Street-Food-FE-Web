@@ -18,6 +18,7 @@ import {
   Loyalty as ShoppingBagIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
   Campaign as CampaignIcon,
+  Assignment as AssignmentIcon,
   LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -96,6 +97,11 @@ const navigation: NavigationItem[] = [
         icon: BuildingStorefrontIcon,
       },
     ],
+  },
+  {
+    name: 'Quản lý nhiệm vụ',
+    href: '/admin/quest',
+    icon: AssignmentIcon,
   },
   {
     name: 'Quản lý voucher',

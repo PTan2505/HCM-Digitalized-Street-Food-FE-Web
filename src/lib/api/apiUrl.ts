@@ -192,6 +192,10 @@ export const apiUrl = {
     RemoveBranchesFromACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches/remove`,
   },
+  quest: {
+    getOrPostQuest: '/Quest',
+    updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+  },
   voucher: {
     GetOrPostVouchers: '/vouchers',
     UpdateOrDeleteVoucher: (voucherId: number): string =>

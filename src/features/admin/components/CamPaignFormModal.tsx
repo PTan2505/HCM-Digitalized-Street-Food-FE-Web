@@ -255,10 +255,13 @@ export default function CamPaignFormModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      scroll="body"
+      scroll="paper"
       PaperProps={{
         sx: {
-          maxHeight: 'unset',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         },
       }}
     >
@@ -278,7 +281,13 @@ export default function CamPaignFormModal({
         </IconButton> */}
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers sx={{ overflowY: 'visible' }}>
+        <DialogContent
+          dividers
+          sx={{
+            overflowY: 'auto',
+            maxHeight: 'calc(90vh - 150px)',
+          }}
+        >
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
@@ -345,7 +354,7 @@ export default function CamPaignFormModal({
               </label>
               <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                 {displayImageUrl ? (
-                  <div className="group relative flex min-h-[160px] w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-300 bg-white shadow-sm transition-colors hover:border-[var(--color-primary-400)]">
+                  <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-300 bg-white shadow-sm transition-colors">
                     <img
                       src={displayImageUrl}
                       alt="Campaign"
@@ -395,10 +404,10 @@ export default function CamPaignFormModal({
                   </div>
                 ) : (
                   <div
-                    className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:border-[var(--color-primary-400)] hover:bg-gray-50/50"
+                    className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <div className="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors group-hover:text-[var(--color-primary-600)]">
+                    <div className="group-hover:text-primary-600 flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors">
                       <AddPhotoAlternateIcon fontSize="medium" />
                     </div>
                     <div className="mt-3 text-center">

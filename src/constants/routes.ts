@@ -59,6 +59,7 @@ export const ROUTES = {
       FEEDBACK_TAG: 'feedback-tag',
       CAMPAIGN: 'campaign',
       CAMPAIGN_VENDOR: 'campaign/vendor',
+      QUEST: 'quest',
       VOUCHER: 'voucher',
     },
   },
