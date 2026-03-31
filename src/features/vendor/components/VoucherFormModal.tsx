@@ -169,15 +169,13 @@ export default function VoucherFormModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      scroll="body"
-      sx={{
-        '& .MuiDialog-container': {
-          overflowY: 'hidden',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         },
       }}
     >
@@ -201,12 +199,8 @@ export default function VoucherFormModal({
         <DialogContent
           dividers
           sx={{
-            overflowY: 'hidden',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
+            overflowY: 'auto',
+            maxHeight: 'calc(90vh - 150px)',
           }}
         >
           <div className="flex flex-col gap-4">
