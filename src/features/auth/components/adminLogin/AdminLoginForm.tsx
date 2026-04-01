@@ -16,7 +16,7 @@ const initialValues: AdminLoginRequest = { phoneNumber: '', password: '' };
 export const AdminLoginForm = (): JSX.Element => {
   const userStatus = useAppSelector(selectUserStatus);
 
-  const { control, handleSubmit, setError } = useForm<AdminLoginRequest>({
+  const { control } = useForm<AdminLoginRequest>({
     defaultValues: initialValues,
     resolver: zodResolver(LoginPasswordSchema),
   });

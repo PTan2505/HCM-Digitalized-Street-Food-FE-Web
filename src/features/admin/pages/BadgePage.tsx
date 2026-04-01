@@ -118,11 +118,11 @@ export default function BadgePage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'badgeId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'badgeId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'iconUrl',
       label: 'Icon',
@@ -171,12 +171,14 @@ export default function BadgePage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Badge): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa huy hiệu',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Badge): void => handleDelete(row),
+      tooltip: 'Xóa huy hiệu',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -199,7 +201,7 @@ export default function BadgePage(): JSX.Element {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm Badge
+          Thêm huy hiệu
         </button>
       </div>
 

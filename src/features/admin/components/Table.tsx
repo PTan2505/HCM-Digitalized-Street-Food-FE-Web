@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Box,
   Typography,
+  Tooltip,
 } from '@mui/material';
 
 interface Column<T> {
@@ -26,6 +27,7 @@ interface Action<T> {
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
+  tooltip?: string;
 }
 
 interface TableProps<T extends object> {
@@ -35,7 +37,7 @@ interface TableProps<T extends object> {
   emptyMessage?: string;
   loadingMessage?: string;
   rowKey?: string;
-  maxHeight?: string;
+  maxHeight?: string | 'none';
   actions?: Action<T>[];
   onRowClick?: (row: T) => void;
 }
@@ -56,8 +58,8 @@ const Table = <T extends object>({
   return (
     <TableContainer
       component={Paper}
-      className="rounded-lg border border-[var(--color-table-border)] font-[var(--font-nunito)] shadow-sm"
-      style={{ maxHeight }}
+      className="border-table-border rounded-lg border shadow-sm"
+      style={{ maxHeight: maxHeight === 'none' ? undefined : maxHeight }}
     >
       <MuiTable stickyHeader>
         <TableHead>
@@ -65,14 +67,14 @@ const Table = <T extends object>({
             {columns.map((column) => (
               <TableCell
                 key={column.key}
-                className="border-b border-[var(--color-table-divider)] bg-[var(--color-table-header-bg)] text-xs font-[var(--font-nunito)] font-semibold tracking-wide text-[var(--color-table-header-text)] uppercase"
+                className="border-table-divider bg-table-header-bg text-table-header-text border-b text-xs font-semibold tracking-wide uppercase"
                 style={{ ...column.style }}
               >
                 {column.label}
               </TableCell>
             ))}
             {actions && actions.length > 0 && (
-              <TableCell className="border-b border-[var(--color-table-divider)] bg-[var(--color-table-header-bg)] text-xs font-[var(--font-nunito)] font-semibold tracking-wide text-[var(--color-table-header-text)] uppercase">
+              <TableCell className="border-table-divider bg-table-header-bg text-table-header-text border-b text-xs font-semibold tracking-wide uppercase">
                 Thao tác
               </TableCell>
             )}
@@ -85,7 +87,7 @@ const Table = <T extends object>({
               <TableCell colSpan={totalColumns} align="center" className="py-8">
                 <Box className="flex flex-col items-center gap-4">
                   <CircularProgress size={32} />
-                  <Typography className="font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+                  <Typography className="text-table-text-secondary">
                     {loadingMessage}
                   </Typography>
                 </Box>
@@ -94,7 +96,7 @@ const Table = <T extends object>({
           ) : data.length === 0 ? (
             <TableRow>
               <TableCell colSpan={totalColumns} align="center" className="py-8">
-                <Typography className="font-[var(--font-nunito)] text-[var(--color-table-text-secondary)]">
+                <Typography className="text-table-text-secondary">
                   {emptyMessage}
                 </Typography>
               </TableCell>
@@ -111,7 +113,7 @@ const Table = <T extends object>({
                     key={String(rowKeyValue)}
                     hover
                     onClick={() => onRowClick?.(row)}
-                    className={`hover:bg-[var(--color-table-row-hover)] last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
+                    className={`hover:bg-table-row-hover last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
                     style={{ height: '60px' }}
                   >
                     {columns.map((column) => {
@@ -127,7 +129,7 @@ const Table = <T extends object>({
                       return (
                         <TableCell
                           key={column.key}
-                          className="border-b border-[var(--color-table-divider)] text-sm font-[var(--font-nunito)] whitespace-nowrap text-[var(--color-table-text-primary)]"
+                          className="border-table-divider text-table-text-primary border-b text-sm whitespace-nowrap"
                           style={{
                             ...column.style,
                             paddingTop: '12px',
@@ -143,7 +145,7 @@ const Table = <T extends object>({
                     })}
                     {actions && actions.length > 0 && (
                       <TableCell
-                        className="border-b border-[var(--color-table-divider)] whitespace-nowrap"
+                        className="border-table-divider border-b whitespace-nowrap"
                         style={{
                           paddingTop: '12px',
                           paddingBottom: '12px',
@@ -151,21 +153,31 @@ const Table = <T extends object>({
                         }}
                       >
                         <Box className="flex gap-2">
-                          {actions.map((action, index) => (
-                            <Button
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                action.onClick(row);
-                              }}
-                              color={action.color ?? 'primary'}
-                              variant={action.variant ?? 'text'}
-                              size="small"
-                              className="font-[var(--font-nunito)]"
-                            >
-                              {action.label}
-                            </Button>
-                          ))}
+                          {actions.map((action, index) => {
+                            const actionButton = (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  action.onClick(row);
+                                }}
+                                color={action.color ?? 'primary'}
+                                variant={action.variant ?? 'text'}
+                                size="small"
+                              >
+                                {action.label}
+                              </Button>
+                            );
+
+                            if (!action.tooltip) {
+                              return <Box key={index}>{actionButton}</Box>;
+                            }
+
+                            return (
+                              <Tooltip key={index} title={action.tooltip} arrow>
+                                <Box>{actionButton}</Box>
+                              </Tooltip>
+                            );
+                          })}
                         </Box>
                       </TableCell>
                     )}

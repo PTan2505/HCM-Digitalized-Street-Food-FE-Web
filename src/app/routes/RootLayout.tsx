@@ -30,6 +30,7 @@ const RootLayout = (): JSX.Element => {
     }
 
     if (isDone && user) {
+      console.log('User loaded:', user);
       const currentPath = location.pathname;
       if (user.role === ROLES.ADMIN) {
         if (
@@ -45,12 +46,32 @@ const RootLayout = (): JSX.Element => {
         ) {
           navigate(ROUTES.MODERATOR.BASE, { replace: true });
         }
-      } else if (user.role === ROLES.USER) {
+      } else if (user.role === ROLES.MANAGER) {
         if (
           currentPath === ROUTES.ROOT ||
-          !currentPath.startsWith(ROUTES.VENDOR_REGISTRATION)
+          !currentPath.startsWith(ROUTES.MANAGER.BASE)
         ) {
-          navigate(ROUTES.VENDOR_REGISTRATION, { replace: true });
+          navigate(ROUTES.MANAGER.BASE, { replace: true });
+        }
+      } else if (user.role === ROLES.USER) {
+        if (!user.userInfoSetup) {
+          if (currentPath !== ROUTES.USER_INFO_SETUP) {
+            navigate(ROUTES.USER_INFO_SETUP, { replace: true });
+          }
+        } else if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.VENDOR.BASE)
+        ) {
+          navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`, {
+            replace: true,
+          });
+        }
+      } else if (user.role === ROLES.VENDOR) {
+        if (
+          currentPath === ROUTES.ROOT ||
+          !currentPath.startsWith(ROUTES.VENDOR.BASE)
+        ) {
+          navigate(ROUTES.VENDOR.BASE, { replace: true });
         }
       }
     }

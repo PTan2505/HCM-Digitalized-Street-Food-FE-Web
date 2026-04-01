@@ -44,5 +44,5 @@ export const MODERATOR_THEME: ModeratorThemeConfig = {
 export const MODERATOR_USER_INFO = {
   name: 'Moderator User',
   email: 'moderator@example.com',
-  role: 'Moderator Panel',
+  role: 'Moderator',
 };

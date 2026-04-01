@@ -1,25 +1,30 @@
 import { createTheme } from '@mui/material/styles';
 
 export const theme = createTheme({
+  typography: {
+    fontFamily: "'Nunito', sans-serif",
+  },
   palette: {
     primary: {
-      main: '#264F67',
-      contrastText: '#F6F6F6',
+      main: '#8bcf3f', // Slightly deeper for stronger contrast
+      light: '#a9e06e',
+      dark: '#6ead2a',
+      contrastText: '#ffffff', // White text on green buttons
     },
     secondary: {
-      main: '#7FAE9B',
+      main: '#6f9f8a',
       contrastText: '#F6F6F6',
     },
     success: {
-      main: '#00b37466',
+      main: '#00a764',
       contrastText: '#F6F6F6',
     },
     error: {
-      main: '#f5342566',
+      main: '#e53935',
       contrastText: '#F53425',
     },
     warning: {
-      main: '#e394004d',
+      main: '#d88900',
       contrastText: '#F6F6F6',
     },
   },
@@ -39,18 +44,37 @@ export const theme = createTheme({
           backgroundColor: '#F9FFF9',
           width: '100%',
           height: '40px',
-          border: `1px solid #7FAE9B`,
+          color: '#7FAE9B',
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
           borderRadius: '20px',
           padding: '8px 16px',
-          color: '#7FAE9B',
+
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#7FAE9B',
+          },
+
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#7FAE9B',
+          },
+
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#14143D',
+          },
+
+          '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#F53425',
+          },
 
           '&.Mui-focused': {
-            borderColor: '#14143D',
-            color: ' #14143D',
+            color: '#14143D',
           },
 
           '&.Mui-error': {
-            borderColor: '#F53425',
             color: '#F53425',
           },
         },
@@ -58,26 +82,21 @@ export const theme = createTheme({
     },
     MuiButton: {
       styleOverrides: {
-        root: ({ ownerState }) => {
-          switch (ownerState.color) {
-            case 'primary':
-              return {
-                '&.Mui-disabled': {
-                  background: '#48888633',
-                  color: '#264F67B2',
-                },
-              };
-            case 'secondary':
-              return {
-                '&.Mui-disabled': {
-                  background: '#7FAE9B33',
-                  color: '#888888',
-                },
-              };
-            default:
-              return;
-          }
-        },
+        root: ({ ownerState }) => ({
+          textTransform: 'none',
+          ...(ownerState.color === 'primary' && {
+            '&.Mui-disabled': {
+              background: '#48888633',
+              color: '#264F67B2',
+            },
+          }),
+          ...(ownerState.color === 'secondary' && {
+            '&.Mui-disabled': {
+              background: '#7FAE9B33',
+              color: '#888888',
+            },
+          }),
+        }),
       },
     },
   },
