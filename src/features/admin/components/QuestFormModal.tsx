@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import useCampaign from '@features/admin/hooks/useCampaign';
+import type { Campaign } from '@features/admin/types/campaign';
 import {
   type Quest,
   type QuestCreate,
@@ -13,13 +15,20 @@ import {
   type QuestFormData,
   QuestSchema,
 } from '@features/admin/utils/questSchema';
-import { useEffect, type JSX } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type JSX,
+} from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 
 interface QuestFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: QuestCreate) => Promise<void>;
+  onSubmit: (data: QuestCreate, imageFile?: File | null) => Promise<void>;
   quest: Quest | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
@@ -49,26 +58,100 @@ export default function QuestFormModal({
   quest,
   status,
 }: QuestFormModalProps): JSX.Element | null {
+  const { onGetCampaigns } = useCampaign();
+  const [campaignOptions, setCampaignOptions] = useState<Campaign[]>([]);
+  const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
+  const [campaignQuery, setCampaignQuery] = useState('');
+  const [isCampaignFocused, setIsCampaignFocused] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
   const {
     register,
     control,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<QuestFormInput, unknown, QuestFormData>({
     resolver: zodResolver(QuestSchema),
     defaultValues,
   });
 
+  const isStandalone = watch('isStandalone');
+  const campaignId = watch('campaignId');
+
+  const selectedCampaign = useMemo(() => {
+    if (!campaignId) {
+      return null;
+    }
+
+    return (
+      campaignOptions.find((campaign) => campaign.campaignId === campaignId) ??
+      null
+    );
+  }, [campaignId, campaignOptions]);
+
+  const filteredCampaigns = useMemo(() => {
+    const normalizedQuery = campaignQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return campaignOptions.slice(0, 8);
+    }
+
+    return campaignOptions
+      .filter((campaign) =>
+        campaign.name.toLowerCase().includes(normalizedQuery)
+      )
+      .sort((first, second) => {
+        const firstStartsWith = first.name
+          .toLowerCase()
+          .startsWith(normalizedQuery);
+        const secondStartsWith = second.name
+          .toLowerCase()
+          .startsWith(normalizedQuery);
+
+        if (firstStartsWith === secondStartsWith) {
+          return first.name.localeCompare(second.name, 'vi');
+        }
+
+        return firstStartsWith ? -1 : 1;
+      })
+      .slice(0, 8);
+  }, [campaignOptions, campaignQuery]);
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'tasks',
   });
 
+  const fetchCampaignOptions = useCallback(async (): Promise<void> => {
+    setIsLoadingCampaigns(true);
+
+    try {
+      const response = await onGetCampaigns(1, 200);
+      setCampaignOptions(
+        (response.items ?? []).filter(
+          (campaign) =>
+            campaign.createdByVendorId === null &&
+            campaign.createdByBranchId === null
+        )
+      );
+    } catch (error) {
+      console.error('Failed to fetch campaigns for quest form', error);
+      setCampaignOptions([]);
+    } finally {
+      setIsLoadingCampaigns(false);
+    }
+  }, [onGetCampaigns]);
+
   useEffect(() => {
     if (!isOpen) {
       return;
     }
+
+    void fetchCampaignOptions();
 
     if (quest) {
       reset({
@@ -89,6 +172,8 @@ export default function QuestFormModal({
               }))
             : [{ ...defaultTask }],
       });
+      setSelectedImageFile(null);
+      setImagePreviewUrl(quest.imageUrl ?? null);
       return;
     }
 
@@ -96,24 +181,72 @@ export default function QuestFormModal({
       ...defaultValues,
       tasks: [{ ...defaultTask }],
     });
-  }, [isOpen, quest, reset]);
+    setCampaignQuery('');
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
+  }, [fetchCampaignOptions, isOpen, quest, reset]);
+
+  useEffect((): (() => void) => {
+    return (): void => {
+      if (imagePreviewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
+  useEffect(() => {
+    if (isCampaignFocused) {
+      return;
+    }
+
+    setCampaignQuery(selectedCampaign?.name ?? '');
+  }, [isCampaignFocused, selectedCampaign]);
+
+  useEffect(() => {
+    if (isStandalone) {
+      setValue('campaignId', null, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [isStandalone, setValue]);
 
   const handleFormSubmit = async (data: QuestFormData): Promise<void> => {
-    await onSubmit({
-      title: data.title,
-      description: data.description,
-      imageUrl: data.imageUrl,
-      isActive: data.isActive,
-      isStandalone: data.isStandalone,
-      campaignId: data.campaignId,
-      tasks: data.tasks.map((task) => ({
-        type: task.type,
-        targetValue: task.targetValue,
-        description: task.description,
-        rewardType: task.rewardType,
-        rewardValue: task.rewardValue,
-      })),
-    });
+    await onSubmit(
+      {
+        title: data.title,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        isActive: data.isActive,
+        isStandalone: data.isStandalone,
+        campaignId: data.campaignId,
+        tasks: data.tasks.map((task) => ({
+          type: task.type,
+          targetValue: task.targetValue,
+          description: task.description,
+          rewardType: task.rewardType,
+          rewardValue: task.rewardValue,
+        })),
+      },
+      selectedImageFile
+    );
+  };
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0] ?? null;
+
+    if (imagePreviewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+
+    if (!file) {
+      setSelectedImageFile(null);
+      setImagePreviewUrl(quest?.imageUrl ?? null);
+      return;
+    }
+
+    setSelectedImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
   };
 
   if (!isOpen) {
@@ -145,7 +278,7 @@ export default function QuestFormModal({
                 type="text"
                 {...register('title')}
                 className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-                placeholder="Nhập tiêu đề quest"
+                placeholder="Nhập tiêu đề nhiệm vụ"
               />
               {errors.title && (
                 <p className="mt-1 text-xs text-red-500">
@@ -156,48 +289,98 @@ export default function QuestFormModal({
 
             <div>
               <label className="text-table-text-primary mb-1 block text-sm font-medium">
-                Campaign ID
+                Tên chiến dịch
+                <span className="text-red-500">{isStandalone ? '' : ' *'}</span>
               </label>
-              <input
-                type="number"
-                {...register('campaignId', {
-                  setValueAs: (value) => {
-                    if (value === '' || value === null || value === undefined) {
-                      return null;
-                    }
-                    const parsedValue = Number(value);
-                    return Number.isNaN(parsedValue) ? null : parsedValue;
-                  },
-                })}
-                className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-                placeholder="Để trống nếu quest độc lập"
-              />
-              {errors.campaignId && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.campaignId.message}
-                </p>
+              {!isStandalone ? (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={campaignQuery}
+                    onFocus={() => setIsCampaignFocused(true)}
+                    onBlur={() => {
+                      window.setTimeout(() => setIsCampaignFocused(false), 120);
+                    }}
+                    onChange={(event) => {
+                      const nextQuery = event.target.value;
+                      setCampaignQuery(nextQuery);
+                      setValue('campaignId', null, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                    }}
+                    className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
+                    placeholder="Nhập tên chiến dịch để tìm"
+                  />
+
+                  {isCampaignFocused && campaignQuery.trim().length > 0 && (
+                    <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                      {isLoadingCampaigns ? (
+                        <p className="text-table-text-secondary px-3 py-2 text-sm">
+                          Đang tải chiến dịch...
+                        </p>
+                      ) : filteredCampaigns.length > 0 ? (
+                        filteredCampaigns.map((campaign) => (
+                          <button
+                            key={campaign.campaignId}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setValue('campaignId', campaign.campaignId, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                              setCampaignQuery(campaign.name);
+                              setIsCampaignFocused(false);
+                            }}
+                            className="hover:bg-primary-50 w-full px-3 py-2 text-left text-sm"
+                          >
+                            <p className="text-table-text-primary font-medium">
+                              {campaign.name}
+                            </p>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-table-text-secondary px-3 py-2 text-sm">
+                          Không tìm thấy chiến dịch phù hợp.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {errors.campaignId && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.campaignId.message}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-table-text-secondary flex min-h-10 items-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2">
+                  Nhiệm vụ độc lập không cần tên chiến dịch.
+                </div>
               )}
             </div>
 
             <div className="md:col-span-2">
               <label className="text-table-text-primary mb-1 block text-sm font-medium">
-                URL ảnh
+                Ảnh nhiệm vụ
               </label>
+
               <input
-                type="text"
-                {...register('imageUrl', {
-                  setValueAs: (value) =>
-                    typeof value === 'string' && value.trim() === ''
-                      ? null
-                      : value,
-                })}
-                className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-                placeholder="https://..."
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:font-medium hover:file:bg-slate-200 focus:border-transparent focus:ring-2 focus:outline-none"
               />
-              {errors.imageUrl && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.imageUrl.message}
-                </p>
+
+              {imagePreviewUrl && (
+                <div className="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                  <img
+                    src={imagePreviewUrl}
+                    alt="Quest preview"
+                    className="max-h-44 w-auto rounded object-cover"
+                  />
+                </div>
               )}
             </div>
 
@@ -214,7 +397,7 @@ export default function QuestFormModal({
                       : value,
                 })}
                 className="focus:ring-primary-500 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-                placeholder="Nhập mô tả quest"
+                placeholder="Nhập mô tả nhiệm vụ"
               />
               {errors.description && (
                 <p className="mt-1 text-xs text-red-500">
@@ -240,7 +423,7 @@ export default function QuestFormModal({
                 {...register('isStandalone')}
                 className="h-4 w-4 rounded border-gray-300"
               />
-              Quest độc lập
+              Nhiệm vụ độc lập
             </label>
           </div>
 
@@ -414,7 +597,7 @@ export default function QuestFormModal({
               ? 'Đang lưu...'
               : quest
                 ? 'Cập nhật'
-                : 'Tạo quest'}
+                : 'Tạo nhiệm vụ'}
           </button>
         </div>
       </div>

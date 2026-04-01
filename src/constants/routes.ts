@@ -60,6 +60,7 @@ export const ROUTES = {
       CAMPAIGN: 'campaign',
       CAMPAIGN_VENDOR: 'campaign/vendor',
       QUEST: 'quest',
+      SETTING: 'setting',
       VOUCHER: 'voucher',
     },
   },
