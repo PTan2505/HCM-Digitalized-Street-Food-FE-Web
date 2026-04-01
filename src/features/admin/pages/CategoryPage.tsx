@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -16,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import CategoryFormModal from '@features/admin/components/CategoryFormModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { Category } from '@features/admin/types/category';
 import useCategory from '@features/admin/hooks/useCategory';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -83,7 +76,7 @@ export default function CategoryPage(): JSX.Element {
       } else {
         await onCreateCategory(payload);
       }
-      await onGetAllCategories();
+      // await onGetAllCategories();
       handleCloseDialog();
     } catch (error) {
       console.error('Failed to save category:', error);
@@ -114,11 +107,11 @@ export default function CategoryPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'categoryId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'categoryId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên Danh mục',
@@ -143,12 +136,14 @@ export default function CategoryPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Category): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa danh mục',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Category): void => handleDelete(row),
+      tooltip: 'Xóa danh mục',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -171,7 +166,7 @@ export default function CategoryPage(): JSX.Element {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm Danh mục
+          Thêm danh mục
         </button>
       </div>
 
@@ -196,40 +191,18 @@ export default function CategoryPage(): JSX.Element {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa danh mục
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa danh mục &quot;
-            {deletingCategory?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa danh mục"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa danh mục &quot;{deletingCategory?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

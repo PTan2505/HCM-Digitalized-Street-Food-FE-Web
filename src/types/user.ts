@@ -10,4 +10,5 @@ export interface User {
   createdAt?: string;
   emailVerified?: boolean;
   phoneNumber?: string;
+  userInfoSetup?: boolean;
 }

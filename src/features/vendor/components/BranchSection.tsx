@@ -1,16 +1,10 @@
 import React, { useState, type JSX } from 'react';
 import { type Branch } from '../types/branch';
+import { type WorkSchedule, type DayOff } from '../types/workSchedule';
 import AddressSection from './AddressSection';
 import OperatingInfoSection from './OperatingInfoSection';
 import DocumentsSection from './DocumentsSection';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface BranchSectionProps {
   branch: Branch;
@@ -18,8 +12,6 @@ interface BranchSectionProps {
   onBranchChange: (branchId: string, field: string, value: unknown) => void;
   onBranchRemove: (branchId: string) => void;
   showRemoveButton: boolean;
-  onWorkingDayToggle: (branchId: string, day: string) => void;
-  onServiceTypeToggle: (branchId: string, service: string) => void;
   onFileChange: (
     branchId: string,
     field: string,
@@ -33,8 +25,6 @@ export default function BranchSection({
   onBranchChange,
   onBranchRemove,
   showRemoveButton,
-  onWorkingDayToggle,
-  onServiceTypeToggle,
   onFileChange,
 }: BranchSectionProps): JSX.Element {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -92,18 +82,30 @@ export default function BranchSection({
 
       {/* Thông tin hoạt động */}
       <OperatingInfoSection
-        formData={{
+        branchId={null}
+        formMode={true}
+        workScheduleData={{
+          weekdays: branch.workingDays.map((day) => parseInt(day, 10)),
           openTime: branch.openTime,
           closeTime: branch.closeTime,
-          workingDays: branch.workingDays,
-          closedDates: branch.closedDates,
-          serviceTypes: branch.serviceTypes,
         }}
-        onFieldChange={handleFieldChange}
-        onWorkingDayToggle={(day) => onWorkingDayToggle(branch.id, day)}
-        onServiceTypeToggle={(service) =>
-          onServiceTypeToggle(branch.id, service)
-        }
+        dayOffData={{
+          startDate: branch.closedDates,
+          endDate: branch.closedDates,
+          startTime: null,
+          endTime: null,
+        }}
+        onWorkScheduleChange={(data: WorkSchedule) => {
+          handleFieldChange(
+            'workingDays',
+            data.weekdays.map((day) => day.toString())
+          );
+          handleFieldChange('openTime', data.openTime);
+          handleFieldChange('closeTime', data.closeTime);
+        }}
+        onDayOffChange={(data: DayOff) => {
+          handleFieldChange('closedDates', data.startDate);
+        }}
       />
 
       {/* Hình ảnh & Giấy tờ */}
@@ -118,35 +120,18 @@ export default function BranchSection({
       />
 
       {/* Dialog xác nhận xóa */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleDeleteCancel}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa chi nhánh
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+        onConfirm={handleDeleteConfirm}
+        title="Xác nhận xóa chi nhánh"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa chi nhánh này không? Hành động này không
             thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="inherit">
-            Hủy
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
     </div>
   );
 }

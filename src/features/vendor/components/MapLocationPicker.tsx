@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import maplibregl from '@openmapvn/openmapvn-gl';
 import '@openmapvn/openmapvn-gl/dist/maplibre-gl.css';
 import type { JSX } from 'react';
+import { ENV } from '@config/env';
 
 const defaultCenter = {
   lat: 10.762622,
@@ -13,6 +14,11 @@ interface MapLocationPickerProps {
   latitude: number | null;
   longitude: number | null;
   onLocationChange: (lat: number, lng: number) => void;
+  onAddressResolved?: (data: {
+    detailAddress: string;
+    ward: string;
+    city: string;
+  }) => void;
 }
 
 export default function MapLocationPicker({
@@ -20,16 +26,104 @@ export default function MapLocationPicker({
   latitude,
   longitude,
   onLocationChange,
+  onAddressResolved,
 }: MapLocationPickerProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
+  const reverseRequestIdRef = useRef(0);
+  const updateSourceRef = useRef<'map' | 'external'>('external');
+  const onLocationChangeRef = useRef(onLocationChange);
+  const onAddressResolvedRef = useRef(onAddressResolved);
   const [inputLat, setInputLat] = useState<string>('');
   const [inputLng, setInputLng] = useState<string>('');
 
-  const apiKey = import.meta.env.VITE_OPENMAP_API_KEY;
+  const apiKey = ENV.maps.openMapApiKey;
+
+  const WARD_PREFIXES = ['phường', 'xã', 'thị trấn'];
+  const CITY_PREFIXES = ['thành phố', 'tỉnh'];
+
+  const findByPrefix = (
+    values: string[],
+    prefixes: string[]
+  ): string | undefined => {
+    const lowerPrefixes = prefixes.map((p) => p.toLowerCase());
+    return values.find((value) => {
+      const lower = value.toLowerCase();
+      return lowerPrefixes.some((prefix) => lower.startsWith(prefix));
+    });
+  };
+
+  const reverseGeocodeAndSync = useCallback(
+    async (lat: number, lng: number): Promise<void> => {
+      if (!onAddressResolvedRef.current) return;
+
+      reverseRequestIdRef.current += 1;
+      const requestId = reverseRequestIdRef.current;
+
+      try {
+        const params = new URLSearchParams({
+          latlng: `${lat},${lng}`,
+          admin_v2: 'true',
+        });
+        if (apiKey) {
+          params.append('apikey', apiKey);
+        }
+
+        const res = await fetch(
+          `/openmap/v1/geocode/reverse?${params.toString()}`
+        );
+        if (!res.ok) return;
+
+        const data = (await res.json()) as {
+          status?: string;
+          results?: Array<{
+            formatted_address?: string;
+            name?: string;
+            address?: string;
+            address_components?: Array<{
+              long_name?: string;
+            }>;
+          }>;
+        };
+
+        if (requestId !== reverseRequestIdRef.current) return;
+        if (data.status !== 'OK' || !data.results?.[0]) return;
+
+        const first = data.results[0];
+        const componentValues = (first.address_components ?? [])
+          .map((item) => item.long_name?.trim() ?? '')
+          .filter(Boolean);
+
+        const ward = findByPrefix(componentValues, WARD_PREFIXES) ?? '';
+        const city =
+          findByPrefix(componentValues, CITY_PREFIXES) ??
+          'Thành phố Hồ Chí Minh';
+
+        const detailAddress =
+          first.formatted_address ?? first.name ?? first.address ?? '';
+
+        if (!detailAddress) return;
+
+        onAddressResolvedRef.current({
+          detailAddress,
+          ward,
+          city,
+        });
+      } catch {
+        // Ignore reverse geocode errors and keep manual position.
+      }
+    },
+    [apiKey]
+  );
+
+  useEffect(() => {
+    onLocationChangeRef.current = onLocationChange;
+  }, [onLocationChange]);
+
+  useEffect(() => {
+    onAddressResolvedRef.current = onAddressResolved;
+  }, [onAddressResolved]);
 
   // Sync input values khi props thay đổi
   useEffect(() => {
@@ -40,6 +134,41 @@ export default function MapLocationPicker({
       setInputLng(longitude.toString());
     }
   }, [latitude, longitude]);
+
+  // Khi coordinates được set từ bên ngoài (ví dụ: autocomplete geocoding thành công)
+  // → di chuyển marker và fly map đến vị trí đó
+  useEffect(() => {
+    if (latitude === null || longitude === null) return;
+    if (!map.current) return;
+
+    if (marker.current) {
+      marker.current.setLngLat([longitude, latitude]);
+    } else {
+      marker.current = new maplibregl.Marker({ draggable: true })
+        .setLngLat([longitude, latitude])
+        .addTo(map.current);
+
+      marker.current.on('dragend', () => {
+        if (marker.current) {
+          const lngLat = marker.current.getLngLat();
+          updateSourceRef.current = 'map';
+          onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+          void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
+        }
+      });
+    }
+
+    if (updateSourceRef.current === 'map') {
+      updateSourceRef.current = 'external';
+      return;
+    }
+
+    map.current.flyTo({
+      center: [longitude, latitude],
+      zoom: 17,
+      duration: 1000,
+    });
+  }, [latitude, longitude, reverseGeocodeAndSync]);
 
   // Hàm cập nhật marker từ input tọa độ
   const handleApplyCoordinates = (): void => {
@@ -59,7 +188,9 @@ export default function MapLocationPicker({
       if (!confirm) return;
     }
 
-    onLocationChange(lat, lng);
+    updateSourceRef.current = 'map';
+    onLocationChangeRef.current(lat, lng);
+    void reverseGeocodeAndSync(lat, lng);
 
     // Cập nhật marker trên map
     if (map.current) {
@@ -73,7 +204,9 @@ export default function MapLocationPicker({
         marker.current.on('dragend', () => {
           if (marker.current) {
             const lngLat = marker.current.getLngLat();
-            onLocationChange(lngLat.lat, lngLat.lng);
+            updateSourceRef.current = 'map';
+            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
           }
         });
       }
@@ -92,9 +225,6 @@ export default function MapLocationPicker({
     if (map.current || !mapContainer.current) return;
 
     if (!apiKey || apiKey === 'YOUR_API_KEY') {
-      setMapError(
-        'Chưa cấu hình OpenMap API Key. Vui lòng thêm VITE_OPENMAP_API_KEY vào file .env'
-      );
       return;
     }
 
@@ -111,7 +241,7 @@ export default function MapLocationPicker({
       });
 
       // Thêm marker nếu đã có tọa độ
-      if (latitude && longitude) {
+      if (latitude !== null && longitude !== null) {
         marker.current = new maplibregl.Marker({ draggable: true })
           .setLngLat([longitude, latitude])
           .addTo(map.current);
@@ -120,7 +250,9 @@ export default function MapLocationPicker({
         marker.current.on('dragend', () => {
           if (marker.current) {
             const lngLat = marker.current.getLngLat();
-            onLocationChange(lngLat.lat, lngLat.lng);
+            updateSourceRef.current = 'map';
+            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
           }
         });
       }
@@ -140,15 +272,19 @@ export default function MapLocationPicker({
           marker.current.on('dragend', () => {
             if (marker.current) {
               const lngLat = marker.current.getLngLat();
-              onLocationChange(lngLat.lat, lngLat.lng);
+              updateSourceRef.current = 'map';
+              onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+              void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
             }
           });
         }
 
-        onLocationChange(lat, lng);
+        updateSourceRef.current = 'map';
+        onLocationChangeRef.current(lat, lng);
+        void reverseGeocodeAndSync(lat, lng);
       });
     } catch {
-      setMapError('Không thể tải bản đồ');
+      // map failed to load
     }
 
     return (): void => {
@@ -157,7 +293,7 @@ export default function MapLocationPicker({
         map.current = null;
       }
     };
-  }, []);
+  }, [apiKey, reverseGeocodeAndSync]);
 
   // Geocoding khi địa chỉ thay đổi (với debounce)
   useEffect(() => {
@@ -169,101 +305,11 @@ export default function MapLocationPicker({
 
     // Debounce: chỉ gọi API sau khi người dùng dừng nhập 1.5 giây
     const timeoutId = setTimeout(() => {
-      setIsGeocoding(true);
-      setMapError(null);
+      // Geocoding logic intentionally disabled
+    }, 1500);
 
-      const addressVariants = [
-        address,
-        address.replace(/Hồ Chí Minh/gi, 'Ho Chi Minh'),
-      ];
-
-      // Hàm thử geocode với một địa chỉ
-      const tryGeocode = async (addressToTry: string): Promise<boolean> => {
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-              addressToTry + ', Vietnam'
-            )}&limit=5&bounded=1&viewbox=106.4,10.5,107.0,11.0`
-          );
-          const data = await response.json();
-
-          if (data && data.length > 0) {
-            // Lọc kết quả nằm trong khu vực TP.HCM (lat: 10.5-11.0, lng: 106.4-107.0)
-            const hcmResults = data.filter((item: Record<string, unknown>) => {
-              const itemLat = parseFloat(item.lat as string);
-              const itemLng = parseFloat(item.lon as string);
-              return (
-                itemLat >= 10.5 &&
-                itemLat <= 11.0 &&
-                itemLng >= 106.4 &&
-                itemLng <= 107.0
-              );
-            });
-
-            const bestResult = hcmResults.length > 0 ? hcmResults[0] : data[0];
-            const lat = parseFloat(bestResult.lat);
-            const lng = parseFloat(bestResult.lon);
-
-            if (!map.current) {
-              setMapError('Bản đồ đang tải, vui lòng thử lại sau');
-              return false;
-            }
-
-            if (marker.current) {
-              marker.current.setLngLat([lng, lat]);
-            } else {
-              marker.current = new maplibregl.Marker({
-                draggable: true,
-                color: '#FF0000',
-              })
-                .setLngLat([lng, lat])
-                .addTo(map.current);
-
-              marker.current.on('dragend', () => {
-                if (marker.current) {
-                  const lngLat = marker.current.getLngLat();
-                  onLocationChange(lngLat.lat, lngLat.lng);
-                }
-              });
-            }
-
-            // Di chuyển map đến vị trí
-            map.current.flyTo({
-              center: [lng, lat],
-              zoom: 17,
-              duration: 2000,
-            });
-
-            onLocationChange(lat, lng);
-            setIsGeocoding(false);
-            return true;
-          }
-          return false;
-        } catch {
-          return false;
-        }
-      };
-
-      // Thử lần lượt các biến thể địa chỉ
-      (async (): Promise<void> => {
-        for (let i = 0; i < addressVariants.length; i++) {
-          const success = await tryGeocode(addressVariants[i]);
-          if (success) {
-            return; // Thành công, dừng lại
-          }
-        }
-
-        setIsGeocoding(false);
-        setMapError(
-          'Không thể định vị địa chỉ chính xác. Vui lòng click trực tiếp vào bản đồ để chọn vị trí.'
-        );
-      })();
-    }, 1500); // Đợi 1.5 giây sau khi người dùng dừng gõ
-
-    // Cleanup: hủy timeout nếu address thay đổi trước khi hết thời gian
     return (): void => {
       clearTimeout(timeoutId);
-      setIsGeocoding(false);
     };
   }, [address]);
 
@@ -293,16 +339,16 @@ export default function MapLocationPicker({
       </div>
 
       {/* Hiển thị trạng thái geocoding */}
-      {isGeocoding && (
+      {/* {isGeocoding && (
         <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
           <p className="text-sm text-blue-800">
             Đang tìm kiếm vị trí trên bản đồ...
           </p>
         </div>
-      )}
+      )} */}
 
       {/* Hiển thị lỗi */}
-      {mapError && (
+      {/* {mapError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
           <p className="mb-2 text-sm font-medium text-red-800">{mapError}</p>
           <div className="text-xs text-red-700">
@@ -340,7 +386,7 @@ export default function MapLocationPicker({
             vị
           </p>
         </div>
-      )}
+      )} */}
 
       {address && address.length < 20 && (
         <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
@@ -363,7 +409,8 @@ export default function MapLocationPicker({
       />
 
       {/* Tọa độ GPS - Chỉnh sửa thủ công */}
-      <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+      {/* GPS coordinate input — hidden from UI but lat/lng still captured via map click/drag */}
+      {/* <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="mb-3 text-sm font-semibold text-blue-900">Tọa độ GPS</p>
         <div className="flex gap-3">
           <div className="flex-1">
@@ -406,7 +453,7 @@ export default function MapLocationPicker({
           Bạn có thể nhập tọa độ chính xác nếu biết hoặc chỉnh sửa để điều chỉnh
           vị trí marker
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }

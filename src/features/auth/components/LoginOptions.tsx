@@ -2,6 +2,7 @@ import FacebookIcon from '@assets/logos/facebookLogo.svg';
 import GoogleIcon from '@assets/logos/googleLogo.svg';
 import useLogin from '@features/auth/hooks/useLogin';
 import PhoneIcon from '@mui/icons-material/Phone';
+import logoImage from '@assets/lowca-logo.png';
 import { Box, Button, Icon } from '@mui/material';
 import { type JSX } from 'react';
 
@@ -13,7 +14,20 @@ export const LoginOptions = ({ setLoginOption }: Props): JSX.Element => {
   const { onGoogleLoginSubmit, onFacebookLoginSubmit } = useLogin();
 
   return (
-    <Box className="flex w-full flex-col gap-4 px-10">
+    <Box className="flex w-full flex-col gap-4">
+      <Box className="mb-6 flex flex-col items-center text-center">
+        <Box className="mb-4 inline-flex items-center justify-center rounded-2xl bg-green-50 p-3">
+          <img
+            src={logoImage}
+            alt="Lowca"
+            className="h-10 w-10 object-contain"
+          />
+        </Box>
+        <h2 className="title-lg text-[#103b1c]">Cổng Đối Tác Lowca</h2>
+        <p className="body-medium mt-2 text-[#3d6647]">
+          Đăng nhập để bắt đầu quản lý cửa hàng và kinh doanh hiệu quả hơn.
+        </p>
+      </Box>
       <Button
         variant="contained"
         fullWidth

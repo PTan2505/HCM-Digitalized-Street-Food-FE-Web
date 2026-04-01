@@ -23,6 +23,8 @@ declare global {
   }
 }
 
+import { ENV } from '@config/env';
+
 export const initFacebookSDK = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (window.FB) {
@@ -30,9 +32,9 @@ export const initFacebookSDK = (): Promise<boolean> => {
       return;
     }
     // Initialize the SDK when it loads
-    window.fbAsyncInit = function () {
+    window.fbAsyncInit = function (): void {
       window.FB.init({
-        appId: import.meta.env.VITE_FACEBOOK_APP_ID ?? '702936619420508',
+        appId: ENV.oauth.facebookAppId,
         cookie: true,
         xfbml: true,
         version: 'v21.0',
@@ -40,7 +42,7 @@ export const initFacebookSDK = (): Promise<boolean> => {
       resolve(true);
     };
     // Load the Facebook SDK script
-    (function (d, s, id) {
+    (function (d: Document, s: string, id: string): void {
       const fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) {
         return;

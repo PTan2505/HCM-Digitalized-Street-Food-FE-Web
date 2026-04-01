@@ -22,12 +22,23 @@ interface CustomInputProps<T extends FieldValues> {
   required?: boolean;
   placeholder?: string;
   type?: string;
+  numericOnly?: boolean;
+  maxLength?: number;
 }
 
 export const CustomInput = <T extends FieldValues>(
   props: CustomInputProps<T>
 ): JSX.Element => {
-  const { name, control, label, placeholder, type, required } = props;
+  const {
+    name,
+    control,
+    label,
+    placeholder,
+    type,
+    required,
+    numericOnly,
+    maxLength,
+  } = props;
   const [hidePassword, setHidePassword] = useState(true);
 
   return (
@@ -47,10 +58,16 @@ export const CustomInput = <T extends FieldValues>(
           </Typography>
           <InputBase
             {...field}
+            onChange={(event) => {
+              const nextValue = numericOnly
+                ? event.target.value.replace(/\D/g, '')
+                : event.target.value;
+              field.onChange(nextValue);
+            }}
             required={required}
             className={
               field.value?.length > 0 && !fieldState.error
-                ? 'border-primary-1000 text-primary-1000'
+                ? 'text-primary-1000'
                 : ''
             }
             type={
@@ -58,6 +75,35 @@ export const CustomInput = <T extends FieldValues>(
             }
             error={!!fieldState.error}
             placeholder={placeholder}
+            inputProps={{
+              inputMode: numericOnly ? 'numeric' : undefined,
+              pattern: numericOnly ? '[0-9]*' : undefined,
+              maxLength,
+            }}
+            sx={{
+              borderRadius: '9999px',
+              border: '1px solid',
+              borderColor: fieldState.error
+                ? '#FE4763'
+                : field.value?.length > 0
+                  ? '#9fd356'
+                  : '#A8B8A7',
+              backgroundColor: '#E9EFE8',
+              paddingInline: '14px',
+              '&.Mui-focused': {
+                borderColor: '#9fd356',
+                boxShadow: '0 0 0 2px rgba(159, 211, 86, 0.2)',
+              },
+              '& .MuiInputBase-input': {
+                padding: '10px 0',
+                color: '#547c1c',
+                fontWeight: 800,
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: '#B8C3B7',
+                opacity: 1,
+              },
+            }}
             endAdornment={
               type === 'password' && (
                 <InputAdornment position="end">
@@ -72,7 +118,7 @@ export const CustomInput = <T extends FieldValues>(
             }
           />
 
-          <Box className="flex h-[19px] justify-between">
+          <Box className="flex h-4.75 justify-between">
             <Typography className="body-medium text-[#FE4763]">
               {fieldState.error?.message}
             </Typography>

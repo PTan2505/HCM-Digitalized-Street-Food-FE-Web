@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Chip } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import UserBadgeFormModal from '@features/admin/components/UserBadgeFormModal';
@@ -86,11 +85,11 @@ export default function UserBadgeManagement(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'userId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'userId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'userName',
       label: 'Tên người dùng',
@@ -164,6 +163,7 @@ export default function UserBadgeManagement(): JSX.Element {
       ),
       onClick: (row: Record<string, unknown>): void =>
         handleOpenDialog(row as unknown as UserWithBadges),
+      tooltip: 'Thêm hoặc thu hồi huy hiệu',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
@@ -175,7 +175,7 @@ export default function UserBadgeManagement(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý Badge của User
+            Quản lý huy hiệu của người dùng
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Gán và quản lý badges cho từng người dùng

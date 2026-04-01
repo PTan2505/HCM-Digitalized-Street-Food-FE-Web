@@ -27,6 +27,7 @@ interface Action<T> {
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
+  show?: (row: T) => boolean;
 }
 
 interface TableProps<T extends object> {
@@ -151,6 +152,11 @@ const Table = <T extends object>({
                     >
                       <Box className="flex gap-2">
                         {actions.map((action, index) => {
+                          // Skip action if show condition returns false
+                          if (action.show && !action.show(row)) {
+                            return null;
+                          }
+
                           const handleClick = (e: React.MouseEvent): void => {
                             e.stopPropagation();
                             action.onClick(row);

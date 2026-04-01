@@ -1,16 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Avatar,
-  Box,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Avatar, Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -18,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import BadgeFormModal from '@features/admin/components/BadgeFormModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { Badge } from '@features/admin/types/badge';
 import useBadge from '@features/admin/hooks/useBadge';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -73,14 +64,14 @@ export default function BadgePage(): JSX.Element {
   const handleSave = async (data: {
     badgeName: string;
     pointToGet: string;
-    iconUrl: string;
+    imageFile?: File | null;
     description: string;
   }): Promise<void> => {
     try {
       const payload = {
         badgeName: data.badgeName,
         pointToGet: parseInt(data.pointToGet, 10),
-        iconUrl: data.iconUrl,
+        imageFile: data.imageFile,
         description: data.description,
       };
 
@@ -118,11 +109,11 @@ export default function BadgePage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'badgeId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'badgeId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'iconUrl',
       label: 'Icon',
@@ -171,12 +162,14 @@ export default function BadgePage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Badge): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa huy hiệu',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Badge): void => handleDelete(row),
+      tooltip: 'Xóa huy hiệu',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -188,7 +181,7 @@ export default function BadgePage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý Badge
+            Quản lý huy hiệu
           </h1>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý danh hiệu và phần thưởng cho người dùng
@@ -199,7 +192,7 @@ export default function BadgePage(): JSX.Element {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
-          Thêm Badge
+          Thêm huy hiệu
         </button>
       </div>
 
@@ -224,38 +217,18 @@ export default function BadgePage(): JSX.Element {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Xác nhận xóa badge</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa badge &quot;
-            {deletingBadge?.badgeName}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa badge"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa badge &quot;{deletingBadge?.badgeName}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

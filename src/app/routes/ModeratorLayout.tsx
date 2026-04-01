@@ -1,21 +1,17 @@
 import SidebarContent from '@components/layout/SidebarContent';
+import NotificationBell from '@components/NotificationBell';
 import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
-  Bars3Icon,
-  ChartBarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CurrencyDollarIcon,
-  HomeIcon,
-  ShoppingBagIcon,
-  UserCircleIcon,
-  UserGroupIcon,
-  UsersIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Menu as Bars3Icon,
+  BarChart as ChartBarIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Verified as ShoppingBagIcon,
+  Close as XMarkIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -24,21 +20,9 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
   {
-    name: 'Quản lý giao dịch',
-    href: '/moderator/transactions',
-    icon: HomeIcon,
-  },
-  {
     name: 'Xác minh người bán',
     href: '/moderator/verification',
     icon: ShoppingBagIcon,
-  },
-  { name: 'Quản lý bài viết', href: '/moderator/posts', icon: UserGroupIcon },
-  { name: 'Quản lý người dùng', href: '/moderator/users', icon: UsersIcon },
-  {
-    name: 'Yêu cầu rút tiền',
-    href: '/moderator/cashout',
-    icon: CurrencyDollarIcon,
   },
 ];
 
@@ -78,14 +62,14 @@ function ModeratorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
@@ -95,6 +79,7 @@ function ModeratorLayout(): JSX.Element {
             settingsPath="/moderator/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
           />
         </div>
       </div>
@@ -156,29 +141,8 @@ function ModeratorLayout(): JSX.Element {
               </Box>
             </Box>
 
-            <Box className="flex items-center gap-3">
-              {/* User menu */}
-              <Box className="flex items-center gap-3">
-                <Box className="hidden flex-col items-end sm:flex">
-                  <Typography variant="body2" className="text-sm font-medium">
-                    {user?.firstName && user?.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : (user?.username ?? 'Moderator User')}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    className="text-xs text-gray-500"
-                  >
-                    {user?.email ?? 'moderator@example.com'}
-                  </Typography>
-                </Box>
-                <Avatar
-                  src={user?.avatarUrl ?? undefined}
-                  className="cursor-pointer hover:opacity-80"
-                >
-                  {!user?.avatarUrl && <UserCircleIcon className="h-6 w-6" />}
-                </Avatar>
-              </Box>
+            <Box className="flex items-center gap-4">
+              <NotificationBell />
             </Box>
           </Box>
         </Box>
