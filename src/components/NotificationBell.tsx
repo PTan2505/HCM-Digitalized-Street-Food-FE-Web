@@ -15,10 +15,12 @@ import { useNotificationContext } from '@contexts/NotificationContext';
 
 interface NotificationBellProps {
   onFeedbackNotificationClick?: (feedbackId: number) => void;
+  onOrderNotificationClick?: (orderId: number) => void;
 }
 
 export default function NotificationBell({
   onFeedbackNotificationClick,
+  onOrderNotificationClick,
 }: NotificationBellProps): JSX.Element {
   const {
     notifications,
@@ -58,6 +60,11 @@ export default function NotificationBell({
       notification.referenceId !== null
     ) {
       onFeedbackNotificationClick?.(notification.referenceId);
+    } else if (
+      notification.type === 'NewOrder' &&
+      notification.referenceId !== null
+    ) {
+      onOrderNotificationClick?.(notification.referenceId);
     }
   };
 
@@ -96,7 +103,7 @@ export default function NotificationBell({
         className="relative"
         title={isConnected ? 'Đã kết nối' : 'Đã ngắt kết nối'}
       >
-        <Badge badgeContent={unreadCount} color="error">
+        <Badge badgeContent={unreadCount} color="warning" max={99}>
           <NotificationsIcon
             sx={{
               ...(isConnected
@@ -308,7 +315,8 @@ export default function NotificationBell({
                     {formatTime(notification.createdAt)}
                   </Typography>
 
-                  {notification.type === 'NewFeedback' &&
+                  {(notification.type === 'NewFeedback' ||
+                    notification.type === 'NewOrder') &&
                     notification.referenceId !== null && (
                       <Typography
                         variant="caption"

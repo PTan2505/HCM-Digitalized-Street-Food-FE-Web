@@ -112,12 +112,12 @@ export const useNotifications = (
       setIsConnected(true);
       setConnectionError(null);
 
-      // Handle incoming real-time notifications (only NewFeedback)
+      // Handle incoming real-time notifications (NewFeedback, NewOrder)
       const handler = (data: NotificationDto): void => {
-        if (data.type !== 'NewFeedback') return;
+        if (data.type !== 'NewFeedback' && data.type !== 'NewOrder') return;
 
         console.log('📬 New notification:', data);
-        playNotificationSound();
+        playNotificationSound(data.type);
         toast.info(CustomNotification, {
           data: {
             title: data.title,
