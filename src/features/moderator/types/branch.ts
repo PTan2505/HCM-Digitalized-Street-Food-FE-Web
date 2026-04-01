@@ -48,6 +48,14 @@ export interface BranchRegisterRequest {
   branch: Branch;
 }
 
+export type PendingRegistrationType = 0 | 1 | 2;
+
+export interface GetPendingRegistrationsParams {
+  pageNumber: number;
+  pageSize: number;
+  type: PendingRegistrationType;
+}
+
 export interface GetPendingRegistrationsResponse {
   currentPage: number;
   pageSize: number;

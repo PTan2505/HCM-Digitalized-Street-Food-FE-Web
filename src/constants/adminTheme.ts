@@ -44,5 +44,5 @@ export const ADMIN_THEME: AdminThemeConfig = {
 export const ADMIN_USER_INFO = {
   name: 'Admin User',
   email: 'admin@example.com',
-  role: 'Admin Panel',
+  role: 'Admin',
 };

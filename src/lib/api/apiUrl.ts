@@ -57,6 +57,8 @@ export const apiUrl = {
     },
   },
   user: {
+    getUserById: (id: number): string => `/User/${id}`,
+    search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
       dietary: '/UserSetup/dietary-setup',
@@ -81,6 +83,8 @@ export const apiUrl = {
     createOrGetBranchesOfAVendor: (vendorId: number): string =>
       `/Branch/vendor/${vendorId}`,
     updateOrDeleteBranch: (branchId: number): string => `/Branch/${branchId}`,
+    updateBranchManager: (branchId: number): string =>
+      `/Branch/${branchId}/manager`,
     //WorkSchedules
     createOrGetWorkSchedulesOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/work-schedules`,
@@ -89,6 +93,8 @@ export const apiUrl = {
     //Day-offs
     createOrGetDayOffsOfABranch: (branchId: number): string =>
       `/Branch/${branchId}/day-offs`,
+    deleteOrUpdateDayOffOfABranch: (dayOffId: number): string =>
+      `/Branch/day-offs/${dayOffId}`,
     deleteDayOffOfABranch: (dayOffId: number): string =>
       `/Branch/day-offs/${dayOffId}`,
     //Images
@@ -135,6 +141,12 @@ export const apiUrl = {
       `/Feedback/branch/${branchId}`,
     CreateOrUpdateOrDeleteReply: (feedbackId: number): string =>
       `/Feedback/${feedbackId}/reply`,
+    GetFeedbackDetails: (feedbackId: number): string =>
+      `/Feedback/${feedbackId}`,
+  },
+  feedbackTag: {
+    getAllOrPostFeedbackTag: '/FeedbackTag',
+    updateOrDeleteFeedbackTag: (id: number): string => `/FeedbackTag/${id}`,
   },
   notification: {
     getNotifications: '/notifications',
@@ -152,5 +164,49 @@ export const apiUrl = {
     getManagerOrders: '/order/manager/orders',
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
+    getVendorOrders: 'order/vendor/orders',
+  },
+  manager: {
+    getMyBranch: '/Branch/manager/my-branch',
+  },
+  campaign: {
+    GetOrPostSystemCampaign: '/Campaign/system',
+    GetOrPostVendorCampaign: '/Campaign/vendor',
+    GetOrPostBranchCampaign: (branchId: number): string =>
+      `/Campaign/branch/${branchId}`,
+    GetJoinableSystemCampaigns: '/Campaign/system/joinable',
+    BranchJoinASystemCampaign: (campaignId: number): string =>
+      `/Campaign/join/system/${campaignId}/branch`,
+    VendorJoinASystemCampaign: '/Campaign/vendor/join​',
+    GetDetailsOfASystemCampaign: (campaignId: number): string =>
+      `/Campaign/system/${campaignId}`,
+    UpdateCampaign: (campaignId: number): string => `/Campaign/${campaignId}`,
+    GetOrPostAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/images`,
+    DeleteAImageOfACampaign: (campaignId: number): string =>
+      `/Campaign/${campaignId}/image`,
+    GetBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches`,
+    AddBranchesToACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/add`,
+    RemoveBranchesFromACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/remove`,
+  },
+  quest: {
+    getOrPostQuest: '/Quest',
+    updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+    postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+  },
+  setting: {
+    getSettings: '/Setting',
+    updateSetting: (name: string): string => `/Setting/${name}`,
+    reloadSettings: '/Setting/reload',
+  },
+  voucher: {
+    GetOrPostVouchers: '/vouchers',
+    UpdateOrDeleteVoucher: (voucherId: number): string =>
+      `/vouchers/${voucherId}`,
+    GetVouchersOfACampaign: (campaignId: number): string =>
+      `/vouchers/campaign/${campaignId}`,
   },
 };

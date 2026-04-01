@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.hcmstreetfood.mobile",
+      "sha256_cert_fingerprints": [
+        "A2:62:1F:0C:1E:C6:1B:C9:73:D0:E8:F6:FA:3A:B3:22:28:F1:7A:6E:37:E8:46:E0:5C:B4:65:A4:6E:06:4A:1C"
+      ]
+    }
+  }
+]

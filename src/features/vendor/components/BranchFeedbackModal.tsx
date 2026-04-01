@@ -17,14 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface BranchFeedbackModalProps {
   isOpen: boolean;
@@ -223,9 +216,9 @@ export default function BranchFeedbackModal({
             <h2 className="text-table-text-primary truncate text-lg leading-tight font-bold">
               {branch.name}
             </h2>
-            <div className="mt-1 inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs text-gray-600">
+            {/* <div className="mt-1 inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs text-gray-600">
               Mã chi nhánh: #{branch.branchId}
-            </div>
+            </div> */}
           </div>
           <IconButton
             size="small"
@@ -442,36 +435,17 @@ export default function BranchFeedbackModal({
           />
         </div>
 
-        <Dialog
+        <DeleteConfirmationDialog
           open={deleteTarget !== null}
           onClose={handleCloseDeleteConfirm}
-          aria-labelledby="delete-feedback-reply-dialog-title"
-          aria-describedby="delete-feedback-reply-dialog-description"
-        >
-          <DialogTitle id="delete-feedback-reply-dialog-title">
-            Xác nhận xóa phản hồi
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="delete-feedback-reply-dialog-description">
-              Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDeleteConfirm} color="primary">
-              Hủy
-            </Button>
-            <Button
-              onClick={() =>
-                deleteTarget && void handleDeleteReply(deleteTarget.feedbackId)
-              }
-              color="error"
-              variant="contained"
-              autoFocus
-            >
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={() => {
+            if (deleteTarget) void handleDeleteReply(deleteTarget.feedbackId);
+          }}
+          title="Xác nhận xóa phản hồi"
+          confirmationMessage={
+            <>Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?</>
+          }
+        />
       </div>
     </div>
   );

@@ -12,16 +12,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import IconButton from '@mui/material/IconButton';
-import {
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-  Tooltip,
-} from '@mui/material';
+import { CircularProgress, Tooltip } from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectDayOffs, selectVendorStatus } from '@slices/vendor';
@@ -535,30 +527,18 @@ export default function DayOffModal({
       </div>
 
       {/* Delete confirmation dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={confirmDeleteId !== null}
         onClose={() => setConfirmDeleteId(null)}
-      >
-        <DialogTitle>Xác nhận xóa ngày nghỉ</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa ngày nghỉ"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa ngày nghỉ này? Hành động này không thể
             hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDeleteId(null)} color="primary">
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
     </>
   );
 }

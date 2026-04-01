@@ -19,6 +19,8 @@ export interface NavigationItem {
     style?: React.CSSProperties;
   }>;
   children?: NavigationItem[];
+  badgeText?: string;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 interface SidebarContentProps {
@@ -33,6 +35,7 @@ interface SidebarContentProps {
   settingsPath?: string;
   onLogout?: () => void;
   onLogoClick?: () => void;
+  onNavigateItemClick?: () => void;
 }
 
 const SidebarContent = ({
@@ -41,6 +44,7 @@ const SidebarContent = ({
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
   onLogoClick,
+  onNavigateItemClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
@@ -64,8 +68,19 @@ const SidebarContent = ({
   };
 
   return (
-    <Box className="bg-gradient-moderator flex flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-      <Box className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4">
+    <Box className="bg-gradient-moderator flex min-h-0 flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+      <Box
+        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4"
+        sx={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        }}
+      >
         {/* Logo/Brand */}
         <Box
           onClick={onLogoClick}
@@ -158,6 +173,7 @@ const SidebarContent = ({
                           <Link
                             key={child.name}
                             to={child.href ?? '#'}
+                            onClick={() => onNavigateItemClick?.()}
                             className="block no-underline"
                           >
                             <Box
@@ -167,7 +183,13 @@ const SidebarContent = ({
                                   : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
                               }`}
                             >
-                              <Typography className="overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
+                              <Box className="flex h-4 w-4 shrink-0 items-center justify-center">
+                                <child.icon
+                                  className="h-4 w-4"
+                                  style={{ color: 'inherit' }}
+                                />
+                              </Box>
+                              <Typography className="ml-2 overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
                                 {child.name}
                               </Typography>
                             </Box>
@@ -187,7 +209,14 @@ const SidebarContent = ({
                 placement="right"
                 disableHoverListener={!collapsed}
               >
-                <Link to={item.href ?? '#'} className="no-underline">
+                <Link
+                  to={item.href ?? '#'}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    onNavigateItemClick?.();
+                  }}
+                  className="no-underline"
+                >
                   <Box
                     className={`mb-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
                       isActive
@@ -208,6 +237,11 @@ const SidebarContent = ({
                     >
                       {item.name}
                     </Typography>
+                    {!collapsed && item.badgeText && (
+                      <Box className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                        {item.badgeText}
+                      </Box>
+                    )}
                   </Box>
                 </Link>
               </Tooltip>

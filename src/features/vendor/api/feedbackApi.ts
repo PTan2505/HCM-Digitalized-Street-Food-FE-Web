@@ -3,6 +3,7 @@ import type {
   GetFeedbacksByBranchResponse,
   ReplyFeedbackRequest,
   ReplyFeedbackResponse,
+  GetFeedbackDetailsResponse,
 } from '@features/vendor/types/feedback';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -56,6 +57,15 @@ export class FeedbackApi {
   async deleteReply(feedbackId: number): Promise<ReplyFeedbackResponse> {
     const res = await this.apiClient.delete<ReplyFeedbackResponse>({
       url: apiUrl.feedback.CreateOrUpdateOrDeleteReply(feedbackId),
+    });
+    return res.data;
+  }
+
+  async getFeedbackDetails(
+    feedbackId: number
+  ): Promise<GetFeedbackDetailsResponse> {
+    const res = await this.apiClient.get<GetFeedbackDetailsResponse>({
+      url: apiUrl.feedback.GetFeedbackDetails(feedbackId),
     });
     return res.data;
   }

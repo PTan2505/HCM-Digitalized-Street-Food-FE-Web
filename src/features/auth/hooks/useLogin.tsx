@@ -22,6 +22,10 @@ import { resetPaymentState } from '@slices/payment';
 import { resetDishState } from '@slices/dish';
 import { resetTasteState } from '@slices/taste';
 import { resetUserDietaryPreferenceState } from '@slices/userPreferenceDietary';
+import { resetOrderState } from '@slices/order';
+import { resetCampaignState } from '@slices/campaign';
+import { resetFeedbackTagState } from '@slices/feedbackTag';
+import { resetVoucherState } from '@slices/voucher';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -81,6 +85,10 @@ export default function useLogin(): {
     dispatch(resetDishState());
     dispatch(resetTasteState());
     dispatch(resetUserDietaryPreferenceState());
+    dispatch(resetOrderState());
+    dispatch(resetCampaignState());
+    dispatch(resetFeedbackTagState());
+    dispatch(resetVoucherState());
     navigate(ROUTES.LOGIN);
   }
   return {

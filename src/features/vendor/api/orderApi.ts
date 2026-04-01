@@ -14,6 +14,17 @@ export class OrderApi {
     this.apiClient = apiClient;
   }
 
+  async getVendorOrders(params: {
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<GetVendorBranchOrdersResponse> {
+    const res = await this.apiClient.get<GetVendorBranchOrdersResponse>({
+      url: apiUrl.order.getVendorOrders,
+      params,
+    });
+    return res.data;
+  }
+
   async getVendorBranchOrders(
     branchId: number,
     params: {

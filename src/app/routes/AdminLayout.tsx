@@ -4,19 +4,24 @@ import type { NavigationItem } from '@components/layout/SidebarContent';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
-  Bars3Icon,
-  BuildingStorefrontIcon,
-  ChartBarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  RectangleStackIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  StarIcon,
-  UserCircleIcon,
-  UserGroupIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  BarChart as ChartBarIcon,
+  Storefront as BuildingStorefrontIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Category as RectangleStackIcon,
+  EmojiEvents as StarIcon,
+  LocalDining as SparklesIcon,
+  Group as UserGroupIcon,
+  Person as UserCircleIcon,
+  Menu as Bars3Icon,
+  Close as XMarkIcon,
+  Loyalty as ShoppingBagIcon,
+  ChatBubbleOutline as ChatBubbleOutlineIcon,
+  Campaign as CampaignIcon,
+  Assignment as AssignmentIcon,
+  LocalOffer as LocalOfferIcon,
+  Settings as SettingsIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -26,12 +31,6 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
-  // {
-  //   name: 'Quản lý giao dịch',
-  //   href: '/admin/transactions',
-  //   icon: HomeIcon,
-  // },
-  // { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
   {
     name: 'Quản lý cửa hàng',
     href: '/admin/vendors',
@@ -41,22 +40,6 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý danh mục',
     href: '/admin/category',
     icon: RectangleStackIcon,
-  },
-  {
-    name: 'Huy hiệu',
-    icon: StarIcon,
-    children: [
-      {
-        name: 'Quản lý huy hiệu',
-        href: '/admin/badge',
-        icon: StarIcon,
-      },
-      {
-        name: 'Huy hiệu của người dùng',
-        href: '/admin/badge-users',
-        icon: ShoppingBagIcon,
-      },
-    ],
   },
   {
     name: 'Quản lý khẩu vị',
@@ -78,6 +61,58 @@ const navigation: NavigationItem[] = [
         icon: UserCircleIcon,
       },
     ],
+  },
+  {
+    name: 'Huy hiệu',
+    icon: StarIcon,
+    children: [
+      {
+        name: 'Quản lý huy hiệu',
+        href: '/admin/badge',
+        icon: StarIcon,
+      },
+      {
+        name: 'Huy hiệu của người dùng',
+        href: '/admin/badge-users',
+        icon: ShoppingBagIcon,
+      },
+    ],
+  },
+  {
+    name: 'Quản lý tag phản hồi',
+    href: '/admin/feedback-tag',
+    icon: ChatBubbleOutlineIcon,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    icon: CampaignIcon,
+    children: [
+      {
+        name: 'Từ hệ thống',
+        href: '/admin/campaign',
+        icon: CampaignIcon,
+      },
+      {
+        name: 'Từ cửa hàng',
+        href: '/admin/campaign/vendor',
+        icon: BuildingStorefrontIcon,
+      },
+    ],
+  },
+  {
+    name: 'Quản lý nhiệm vụ',
+    href: '/admin/quest',
+    icon: AssignmentIcon,
+  },
+  {
+    name: 'Quản lý voucher',
+    href: '/admin/voucher',
+    icon: LocalOfferIcon,
+  },
+  {
+    name: 'Cấu hình hệ thống',
+    href: '/admin/setting',
+    icon: SettingsIcon,
   },
 ];
 
@@ -123,14 +158,14 @@ function AdminLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
@@ -140,6 +175,7 @@ function AdminLayout(): JSX.Element {
             settingsPath="/admin/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
           />
         </div>
       </div>
@@ -208,7 +244,7 @@ function AdminLayout(): JSX.Element {
 
         {/* Page content */}
         <Box component="main" className="py-6">
-          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <Box className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />
           </Box>
         </Box>

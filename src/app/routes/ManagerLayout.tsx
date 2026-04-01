@@ -1,14 +1,21 @@
 import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
+import { ROUTES } from '@constants/routes';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
+import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import {
-  Bars3Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ShoppingBagIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Menu as Bars3Icon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ShoppingCart as ShoppingBagIcon,
+  Store as StoreIcon,
+  RestaurantMenu as RestaurantMenuIcon,
+  RateReview as RateReviewIcon,
+  Schedule as ScheduleIcon,
+  EventBusy as EventBusyIcon,
+  Close as XMarkIcon,
+} from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
@@ -19,14 +26,40 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const navigation = [
   {
     name: 'Quản lý đơn hàng',
-    href: '/manager/orders',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.ORDER}`,
     icon: ShoppingBagIcon,
+  },
+  {
+    name: 'Quản lý chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
+    icon: StoreIcon,
+  },
+  {
+    name: 'Quản lý thực đơn',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DISH}`,
+    icon: RestaurantMenuIcon,
+  },
+  {
+    name: 'Quản lý phản hồi chi nhánh',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.FEEDBACK}`,
+    icon: RateReviewIcon,
+  },
+  {
+    name: 'Quản lý thời gian hoạt động',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.WORK_SCHEDULE}`,
+    icon: ScheduleIcon,
+  },
+  {
+    name: 'Quản lý thời gian nghỉ',
+    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DAY_OFF}`,
+    icon: EventBusyIcon,
   },
 ];
 
 function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -34,7 +67,7 @@ function ManagerLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/manager');
+    navigate(ROUTES.MANAGER.BASE);
   };
 
   const sidebarUserInfo = {
@@ -58,23 +91,24 @@ function ManagerLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/manager/settings"
+            settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
           />
         </div>
       </div>
@@ -88,7 +122,7 @@ function ManagerLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/manager/settings"
+          settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
         />
@@ -133,7 +167,9 @@ function ManagerLayout(): JSX.Element {
             </Box>
 
             <Box className="flex items-center gap-4">
-              <NotificationBell />
+              <NotificationBell
+                onFeedbackNotificationClick={setFeedbackModalId}
+              />
             </Box>
           </Box>
         </Box>
@@ -144,6 +180,12 @@ function ManagerLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+
+      <FeedbackDetailsModal
+        isOpen={feedbackModalId !== null}
+        onClose={() => setFeedbackModalId(null)}
+        feedbackId={feedbackModalId}
+      />
     </Box>
   );
 }

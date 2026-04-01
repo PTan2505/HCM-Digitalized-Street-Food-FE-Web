@@ -6,8 +6,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import PaymentIcon from '@mui/icons-material/Payment';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 
 interface PaymentBenefitsModalProps {
   isOpen: boolean;
@@ -146,7 +146,7 @@ export default function PaymentBenefitsModal({
                 ></Box>
                 Quản lý bán hàng
               </Typography>
-              <Box className="grid grid-cols-1 gap-4 sm:grid-cols-1">
+              <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
                     <RestaurantMenuIcon fontSize="small" />
@@ -161,6 +161,24 @@ export default function PaymentBenefitsModal({
                     <Typography className="text-sm leading-relaxed text-[var(--color-table-text-secondary)]">
                       Cho phép khách hàng xem menu, đặt món và thanh toán trực
                       tiếp qua ứng dụng Lowca.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                  <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                    <MenuBookIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h4"
+                      className="mb-1 text-base font-bold text-[var(--color-table-text-primary)]"
+                    >
+                      Hiển Thị Thực Đơn
+                    </Typography>
+                    <Typography className="text-sm leading-relaxed text-[var(--color-table-text-secondary)]">
+                      Mở khoá quyền thêm các món ăn vào hồ sơ chi nhánh. Giúp
+                      thực khách dễ dàng tìm kiếm và xem trước món ngon của bạn.
                     </Typography>
                   </Box>
                 </Box>

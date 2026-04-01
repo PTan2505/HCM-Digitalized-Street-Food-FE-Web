@@ -2,10 +2,10 @@ import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
-  HttpTransportType,
   LogLevel,
 } from '@microsoft/signalr';
 import { tokenManagement } from '@utils/tokenManagement';
+import { ENV } from './env';
 
 class SignalRService {
   private connection: HubConnection | null = null;
@@ -21,10 +21,8 @@ class SignalRService {
     }
 
     this.connection = new HubConnectionBuilder()
-      .withUrl(import.meta.env.VITE_SIGNALR_URL as string, {
+      .withUrl(ENV.signalr.url, {
         accessTokenFactory: () => tokenManagement.getAccessToken() || '',
-        skipNegotiation: true,
-        transport: HttpTransportType.WebSockets,
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000])
       .configureLogging(LogLevel.Information)

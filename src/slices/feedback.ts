@@ -5,6 +5,7 @@ import type {
   GetFeedbacksByBranchParams,
   RawBranchFeedbackResponse,
   ReplyFeedbackRequest,
+  GetFeedbackDetailsResponse,
 } from '@features/vendor/types/feedback';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -38,6 +39,7 @@ export interface FeedbackState {
   pagination: PaginationState;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
+  selectedFeedback: GetFeedbackDetailsResponse | null;
 }
 
 const initialState: FeedbackState = {
@@ -45,6 +47,7 @@ const initialState: FeedbackState = {
   pagination: { ...defaultPagination },
   status: 'idle',
   error: null,
+  selectedFeedback: null,
 };
 
 const normalizeReply = (
@@ -155,11 +158,25 @@ export const deleteFeedbackReply = createAppAsyncThunk(
   }
 );
 
+export const getFeedbackDetails = createAppAsyncThunk(
+  'feedback/getFeedbackDetails',
+  async (feedbackId: number, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.feedbackApi.getFeedbackDetails(feedbackId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const allThunks = [
   getFeedbacksByBranch,
   createFeedbackReply,
   updateFeedbackReply,
   deleteFeedbackReply,
+  getFeedbackDetails,
 ] as const;
 
 const feedbackSlice = createSlice({
@@ -183,6 +200,9 @@ const feedbackSlice = createSlice({
           hasNext: action.payload.hasNext,
         };
       })
+      .addCase(getFeedbackDetails.fulfilled, (state, action) => {
+        state.selectedFeedback = action.payload;
+      })
       .addCase(createFeedbackReply.fulfilled, (state, action) => {
         const feedback = state.feedbacks.find(
           (item) => item.feedbackId === action.payload.feedbackId
@@ -190,6 +210,15 @@ const feedbackSlice = createSlice({
         if (feedback) {
           feedback.replyContent = action.payload.data.content;
           feedback.repliedAt = new Date().toISOString();
+        }
+        if (state.selectedFeedback?.id === action.payload.feedbackId) {
+          const now = new Date().toISOString();
+          state.selectedFeedback.vendorReply = {
+            ...(state.selectedFeedback.vendorReply ?? {}),
+            content: action.payload.data.content,
+            createdAt: now,
+            updatedAt: now,
+          };
         }
       })
       .addCase(updateFeedbackReply.fulfilled, (state, action) => {
@@ -200,6 +229,14 @@ const feedbackSlice = createSlice({
           feedback.replyContent = action.payload.data.content;
           feedback.repliedAt = new Date().toISOString();
         }
+        if (state.selectedFeedback?.id === action.payload.feedbackId) {
+          const now = new Date().toISOString();
+          state.selectedFeedback.vendorReply = {
+            ...(state.selectedFeedback.vendorReply ?? {}),
+            content: action.payload.data.content,
+            updatedAt: now,
+          };
+        }
       })
       .addCase(deleteFeedbackReply.fulfilled, (state, action) => {
         const feedback = state.feedbacks.find(
@@ -208,6 +245,9 @@ const feedbackSlice = createSlice({
         if (feedback) {
           feedback.replyContent = null;
           feedback.repliedAt = null;
+        }
+        if (state.selectedFeedback?.id === action.payload) {
+          state.selectedFeedback.vendorReply = null;
         }
       })
       .addMatcher(isPending(...allThunks), (state) => {
@@ -244,3 +284,7 @@ export const selectBranchFeedbacks = (
 export const selectBranchFeedbacksPagination = (
   state: RootState
 ): FeedbackState['pagination'] => state.feedback.pagination;
+
+export const selectSelectedFeedback = (
+  state: RootState
+): GetFeedbackDetailsResponse | null => state.feedback.selectedFeedback;

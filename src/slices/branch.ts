@@ -6,6 +6,7 @@ import type {
 } from '@features/home/types/branch';
 import type {
   BranchRegisterRequest,
+  GetPendingRegistrationsParams,
   GetPendingRegistrationsResponse,
   VerifyRegistrationRequest,
   RejectRegistrationRequest,
@@ -64,10 +65,7 @@ export const getActiveBranches = createAppAsyncThunk(
 
 export const getPendingRegistrations = createAppAsyncThunk(
   'vendor/getPendingRegistrations',
-  async (
-    params: { pageNumber: number; pageSize: number },
-    { rejectWithValue }
-  ) => {
+  async (params: GetPendingRegistrationsParams, { rejectWithValue }) => {
     try {
       const response: GetPendingRegistrationsResponse =
         await axiosApi.branchApi.getPendingRegistrations(params);
