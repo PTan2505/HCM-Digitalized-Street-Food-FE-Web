@@ -3,7 +3,7 @@ import { Avatar } from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { BadgeFormSchema } from '@features/admin/utils/badgeFormSchema';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { z } from 'zod';
 
 type BadgeFormSchemaType = z.infer<typeof BadgeFormSchema>;
@@ -37,6 +37,7 @@ export default function BadgeFormModal({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm<BadgeFormSchemaType>({
     resolver: zodResolver(BadgeFormSchema),
@@ -44,20 +45,32 @@ export default function BadgeFormModal({
     defaultValues: {
       badgeName: '',
       pointToGet: '',
-      iconUrl: '',
       description: '',
+      imageFile: null,
     },
   });
 
-  const iconUrl = watch('iconUrl');
+  const imageFile = watch('imageFile');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+
+  useEffect((): (() => void) | void => {
+    if (imageFile instanceof File) {
+      const url = URL.createObjectURL(imageFile);
+      setPreviewUrl(url);
+      return (): void => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(formData.iconUrl ?? '');
+      return undefined;
+    }
+  }, [imageFile, formData.iconUrl]);
 
   useEffect(() => {
     if (isOpen) {
       reset({
         badgeName: formData.badgeName ?? '',
         pointToGet: formData.pointToGet?.toString() ?? '',
-        iconUrl: formData.iconUrl ?? '',
         description: formData.description ?? '',
+        imageFile: null,
       });
     }
   }, [isOpen, formData, reset]);
@@ -122,26 +135,26 @@ export default function BadgeFormModal({
             )}
           </div>
 
-          {/* URL Icon */}
+          {/* File Icon */}
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
-              URL Icon <span className="text-red-500">*</span>
+              Icon huy hiệu
             </label>
             <input
-              type="text"
-              {...register('iconUrl')}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
-              placeholder="URL Icon"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setValue('imageFile', file, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[var(--color-primary-50)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary-700)] hover:file:bg-[var(--color-primary-100)] focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
             />
-            {errors.iconUrl ? (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.iconUrl.message}
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
-                Nhập URL hình ảnh icon
-              </p>
-            )}
+            <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
+              Tải lên hình ảnh icon cho huy hiệu
+            </p>
           </div>
 
           {/* Mô tả */}
@@ -163,12 +176,12 @@ export default function BadgeFormModal({
           </div>
 
           {/* Preview */}
-          {iconUrl && (
+          {previewUrl && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-[var(--color-table-text-secondary)]">
                 Xem trước icon huy hiệu:
               </span>
-              <Avatar src={iconUrl} alt="Preview" className="h-12 w-12" />
+              <Avatar src={previewUrl} alt="Preview" className="h-12 w-12" />
             </div>
           )}
         </div>

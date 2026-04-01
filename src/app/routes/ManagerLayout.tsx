@@ -91,14 +91,14 @@ function ManagerLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex h-full w-full max-w-xs flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
@@ -108,6 +108,7 @@ function ManagerLayout(): JSX.Element {
             settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
           />
         </div>
       </div>

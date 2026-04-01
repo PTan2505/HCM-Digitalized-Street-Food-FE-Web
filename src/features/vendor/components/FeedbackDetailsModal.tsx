@@ -11,14 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface FeedbackDetailsModalProps {
   isOpen: boolean;
@@ -384,34 +377,15 @@ export default function FeedbackDetailsModal({
         </div>
 
         {/* Delete confirm dialog */}
-        <Dialog
+        <DeleteConfirmationDialog
           open={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
-          aria-labelledby="feedback-detail-delete-title"
-          aria-describedby="feedback-detail-delete-description"
-        >
-          <DialogTitle id="feedback-detail-delete-title">
-            Xác nhận xóa phản hồi
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="feedback-detail-delete-description">
-              Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowDeleteConfirm(false)} color="primary">
-              Hủy
-            </Button>
-            <Button
-              onClick={() => void handleDeleteReply()}
-              color="error"
-              variant="contained"
-              autoFocus
-            >
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={handleDeleteReply}
+          title="Xác nhận xóa phản hồi"
+          confirmationMessage={
+            <>Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?</>
+          }
+        />
       </div>
 
       {/* Lightbox for images */}
