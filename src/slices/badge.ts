@@ -159,8 +159,7 @@ export const badgeSlice = createSlice({
       })
       .addCase(updateBadge.fulfilled, (state, action) => {
         if (action.payload) {
-          const responseData = action.payload as unknown as { badge: Badge };
-          const badge = responseData.badge;
+          const badge = action.payload as unknown as Badge;
           const index = state.badges.findIndex(
             (b) => b.badgeId === badge.badgeId
           );

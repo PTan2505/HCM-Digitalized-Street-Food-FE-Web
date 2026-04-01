@@ -4,8 +4,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
-  DialogActions,
   IconButton,
   Box,
   Button,
@@ -26,6 +24,7 @@ import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVouchers, selectVoucherStatus } from '@slices/voucher';
 import VoucherFormModal from '@features/vendor/components/VoucherFormModal';
 import VoucherDetailsModal from '@features/vendor/components/VoucherDetailsModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface VendorCampaignVoucherModalProps {
   isOpen: boolean;
@@ -353,40 +352,18 @@ export default function VendorCampaignVoucherModal({
         fixedCampaignId={campaign.campaignId}
       />
 
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-voucher-title"
-        aria-describedby="delete-voucher-description"
-      >
-        <DialogTitle id="delete-voucher-title">
-          Xác nhận xóa voucher
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-voucher-description">
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa voucher"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa voucher &quot;{deletingVoucher?.name}
             &quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-(--font-nunito)"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-(--font-nunito)"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
 
       <VoucherDetailsModal
         isOpen={openDetailsModal}

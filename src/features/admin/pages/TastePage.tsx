@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -16,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import TasteFormModal from '@features/admin/components/TasteFormModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { Taste } from '@features/admin/types/taste';
 import useTaste from '@features/admin/hooks/useTaste';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -190,38 +183,18 @@ export default function TastePage(): JSX.Element {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Xác nhận xóa khẩu vị</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa khẩu vị &quot;
-            {deletingTaste?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa khẩu vị"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa khẩu vị &quot;{deletingTaste?.name}&quot;?
+            Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }
