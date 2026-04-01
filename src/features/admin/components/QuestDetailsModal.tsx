@@ -152,9 +152,22 @@ export default function QuestDetailsModal({
 
             <div>
               <p className="text-table-text-secondary text-xs">Hình ảnh</p>
-              <p className="text-table-text-primary text-sm break-all">
-                {quest?.imageUrl ?? 'Không có hình ảnh'}
-              </p>
+              {quest?.imageUrl ? (
+                <div className="mt-1 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                  <img
+                    src={quest.imageUrl}
+                    alt={quest.title}
+                    className="max-h-56 w-auto rounded object-cover"
+                  />
+                  <p className="text-table-text-secondary mt-2 text-xs break-all">
+                    {quest.imageUrl}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-table-text-primary text-sm">
+                  Không có hình ảnh
+                </p>
+              )}
             </div>
           </div>
 
@@ -173,11 +186,8 @@ export default function QuestDetailsModal({
                     Nhiệm vụ {index + 1}: {QUEST_TASK_TYPE_LABELS[task.type]}
                   </p>
                   <p className="text-table-text-secondary text-sm">
-                    Mục tiêu: {task.targetValue}
-                  </p>
-                  <p className="text-table-text-secondary text-sm">
-                    Phần thưởng: {QUEST_REWARD_TYPE_LABELS[task.rewardType]} (
-                    {task.rewardValue})
+                    Phần thưởng: {QUEST_REWARD_TYPE_LABELS[task.rewardType]} /
+                    Giá trị thưởng: {task.rewardValue}
                   </p>
                   <p className="text-table-text-secondary text-sm">
                     Mô tả: {task.description ?? 'Không có mô tả'}

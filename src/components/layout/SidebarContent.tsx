@@ -35,6 +35,7 @@ interface SidebarContentProps {
   settingsPath?: string;
   onLogout?: () => void;
   onLogoClick?: () => void;
+  onNavigateItemClick?: () => void;
 }
 
 const SidebarContent = ({
@@ -43,6 +44,7 @@ const SidebarContent = ({
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
   onLogoClick,
+  onNavigateItemClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
@@ -171,6 +173,7 @@ const SidebarContent = ({
                           <Link
                             key={child.name}
                             to={child.href ?? '#'}
+                            onClick={() => onNavigateItemClick?.()}
                             className="block no-underline"
                           >
                             <Box
@@ -208,7 +211,10 @@ const SidebarContent = ({
               >
                 <Link
                   to={item.href ?? '#'}
-                  onClick={item.onClick}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    onNavigateItemClick?.();
+                  }}
                   className="no-underline"
                 >
                   <Box

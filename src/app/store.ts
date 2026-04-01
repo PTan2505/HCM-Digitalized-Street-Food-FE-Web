@@ -13,6 +13,7 @@ import orderReducer from '@slices/order';
 import feedbackTagReducer from '@slices/feedbackTag';
 import campaignReducer from '@slices/campaign';
 import questReducer from '@slices/quest';
+import settingReducer from '@slices/setting';
 import voucherReducer from '@slices/voucher';
 
 export const store = configureStore({
@@ -31,6 +32,7 @@ export const store = configureStore({
     feedbackTag: feedbackTagReducer,
     campaign: campaignReducer,
     quest: questReducer,
+    setting: settingReducer,
     voucher: voucherReducer,
   },
 });

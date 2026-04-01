@@ -85,6 +85,7 @@ export default function QuestPage(): JSX.Element {
     onCreateQuest,
     onUpdateQuest,
     onDeleteQuest,
+    onPostQuestImage,
   } = useQuest();
 
   const [page, setPage] = useState(1);
@@ -122,14 +123,24 @@ export default function QuestPage(): JSX.Element {
   };
 
   const handleSaveQuest = async (
-    data: Parameters<typeof onCreateQuest>[0]
+    data: Parameters<typeof onCreateQuest>[0],
+    imageFile?: File | null
   ): Promise<void> => {
     try {
+      let savedQuest: Quest;
+
       if (editingQuest) {
-        await onUpdateQuest(editingQuest.questId, data);
+        savedQuest = await onUpdateQuest(editingQuest.questId, data);
       } else {
-        await onCreateQuest(data);
+        savedQuest = await onCreateQuest(data);
       }
+
+      if (imageFile && savedQuest.questId) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        await onPostQuestImage(savedQuest.questId, formData);
+      }
+
       handleCloseModal();
       await fetchQuests();
     } catch (error) {
