@@ -15,4 +15,5 @@ export const CategoryFormSchema = z.object({
     .max(500, 'Mô tả không được vượt quá 500 ký tự')
     .nullable()
     .optional(),
+  imageFile: z.any().optional().nullable(),
 });

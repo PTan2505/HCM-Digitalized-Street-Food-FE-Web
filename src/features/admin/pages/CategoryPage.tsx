@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import { Box, Avatar } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -32,6 +32,7 @@ export default function CategoryPage(): JSX.Element {
   const [formData, setFormData] = useState<Partial<Category>>({
     name: '',
     description: null,
+    imageUrl: null,
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function CategoryPage(): JSX.Element {
       setFormData({
         name: '',
         description: null,
+        imageUrl: null,
       });
     }
     setOpenDialog(true);
@@ -58,17 +60,20 @@ export default function CategoryPage(): JSX.Element {
     setFormData({
       name: '',
       description: null,
+      imageUrl: null,
     });
   };
 
   const handleSave = async (data: {
     name: string;
     description?: string | null;
+    imageFile?: File | null;
   }): Promise<void> => {
     try {
       const payload = {
         name: data.name,
         description: data.description ?? null,
+        imageFile: data.imageFile,
       };
 
       if (editingCategory) {
@@ -112,6 +117,19 @@ export default function CategoryPage(): JSX.Element {
     //   label: 'ID',
     //   style: { width: '80px' },
     // },
+    {
+      key: 'imageUrl',
+      label: 'Hình ảnh',
+      style: { width: '100px' },
+      render: (value: unknown): React.ReactNode => (
+        <Avatar
+          src={String(value)}
+          alt="Category Image"
+          variant="rounded"
+          className="h-10 w-10 bg-[var(--color-primary-100)]"
+        />
+      ),
+    },
     {
       key: 'name',
       label: 'Tên Danh mục',
