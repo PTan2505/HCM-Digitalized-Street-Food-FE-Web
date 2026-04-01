@@ -17,12 +17,7 @@ export const BadgeFormSchema = z.object({
     .refine((value) => parseInt(value, 10) > 0, {
       message: VALIDATE_ERROR_MESSAGES.MIN_POINT_TO_GET,
     }),
-  iconUrl: z
-    .string()
-    .nonempty(VALIDATE_ERROR_MESSAGES.EMPTY_ICON_URL)
-    .refine((value) => validator.isURL(value), {
-      message: VALIDATE_ERROR_MESSAGES.INVALID_ICON_URL,
-    }),
+  imageFile: z.any().optional().nullable(),
   description: z
     .string()
     .nonempty(VALIDATE_ERROR_MESSAGES.EMPTY_DESCRIPTION)

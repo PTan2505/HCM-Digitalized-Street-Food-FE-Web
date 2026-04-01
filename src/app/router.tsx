@@ -16,6 +16,8 @@ import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDiet
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
 import AdminCampaignPage from '@features/admin/pages/CampaignPage';
 import AdminVendorCampaignPage from '@features/admin/pages/AdminVendorCampaignPage';
+import AdminQuestPage from '@features/admin/pages/QuestPage';
+import AdminSettingPage from '@features/admin/pages/SettingPage';
 import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
@@ -239,6 +241,14 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.CAMPAIGN_VENDOR,
             element: <AdminVendorCampaignPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.QUEST,
+            element: <AdminQuestPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.SETTING,
+            element: <AdminSettingPage />,
           },
           {
             path: ROUTES.ADMIN.PATHS.VOUCHER,

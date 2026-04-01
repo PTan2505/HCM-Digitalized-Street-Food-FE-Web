@@ -18,6 +18,7 @@ import {
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import VendorDetailModal from '@features/admin/components/VendorDetailModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { AdminVendor } from '@features/admin/types/vendor';
 import useVendor from '@features/admin/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -265,41 +266,18 @@ export default function VendorsPage(): JSX.Element {
         onPageSizeChange={handlePageSizeChange}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa cửa hàng
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa cửa hàng"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa cửa hàng &quot;{selectedVendor?.name}
             &quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDialog}
-            color="primary"
-            className="font-semibold"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-semibold"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
 
       {/* Suspend Confirmation Dialog */}
       <Dialog
