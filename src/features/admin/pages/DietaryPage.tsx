@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -17,6 +9,7 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import DietaryFormModal from '@features/admin/components/DietaryFormModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { UserDietaryPreference } from '@features/admin/types/userDietaryPreference';
 import useDietary from '@features/admin/hooks/useDietary';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -208,40 +201,18 @@ export default function DietaryPage(): JSX.Element {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa chế độ ăn
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa chế độ ăn"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa chế độ ăn &quot;{deletingDietary?.name}
             &quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
     </div>
   );
 }
