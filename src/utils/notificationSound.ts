@@ -1,15 +1,26 @@
 import { Howl } from 'howler';
-import soundFile from '@assets/sounds/sound_v2.mp3';
+import NewOrderSound from '@assets/sounds/NewOrder.m4a';
+import NewFeedbackSound from '@assets/sounds/NewFeedback.m4a';
 
-const notificationHowl = new Howl({
-  src: [soundFile],
-  volume: 0.7,
+const feedbackHowl = new Howl({
+  src: [NewFeedbackSound],
+  volume: 0.9,
   preload: true,
 });
 
-export const playNotificationSound = (): void => {
+const orderHowl = new Howl({
+  src: [NewOrderSound],
+  volume: 0.9,
+  preload: true,
+});
+
+export const playNotificationSound = (type?: string): void => {
   try {
-    notificationHowl.play();
+    if (type === 'NewOrder') {
+      orderHowl.play();
+    } else {
+      feedbackHowl.play();
+    }
   } catch (error) {
     console.warn('Could not play notification sound:', error);
   }

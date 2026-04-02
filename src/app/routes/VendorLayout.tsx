@@ -3,6 +3,7 @@ import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
 import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
 import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
 import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMissingDishModal';
@@ -126,6 +127,7 @@ function VendorLayout(): JSX.Element {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [orderModalId, setOrderModalId] = useState<number | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
@@ -528,6 +530,7 @@ function VendorLayout(): JSX.Element {
               )}
               <NotificationBell
                 onFeedbackNotificationClick={setFeedbackModalId}
+                onOrderNotificationClick={setOrderModalId}
               />
             </Box>
           </Box>
@@ -552,6 +555,11 @@ function VendorLayout(): JSX.Element {
         isOpen={feedbackModalId !== null}
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
+      />
+      <OrderDetailsModal
+        isOpen={orderModalId !== null}
+        onClose={() => setOrderModalId(null)}
+        orderId={orderModalId}
       />
       <OnboardingMissingBranchModal
         open={isBranchModalOpen}

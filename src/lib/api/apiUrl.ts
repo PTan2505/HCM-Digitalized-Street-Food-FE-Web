@@ -165,6 +165,7 @@ export const apiUrl = {
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
     getVendorOrders: 'order/vendor/orders',
+    getOrderDetails: (orderId: number): string => `/order/${orderId}`,
   },
   manager: {
     getMyBranch: '/Branch/manager/my-branch',

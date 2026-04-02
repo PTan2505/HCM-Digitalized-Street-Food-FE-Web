@@ -57,3 +57,5 @@ export interface CompleteVendorOrderResponse {
   status: number;
   finalAmount: number;
 }
+
+export type OrderDetailsResponse = VendorOrder;
