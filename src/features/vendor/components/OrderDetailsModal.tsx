@@ -52,8 +52,6 @@ export default function OrderDetailsModal({
     void onGetOrderDetails(orderId);
   }, [isOpen, orderId, onGetOrderDetails]);
 
-  if (!isOpen) return null;
-
   const isLoading = status === 'pending' && order?.orderId !== orderId;
 
   const statusMeta = useMemo(() => {
@@ -122,6 +120,8 @@ export default function OrderDetailsModal({
     if (method.toLowerCase() === 'banking') return 'Chuyển khoản';
     return method;
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
