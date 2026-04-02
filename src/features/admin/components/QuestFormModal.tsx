@@ -1,6 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import useBadge from '@features/admin/hooks/useBadge';
 import useCampaign from '@features/admin/hooks/useCampaign';
+import useVoucher from '@features/admin/hooks/useVoucher';
+import type { Badge } from '@features/admin/types/badge';
 import type { Campaign } from '@features/admin/types/campaign';
 import {
   type Quest,
@@ -24,6 +27,7 @@ import {
   type JSX,
 } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
+import type { Voucher } from '@custom-types/voucher';
 
 interface QuestFormModalProps {
   isOpen: boolean;
@@ -31,6 +35,12 @@ interface QuestFormModalProps {
   onSubmit: (data: QuestCreate, imageFile?: File | null) => Promise<void>;
   quest: Quest | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
+}
+
+interface RewardOption {
+  id: number;
+  label: string;
+  hint: string;
 }
 
 const defaultTask = {
@@ -59,10 +69,21 @@ export default function QuestFormModal({
   status,
 }: QuestFormModalProps): JSX.Element | null {
   const { onGetCampaigns } = useCampaign();
+  const { onGetAllBadges } = useBadge();
+  const { onGetVouchers } = useVoucher();
   const [campaignOptions, setCampaignOptions] = useState<Campaign[]>([]);
+  const [badgeOptions, setBadgeOptions] = useState<Badge[]>([]);
+  const [voucherOptions, setVoucherOptions] = useState<Voucher[]>([]);
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
+  const [isLoadingRewards, setIsLoadingRewards] = useState(false);
   const [campaignQuery, setCampaignQuery] = useState('');
   const [isCampaignFocused, setIsCampaignFocused] = useState(false);
+  const [rewardQueries, setRewardQueries] = useState<Record<string, string>>(
+    {}
+  );
+  const [rewardFocusedMap, setRewardFocusedMap] = useState<
+    Record<string, boolean>
+  >({});
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
@@ -121,6 +142,26 @@ export default function QuestFormModal({
       .slice(0, 8);
   }, [campaignOptions, campaignQuery]);
 
+  const badgeRewardOptions = useMemo<RewardOption[]>(
+    () =>
+      badgeOptions.map((badge) => ({
+        id: badge.badgeId,
+        label: badge.badgeName,
+        hint: `ID: ${badge.badgeId}`,
+      })),
+    [badgeOptions]
+  );
+
+  const voucherRewardOptions = useMemo<RewardOption[]>(
+    () =>
+      voucherOptions.map((voucher) => ({
+        id: voucher.voucherId,
+        label: voucher.name,
+        hint: voucher.voucherCode,
+      })),
+    [voucherOptions]
+  );
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'tasks',
@@ -146,12 +187,32 @@ export default function QuestFormModal({
     }
   }, [onGetCampaigns]);
 
+  const fetchRewardOptions = useCallback(async (): Promise<void> => {
+    setIsLoadingRewards(true);
+
+    try {
+      const [badges, vouchers] = await Promise.all([
+        onGetAllBadges(),
+        onGetVouchers(),
+      ]);
+      setBadgeOptions(badges);
+      setVoucherOptions(vouchers);
+    } catch (error) {
+      console.error('Failed to fetch reward options for quest form', error);
+      setBadgeOptions([]);
+      setVoucherOptions([]);
+    } finally {
+      setIsLoadingRewards(false);
+    }
+  }, [onGetAllBadges, onGetVouchers]);
+
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
     void fetchCampaignOptions();
+    void fetchRewardOptions();
 
     if (quest) {
       reset({
@@ -174,6 +235,8 @@ export default function QuestFormModal({
       });
       setSelectedImageFile(null);
       setImagePreviewUrl(quest.imageUrl ?? null);
+      setRewardQueries({});
+      setRewardFocusedMap({});
       return;
     }
 
@@ -184,7 +247,9 @@ export default function QuestFormModal({
     setCampaignQuery('');
     setSelectedImageFile(null);
     setImagePreviewUrl(null);
-  }, [fetchCampaignOptions, isOpen, quest, reset]);
+    setRewardQueries({});
+    setRewardFocusedMap({});
+  }, [fetchCampaignOptions, fetchRewardOptions, isOpen, quest, reset]);
 
   useEffect((): (() => void) => {
     return (): void => {
@@ -514,20 +579,58 @@ export default function QuestFormModal({
                     <label className="text-table-text-primary mb-1 block text-sm font-medium">
                       Loại thưởng <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      {...register(`tasks.${index}.rewardType`, {
-                        setValueAs: (value) => Number(value),
-                      })}
-                      className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-                    >
-                      {Object.entries(QUEST_REWARD_TYPE_LABELS).map(
-                        ([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        )
-                      )}
-                    </select>
+                    {((): JSX.Element => {
+                      const rewardTypeRegister = register(
+                        `tasks.${index}.rewardType`,
+                        {
+                          setValueAs: (value) => Number(value),
+                        }
+                      );
+
+                      return (
+                        <select
+                          {...rewardTypeRegister}
+                          onChange={(event) => {
+                            rewardTypeRegister.onChange(event);
+                            const nextRewardType = Number(
+                              event.target.value
+                            ) as QuestRewardType;
+                            const taskKey = field.id;
+
+                            if (nextRewardType === QuestRewardType.POINTS) {
+                              setValue(`tasks.${index}.rewardValue`, 1, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                              setRewardQueries((prev) => {
+                                const nextQueries = { ...prev };
+                                delete nextQueries[taskKey];
+                                return nextQueries;
+                              });
+                              return;
+                            }
+
+                            setValue(`tasks.${index}.rewardValue`, 0, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            });
+                            setRewardQueries((prev) => ({
+                              ...prev,
+                              [taskKey]: '',
+                            }));
+                          }}
+                          className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
+                        >
+                          {Object.entries(QUEST_REWARD_TYPE_LABELS).map(
+                            ([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      );
+                    })()}
                     {errors.tasks?.[index]?.rewardType && (
                       <p className="mt-1 text-xs text-red-500">
                         {errors.tasks[index]?.rewardType?.message}
@@ -539,13 +642,152 @@ export default function QuestFormModal({
                     <label className="text-table-text-primary mb-1 block text-sm font-medium">
                       Giá trị thưởng <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      {...register(`tasks.${index}.rewardValue`, {
-                        valueAsNumber: true,
-                      })}
-                      className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-                    />
+                    {((): JSX.Element => {
+                      const rewardTypeValue =
+                        watch(`tasks.${index}.rewardType`) ??
+                        QuestRewardType.POINTS;
+
+                      if (rewardTypeValue === QuestRewardType.POINTS) {
+                        return (
+                          <input
+                            type="number"
+                            {...register(`tasks.${index}.rewardValue`, {
+                              valueAsNumber: true,
+                            })}
+                            className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
+                          />
+                        );
+                      }
+
+                      const isBadgeReward =
+                        rewardTypeValue === QuestRewardType.BADGE;
+                      const rewardOptions = isBadgeReward
+                        ? badgeRewardOptions
+                        : voucherRewardOptions;
+                      const currentRewardValue =
+                        watch(`tasks.${index}.rewardValue`) ?? 0;
+                      const selectedRewardOption =
+                        rewardOptions.find(
+                          (option) => option.id === currentRewardValue
+                        ) ?? null;
+                      const taskKey = field.id;
+                      const isRewardFocused =
+                        rewardFocusedMap[taskKey] ?? false;
+                      const rewardQueryFromState = rewardQueries[taskKey];
+                      const rewardQuery =
+                        rewardQueryFromState ??
+                        selectedRewardOption?.label ??
+                        '';
+                      const normalizedRewardQuery = rewardQuery
+                        .trim()
+                        .toLowerCase();
+                      const filteredRewardOptions = !normalizedRewardQuery
+                        ? rewardOptions.slice(0, 8)
+                        : rewardOptions
+                            .filter((option) =>
+                              `${option.label} ${option.hint}`
+                                .toLowerCase()
+                                .includes(normalizedRewardQuery)
+                            )
+                            .slice(0, 8);
+
+                      return (
+                        <div className="relative">
+                          <input
+                            type="hidden"
+                            {...register(`tasks.${index}.rewardValue`, {
+                              valueAsNumber: true,
+                            })}
+                          />
+
+                          <input
+                            type="text"
+                            value={rewardQuery}
+                            onFocus={() => {
+                              setRewardFocusedMap((prev) => ({
+                                ...prev,
+                                [taskKey]: true,
+                              }));
+                            }}
+                            onBlur={() => {
+                              window.setTimeout(() => {
+                                setRewardFocusedMap((prev) => ({
+                                  ...prev,
+                                  [taskKey]: false,
+                                }));
+                              }, 120);
+                            }}
+                            onChange={(event) => {
+                              const nextQuery = event.target.value;
+                              setRewardQueries((prev) => ({
+                                ...prev,
+                                [taskKey]: nextQuery,
+                              }));
+                              setValue(`tasks.${index}.rewardValue`, 0, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                            }}
+                            className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
+                            placeholder={
+                              isBadgeReward
+                                ? 'Tìm và chọn huy hiệu'
+                                : 'Tìm và chọn voucher'
+                            }
+                          />
+
+                          {isRewardFocused && (
+                            <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                              {isLoadingRewards ? (
+                                <p className="text-table-text-secondary px-3 py-2 text-sm">
+                                  Đang tải dữ liệu phần thưởng...
+                                </p>
+                              ) : filteredRewardOptions.length > 0 ? (
+                                filteredRewardOptions.map((option) => (
+                                  <button
+                                    key={option.id}
+                                    type="button"
+                                    onMouseDown={(event) =>
+                                      event.preventDefault()
+                                    }
+                                    onClick={() => {
+                                      setValue(
+                                        `tasks.${index}.rewardValue`,
+                                        option.id,
+                                        {
+                                          shouldDirty: true,
+                                          shouldValidate: true,
+                                        }
+                                      );
+                                      setRewardQueries((prev) => ({
+                                        ...prev,
+                                        [taskKey]: option.label,
+                                      }));
+                                      setRewardFocusedMap((prev) => ({
+                                        ...prev,
+                                        [taskKey]: false,
+                                      }));
+                                    }}
+                                    className="hover:bg-primary-50 w-full px-3 py-2 text-left text-sm"
+                                  >
+                                    <p className="text-table-text-primary font-medium">
+                                      {option.label}
+                                    </p>
+                                    {/* <p className="text-table-text-secondary text-xs">
+                                      {option.hint}
+                                    </p> */}
+                                  </button>
+                                ))
+                              ) : (
+                                <p className="text-table-text-secondary px-3 py-2 text-sm">
+                                  Không tìm thấy phần thưởng phù hợp.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {errors.tasks?.[index]?.rewardValue && (
                       <p className="mt-1 text-xs text-red-500">
                         {errors.tasks[index]?.rewardValue?.message}
