@@ -1,6 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import useOrder from '@features/vendor/hooks/useOrder';
+import {
+  getOrderStatusMeta,
+  OrderStatusBadge,
+} from '@features/vendor/components/OrderStatusBadge';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectSelectedOrder, selectOrderStatus } from '@slices/order';
 import CloseIcon from '@mui/icons-material/Close';
@@ -35,17 +39,65 @@ export default function OrderDetailsModal({
   const order = useAppSelector(selectSelectedOrder);
   const status = useAppSelector(selectOrderStatus);
 
-  const { onGetOrderDetails } = useOrder();
+  const { onGetOrderDetails, onDecideVendorOrder, onCompleteVendorOrder } =
+    useOrder();
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+  const [isSubmittingComplete, setIsSubmittingComplete] = useState(false);
 
   // Fetch details khi modal mở
   useEffect(() => {
     if (!isOpen || !orderId) return;
+    setVerificationCode('');
     void onGetOrderDetails(orderId);
   }, [isOpen, orderId, onGetOrderDetails]);
 
   if (!isOpen) return null;
 
   const isLoading = status === 'pending' && order?.orderId !== orderId;
+
+  const statusMeta = useMemo(() => {
+    if (!order) return getOrderStatusMeta(-1);
+    return getOrderStatusMeta(order.status);
+  }, [order]);
+
+  const handleDecision = async (approve: boolean): Promise<void> => {
+    if (!order) return;
+
+    setIsSubmittingDecision(true);
+
+    try {
+      await onDecideVendorOrder({
+        orderId: order.orderId,
+        approve,
+      });
+      await onGetOrderDetails(order.orderId);
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  };
+
+  const handleVerificationCodeChange = (value: string): void => {
+    const sanitizedCode = value.replace(/\D/g, '').slice(0, 6);
+    setVerificationCode(sanitizedCode);
+  };
+
+  const handleCompleteOrder = async (): Promise<void> => {
+    if (!order || verificationCode.length !== 6) return;
+
+    setIsSubmittingComplete(true);
+
+    try {
+      await onCompleteVendorOrder({
+        orderId: order.orderId,
+        verificationCode,
+      });
+      await onGetOrderDetails(order.orderId);
+      setVerificationCode('');
+    } finally {
+      setIsSubmittingComplete(false);
+    }
+  };
 
   const getOrderStatusText = (statusCode: number): string => {
     switch (statusCode) {
@@ -135,9 +187,10 @@ export default function OrderDetailsModal({
                     <div className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-500">
                       {formatDateTime(order.createdAt)}
                     </div>
-                    <div className="bg-primary-50 text-primary-700 rounded-full px-2.5 py-1 text-xs font-semibold">
-                      {getOrderStatusText(order.status)}
-                    </div>
+                    <OrderStatusBadge
+                      label={statusMeta.label}
+                      type={statusMeta.type}
+                    />
                   </div>
                 </div>
 
@@ -212,6 +265,88 @@ export default function OrderDetailsModal({
                     })}
                   </div>
                 </div>
+              </div>
+
+              {/* Order actions */}
+              <div className="bg-primary-50 border-primary-100 space-y-3 rounded-xl border p-4">
+                <p className="text-primary-700 mb-1 text-xs font-semibold tracking-wide uppercase">
+                  Thao tác đơn hàng
+                </p>
+
+                {order.status === 1 ? (
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleDecision(true);
+                      }}
+                      disabled={isSubmittingDecision || isSubmittingComplete}
+                      className="bg-primary-600 hover:bg-primary-700 inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmittingDecision ? 'Đang xử lý...' : 'Chấp nhận'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleDecision(false);
+                      }}
+                      disabled={isSubmittingDecision || isSubmittingComplete}
+                      className="inline-flex h-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmittingDecision ? 'Đang xử lý...' : 'Từ chối'}
+                    </button>
+                  </div>
+                ) : null}
+
+                {order.status === 2 ? (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-semibold text-gray-600">
+                      Vui lòng nhập 6 số xác thực từ khách hàng để hoàn tất đơn:
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="text"
+                        value={verificationCode}
+                        onChange={(event) => {
+                          handleVerificationCodeChange(event.target.value);
+                        }}
+                        maxLength={6}
+                        inputMode="numeric"
+                        placeholder="Nhập 6 chữ số"
+                        disabled={isSubmittingComplete || isSubmittingDecision}
+                        className="focus:border-primary-500 focus:ring-primary-200 h-10 min-w-52 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold tracking-[0.15em] text-gray-800 outline-none placeholder:tracking-normal placeholder:text-gray-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void handleCompleteOrder();
+                        }}
+                        disabled={
+                          verificationCode.length !== 6 ||
+                          isSubmittingComplete ||
+                          isSubmittingDecision
+                        }
+                        className="bg-primary-600 hover:bg-primary-700 inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isSubmittingComplete
+                          ? 'Đang hoàn tất...'
+                          : 'Hoàn tất đơn'}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {order.status === 3 || order.status === 4 ? (
+                  <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 shadow-sm">
+                    <span className="text-sm font-medium text-gray-600">
+                      Trạng thái xử lý:
+                    </span>
+                    <OrderStatusBadge
+                      label={getOrderStatusText(order.status)}
+                      type={statusMeta.type}
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           )}
