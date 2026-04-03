@@ -228,7 +228,7 @@ export default function NotificationBell({
                 <MenuItem
                   key={notification.notificationId}
                   onClick={() => handleNotificationClick(notification)}
-                  sx={{
+                  sx={(theme) => ({
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
@@ -236,17 +236,25 @@ export default function NotificationBell({
                     py: 1.4,
                     background: notification.isRead
                       ? '#fff'
-                      : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
+                      : notification.type === 'NewFeedback'
+                        ? `color-mix(in srgb, ${theme.palette.warning.main} 8%, transparent)`
+                        : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
                     borderLeft: notification.isRead
                       ? '3px solid transparent'
-                      : '3px solid var(--color-primary-500)',
+                      : notification.type === 'NewFeedback'
+                        ? `3px solid ${theme.palette.warning.main}`
+                        : '3px solid var(--color-primary-500)',
                     transition: 'background 0.18s ease',
                     '&:hover': {
                       background: notification.isRead
-                        ? 'var(--color-primary-50)'
-                        : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
+                        ? notification.type === 'NewFeedback'
+                          ? `color-mix(in srgb, ${theme.palette.warning.main} 6%, transparent)`
+                          : 'var(--color-primary-50)'
+                        : notification.type === 'NewFeedback'
+                          ? `color-mix(in srgb, ${theme.palette.warning.main} 15%, transparent)`
+                          : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
                     },
-                  }}
+                  })}
                 >
                   {/* Title row */}
                   <Box
@@ -291,16 +299,21 @@ export default function NotificationBell({
                     </Box>
                     {!notification.isRead && (
                       <Box
-                        sx={{
+                        sx={(theme) => ({
                           flexShrink: 0,
                           mt: 0.5,
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          background: 'var(--color-primary-500)',
+                          background:
+                            notification.type === 'NewFeedback'
+                              ? theme.palette.warning.main
+                              : 'var(--color-primary-500)',
                           boxShadow:
-                            '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
-                        }}
+                            notification.type === 'NewFeedback'
+                              ? `0 0 0 2px color-mix(in srgb, ${theme.palette.warning.main} 35%, transparent)`
+                              : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
+                        })}
                       />
                     )}
                   </Box>
@@ -349,7 +362,10 @@ export default function NotificationBell({
                           sx={{
                             fontSize: '0.7rem',
                             fontWeight: 700,
-                            color: 'var(--color-primary-600)',
+                            color:
+                              notification.type === 'NewFeedback'
+                                ? 'warning.main'
+                                : 'var(--color-primary-600)',
                           }}
                         >
                           Xem chi tiết →
