@@ -1,15 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-  Box,
-  Chip,
-} from '@mui/material';
+import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -19,6 +10,7 @@ import {
 import Table from '@features/admin/components/Table';
 import VoucherFormModal from '@features/admin/components/VoucherFormModal';
 import VoucherDetailsModal from '@features/admin/components/VoucherDetailsModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -326,39 +318,18 @@ export default function VoucherPage(): JSX.Element {
         voucher={viewingVoucher}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Xác nhận xóa voucher</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa voucher &quot;
-            {deletingVoucher?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa voucher"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa voucher &quot;{deletingVoucher?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

@@ -5,12 +5,19 @@ import {
   DialogTitle,
   Button,
 } from '@mui/material';
-import type { JSX } from 'react';
+import useBadge from '@features/admin/hooks/useBadge';
+import useCampaign from '@features/admin/hooks/useCampaign';
+import useVoucher from '@features/admin/hooks/useVoucher';
+import type { Badge } from '@features/admin/types/badge';
+import type { Campaign } from '@features/admin/types/campaign';
 import {
   type Quest,
+  QuestRewardType,
   QUEST_REWARD_TYPE_LABELS,
   QUEST_TASK_TYPE_LABELS,
 } from '@features/admin/types/quest';
+import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
+import type { Voucher } from '@custom-types/voucher';
 
 interface QuestDetailsModalProps {
   isOpen: boolean;
@@ -85,6 +92,84 @@ export default function QuestDetailsModal({
   onClose,
   quest,
 }: QuestDetailsModalProps): JSX.Element {
+  const { onGetCampaigns } = useCampaign();
+  const { onGetAllBadges } = useBadge();
+  const { onGetVouchers } = useVoucher();
+
+  const [campaignOptions, setCampaignOptions] = useState<Campaign[]>([]);
+  const [badgeOptions, setBadgeOptions] = useState<Badge[]>([]);
+  const [voucherOptions, setVoucherOptions] = useState<Voucher[]>([]);
+
+  const fetchReferenceData = useCallback(async (): Promise<void> => {
+    try {
+      const [campaignResponse, badges, vouchers] = await Promise.all([
+        onGetCampaigns(1, 200),
+        onGetAllBadges(),
+        onGetVouchers(),
+      ]);
+
+      setCampaignOptions(campaignResponse.items ?? []);
+      setBadgeOptions(badges);
+      setVoucherOptions(vouchers);
+    } catch (error) {
+      console.error('Failed to fetch quest reference data', error);
+      setCampaignOptions([]);
+      setBadgeOptions([]);
+      setVoucherOptions([]);
+    }
+  }, [onGetAllBadges, onGetCampaigns, onGetVouchers]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void fetchReferenceData();
+  }, [fetchReferenceData, isOpen]);
+
+  const campaignName = useMemo((): string => {
+    if (quest?.isStandalone) {
+      return '-';
+    }
+
+    if (!quest?.campaignId) {
+      return '-';
+    }
+
+    return (
+      campaignOptions.find(
+        (campaign) => campaign.campaignId === quest.campaignId
+      )?.name ?? `#${quest.campaignId}`
+    );
+  }, [campaignOptions, quest?.campaignId, quest?.isStandalone]);
+
+  const rewardValueLabelByTask = useMemo((): Record<number, string> => {
+    if (!quest?.tasks?.length) {
+      return {};
+    }
+
+    return quest.tasks.reduce<Record<number, string>>((accumulator, task) => {
+      if (task.rewardType === QuestRewardType.POINTS) {
+        accumulator[task.questTaskId] = String(task.rewardValue);
+        return accumulator;
+      }
+
+      if (task.rewardType === QuestRewardType.BADGE) {
+        const badgeName = badgeOptions.find(
+          (badge) => badge.badgeId === task.rewardValue
+        )?.badgeName;
+        accumulator[task.questTaskId] = badgeName ?? `#${task.rewardValue}`;
+        return accumulator;
+      }
+
+      const voucherName = voucherOptions.find(
+        (voucher) => voucher.voucherId === task.rewardValue
+      )?.name;
+      accumulator[task.questTaskId] = voucherName ?? `#${task.rewardValue}`;
+      return accumulator;
+    }, {});
+  }, [badgeOptions, quest?.tasks, voucherOptions]);
+
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>Chi tiết nhiệm vụ</DialogTitle>
@@ -118,9 +203,11 @@ export default function QuestDetailsModal({
                 </p>
               </div>
               <div>
-                <p className="text-table-text-secondary text-xs">Campaign ID</p>
+                <p className="text-table-text-secondary text-xs">
+                  Tên chiến dịch
+                </p>
                 <p className="text-table-text-primary text-sm font-semibold">
-                  {quest?.campaignId ?? '-'}
+                  {campaignName}
                 </p>
               </div>
               <div>
@@ -152,9 +239,22 @@ export default function QuestDetailsModal({
 
             <div>
               <p className="text-table-text-secondary text-xs">Hình ảnh</p>
-              <p className="text-table-text-primary text-sm break-all">
-                {quest?.imageUrl ?? 'Không có hình ảnh'}
-              </p>
+              {quest?.imageUrl ? (
+                <div className="mt-1 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 p-2">
+                  <img
+                    src={quest.imageUrl}
+                    alt={quest.title}
+                    className="max-h-56 w-auto rounded object-cover"
+                  />
+                  <p className="text-table-text-secondary mt-2 text-xs break-all">
+                    {quest.imageUrl}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-table-text-primary text-sm">
+                  Không có hình ảnh
+                </p>
+              )}
             </div>
           </div>
 
@@ -173,11 +273,13 @@ export default function QuestDetailsModal({
                     Nhiệm vụ {index + 1}: {QUEST_TASK_TYPE_LABELS[task.type]}
                   </p>
                   <p className="text-table-text-secondary text-sm">
-                    Mục tiêu: {task.targetValue}
+                    Phần thưởng: {QUEST_REWARD_TYPE_LABELS[task.rewardType]} /
+                    Giá trị thưởng:{' '}
+                    {rewardValueLabelByTask[task.questTaskId] ??
+                      task.rewardValue}
                   </p>
                   <p className="text-table-text-secondary text-sm">
-                    Phần thưởng: {QUEST_REWARD_TYPE_LABELS[task.rewardType]} (
-                    {task.rewardValue})
+                    Mục tiêu: {task.targetValue}
                   </p>
                   <p className="text-table-text-secondary text-sm">
                     Mô tả: {task.description ?? 'Không có mô tả'}

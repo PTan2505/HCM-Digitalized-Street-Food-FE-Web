@@ -10,6 +10,7 @@ import {
   deleteQuest,
   getAllQuests,
   getQuestById,
+  postQuestImage,
   updateQuest,
 } from '@slices/quest';
 import { useCallback } from 'react';
@@ -25,6 +26,7 @@ const useQuest = (): {
   onCreateQuest: (data: QuestCreate) => Promise<Quest>;
   onUpdateQuest: (id: number, data: QuestUpdate) => Promise<Quest>;
   onDeleteQuest: (id: number) => Promise<number>;
+  onPostQuestImage: (id: number, data: FormData) => Promise<Quest>;
 } => {
   const dispatch = useAppDispatch();
 
@@ -68,12 +70,20 @@ const useQuest = (): {
     [dispatch]
   );
 
+  const onPostQuestImage = useCallback(
+    async (id: number, data: FormData): Promise<Quest> => {
+      return await dispatch(postQuestImage({ id, data })).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onGetQuests,
     onGetQuestById,
     onCreateQuest,
     onUpdateQuest,
     onDeleteQuest,
+    onPostQuestImage,
   };
 };
 

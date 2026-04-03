@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  Box,
-  IconButton,
-  Tooltip as MuiTooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
@@ -562,35 +553,18 @@ function BranchPage(): JSX.Element {
         onClose={() => setShowOnboardingGuide(false)}
       />
 
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-branch-dialog-title"
-        aria-describedby="delete-branch-dialog-description"
-      >
-        <DialogTitle id="delete-branch-dialog-title">
-          Xác nhận xóa chi nhánh
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-branch-dialog-description">
-            Bạn có chắc chắn muốn xóa chi nhánh &quot;
-            {deletingBranch?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa chi nhánh"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa chi nhánh &quot;{deletingBranch?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

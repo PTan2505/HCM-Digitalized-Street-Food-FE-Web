@@ -55,4 +55,15 @@ export class QuestApi {
       url: apiUrl.quest.updateOrDeleteQuest(id),
     });
   }
+
+  async postQuestImage(id: number, data: FormData): Promise<Quest> {
+    const res = await this.apiClient.post<Quest, FormData>({
+      url: apiUrl.quest.postQuestImage(id),
+      data,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  }
 }

@@ -110,6 +110,21 @@ export const deleteQuest = createAppAsyncThunk(
   }
 );
 
+export const postQuestImage = createAppAsyncThunk(
+  'quest/postQuestImage',
+  async (payload: { id: number; data: FormData }, { rejectWithValue }) => {
+    try {
+      const response: Quest = await axiosApi.questApi.postQuestImage(
+        payload.id,
+        payload.data
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const questSlice = createSlice({
   name: 'quest',
   initialState,
@@ -151,13 +166,24 @@ export const questSlice = createSlice({
           state.totalCount -= 1;
         }
       })
+      .addCase(postQuestImage.fulfilled, (state, action) => {
+        if (action.payload) {
+          const index = state.quests.findIndex(
+            (quest) => quest.questId === action.payload.questId
+          );
+          if (index !== -1) {
+            state.quests[index] = action.payload;
+          }
+        }
+      })
       .addMatcher(
         isPending(
           getAllQuests,
           getQuestById,
           createQuest,
           updateQuest,
-          deleteQuest
+          deleteQuest,
+          postQuestImage
         ),
         (state) => {
           state.status = 'pending';
@@ -169,7 +195,8 @@ export const questSlice = createSlice({
           getQuestById,
           createQuest,
           updateQuest,
-          deleteQuest
+          deleteQuest,
+          postQuestImage
         ),
         (state) => {
           state.status = 'succeeded';
@@ -182,7 +209,8 @@ export const questSlice = createSlice({
           getQuestById,
           createQuest,
           updateQuest,
-          deleteQuest
+          deleteQuest,
+          postQuestImage
         ),
         (state, action) => {
           state.status = 'failed';

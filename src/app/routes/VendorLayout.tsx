@@ -3,6 +3,7 @@ import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
 import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
 import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
 import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMissingDishModal';
@@ -126,6 +127,7 @@ function VendorLayout(): JSX.Element {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [orderModalId, setOrderModalId] = useState<number | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
@@ -428,14 +430,14 @@ function VendorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex h-full w-full max-w-xs flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
@@ -445,6 +447,7 @@ function VendorLayout(): JSX.Element {
             settingsPath="/vendor/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
           />
         </div>
       </div>
@@ -525,9 +528,14 @@ function VendorLayout(): JSX.Element {
                   </Button>
                 </Box>
               )}
-              <NotificationBell
-                onFeedbackNotificationClick={setFeedbackModalId}
-              />
+              {isVendor ? (
+                <NotificationBell
+                  onFeedbackNotificationClick={setFeedbackModalId}
+                  onOrderNotificationClick={setOrderModalId}
+                />
+              ) : (
+                <NotificationBell />
+              )}
             </Box>
           </Box>
         </Box>
@@ -551,6 +559,11 @@ function VendorLayout(): JSX.Element {
         isOpen={feedbackModalId !== null}
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
+      />
+      <OrderDetailsModal
+        isOpen={orderModalId !== null}
+        onClose={() => setOrderModalId(null)}
+        orderId={orderModalId}
       />
       <OnboardingMissingBranchModal
         open={isBranchModalOpen}

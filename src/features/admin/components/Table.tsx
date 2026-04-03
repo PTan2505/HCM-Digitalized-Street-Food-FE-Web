@@ -23,7 +23,7 @@ interface Column<T> {
 }
 
 interface Action<T> {
-  label: string | React.ReactNode;
+  label: string | React.ReactNode | ((row: T) => React.ReactNode);
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
@@ -154,6 +154,10 @@ const Table = <T extends object>({
                       >
                         <Box className="flex gap-2">
                           {actions.map((action, index) => {
+                            const label =
+                              typeof action.label === 'function'
+                                ? action.label(row)
+                                : action.label;
                             const actionButton = (
                               <Button
                                 onClick={(e) => {
@@ -164,7 +168,7 @@ const Table = <T extends object>({
                                 variant={action.variant ?? 'text'}
                                 size="small"
                               >
-                                {action.label}
+                                {label}
                               </Button>
                             );
 

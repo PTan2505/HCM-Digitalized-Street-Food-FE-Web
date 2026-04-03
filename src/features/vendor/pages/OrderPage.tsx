@@ -23,7 +23,6 @@ import {
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import useOrder from '@features/vendor/hooks/useOrder';
-import usePayment from '@features/vendor/hooks/usePayment';
 import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorOrder } from '@features/vendor/types/order';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -52,7 +51,6 @@ export default function OrderPage(): JSX.Element {
     onDecideVendorOrder,
     onCompleteVendorOrder,
   } = useOrder();
-  const { onGetVendorBalance } = usePayment();
 
   const myVendor = useAppSelector(selectMyVendor);
   const orders = useAppSelector(selectVendorOrders);
@@ -119,14 +117,14 @@ export default function OrderPage(): JSX.Element {
   ): Promise<void> => {
     await onDecideVendorOrder({ orderId, approve });
 
-    if (selectedBranchId === 'all') {
-      await onGetVendorOrders({ pageNumber, pageSize });
-    } else {
-      await onGetVendorBranchOrders({
-        branchId: selectedBranchId,
-        params: { pageNumber, pageSize },
-      });
-    }
+    // if (selectedBranchId === 'all') {
+    //   await onGetVendorOrders({ pageNumber, pageSize });
+    // } else {
+    //   await onGetVendorBranchOrders({
+    //     branchId: selectedBranchId,
+    //     params: { pageNumber, pageSize },
+    //   });
+    // }
   };
 
   const handleVerificationCodeChange = (
@@ -181,9 +179,6 @@ export default function OrderPage(): JSX.Element {
         status: 4,
         updatedAt: new Date().toISOString(),
       };
-
-      // Refresh account balance in the payment slice right after completion.
-      void onGetVendorBalance();
 
       setDetailOrder(completedOrder);
       setVerificationCode('');
