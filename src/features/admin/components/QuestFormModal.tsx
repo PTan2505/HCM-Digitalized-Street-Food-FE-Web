@@ -162,6 +162,21 @@ export default function QuestFormModal({
     [voucherOptions]
   );
 
+  const getDefaultRewardValue = useCallback(
+    (rewardType: QuestRewardType): number => {
+      if (rewardType === QuestRewardType.POINTS) {
+        return 1;
+      }
+
+      if (rewardType === QuestRewardType.BADGE) {
+        return badgeRewardOptions[0]?.id ?? 0;
+      }
+
+      return voucherRewardOptions[0]?.id ?? 0;
+    },
+    [badgeRewardOptions, voucherRewardOptions]
+  );
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'tasks',
@@ -598,10 +613,14 @@ export default function QuestFormModal({
                             const taskKey = field.id;
 
                             if (nextRewardType === QuestRewardType.POINTS) {
-                              setValue(`tasks.${index}.rewardValue`, 1, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              });
+                              setValue(
+                                `tasks.${index}.rewardValue`,
+                                getDefaultRewardValue(nextRewardType),
+                                {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                }
+                              );
                               setRewardQueries((prev) => {
                                 const nextQueries = { ...prev };
                                 delete nextQueries[taskKey];
@@ -610,10 +629,14 @@ export default function QuestFormModal({
                               return;
                             }
 
-                            setValue(`tasks.${index}.rewardValue`, 0, {
-                              shouldDirty: true,
-                              shouldValidate: true,
-                            });
+                            setValue(
+                              `tasks.${index}.rewardValue`,
+                              getDefaultRewardValue(nextRewardType),
+                              {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              }
+                            );
                             setRewardQueries((prev) => ({
                               ...prev,
                               [taskKey]: '',
@@ -685,7 +708,7 @@ export default function QuestFormModal({
                         ? rewardOptions.slice(0, 8)
                         : rewardOptions
                             .filter((option) =>
-                              `${option.label} ${option.hint}`
+                              `${option.label}`
                                 .toLowerCase()
                                 .includes(normalizedRewardQuery)
                             )
@@ -723,10 +746,6 @@ export default function QuestFormModal({
                                 ...prev,
                                 [taskKey]: nextQuery,
                               }));
-                              setValue(`tasks.${index}.rewardValue`, 0, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              });
                             }}
                             className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
                             placeholder={
