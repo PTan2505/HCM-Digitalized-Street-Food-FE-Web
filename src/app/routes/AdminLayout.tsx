@@ -23,12 +23,13 @@ import {
   LocalOffer as LocalOfferIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
-import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
+import { useAppSelector } from '@hooks/reduxHooks';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
@@ -141,6 +142,7 @@ const navigation: NavigationItem[] = [
 function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -198,6 +200,7 @@ function AdminLayout(): JSX.Element {
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -215,6 +218,7 @@ function AdminLayout(): JSX.Element {
           settingsPath="/admin/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -271,6 +275,10 @@ function AdminLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </Box>
   );
 }

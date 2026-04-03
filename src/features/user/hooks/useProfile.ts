@@ -4,14 +4,19 @@ import { markUserInfoSetup, updateProfile } from '@slices/auth';
 import { useCallback } from 'react';
 
 export default function useProfile(): {
-  updateUserProfile: (data: Partial<User>) => Promise<void>;
+  updateUserProfile: (
+    data: Partial<User>,
+    skipMarkSetup?: boolean
+  ) => Promise<void>;
 } {
   const dispatch = useAppDispatch();
 
   const updateUserProfile = useCallback(
-    async (data: Partial<User>): Promise<void> => {
+    async (data: Partial<User>, skipMarkSetup = false): Promise<void> => {
       const updatedUser = await dispatch(updateProfile(data)).unwrap();
-      if (!updatedUser?.userInfoSetup) await dispatch(markUserInfoSetup());
+      if (!updatedUser?.userInfoSetup && !skipMarkSetup) {
+        await dispatch(markUserInfoSetup());
+      }
     },
     [dispatch]
   );
