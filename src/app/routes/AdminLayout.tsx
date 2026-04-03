@@ -13,6 +13,7 @@ import {
   LocalDining as SparklesIcon,
   Group as UserGroupIcon,
   Person as UserCircleIcon,
+  People as PeopleIcon,
   Menu as Bars3Icon,
   Close as XMarkIcon,
   Loyalty as ShoppingBagIcon,
@@ -45,6 +46,27 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý khẩu vị',
     href: '/admin/taste',
     icon: SparklesIcon,
+  },
+  {
+    name: 'Quản lý người dùng',
+    icon: PeopleIcon,
+    children: [
+      {
+        name: 'Khách hàng',
+        href: '/admin/users/customer',
+        icon: UserCircleIcon,
+      },
+      {
+        name: 'Đối tác',
+        href: '/admin/users/vendor',
+        icon: BuildingStorefrontIcon,
+      },
+      {
+        name: 'Hệ thống',
+        href: '/admin/users/system',
+        icon: UserGroupIcon,
+      },
+    ],
   },
   {
     name: 'Chế độ ăn',

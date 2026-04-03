@@ -57,7 +57,10 @@ export const apiUrl = {
     },
   },
   user: {
+    getUsers: '/User',
     getUserById: (id: number): string => `/User/${id}`,
+    banUser: (id: number): string => `/User/${id}/ban`,
+    unbanUser: (id: number): string => `/User/${id}/unban`,
     search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',

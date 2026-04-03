@@ -225,7 +225,27 @@ export const router = createBrowserRouter([
             path: ROUTES.ADMIN.PATHS.USER_WITH_DIETARY,
             element: <UsersWithDietaryPreferencesPage />,
           },
-          { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS,
+            element: (
+              <Navigate
+                to={`/${ROUTES.ADMIN.BASE.replace('/', '')}/${ROUTES.ADMIN.PATHS.USERS_CUSTOMER}`}
+                replace
+              />
+            ),
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS_CUSTOMER,
+            element: <AdminUsersPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS_VENDOR,
+            element: <AdminUsersPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS_SYSTEM,
+            element: <AdminUsersPage />,
+          },
           { path: ROUTES.ADMIN.PATHS.VENDORS, element: <AdminVendorsPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
