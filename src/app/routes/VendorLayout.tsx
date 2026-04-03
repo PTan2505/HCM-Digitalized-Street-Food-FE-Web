@@ -528,10 +528,14 @@ function VendorLayout(): JSX.Element {
                   </Button>
                 </Box>
               )}
-              <NotificationBell
-                onFeedbackNotificationClick={setFeedbackModalId}
-                onOrderNotificationClick={setOrderModalId}
-              />
+              {isVendor ? (
+                <NotificationBell
+                  onFeedbackNotificationClick={setFeedbackModalId}
+                  onOrderNotificationClick={setOrderModalId}
+                />
+              ) : (
+                <NotificationBell />
+              )}
             </Box>
           </Box>
         </Box>
