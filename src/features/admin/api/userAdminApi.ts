@@ -48,4 +48,13 @@ export class UserAdminApi {
     });
     return res.data;
   }
+
+  async promoteModerator(id: number): Promise<{ message: string }> {
+    let res = null;
+    res = await this.apiClient.post<{ message: string }, null>({
+      url: apiUrl.user.promoteModerator(id),
+      data: null,
+    });
+    return res.data;
+  }
 }

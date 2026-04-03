@@ -7,11 +7,21 @@ import type {
   UserRoleFilter,
 } from '@features/admin/types/userManagement';
 import { axiosApi } from '@lib/api/apiInstance';
-import { Box, Button } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import { FilterAltOff as FilterAltOffIcon } from '@mui/icons-material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
+
+type ConfirmActionType = 'toggleBan' | 'promoteModerator' | null;
 
 interface AdminPagination {
   currentPage: number;
@@ -102,6 +112,15 @@ const matchesRoleFilter = (
   return resolvedRole === roleFilter;
 };
 
+const isUserBanned = (user: AdminUserItem): boolean => {
+  return Boolean(
+    user.isBanned ??
+    user.banned ??
+    user.isBlocked ??
+    user.status?.toLowerCase() === 'banned'
+  );
+};
+
 const convertToPagination = (response: GetUsersResponse): AdminPagination => {
   return {
     currentPage: response.currentPage,
@@ -129,6 +148,10 @@ export default function UsersPage(): JSX.Element {
   const [processingUserId, setProcessingUserId] = useState<number | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedSearchKeyword, setDebouncedSearchKeyword] = useState('');
+  const [confirmActionType, setConfirmActionType] =
+    useState<ConfirmActionType>(null);
+  const [selectedActionUser, setSelectedActionUser] =
+    useState<AdminUserItem | null>(null);
 
   const pageTitle =
     roleFilter === 'vendor'
@@ -243,13 +266,34 @@ export default function UsersPage(): JSX.Element {
     setPage(1);
   }, [searchKeyword]);
 
+  const handleOpenConfirmToggleBan = useCallback(
+    (user: AdminUserItem): void => {
+      setSelectedActionUser(user);
+      setConfirmActionType('toggleBan');
+    },
+    []
+  );
+
+  const handleOpenConfirmPromoteModerator = useCallback(
+    (user: AdminUserItem): void => {
+      setSelectedActionUser(user);
+      setConfirmActionType('promoteModerator');
+    },
+    []
+  );
+
+  const handleCloseConfirmDialog = useCallback((): void => {
+    if (processingUserId !== null) {
+      return;
+    }
+
+    setConfirmActionType(null);
+    setSelectedActionUser(null);
+  }, [processingUserId]);
+
   const handleToggleBan = useCallback(
     async (user: AdminUserItem): Promise<void> => {
-      const banned =
-        user.isBanned ??
-        user.banned ??
-        user.isBlocked ??
-        user.status?.toLowerCase() === 'banned';
+      const banned = isUserBanned(user);
       setProcessingUserId(user.id);
 
       try {
@@ -259,15 +303,116 @@ export default function UsersPage(): JSX.Element {
           await axiosApi.userAdminApi.banUser(user.id);
         }
 
-        await loadUsers();
+        const nextBannedState = !banned;
+        setUsers((previousUsers) => {
+          return previousUsers.map((item) => {
+            if (item.id !== user.id) {
+              return item;
+            }
+
+            return {
+              ...item,
+              isBanned: nextBannedState,
+              banned: nextBannedState,
+              isBlocked: nextBannedState,
+              status: nextBannedState ? 'banned' : 'active',
+            };
+          });
+        });
       } catch {
         // toast.error('Không thể cập nhật trạng thái chặn');
       } finally {
         setProcessingUserId(null);
       }
     },
-    [loadUsers]
+    []
   );
+
+  const handlePromoteModerator = useCallback(
+    async (user: AdminUserItem): Promise<void> => {
+      setProcessingUserId(user.id);
+
+      try {
+        await axiosApi.userAdminApi.promoteModerator(user.id);
+        setUsers((previousUsers) => {
+          return previousUsers.filter((item) => item.id !== user.id);
+        });
+        setPagination((previousPagination) => {
+          return {
+            ...previousPagination,
+            totalCount: Math.max(previousPagination.totalCount - 1, 0),
+          };
+        });
+      } catch {
+        // toast.error('Không thể thêm moderator');
+      } finally {
+        setProcessingUserId(null);
+      }
+    },
+    []
+  );
+
+  const handleConfirmAction = useCallback(async (): Promise<void> => {
+    if (!selectedActionUser || !confirmActionType) {
+      return;
+    }
+
+    if (confirmActionType === 'toggleBan') {
+      await handleToggleBan(selectedActionUser);
+    }
+
+    if (confirmActionType === 'promoteModerator') {
+      await handlePromoteModerator(selectedActionUser);
+    }
+
+    setConfirmActionType(null);
+    setSelectedActionUser(null);
+  }, [
+    confirmActionType,
+    handlePromoteModerator,
+    handleToggleBan,
+    selectedActionUser,
+  ]);
+
+  const confirmDialogTitle = useMemo((): string => {
+    if (!selectedActionUser || !confirmActionType) {
+      return '';
+    }
+
+    if (confirmActionType === 'toggleBan') {
+      return isUserBanned(selectedActionUser)
+        ? 'Xác nhận bỏ chặn tài khoản'
+        : 'Xác nhận chặn tài khoản';
+    }
+
+    return 'Xác nhận thêm moderator';
+  }, [confirmActionType, selectedActionUser]);
+
+  const confirmDialogMessage = useMemo((): string => {
+    if (!selectedActionUser || !confirmActionType) {
+      return '';
+    }
+
+    if (confirmActionType === 'toggleBan') {
+      return isUserBanned(selectedActionUser)
+        ? `Bạn có chắc muốn bỏ chặn người dùng ${selectedActionUser.userName}?`
+        : `Bạn có chắc muốn chặn người dùng ${selectedActionUser.userName}?`;
+    }
+
+    return `Bạn có chắc muốn thêm ${selectedActionUser.userName} thành moderator?`;
+  }, [confirmActionType, selectedActionUser]);
+
+  const confirmButtonLabel = useMemo((): string => {
+    if (!selectedActionUser || !confirmActionType) {
+      return 'Xác nhận';
+    }
+
+    if (confirmActionType === 'toggleBan') {
+      return isUserBanned(selectedActionUser) ? 'Bỏ chặn' : 'Chặn';
+    }
+
+    return 'Thêm Moderator';
+  }, [confirmActionType, selectedActionUser]);
 
   return (
     <div>
@@ -305,8 +450,40 @@ export default function UsersPage(): JSX.Element {
         loading={loading}
         roleFilter={roleFilter}
         processingUserId={processingUserId}
-        onToggleBan={handleToggleBan}
+        onToggleBan={handleOpenConfirmToggleBan}
+        onPromoteModerator={handleOpenConfirmPromoteModerator}
       />
+
+      <Dialog
+        open={confirmActionType !== null}
+        onClose={handleCloseConfirmDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>{confirmDialogTitle}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{confirmDialogMessage}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseConfirmDialog}
+            disabled={processingUserId !== null}
+            variant="outlined"
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={() => {
+              void handleConfirmAction();
+            }}
+            disabled={processingUserId !== null}
+            color={confirmActionType === 'toggleBan' ? 'warning' : 'info'}
+            variant="outlined"
+          >
+            {confirmButtonLabel}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Pagination
         currentPage={pagination.currentPage}
