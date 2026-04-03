@@ -11,7 +11,8 @@ interface AdminUsersTableProps {
   loading: boolean;
   roleFilter: UserRoleFilter;
   processingUserId: number | null;
-  onToggleBan: (user: AdminUserItem) => Promise<void>;
+  onToggleBan: (user: AdminUserItem) => void;
+  onPromoteModerator: (user: AdminUserItem) => void;
 }
 
 const mapRoleLabel = (role: string | number | null | undefined): string => {
@@ -67,6 +68,7 @@ export default function AdminUsersTable({
   roleFilter,
   processingUserId,
   onToggleBan,
+  onPromoteModerator,
 }: AdminUsersTableProps): JSX.Element {
   return (
     <Table
@@ -111,13 +113,14 @@ export default function AdminUsersTable({
         roleFilter === 'user'
           ? [
               {
-                label: 'Ban/Unban',
+                label: (row: AdminUserItem): string =>
+                  isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
                 onClick: (row): void => {
                   if (processingUserId !== null) {
                     return;
                   }
 
-                  void onToggleBan(row);
+                  onToggleBan(row);
                 },
                 variant: 'outlined',
                 color: 'warning',
@@ -125,6 +128,22 @@ export default function AdminUsersTable({
                   processingUserId !== null
                     ? 'Đang cập nhật trạng thái...'
                     : 'Khóa hoặc mở khóa tài khoản',
+              },
+              {
+                label: 'Thêm Moderator',
+                onClick: (row): void => {
+                  if (processingUserId !== null) {
+                    return;
+                  }
+
+                  onPromoteModerator(row);
+                },
+                variant: 'outlined',
+                color: 'info',
+                tooltip:
+                  processingUserId !== null
+                    ? 'Đang cập nhật vai trò...'
+                    : 'Nâng quyền thành moderator',
               },
             ]
           : undefined
