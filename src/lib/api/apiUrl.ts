@@ -191,7 +191,7 @@ export const apiUrl = {
     DeleteAImageOfACampaign: (campaignId: number): string =>
       `/Campaign/${campaignId}/image`,
     GetBranchesOfACampaign: (campaignId: number): string =>
-      `/Campaign/vendor/${campaignId}/branches`,
+      `/Campaign/system/${campaignId}/branches`,
     AddBranchesToACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches/add`,
     RemoveBranchesFromACampaign: (campaignId: number): string =>
