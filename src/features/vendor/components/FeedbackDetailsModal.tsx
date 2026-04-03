@@ -11,14 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface FeedbackDetailsModalProps {
   isOpen: boolean;
@@ -244,10 +237,10 @@ export default function FeedbackDetailsModal({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {feedback.tags.map((tag) => (
                       <span
-                        key={tag}
+                        key={tag.id}
                         className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-xs text-blue-700"
                       >
-                        #{tag}
+                        #{tag.name}
                       </span>
                     ))}
                   </div>
@@ -384,34 +377,15 @@ export default function FeedbackDetailsModal({
         </div>
 
         {/* Delete confirm dialog */}
-        <Dialog
+        <DeleteConfirmationDialog
           open={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
-          aria-labelledby="feedback-detail-delete-title"
-          aria-describedby="feedback-detail-delete-description"
-        >
-          <DialogTitle id="feedback-detail-delete-title">
-            Xác nhận xóa phản hồi
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="feedback-detail-delete-description">
-              Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowDeleteConfirm(false)} color="primary">
-              Hủy
-            </Button>
-            <Button
-              onClick={() => void handleDeleteReply()}
-              color="error"
-              variant="contained"
-              autoFocus
-            >
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={handleDeleteReply}
+          title="Xác nhận xóa phản hồi"
+          confirmationMessage={
+            <>Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?</>
+          }
+        />
       </div>
 
       {/* Lightbox for images */}

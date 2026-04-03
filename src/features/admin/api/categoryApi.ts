@@ -16,12 +16,24 @@ export class CategoryApi {
   async createCategory(
     data: CreateOrUpdateCategoryRequest
   ): Promise<CreateOrUpdateCategoryResponse> {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    if (data.imageFile) {
+      formData.append('imageFile', data.imageFile);
+    }
+
     const res = await this.apiClient.post<
       CreateOrUpdateCategoryResponse,
-      CreateOrUpdateCategoryRequest
+      FormData
     >({
       url: apiUrl.category.getAllOrPostCategory,
-      data,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   }
@@ -30,12 +42,24 @@ export class CategoryApi {
     categoryId: number,
     data: CreateOrUpdateCategoryRequest
   ): Promise<CreateOrUpdateCategoryResponse> {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    if (data.imageFile) {
+      formData.append('imageFile', data.imageFile);
+    }
+
     const res = await this.apiClient.put<
       CreateOrUpdateCategoryResponse,
-      CreateOrUpdateCategoryRequest
+      FormData
     >({
       url: apiUrl.category.updateOrDeleteCategory(categoryId),
-      data,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   }

@@ -66,11 +66,11 @@ function RegistrationHistoryPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'branchId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'branchId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên chi nhánh',
@@ -94,11 +94,11 @@ function RegistrationHistoryPage(): JSX.Element {
       label: 'Phường/Xã',
       style: { width: '140px' },
     },
-    {
-      key: 'city',
-      label: 'Thành phố',
-      style: { width: '140px' },
-    },
+    // {
+    //   key: 'city',
+    //   label: 'Thành phố',
+    //   style: { width: '140px' },
+    // },
     {
       key: 'isVerified',
       label: 'Xác thực',
@@ -216,6 +216,7 @@ function RegistrationHistoryPage(): JSX.Element {
         loading={status === 'pending'}
         emptyMessage="Chưa có lịch sử đăng ký nào"
         actions={actions}
+        maxHeight="calc(100vh - 240px)"
       />
 
       <BranchDetailsModal

@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  Box,
-  IconButton,
-  Tooltip as MuiTooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
@@ -39,6 +30,7 @@ import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetail
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
+// import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
 
 const StatusBadge = ({
   label,
@@ -84,6 +76,7 @@ function BranchPage(): JSX.Element {
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
   const [managerBranch, setManagerBranch] = useState<Branch | null>(null);
+  // const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
   const [managerNameById, setManagerNameById] = useState<
     Record<number, string>
   >({});
@@ -223,11 +216,11 @@ function BranchPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'branchId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'branchId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'name',
       label: 'Tên chi nhánh',
@@ -251,11 +244,11 @@ function BranchPage(): JSX.Element {
       label: 'Phường/Xã',
       style: { width: '140px' },
     },
-    {
-      key: 'city',
-      label: 'Thành phố',
-      style: { width: '140px' },
-    },
+    // {
+    //   key: 'city',
+    //   label: 'Thành phố',
+    //   style: { width: '140px' },
+    // },
     {
       key: 'managerId',
       label: 'Quản lý chi nhánh',
@@ -273,28 +266,28 @@ function BranchPage(): JSX.Element {
         );
       },
     },
-    {
-      key: 'isVerified',
-      label: 'Xác thực',
-      style: { width: '120px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value ? 'Đã xác thực' : 'Chưa xác thực'}
-          type={value ? 'success' : 'default'}
-        />
-      ),
-    },
-    {
-      key: 'isActive',
-      label: 'Tình trạng hoạt động',
-      style: { width: '120px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value ? 'Đang hoạt động' : 'Không hoạt động'}
-          type={value ? 'success' : 'error'}
-        />
-      ),
-    },
+    // {
+    //   key: 'isVerified',
+    //   label: 'Xác thực',
+    //   style: { width: '120px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <StatusBadge
+    //       label={value ? 'Đã xác thực' : 'Chưa xác thực'}
+    //       type={value ? 'success' : 'default'}
+    //     />
+    //   ),
+    // },
+    // {
+    //   key: 'isActive',
+    //   label: 'Tình trạng hoạt động',
+    //   style: { width: '120px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <StatusBadge
+    //       label={value ? 'Đang hoạt động' : 'Không hoạt động'}
+    //       type={value ? 'success' : 'error'}
+    //     />
+    //   ),
+    // },
     {
       key: 'isSubscribed',
       label: 'Tình trạng đăng ký',
@@ -343,36 +336,12 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
-      label: <ManageAccountsIcon fontSize="small" />,
-      menuLabel: 'Cập nhật người quản lý',
-      onClick: (branch: Branch): void => {
-        setManagerBranch(branch);
-      },
-      color: 'info' as const,
-    },
-    {
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
       onClick: (branch: Branch): void => {
         handleDeleteBranch(branch);
       },
       color: 'error' as const,
-    },
-    {
-      label: <RestaurantMenuIcon fontSize="small" />,
-      menuLabel: 'Quản lý menu',
-      onClick: (branch: Branch): void => {
-        setDishBranch(branch);
-      },
-      color: 'primary' as const,
-    },
-    {
-      label: <RateReviewIcon fontSize="small" />,
-      menuLabel: 'Phản hồi về chi nhánh',
-      onClick: (branch: Branch): void => {
-        setFeedbackBranch(branch);
-      },
-      color: 'info' as const,
     },
     {
       label: <ImageIcon fontSize="small" />,
@@ -397,6 +366,40 @@ function BranchPage(): JSX.Element {
         setDayOffBranch(branch);
       },
       color: 'error' as const,
+    },
+    {
+      label: <RestaurantMenuIcon fontSize="small" />,
+      menuLabel: 'Quản lý menu',
+      onClick: (branch: Branch): void => {
+        setDishBranch(branch);
+      },
+      color: 'primary' as const,
+      show: (branch: Branch): boolean => branch.isSubscribed,
+    },
+    {
+      label: <ManageAccountsIcon fontSize="small" />,
+      menuLabel: 'Cập nhật người quản lý',
+      onClick: (branch: Branch): void => {
+        setManagerBranch(branch);
+      },
+      color: 'info' as const,
+    },
+    // {
+    //   label: <CampaignIcon fontSize="small" />,
+    //   menuLabel: 'Quản lý chiến dịch',
+    //   onClick: (branch: Branch): void => {
+    //     setCampaignBranch(branch);
+    //   },
+    //   color: 'warning' as const,
+    //   show: (branch: Branch): boolean => branch.isSubscribed,
+    // },
+    {
+      label: <RateReviewIcon fontSize="small" />,
+      menuLabel: 'Phản hồi về chi nhánh',
+      onClick: (branch: Branch): void => {
+        setFeedbackBranch(branch);
+      },
+      color: 'info' as const,
     },
   ];
 
@@ -474,6 +477,7 @@ function BranchPage(): JSX.Element {
         loading={status === 'pending'}
         emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
         actions={actions}
+        maxHeight="calc(100vh - 240px)"
       />
 
       <BranchDetailsModal
@@ -538,40 +542,29 @@ function BranchPage(): JSX.Element {
         }}
       />
 
+      {/* <BranchCampaignManagementModal
+        isOpen={campaignBranch !== null}
+        onClose={() => setCampaignBranch(null)}
+        branch={campaignBranch}
+      /> */}
+
       <OnboardingGuideModal
         open={showOnboardingGuide}
         onClose={() => setShowOnboardingGuide(false)}
       />
 
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-branch-dialog-title"
-        aria-describedby="delete-branch-dialog-description"
-      >
-        <DialogTitle id="delete-branch-dialog-title">
-          Xác nhận xóa chi nhánh
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-branch-dialog-description">
-            Bạn có chắc chắn muốn xóa chi nhánh &quot;
-            {deletingBranch?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa chi nhánh"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa chi nhánh &quot;{deletingBranch?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

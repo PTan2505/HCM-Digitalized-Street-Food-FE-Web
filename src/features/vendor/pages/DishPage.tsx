@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Avatar,
-  Box,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Avatar, Box, Chip } from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -160,11 +151,11 @@ export default function DishPage(): JSX.Element {
   // ─── Table config ──────────────────────────────────────
 
   const columns = [
-    {
-      key: 'dishId',
-      label: 'ID',
-      style: { width: '60px' },
-    },
+    // {
+    //   key: 'dishId',
+    //   label: 'ID',
+    //   style: { width: '60px' },
+    // },
     {
       key: 'imageUrl',
       label: 'Ảnh',
@@ -323,41 +314,18 @@ export default function DishPage(): JSX.Element {
         onSuccess={handleFormSuccess}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dish-dialog-title"
-        aria-describedby="delete-dish-dialog-description"
-      >
-        <DialogTitle id="delete-dish-dialog-title">
-          Xác nhận xóa món ăn
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dish-dialog-description">
-            Bạn có chắc chắn muốn xóa món &quot;
-            {deletingDish?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa món ăn"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa món &quot;{deletingDish?.name}&quot;? Hành
+            động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

@@ -1,19 +1,15 @@
 import type { JSX } from 'react';
 import { Dialog, DialogContent } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@constants/routes';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface OnboardingMissingDishModalProps {
   open: boolean;
   onClose: () => void;
-  onSkip: () => void;
 }
 
 export default function OnboardingMissingDishModal({
   open,
   onClose,
-  onSkip,
 }: OnboardingMissingDishModalProps): JSX.Element {
   return (
     <Dialog
@@ -79,18 +75,18 @@ export default function OnboardingMissingDishModal({
         </div>
 
         <div className="border-t border-gray-100 bg-gray-50 px-6 py-6">
-          <Link
+          {/* <Link
             to={`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.DISH}`}
             onClick={onClose}
             className="mb-3 block w-full rounded-lg bg-linear-to-r from-[#0ea5e9] to-[#2563eb] px-4 py-3 text-center font-semibold text-white shadow-sm transition-all duration-200 hover:from-[#0284c7] hover:to-[#1d4ed8] hover:shadow-md active:scale-95"
           >
             Thêm món ngay
-          </Link>
+          </Link> */}
           <button
-            onClick={onSkip}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            onClick={onClose}
+            className="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
           >
-            Có thể để sau
+            Đã hiểu
           </button>
         </div>
       </DialogContent>

@@ -73,6 +73,8 @@ export interface VendorState {
   licenseStatus: CheckLicenseStatusResponse | null;
   images: GetImagesResponse | null;
   workSchedules: GetWorkScheduleResponse;
+  // Map branchId → có lịch làm việc hay không; reactive để badge sidebar cập nhật ngay
+  branchScheduleMap: Record<number, boolean>;
   dayOffs: GetDayOffResponse;
   ghostPins: GhostPin[];
   ghostPinsPagination: PaginationState;
@@ -101,6 +103,7 @@ const initialState: VendorState = {
   licenseStatus: null,
   images: null,
   workSchedules: [],
+  branchScheduleMap: {},
   dayOffs: [],
   ghostPins: [],
   ghostPinsPagination: { ...defaultPagination },
@@ -351,6 +354,18 @@ export const createBranch = createAppAsyncThunk(
     try {
       const response: CreateOrUpdateBranchResponse =
         await axiosApi.vendorApi.createBranch(payload.vendorId, payload.data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getBranchesByVendor = createAppAsyncThunk(
+  'vendor/getBranchesByVendor',
+  async (vendorId: number, { rejectWithValue }) => {
+    try {
+      const response: Branch[] = await axiosApi.vendorApi.getBranches(vendorId);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -636,6 +651,11 @@ export const vendorSlice = createSlice({
           state.myVendor.branches.push(action.payload as unknown as Branch);
         }
       })
+      .addCase(getBranchesByVendor.fulfilled, (state, action) => {
+        if (state.myVendor) {
+          state.myVendor.branches = action.payload;
+        }
+      })
       .addCase(updateBranch.fulfilled, (state, action) => {
         if (state.myVendor && action.payload) {
           const branchIndex = state.myVendor.branches.findIndex(
@@ -663,6 +683,15 @@ export const vendorSlice = createSlice({
       )
       .addCase(getWorkSchedules.fulfilled, (state, action) => {
         state.workSchedules = action.payload;
+        // Cập nhật map: branchId của batch này → có schedule hay không
+        if (action.payload.length > 0) {
+          const branchId = action.payload[0].branchId;
+          state.branchScheduleMap[branchId] = true;
+        } else {
+          // Lấy branchId từ arg (thunk arg)
+          const branchId = action.meta.arg;
+          state.branchScheduleMap[branchId] = false;
+        }
       })
       .addCase(submitWorkSchedule.fulfilled, (state, action) => {
         const weekdayNameMap: Record<number, WeekdayName> = {
@@ -683,6 +712,11 @@ export const vendorSlice = createSlice({
           closeTime: item.closeTime,
         }));
         state.workSchedules.push(...mapped);
+        // Đánh dấu branch này đã có lịch
+        if (action.payload.length > 0) {
+          const branchId = action.payload[0].branchId;
+          state.branchScheduleMap[branchId] = true;
+        }
       })
       .addCase(updateWorkSchedule.fulfilled, (state, action) => {
         const idx = state.workSchedules.findIndex(
@@ -698,9 +732,20 @@ export const vendorSlice = createSlice({
         }
       })
       .addCase(deleteWorkSchedule.fulfilled, (state, action) => {
+        // Tìm item trước khi xóa để lấy branchId
+        const deletedItem = state.workSchedules.find(
+          (ws) => ws.workScheduleId === action.payload
+        );
         state.workSchedules = state.workSchedules.filter(
           (ws) => ws.workScheduleId !== action.payload
         );
+        // Cập nhật map: nếu branch đó không còn schedule nào → false (hiện badge)
+        if (deletedItem) {
+          const stillHas = state.workSchedules.some(
+            (ws) => ws.branchId === deletedItem.branchId
+          );
+          state.branchScheduleMap[deletedItem.branchId] = stillHas;
+        }
       })
       .addCase(getDayOffs.fulfilled, (state, action) => {
         state.dayOffs = action.payload;
@@ -801,8 +846,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state) => {
           state.status = 'pending';
@@ -832,8 +876,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state, action) => {
           state.status = 'failed';
@@ -865,8 +908,7 @@ export const vendorSlice = createSlice({
           updateDietaryPreferencesOfMyVendor,
           getAllGhostPins,
           claimBranch,
-          updateBranchManager,
-          searchUsers
+          updateBranchManager
         ),
         (state) => {
           state.status = 'succeeded';
@@ -959,6 +1001,10 @@ export const selectImages = (state: RootState): GetImagesResponse | null =>
 export const selectWorkSchedules = (
   state: RootState
 ): GetWorkScheduleResponse => state.vendor.workSchedules;
+
+export const selectBranchScheduleMap = (
+  state: RootState
+): Record<number, boolean> => state.vendor.branchScheduleMap;
 
 export const selectDayOffs = (state: RootState): GetDayOffResponse =>
   state.vendor.dayOffs;

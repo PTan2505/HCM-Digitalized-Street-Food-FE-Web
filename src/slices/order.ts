@@ -5,6 +5,7 @@ import type {
   DecideVendorOrderResponse,
   GetOrderPickupCodeResponse,
   GetVendorBranchOrdersResponse,
+  OrderDetailsResponse,
 } from '@features/vendor/types/order';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -13,6 +14,7 @@ import {
   isFulfilled,
   isPending,
   isRejected,
+  type PayloadAction,
 } from '@reduxjs/toolkit';
 
 type PaginationState = {
@@ -35,6 +37,7 @@ const defaultPagination: PaginationState = {
 
 export interface OrderState {
   orders: GetVendorBranchOrdersResponse['items'];
+  selectedOrder: OrderDetailsResponse | null;
   pagination: PaginationState;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
@@ -42,10 +45,30 @@ export interface OrderState {
 
 const initialState: OrderState = {
   orders: [],
+  selectedOrder: null,
   pagination: { ...defaultPagination },
   status: 'idle',
   error: null,
 };
+
+export const getVendorOrders = createAppAsyncThunk(
+  'order/getVendorOrders',
+  async (
+    params: {
+      pageNumber: number;
+      pageSize: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: GetVendorBranchOrdersResponse =
+        await axiosApi.orderApi.getVendorOrders(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 export const getVendorBranchOrders = createAppAsyncThunk(
   'order/getVendorBranchOrders',
@@ -142,12 +165,25 @@ export const completeVendorOrder = createAppAsyncThunk(
   }
 );
 
+export const getOrderDetails = createAppAsyncThunk(
+  'order/getOrderDetails',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      return await axiosApi.orderApi.getOrderDetails(orderId);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const allThunks = [
+  getVendorOrders,
   getVendorBranchOrders,
   getManagerOrders,
   decideVendorOrder,
   getOrderPickupCode,
   completeVendorOrder,
+  getOrderDetails,
 ] as const;
 
 export const orderSlice = createSlice({
@@ -155,9 +191,28 @@ export const orderSlice = createSlice({
   initialState,
   reducers: {
     resetOrderState: () => initialState,
+    addNewOrder: (state, action: PayloadAction<OrderDetailsResponse>) => {
+      const exists = state.orders.some(
+        (o) => o.orderId === action.payload.orderId
+      );
+      if (!exists) {
+        state.orders.unshift(action.payload);
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getVendorOrders.fulfilled, (state, action) => {
+        state.orders = action.payload.items;
+        state.pagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
       .addCase(getVendorBranchOrders.fulfilled, (state, action) => {
         state.orders = action.payload.items;
         state.pagination = {
@@ -189,6 +244,11 @@ export const orderSlice = createSlice({
           targetOrder.finalAmount = action.payload.finalAmount;
           targetOrder.updatedAt = new Date().toISOString();
         }
+        if (state.selectedOrder?.orderId === action.payload.orderId) {
+          state.selectedOrder.status = action.payload.status;
+          state.selectedOrder.finalAmount = action.payload.finalAmount;
+          state.selectedOrder.updatedAt = new Date().toISOString();
+        }
       })
       .addCase(completeVendorOrder.fulfilled, (state, action) => {
         const targetOrder = state.orders.find(
@@ -199,6 +259,14 @@ export const orderSlice = createSlice({
           targetOrder.finalAmount = action.payload.finalAmount;
           targetOrder.updatedAt = new Date().toISOString();
         }
+        if (state.selectedOrder?.orderId === action.payload.orderId) {
+          state.selectedOrder.status = action.payload.status;
+          state.selectedOrder.finalAmount = action.payload.finalAmount;
+          state.selectedOrder.updatedAt = new Date().toISOString();
+        }
+      })
+      .addCase(getOrderDetails.fulfilled, (state, action) => {
+        state.selectedOrder = action.payload;
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';
@@ -216,7 +284,7 @@ export const orderSlice = createSlice({
   },
 });
 
-export const { resetOrderState } = orderSlice.actions;
+export const { resetOrderState, addNewOrder } = orderSlice.actions;
 
 export default orderSlice.reducer;
 
@@ -226,6 +294,10 @@ export const selectVendorOrders = (state: RootState): OrderState['orders'] =>
 export const selectVendorOrdersPagination = (
   state: RootState
 ): OrderState['pagination'] => state.order.pagination;
+
+export const selectSelectedOrder = (
+  state: RootState
+): OrderState['selectedOrder'] => state.order.selectedOrder;
 
 export const selectOrderStatus = (state: RootState): OrderState['status'] =>
   state.order.status;

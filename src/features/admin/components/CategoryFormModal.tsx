@@ -1,8 +1,9 @@
 import type { JSX } from 'react';
+import { Avatar } from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { CategoryFormSchema } from '@features/admin/utils/categoryFormSchema';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { z } from 'zod';
 
 type CategoryFormSchemaType = z.infer<typeof CategoryFormSchema>;
@@ -11,6 +12,7 @@ interface CategoryFormData {
   name?: string;
   description?: string | null;
   categoryId?: number;
+  imageUrl?: string | null;
 }
 
 interface CategoryFormModalProps {
@@ -33,6 +35,8 @@ export default function CategoryFormModal({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm<CategoryFormSchemaType>({
     resolver: zodResolver(CategoryFormSchema),
@@ -40,14 +44,30 @@ export default function CategoryFormModal({
     defaultValues: {
       name: '',
       description: '',
+      imageFile: null,
     },
   });
+
+  const imageFile = watch('imageFile');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+
+  useEffect((): (() => void) | void => {
+    if (imageFile instanceof File) {
+      const url = URL.createObjectURL(imageFile);
+      setPreviewUrl(url);
+      return (): void => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(formData.imageUrl ?? '');
+      return undefined;
+    }
+  }, [imageFile, formData.imageUrl]);
 
   useEffect(() => {
     if (isOpen) {
       reset({
         name: formData.name ?? '',
         description: formData.description ?? '',
+        imageFile: null,
       });
     }
   }, [isOpen, formData, reset]);
@@ -109,6 +129,43 @@ export default function CategoryFormModal({
               </p>
             )}
           </div>
+
+          {/* File Ảnh */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+              Hình ảnh danh mục
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setValue('imageFile', file, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[var(--color-primary-50)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary-700)] hover:file:bg-[var(--color-primary-100)] focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+            />
+            <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
+              Tải lên hình ảnh cho danh mục
+            </p>
+          </div>
+
+          {/* Preview */}
+          {previewUrl && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[var(--color-table-text-secondary)]">
+                Xem trước hình ảnh:
+              </span>
+              <Avatar
+                src={previewUrl}
+                alt="Preview"
+                className="h-16 w-16 rounded-md"
+                variant="rounded"
+              />
+            </div>
+          )}
         </div>
 
         {/* Modal Actions */}

@@ -16,6 +16,7 @@ import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation = [
   { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
@@ -29,6 +30,7 @@ const navigation = [
 function ModeratorLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -62,14 +64,14 @@ function ModeratorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
@@ -79,6 +81,8 @@ function ModeratorLayout(): JSX.Element {
             settingsPath="/moderator/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -96,6 +100,7 @@ function ModeratorLayout(): JSX.Element {
           settingsPath="/moderator/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -153,6 +158,10 @@ function ModeratorLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </Box>
   );
 }
