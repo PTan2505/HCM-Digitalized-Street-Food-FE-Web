@@ -350,6 +350,8 @@ export default function VendorCampaignVoucherModal({
         voucher={editingVoucher}
         status={status}
         fixedCampaignId={campaign.campaignId}
+        campaignStartDate={campaign.startDate}
+        campaignEndDate={campaign.endDate}
       />
 
       <DeleteConfirmationDialog
