@@ -42,14 +42,14 @@ export default function PendingTypeFilterSection({
         background: 'linear-gradient(to right, #ffffff, #f8fafc)',
       }}
     >
-      <Box className="flex items-center gap-2">
+      {/* <Box className="flex items-center gap-2">
         <Box className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600">
           <FilterListIcon fontSize="small" />
         </Box>
         <Typography className="text-base font-bold text-gray-800">
           Lọc danh sách chờ duyệt
         </Typography>
-      </Box>
+      </Box> */}
 
       <Box className="w-full sm:w-[520px]">
         <Typography className="mb-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">

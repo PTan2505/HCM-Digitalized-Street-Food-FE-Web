@@ -14,8 +14,6 @@ import {
 } from '@slices/campaign';
 import { selectMyVendor } from '@slices/vendor';
 
-const PAGE_SIZE = 10;
-
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
   const date = new Date(isoStr);
@@ -61,6 +59,7 @@ export default function VendorSystemCampaignPage(): JSX.Element {
   const { onGetJoinableSystemCampaigns } = useVendorCampaign();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [detailsCampaignId, setDetailsCampaignId] = useState<number | null>(
     null
   );
@@ -68,20 +67,20 @@ export default function VendorSystemCampaignPage(): JSX.Element {
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
-      await onGetJoinableSystemCampaigns(page, PAGE_SIZE);
+      await onGetJoinableSystemCampaigns(page, pageSize);
     } catch (error) {
       console.error('Failed to fetch system campaigns', error);
     }
-  }, [onGetJoinableSystemCampaigns, page]);
+  }, [onGetJoinableSystemCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchCampaigns();
   }, [fetchCampaigns]);
 
   const totalPages = useMemo(() => {
-    const pages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
+    const pages = Math.ceil((totalCount ?? 0) / pageSize);
     return pages > 0 ? pages : 1;
-  }, [totalCount]);
+  }, [totalCount, pageSize]);
 
   const vendorBranches = myVendor?.branches ?? [];
   const vendorBranchIds = vendorBranches.map((branch) => branch.branchId);
@@ -170,17 +169,19 @@ export default function VendorSystemCampaignPage(): JSX.Element {
         />
       </Box>
 
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={totalCount ?? 0}
-          pageSize={PAGE_SIZE}
-          hasPrevious={page > 1}
-          hasNext={page < totalPages}
-          onPageChange={setPage}
-        />
-      </Box>
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalCount={totalCount ?? 0}
+        pageSize={pageSize}
+        hasPrevious={page > 1}
+        hasNext={page < totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(1);
+        }}
+      />
 
       <SystemCampaignDetailsModal
         isOpen={isDetailsModalOpen}

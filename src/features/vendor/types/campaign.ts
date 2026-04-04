@@ -12,6 +12,7 @@ export interface VendorCampaign {
   updatedAt: string | null;
   isSystemCampaign: boolean;
   imageUrl?: string | null;
+  branchIds?: number[] | null;
 }
 
 export interface VendorCampaignCreate {
@@ -21,6 +22,7 @@ export interface VendorCampaignCreate {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  branchIds: number[] | null;
 }
 
 export interface VendorCampaignUpdate {
@@ -30,6 +32,7 @@ export interface VendorCampaignUpdate {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  branchIds: number[] | null;
 }
 
 export interface VendorCampaignListResponse {
@@ -55,6 +58,45 @@ export interface BranchJoinedResponse {
 export interface JoinSystemCampaignResponse {
   payment: PaymentResponse;
   branches: BranchJoinedResponse[];
+}
+
+export interface CampaignBranchesResponse {
+  campaignId: number;
+  branchIds: number[];
+}
+
+export interface CampaignBranchItem {
+  finalScore: number;
+  distanceKm: number | null;
+  branchId: number;
+  vendorId: number;
+  managerId: number;
+  name: string;
+  phoneNumber: string;
+  email: string;
+  addressDetail: string;
+  ward: string;
+  city: string;
+  lat: number;
+  long: number;
+  createdAt: string;
+  updatedAt: string;
+  isVerified: boolean;
+  avgRating: number;
+  totalReviewCount: number;
+  isActive: boolean;
+  tierId: number;
+  tierName: string;
+}
+
+export interface GetBranchesOfCampaignResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: CampaignBranchItem[];
 }
 
 export interface CampaignDetailsResponse {

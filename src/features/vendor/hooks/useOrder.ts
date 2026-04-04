@@ -3,6 +3,7 @@ import type {
   DecideVendorOrderResponse,
   GetOrderPickupCodeResponse,
   GetVendorBranchOrdersResponse,
+  OrderDetailsResponse,
 } from '@features/vendor/types/order';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -11,6 +12,7 @@ import {
   getOrderPickupCode,
   getVendorBranchOrders,
   getVendorOrders,
+  getOrderDetails,
   resetOrderState,
 } from '@slices/order';
 import { useCallback } from 'react';
@@ -38,6 +40,7 @@ export default function useOrder(): {
     orderId: number;
     verificationCode: string;
   }) => Promise<CompleteVendorOrderResponse>;
+  onGetOrderDetails: (orderId: number) => Promise<OrderDetailsResponse>;
   onResetOrderState: () => void;
 } {
   const dispatch = useAppDispatch();
@@ -96,12 +99,20 @@ export default function useOrder(): {
     dispatch(resetOrderState());
   }, [dispatch]);
 
+  const onGetOrderDetails = useCallback(
+    async (orderId: number): Promise<OrderDetailsResponse> => {
+      return await dispatch(getOrderDetails(orderId)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     onGetVendorOrders,
     onGetVendorBranchOrders,
     onDecideVendorOrder,
     onGetOrderPickupCode,
     onCompleteVendorOrder,
+    onGetOrderDetails,
     onResetOrderState,
   };
 }

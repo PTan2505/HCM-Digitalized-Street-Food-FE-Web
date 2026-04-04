@@ -57,7 +57,11 @@ export const apiUrl = {
     },
   },
   user: {
+    getUsers: '/User',
     getUserById: (id: number): string => `/User/${id}`,
+    banUser: (id: number): string => `/User/${id}/ban`,
+    unbanUser: (id: number): string => `/User/${id}/unban`,
+    promoteModerator: (id: number): string => `/User/${id}/promote-moderator`,
     search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
@@ -165,6 +169,7 @@ export const apiUrl = {
     completeVendorOrder: (orderId: number): string =>
       `/order/vendor/orders/${orderId}/complete`,
     getVendorOrders: 'order/vendor/orders',
+    getOrderDetails: (orderId: number): string => `/order/${orderId}`,
   },
   manager: {
     getMyBranch: '/Branch/manager/my-branch',
@@ -185,6 +190,22 @@ export const apiUrl = {
       `/Campaign/${campaignId}/images`,
     DeleteAImageOfACampaign: (campaignId: number): string =>
       `/Campaign/${campaignId}/image`,
+    GetBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/system/${campaignId}/branches`,
+    AddBranchesToACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/add`,
+    RemoveBranchesFromACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches/remove`,
+  },
+  quest: {
+    getOrPostQuest: '/Quest',
+    updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+    postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+  },
+  setting: {
+    getSettings: '/Setting',
+    updateSetting: (name: string): string => `/Setting/${name}`,
+    reloadSettings: '/Setting/reload',
   },
   voucher: {
     GetOrPostVouchers: '/vouchers',

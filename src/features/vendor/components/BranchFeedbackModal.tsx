@@ -17,14 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface BranchFeedbackModalProps {
   isOpen: boolean;
@@ -442,36 +435,17 @@ export default function BranchFeedbackModal({
           />
         </div>
 
-        <Dialog
+        <DeleteConfirmationDialog
           open={deleteTarget !== null}
           onClose={handleCloseDeleteConfirm}
-          aria-labelledby="delete-feedback-reply-dialog-title"
-          aria-describedby="delete-feedback-reply-dialog-description"
-        >
-          <DialogTitle id="delete-feedback-reply-dialog-title">
-            Xác nhận xóa phản hồi
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="delete-feedback-reply-dialog-description">
-              Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDeleteConfirm} color="primary">
-              Hủy
-            </Button>
-            <Button
-              onClick={() =>
-                deleteTarget && void handleDeleteReply(deleteTarget.feedbackId)
-              }
-              color="error"
-              variant="contained"
-              autoFocus
-            >
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={() => {
+            if (deleteTarget) void handleDeleteReply(deleteTarget.feedbackId);
+          }}
+          title="Xác nhận xóa phản hồi"
+          confirmationMessage={
+            <>Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?</>
+          }
+        />
       </div>
     </div>
   );

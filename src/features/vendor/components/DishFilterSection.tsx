@@ -90,14 +90,14 @@ export default function DishFilterSection({
         background: 'linear-gradient(to right, #ffffff, #f8fafc)',
       }}
     >
-      <Box className="flex items-center gap-2">
+      {/* <Box className="flex items-center gap-2">
         <Box className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600">
           <FilterListIcon fontSize="small" />
         </Box>
         <Typography className="text-base font-bold text-gray-800">
           Lọc và Tìm kiếm
         </Typography>
-      </Box>
+      </Box> */}
 
       <Box className="flex flex-wrap items-center gap-4">
         {/* Keyword search */}

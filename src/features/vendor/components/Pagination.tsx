@@ -83,6 +83,9 @@ export default function Pagination({
                 height: 32,
                 fontSize: '0.875rem',
               }}
+              MenuProps={{
+                sx: { zIndex: 9999 },
+              }}
             >
               {pageSizeOptions.map((option) => (
                 <MenuItem key={option} value={option}>

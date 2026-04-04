@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, Avatar } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -16,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import CategoryFormModal from '@features/admin/components/CategoryFormModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { Category } from '@features/admin/types/category';
 import useCategory from '@features/admin/hooks/useCategory';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -39,6 +32,7 @@ export default function CategoryPage(): JSX.Element {
   const [formData, setFormData] = useState<Partial<Category>>({
     name: '',
     description: null,
+    imageUrl: null,
   });
 
   useEffect(() => {
@@ -54,6 +48,7 @@ export default function CategoryPage(): JSX.Element {
       setFormData({
         name: '',
         description: null,
+        imageUrl: null,
       });
     }
     setOpenDialog(true);
@@ -65,17 +60,20 @@ export default function CategoryPage(): JSX.Element {
     setFormData({
       name: '',
       description: null,
+      imageUrl: null,
     });
   };
 
   const handleSave = async (data: {
     name: string;
     description?: string | null;
+    imageFile?: File | null;
   }): Promise<void> => {
     try {
       const payload = {
         name: data.name,
         description: data.description ?? null,
+        imageFile: data.imageFile,
       };
 
       if (editingCategory) {
@@ -120,6 +118,19 @@ export default function CategoryPage(): JSX.Element {
     //   style: { width: '80px' },
     // },
     {
+      key: 'imageUrl',
+      label: 'Hình ảnh',
+      style: { width: '100px' },
+      render: (value: unknown): React.ReactNode => (
+        <Avatar
+          src={String(value)}
+          alt="Category Image"
+          variant="rounded"
+          className="h-10 w-10 bg-[var(--color-primary-100)]"
+        />
+      ),
+    },
+    {
       key: 'name',
       label: 'Tên Danh mục',
       render: (value: unknown): React.ReactNode => (
@@ -143,12 +154,14 @@ export default function CategoryPage(): JSX.Element {
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Category): void => handleOpenDialog(row),
+      tooltip: 'Chỉnh sửa danh mục',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Category): void => handleDelete(row),
+      tooltip: 'Xóa danh mục',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -196,40 +209,18 @@ export default function CategoryPage(): JSX.Element {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa danh mục
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa danh mục &quot;
-            {deletingCategory?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa danh mục"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa danh mục &quot;{deletingCategory?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +10,13 @@ import {
   Button,
   IconButton,
   CircularProgress,
+  Tooltip,
+  Chip,
 } from '@mui/material';
+import {
+  AddPhotoAlternate as AddPhotoAlternateIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
@@ -21,7 +27,8 @@ interface VendorCampaignFormModalProps {
   onClose: () => void;
   onSubmit: (
     data: VendorCampaignFormData,
-    imageFile: File | null
+    imageFile: File | null,
+    isImageRemoved?: boolean
   ) => Promise<void>;
   campaign: VendorCampaign | null;
   branches?: Branch[];
@@ -88,8 +95,13 @@ export default function VendorCampaignFormModal({
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
-  const subscribedBranches = (Array.isArray(branches) ? branches : []).filter(
-    (branch) => branch.isSubscribed
+
+  const subscribedBranches = useMemo(
+    () =>
+      branches.filter(
+        (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+      ),
+    [branches]
   );
 
   const {
@@ -108,17 +120,16 @@ export default function VendorCampaignFormModal({
       startDate: '',
       endDate: '',
       isActive: true,
-      applyScope: 'VENDOR',
-      branchIds: [],
+      branchIds: null,
     },
   });
 
   const startDate = watch('startDate');
   const endDate = watch('endDate');
-  const applyScope = watch('applyScope');
   const selectedBranchIds = watch('branchIds');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -131,8 +142,7 @@ export default function VendorCampaignFormModal({
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
           isActive: campaign.isActive,
-          applyScope: 'VENDOR',
-          branchIds: [],
+          branchIds: campaign.branchIds ?? null,
         });
       } else {
         reset({
@@ -142,12 +152,12 @@ export default function VendorCampaignFormModal({
           startDate: '',
           endDate: '',
           isActive: true,
-          applyScope: 'VENDOR',
-          branchIds: [],
+          branchIds: null,
         });
       }
       setImageFile(null);
       setImagePreviewUrl(null);
+      setIsImageRemoved(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -161,12 +171,6 @@ export default function VendorCampaignFormModal({
       }
     };
   }, [imagePreviewUrl]);
-
-  useEffect(() => {
-    if (applyScope === 'VENDOR' && selectedBranchIds.length > 0) {
-      setValue('branchIds', [], { shouldValidate: true });
-    }
-  }, [applyScope, selectedBranchIds.length, setValue]);
 
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
@@ -187,7 +191,7 @@ export default function VendorCampaignFormModal({
       endDate: toIsoZulu(data.endDate) ?? '',
       isActive: data.isActive,
     };
-    await onSubmit(payload, imageFile);
+    await onSubmit(payload, imageFile, isImageRemoved);
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -199,6 +203,7 @@ export default function VendorCampaignFormModal({
     }
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
+    setIsImageRemoved(false);
   };
 
   const handleClearSelectedImage = (): void => {
@@ -207,26 +212,17 @@ export default function VendorCampaignFormModal({
     }
     setImageFile(null);
     setImagePreviewUrl(null);
+    setIsImageRemoved(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handleToggleBranch = (branchId: number): void => {
-    const nextSelected = selectedBranchIds.includes(branchId)
-      ? selectedBranchIds.filter((id) => id !== branchId)
-      : [...selectedBranchIds, branchId];
-
-    setValue('branchIds', nextSelected, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-  };
-
   if (!isOpen) return null;
 
   const existingImageUrl = campaign?.imageUrl ?? null;
-  const displayImageUrl = imagePreviewUrl ?? existingImageUrl;
+  const displayImageUrl =
+    imagePreviewUrl ?? (isImageRemoved ? null : existingImageUrl);
 
   return (
     <Dialog
@@ -234,10 +230,13 @@ export default function VendorCampaignFormModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      scroll="body"
+      scroll="paper"
       PaperProps={{
         sx: {
-          maxHeight: 'unset',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         },
       }}
     >
@@ -257,7 +256,13 @@ export default function VendorCampaignFormModal({
         </IconButton>
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent dividers sx={{ overflowY: 'visible' }}>
+        <DialogContent
+          dividers
+          sx={{
+            overflowY: 'auto',
+            maxHeight: 'calc(90vh - 150px)',
+          }}
+        >
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
@@ -295,7 +300,7 @@ export default function VendorCampaignFormModal({
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
                   Trạng thái hoạt động
                 </label>
-                <label className="inline-flex h-[42px] items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700">
+                <label className="inline-flex h-10.5 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700">
                   <input
                     type="checkbox"
                     {...register('isActive')}
@@ -324,44 +329,76 @@ export default function VendorCampaignFormModal({
                 Ảnh chiến dịch
               </label>
               <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div className="flex min-h-[160px] items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-white">
-                  {displayImageUrl ? (
+                {displayImageUrl ? (
+                  <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-300 bg-white shadow-sm transition-colors">
                     <img
                       src={displayImageUrl}
                       alt="Campaign"
-                      className="h-40 w-full object-contain"
+                      className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
                     />
-                  ) : (
-                    <div className="text-center text-sm text-gray-500">
-                      Chưa có ảnh chiến dịch
+
+                    {/* Actions Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
+                      <Tooltip title="Đổi ảnh khác" arrow>
+                        <IconButton
+                          onClick={() => fileInputRef.current?.click()}
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.95)',
+                            color: 'var(--color-primary-600)',
+                            '&:hover': {
+                              bgcolor: 'white',
+                              transform: 'scale(1.1)',
+                            },
+                            transition: 'all 0.2s',
+                            width: 44,
+                            height: 44,
+                          }}
+                        >
+                          <AddPhotoAlternateIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Xoá ảnh hiện tại" arrow>
+                        <IconButton
+                          onClick={handleClearSelectedImage}
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.95)',
+                            color: '#ef4444',
+                            '&:hover': {
+                              bgcolor: '#fee2e2',
+                              color: '#b91c1c',
+                              transform: 'scale(1.1)',
+                            },
+                            transition: 'all 0.2s',
+                            width: 44,
+                            height: 44,
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </div>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
+                  </div>
+                ) : (
+                  <div
+                    className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
                   >
-                    {imageFile
-                      ? 'Đổi ảnh'
-                      : displayImageUrl
-                        ? 'Cập nhật ảnh'
-                        : 'Tải ảnh'}
-                  </button>
-                  {imageFile && (
-                    <button
-                      type="button"
-                      onClick={handleClearSelectedImage}
-                      className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100"
-                    >
-                      Bỏ ảnh đã chọn
-                    </button>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  Định dạng hỗ trợ: JPG, PNG, WEBP. Kích thước khuyên dùng:
-                  1200x675 (16:9).
+                    <div className="group-hover:text-primary-600 flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors">
+                      <AddPhotoAlternateIcon fontSize="medium" />
+                    </div>
+                    <div className="mt-3 text-center">
+                      <p className="text-sm font-semibold text-gray-700">
+                        Nhấn để tải ảnh lên
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Kích thước khuyên dùng: 1200x675 (16:9)
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-center text-xs text-gray-500">
+                  Định dạng hỗ trợ: JPG, PNG, WEBP.
                 </p>
                 <input
                   ref={fileInputRef}
@@ -375,80 +412,95 @@ export default function VendorCampaignFormModal({
 
             {!isEditMode && !hideApplyScope && (
               <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Phạm vi áp dụng
-                </label>
-
-                <div className="rounded-lg border border-gray-200 p-3">
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="radio"
-                        checked={applyScope === 'VENDOR'}
-                        onChange={() =>
-                          setValue('applyScope', 'VENDOR', {
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">
+                    Chi nhánh áp dụng chiến dịch{' '}
+                    <span className="text-xs font-normal text-red-500 italic">
+                      (Phải chọn ít nhất 1 chi nhánh)
+                    </span>
+                  </p>
+                  {subscribedBranches.length > 0 &&
+                    selectedBranchIds !== null &&
+                    selectedBranchIds.length !== subscribedBranches.length && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue('branchIds', null, {
                             shouldDirty: true,
                             shouldValidate: true,
-                          })
-                        }
-                        className="h-4 w-4 border-gray-300 text-amber-600 focus:ring-amber-300"
-                      />
-                      Áp dụng cho tất cả chi nhánh đã đăng ký gói
-                    </label>
-
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="radio"
-                        checked={applyScope === 'BRANCHES'}
-                        onChange={() =>
-                          setValue('applyScope', 'BRANCHES', {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          })
-                        }
-                        className="h-4 w-4 border-gray-300 text-amber-600 focus:ring-amber-300"
-                      />
-                      Chọn chi nhánh cụ thể
-                    </label>
-                  </div>
-
-                  {applyScope === 'BRANCHES' && (
-                    <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                      {subscribedBranches.length === 0 ? (
-                        <p className="text-sm text-gray-500">
-                          Không có chi nhánh nào đang đăng ký gói để áp dụng.
-                        </p>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          {subscribedBranches.map((branch) => (
-                            <label
-                              key={branch.branchId}
-                              className="flex items-center gap-2 rounded-md bg-white px-2 py-1.5 text-sm text-gray-700"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedBranchIds.includes(
-                                  branch.branchId
-                                )}
-                                onChange={() =>
-                                  handleToggleBranch(branch.branchId)
-                                }
-                                className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
-                              />
-                              {branch.name}
-                            </label>
-                          ))}
-                        </div>
-                      )}
-
-                      {errors.branchIds?.message && (
-                        <p className="mt-2 text-xs text-red-500">
-                          {errors.branchIds.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                          });
+                        }}
+                        className="text-primary-600 hover:text-primary-700 text-xs font-semibold transition-colors hover:underline"
+                      >
+                        Chọn tất cả
+                      </button>
+                    )}
                 </div>
+                {subscribedBranches.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Không có chi nhánh khả dụng.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {subscribedBranches.map((branch) => {
+                      const isSelected =
+                        selectedBranchIds === null ||
+                        selectedBranchIds.includes(branch.branchId);
+                      return (
+                        <Chip
+                          key={branch.branchId}
+                          label={branch.name}
+                          color={isSelected ? 'primary' : 'default'}
+                          variant={isSelected ? 'filled' : 'outlined'}
+                          onClick={() => {
+                            let newSelected: number[];
+                            if (selectedBranchIds === null) {
+                              newSelected = subscribedBranches
+                                .map((b) => b.branchId)
+                                .filter((id) => id !== branch.branchId);
+                            } else {
+                              if (selectedBranchIds.includes(branch.branchId)) {
+                                newSelected = selectedBranchIds.filter(
+                                  (id) => id !== branch.branchId
+                                );
+                              } else {
+                                newSelected = [
+                                  ...selectedBranchIds,
+                                  branch.branchId,
+                                ];
+                              }
+                            }
+
+                            // Phải bắt buộc chọn ít nhất 1 nhánh
+                            if (newSelected.length === 0) {
+                              return;
+                            }
+
+                            if (
+                              newSelected.length === subscribedBranches.length
+                            ) {
+                              setValue('branchIds', null, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                            } else {
+                              setValue('branchIds', newSelected, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                            }
+                          }}
+                          className="cursor-pointer font-medium transition-all hover:opacity-80"
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+                {errors.branchIds?.message && (
+                  <p className="mt-2 text-xs text-red-500">
+                    {errors.branchIds.message}
+                  </p>
+                )}
               </div>
             )}
 
