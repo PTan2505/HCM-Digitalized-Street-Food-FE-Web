@@ -19,6 +19,7 @@ import AdminVendorCampaignPage from '@features/admin/pages/AdminVendorCampaignPa
 import AdminQuestPage from '@features/admin/pages/QuestPage';
 import AdminSettingPage from '@features/admin/pages/SettingPage';
 import AdminVoucherPage from '@features/admin/pages/VoucherPage';
+import AdminVendorVerificationPage from '@features/admin/pages/VendorVerificationPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -273,6 +274,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.VOUCHER,
             element: <AdminVoucherPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.VERIFICATION,
+            element: <AdminVendorVerificationPage />,
           },
         ],
       },

@@ -22,6 +22,7 @@ import {
   Assignment as AssignmentIcon,
   LocalOffer as LocalOfferIcon,
   Settings as SettingsIcon,
+  Verified as VerifiedIcon,
 } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -33,6 +34,11 @@ import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileM
 
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
+  {
+    name: 'Xác minh người bán',
+    href: '/admin/verification',
+    icon: VerifiedIcon,
+  },
   {
     name: 'Quản lý cửa hàng',
     href: '/admin/vendors',
