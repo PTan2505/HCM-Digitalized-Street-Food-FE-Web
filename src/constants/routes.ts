@@ -65,6 +65,7 @@ export const ROUTES = {
       QUEST: 'quest',
       SETTING: 'setting',
       VOUCHER: 'voucher',
+      VERIFICATION: 'verification',
     },
   },
 
