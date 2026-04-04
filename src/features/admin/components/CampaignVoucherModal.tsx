@@ -355,6 +355,9 @@ export default function CampaignVoucherModal({
         voucher={editingVoucher}
         status={status}
         fixedCampaignId={campaign.campaignId}
+        campaignStartDate={campaign.startDate}
+        campaignEndDate={campaign.endDate}
+        campaignName={campaign.name}
       />
 
       {/* Delete Confirmation Dialog */}
