@@ -36,6 +36,7 @@ interface SidebarContentProps {
   onLogout?: () => void;
   onLogoClick?: () => void;
   onNavigateItemClick?: () => void;
+  onUserInfoClick?: () => void;
 }
 
 const SidebarContent = ({
@@ -45,6 +46,7 @@ const SidebarContent = ({
   onLogout = (): void => {},
   onLogoClick,
   onNavigateItemClick,
+  onUserInfoClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
@@ -284,7 +286,10 @@ const SidebarContent = ({
               placement="right"
               disableHoverListener={!collapsed}
             >
-              <Box className="flex items-center overflow-hidden px-3 py-2">
+              <Box
+                className="flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
+                onClick={onUserInfoClick}
+              >
                 <Avatar
                   src={userInfo?.avatarUrl ?? undefined}
                   className="shrink-0 bg-[var(--color-moderator-active-bg)] text-[var(--color-moderator-active-text)] transition-[width,height] duration-300 ease-in-out"

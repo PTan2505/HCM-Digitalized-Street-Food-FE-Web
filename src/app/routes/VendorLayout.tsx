@@ -1,8 +1,11 @@
 import RequestTransferModal from '@components/RequestTransferModal';
-import SidebarContent from '@components/layout/SidebarContent';
+import SidebarContent, {
+  type NavigationItem,
+} from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
 import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
 import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
 import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMissingDishModal';
@@ -10,6 +13,7 @@ import useDish from '@features/vendor/hooks/useDish';
 import usePayment from '@features/vendor/hooks/usePayment';
 import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 import {
   Menu as Bars3Icon,
   ChevronLeft as ChevronLeftIcon,
@@ -102,7 +106,7 @@ const navigation = [
   {
     name: 'Lịch sử',
     icon: DocumentTextIcon,
-    isForVendor: true,
+    isForVendor: false,
     children: [
       {
         name: 'Lịch sử đăng ký',
@@ -123,9 +127,11 @@ function VendorLayout(): JSX.Element {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [orderModalId, setOrderModalId] = useState<number | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
@@ -203,6 +209,17 @@ function VendorLayout(): JSX.Element {
         };
       }
 
+      if (item.name === 'Lịch sử') {
+        if (!isVendor) {
+          return {
+            name: 'Lịch sử đăng ký',
+            href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
+            icon: DocumentTextIcon,
+          };
+        }
+        return item;
+      }
+
       if (item.href !== vendorDietaryPath) {
         if (item.href !== vendorDishPath) {
           return item;
@@ -243,7 +260,7 @@ function VendorLayout(): JSX.Element {
       return directMatch.name;
     }
 
-    for (const item of filteredNavigation) {
+    for (const item of filteredNavigation as NavigationItem[]) {
       const childMatch = item.children?.find(
         (child) => child.href === location.pathname
       );
@@ -446,6 +463,7 @@ function VendorLayout(): JSX.Element {
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -463,6 +481,7 @@ function VendorLayout(): JSX.Element {
           settingsPath="/vendor/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -526,9 +545,14 @@ function VendorLayout(): JSX.Element {
                   </Button>
                 </Box>
               )}
-              <NotificationBell
-                onFeedbackNotificationClick={setFeedbackModalId}
-              />
+              {isVendor ? (
+                <NotificationBell
+                  onFeedbackNotificationClick={setFeedbackModalId}
+                  onOrderNotificationClick={setOrderModalId}
+                />
+              ) : (
+                <NotificationBell />
+              )}
             </Box>
           </Box>
         </Box>
@@ -553,6 +577,11 @@ function VendorLayout(): JSX.Element {
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
       />
+      <OrderDetailsModal
+        isOpen={orderModalId !== null}
+        onClose={() => setOrderModalId(null)}
+        orderId={orderModalId}
+      />
       <OnboardingMissingBranchModal
         open={isBranchModalOpen}
         missingBranches={missingScheduleBranches}
@@ -565,6 +594,10 @@ function VendorLayout(): JSX.Element {
       <OnboardingMissingDishModal
         open={isDishModalOpen}
         onClose={() => setIsDishModalOpen(false)}
+      />
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </Box>
   );

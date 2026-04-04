@@ -4,6 +4,7 @@ import { ROUTES } from '@constants/routes';
 import { MANAGER_USER_INFO } from '@constants/managerTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
 import {
   Menu as Bars3Icon,
   ChevronLeft as ChevronLeftIcon,
@@ -22,6 +23,7 @@ import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation = [
   {
@@ -59,7 +61,9 @@ const navigation = [
 function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [orderModalId, setOrderModalId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -109,6 +113,7 @@ function ManagerLayout(): JSX.Element {
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -125,6 +130,7 @@ function ManagerLayout(): JSX.Element {
           settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -169,6 +175,7 @@ function ManagerLayout(): JSX.Element {
             <Box className="flex items-center gap-4">
               <NotificationBell
                 onFeedbackNotificationClick={setFeedbackModalId}
+                onOrderNotificationClick={setOrderModalId}
               />
             </Box>
           </Box>
@@ -185,6 +192,15 @@ function ManagerLayout(): JSX.Element {
         isOpen={feedbackModalId !== null}
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
+      />
+      <OrderDetailsModal
+        isOpen={orderModalId !== null}
+        onClose={() => setOrderModalId(null)}
+        orderId={orderModalId}
+      />
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </Box>
   );

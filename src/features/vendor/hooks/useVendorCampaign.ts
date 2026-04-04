@@ -24,6 +24,7 @@ import type {
   VendorCampaignListResponse,
   JoinSystemCampaignResponse,
   CampaignBranchesResponse,
+  GetBranchesOfCampaignResponse,
 } from '@features/vendor/types/campaign';
 
 const useVendorCampaign = (): {
@@ -62,8 +63,10 @@ const useVendorCampaign = (): {
     campaignId: number
   ) => Promise<CampaignDetailsResponse>;
   onGetBranchesOfACampaign: (
-    campaignId: number
-  ) => Promise<CampaignBranchesResponse>;
+    campaignId: number,
+    pageNumber?: number,
+    pageSize?: number
+  ) => Promise<GetBranchesOfCampaignResponse>;
   onAddBranchesToACampaign: (
     campaignId: number,
     branchIds: number[]
@@ -179,8 +182,14 @@ const useVendorCampaign = (): {
   );
 
   const onGetBranchesOfACampaign = useCallback(
-    async (campaignId: number): Promise<CampaignBranchesResponse> => {
-      return await dispatch(getBranchesOfACampaign(campaignId)).unwrap();
+    async (
+      campaignId: number,
+      pageNumber: number = 1,
+      pageSize: number = 100
+    ): Promise<GetBranchesOfCampaignResponse> => {
+      return await dispatch(
+        getBranchesOfACampaign({ campaignId, pageNumber, pageSize })
+      ).unwrap();
     },
     [dispatch]
   );

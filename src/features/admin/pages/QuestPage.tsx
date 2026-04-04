@@ -142,7 +142,6 @@ export default function QuestPage(): JSX.Element {
       }
 
       handleCloseModal();
-      await fetchQuests();
     } catch (error) {
       console.error('Failed to save quest', error);
     }
@@ -173,7 +172,6 @@ export default function QuestPage(): JSX.Element {
       await onDeleteQuest(deletingQuest.questId);
       setOpenDeleteDialog(false);
       setDeletingQuest(null);
-      await fetchQuests();
     } catch (error) {
       console.error('Failed to delete quest', error);
     }

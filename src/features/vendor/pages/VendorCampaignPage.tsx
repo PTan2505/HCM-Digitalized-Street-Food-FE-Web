@@ -180,7 +180,7 @@ export default function VendorCampaignPage(): JSX.Element {
             createImageFormData(imageFile)
           );
         }
-        await fetchCampaigns();
+        // await fetchCampaigns();
       }
       handleCloseModal();
     } catch (err) {
