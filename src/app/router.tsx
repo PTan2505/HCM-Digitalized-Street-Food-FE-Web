@@ -47,6 +47,7 @@ import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
 import HomePage from '@features/home/pages/HomePage';
+import DeepLinkRedirectPage from '@features/home/pages/DeepLinkRedirectPage';
 import PaymentSuccess from '@features/vendor/pages/PaymentSuccess';
 import PaymentCancel from '@features/vendor/pages/PaymentCancel';
 
@@ -78,6 +79,10 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.PAYMENT_CANCEL,
     element: <PaymentCancel />,
+  },
+  {
+    path: '*',
+    element: <DeepLinkRedirectPage />,
   },
   {
     path: ROUTES.ROOT,
