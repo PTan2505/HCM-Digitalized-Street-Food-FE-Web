@@ -37,7 +37,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   } = useBranch();
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [pendingType, setPendingType] = useState<PendingRegistrationType>(1);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -321,14 +321,14 @@ export default function VendorVerificationPage(): React.JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Xác minh người bán
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Quản lý và xử lý các yêu cầu đăng ký chi nhánh
           </p>
         </div>

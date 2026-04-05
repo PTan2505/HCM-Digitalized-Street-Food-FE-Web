@@ -60,7 +60,7 @@ export default function OrderPage(): JSX.Element {
   const [selectedBranchId, setSelectedBranchId] =
     useState<SelectedBranch>('all');
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [detailOrder, setDetailOrder] = useState<VendorOrder | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);

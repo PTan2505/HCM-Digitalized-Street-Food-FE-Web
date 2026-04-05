@@ -24,7 +24,7 @@ const StatusBadge = ({
   };
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -41,7 +41,7 @@ export default function GhostPinPage(): JSX.Element {
   const [loading, setLoading] = useState(false);
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     const fetchGhostPins = async (): Promise<void> => {
@@ -113,14 +113,14 @@ export default function GhostPinPage(): JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Danh sách quán gợi ý (Ghost Pin)
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Danh sách các quán gợi ý có thể nhận quản lý
           </p>
         </div>

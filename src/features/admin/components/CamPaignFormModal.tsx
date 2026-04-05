@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -15,10 +14,12 @@ import {
 import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
   Delete as DeleteIcon,
+  Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import type { Campaign } from '@features/admin/types/campaign';
 import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface CamPaignFormModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export default function CamPaignFormModal({
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<CampaignFormData>({
     resolver: zodResolver(CampaignSchema),
     defaultValues: {
@@ -265,6 +266,7 @@ export default function CamPaignFormModal({
   );
 
   const watchedIsActive = watch('isActive');
+  const hasCampaignChanges = isDirty || imageFile !== null || isImageRemoved;
 
   return (
     <Dialog
@@ -282,9 +284,13 @@ export default function CamPaignFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
-      </DialogTitle>
+      <AppModalHeader
+        title={campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
+        subtitle={campaign?.name ?? ''}
+        icon={<CampaignIcon />}
+        iconTone="campaign"
+        onClose={onClose}
+      />
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
           dividers
@@ -539,7 +545,7 @@ export default function CamPaignFormModal({
                       className="peer sr-only"
                     />
                     <div
-                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
                       style={{
                         backgroundColor: watchedIsActive
                           ? '#8bcf3f'
@@ -553,7 +559,7 @@ export default function CamPaignFormModal({
             </div>
           </div>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
@@ -561,7 +567,9 @@ export default function CamPaignFormModal({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === 'pending'}
+            disabled={
+              status === 'pending' || (campaign !== null && !hasCampaignChanges)
+            }
             startIcon={
               status === 'pending' ? <CircularProgress size={20} /> : null
             }

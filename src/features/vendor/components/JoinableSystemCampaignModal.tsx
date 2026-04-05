@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { Box, Button, Snackbar, Alert } from '@mui/material';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import SystemCampaignDetailsModal from '@features/vendor/components/SystemCampaignDetailsModal';
@@ -13,6 +14,7 @@ import {
   selectJoinableSystemCampaignTotalCount,
 } from '@slices/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface JoinableSystemCampaignModalProps {
   isOpen: boolean;
@@ -55,7 +57,7 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -154,7 +156,7 @@ export default function JoinableSystemCampaignModal({
       key: 'name',
       label: 'Tên chiến dịch hệ thống',
       render: (value: unknown): React.ReactNode => (
-        <Box className="font-semibold text-[var(--color-table-text-primary)]">
+        <Box className="text-table-text-primary font-semibold">
           {typeof value === 'string' ? value : String(value)}
         </Box>
       ),
@@ -163,7 +165,7 @@ export default function JoinableSystemCampaignModal({
       key: 'startDate',
       label: 'Thời gian diễn ra',
       render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+        <Box className="text-table-text-secondary text-sm">
           <div>Từ: {formatVNDatetime(row.startDate)}</div>
           <div>Đến: {formatVNDatetime(row.endDate)}</div>
         </Box>
@@ -206,7 +208,7 @@ export default function JoinableSystemCampaignModal({
                 setDetailsCampaignId(row.campaignId);
                 setIsDetailsModalOpen(true);
               }}
-              className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+              className="bg-primary-600 hover:bg-primary-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-colors"
             >
               Chi tiết
             </button>
@@ -222,7 +224,7 @@ export default function JoinableSystemCampaignModal({
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
               isJoining || branchId === null || isAlreadyJoined
                 ? 'cursor-not-allowed bg-gray-200 text-gray-500'
-                : 'bg-[var(--color-primary-600)] text-white hover:bg-[var(--color-primary-700)]'
+                : 'bg-primary-600 hover:bg-primary-700 text-white'
             }`}
           >
             {isAlreadyJoined
@@ -239,7 +241,7 @@ export default function JoinableSystemCampaignModal({
   return (
     <>
       <div
-        className={`fixed inset-0 z-[1400] flex items-center justify-center p-4 transition-opacity ${
+        className={`fixed inset-0 z-1400 flex items-center justify-center p-4 transition-opacity ${
           isOpen
             ? 'bg-black/60 opacity-100'
             : 'pointer-events-none bg-transparent opacity-0'
@@ -250,26 +252,16 @@ export default function JoinableSystemCampaignModal({
           className="mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Modal Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                {mode === 'join'
-                  ? 'Tham gia chiến dịch hệ thống'
-                  : 'Chiến dịch hệ thống khả dụng'}
-              </h2>
-            </div>
-            {/* <IconButton
-              aria-label="close"
-              onClick={onClose}
-              sx={{
-                color: 'text.secondary',
-                '&:hover': { backgroundColor: 'action.hover' },
-              }}
-            >
-              <CloseIcon />
-            </IconButton> */}
-          </div>
+          <VendorModalHeader
+            title={
+              mode === 'join'
+                ? 'Tham gia chiến dịch hệ thống'
+                : 'Chiến dịch hệ thống khả dụng'
+            }
+            icon={<CampaignIcon />}
+            iconTone="campaign"
+            onClose={onClose}
+          />
 
           {/* Modal Content */}
           <div className="flex-1 overflow-y-auto p-8">

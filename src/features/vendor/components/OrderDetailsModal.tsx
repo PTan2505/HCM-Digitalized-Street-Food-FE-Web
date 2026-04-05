@@ -7,9 +7,9 @@ import {
 } from '@features/vendor/components/OrderStatusBadge';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectSelectedOrder, selectOrderStatus } from '@slices/order';
-import CloseIcon from '@mui/icons-material/Close';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -123,37 +123,21 @@ export default function OrderDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 transition-opacity"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 transition-opacity"
       onClick={onClose}
     >
       <div
         className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-4">
-          <div className="min-w-0">
-            <p className="text-primary-700 mb-1 text-xs font-semibold tracking-wide uppercase">
-              Chi tiết đơn hàng
-            </p>
-            <h2 className="text-table-text-primary text-lg leading-tight font-bold">
-              {order
-                ? `#${order.orderId.toString()} - ${order.branchName}`
-                : '—'}
-            </h2>
-          </div>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #f3f4f6',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
+        <VendorModalHeader
+          title="Chi tiết đơn hàng"
+          subtitle={
+            order ? `#${order.orderId.toString()} - ${order.branchName}` : '—'
+          }
+          icon={<ReceiptLongIcon />}
+          onClose={onClose}
+        />
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">

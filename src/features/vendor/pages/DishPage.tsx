@@ -38,7 +38,7 @@ const StatusBadge = ({
   };
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -63,7 +63,7 @@ export default function DishPage(): JSX.Element {
     useState<CreateOrUpdateDishResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [filters, setFilters] = useState<DishFilterValues>({});
 
   const vendorId = myVendor?.vendorId;
@@ -165,7 +165,7 @@ export default function DishPage(): JSX.Element {
           src={String(value)}
           alt="Dish"
           variant="rounded"
-          className="h-10 w-10 bg-[var(--color-primary-100)]"
+          className="bg-primary-100 h-10 w-10"
         />
       ),
     },
@@ -186,7 +186,7 @@ export default function DishPage(): JSX.Element {
         <Chip
           label={`${Number(value).toLocaleString('vi-VN')}đ`}
           size="small"
-          className="bg-[var(--color-primary-100)] font-[var(--font-nunito)] font-semibold text-[var(--color-primary-800)]"
+          className="bg-primary-100 text-primary-800 font-semibold"
         />
       ),
     },
@@ -257,20 +257,20 @@ export default function DishPage(): JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Quản lý món ăn
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Danh sách các món ăn của cửa hàng
           </p>
         </div>
         <button
           onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
         >
           <AddIcon fontSize="small" />
           Thêm món ăn

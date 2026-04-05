@@ -1,17 +1,7 @@
+import { Dialog, DialogContent, Chip } from '@mui/material';
 import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Button,
-  Chip,
-} from '@mui/material';
-import {
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
   EmojiEvents as EmojiEventsIcon,
   Campaign as CampaignIcon,
-  Image as ImageIcon,
   Assignment as AssignmentIcon,
 } from '@mui/icons-material';
 import useBadge from '@features/admin/hooks/useBadge';
@@ -27,6 +17,7 @@ import {
 } from '@features/admin/types/quest';
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 import type { Voucher } from '@custom-types/voucher';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface QuestDetailsModalProps {
   isOpen: boolean;
@@ -52,15 +43,27 @@ const formatVNDatetime = (isoStr?: string): string => {
 const InfoCard = ({
   label,
   value,
+  tone,
 }: {
   label: string;
   value: string | number;
+  tone: 'lime' | 'sky' | 'violet' | 'amber';
 }): JSX.Element => (
-  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+  <div
+    className={`rounded-xl border px-4 py-3 shadow-sm ${
+      tone === 'lime'
+        ? 'border-lime-200 bg-lime-50'
+        : tone === 'sky'
+          ? 'border-sky-200 bg-sky-50'
+          : tone === 'violet'
+            ? 'border-violet-200 bg-violet-50'
+            : 'border-amber-200 bg-amber-50'
+    }`}
+  >
     <p className="mb-0.5 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
       {label}
     </p>
-    <p className="text-sm font-semibold text-gray-800">{value}</p>
+    <p className="text-sm font-bold text-gray-800">{value}</p>
   </div>
 );
 
@@ -83,6 +86,41 @@ const SectionHeading = ({
       {title}
     </h3>
   </div>
+);
+
+const StatusBadge = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default';
+}): JSX.Element => {
+  const colors = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
+  return (
+    <span
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+    >
+      {label}
+    </span>
+  );
+};
+
+const TaskTypeBadge = ({ label }: { label: string }): JSX.Element => (
+  <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+    {label}
+  </span>
+);
+
+const RewardTypeBadge = ({ label }: { label: string }): JSX.Element => (
+  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+    {label}
+  </span>
 );
 
 export default function QuestDetailsModal({
@@ -167,97 +205,70 @@ export default function QuestDetailsModal({
         },
       }}
     >
-      {/* ── Header ── */}
-      <DialogTitle
-        sx={{
-          p: 0,
-          background: 'linear-gradient(135deg, #8bcf3f 0%, #6aaa28 100%)',
-        }}
-      >
-        <div className="flex items-start gap-4 px-6 py-5">
-          {/* Quest image or placeholder */}
-          <div className="flex-shrink-0">
-            {quest?.imageUrl ? (
-              <img
-                src={quest.imageUrl}
-                alt={quest.title}
-                className="h-16 w-16 rounded-xl border-2 border-white/40 object-cover shadow-md"
-              />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-white/30 bg-white/20">
-                <ImageIcon sx={{ color: 'white', fontSize: 28 }} />
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-hidden">
-            <p className="text-xs font-semibold tracking-widest text-white/70 uppercase">
-              Chi tiết nhiệm vụ
-            </p>
-            <h2 className="mt-0.5 truncate text-xl font-bold text-white">
-              {quest?.title ?? '—'}
-            </h2>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Chip
-                icon={
-                  quest?.isActive ? (
-                    <CheckCircleIcon style={{ color: '#fff', fontSize: 14 }} />
-                  ) : (
-                    <CancelIcon style={{ color: '#fff', fontSize: 14 }} />
-                  )
-                }
-                label={quest?.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
-                size="small"
-                sx={{
-                  bgcolor: quest?.isActive
-                    ? 'rgba(255,255,255,0.25)'
-                    : 'rgba(239,68,68,0.5)',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '0.7rem',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  '& .MuiChip-icon': { ml: '6px' },
-                }}
-              />
-              <Chip
-                label={quest?.isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
-                size="small"
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '0.7rem',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </DialogTitle>
+      <AppModalHeader
+        title="Chi tiết nhiệm vụ"
+        subtitle={quest?.title ?? '—'}
+        icon={<AssignmentIcon />}
+        iconTone="admin"
+        onClose={onClose}
+      />
 
       {/* ── Body ── */}
       <DialogContent
         dividers
-        sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 200px)', p: 3 }}
+        sx={{
+          overflowY: 'auto',
+          maxHeight: 'calc(90vh - 120px)',
+          p: 3,
+          backgroundColor: '#f8fafc',
+        }}
       >
         <div className="flex flex-col gap-6">
-          {/* ── Stats row ── */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-linear-to-r from-white to-slate-50 p-5 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-table-text-primary text-base font-bold">
+                  {quest?.title ?? 'Nhiệm vụ'}
+                </p>
+                <p className="text-table-text-secondary mt-1 text-sm leading-6">
+                  {quest?.description ?? 'Không có mô tả cho nhiệm vụ này.'}
+                </p>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <StatusBadge
+                  label={quest?.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+                  type={quest?.isActive ? 'success' : 'error'}
+                />
+                <Chip
+                  label={quest?.isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
+                  size="small"
+                  color="default"
+                  variant="outlined"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <InfoCard
               label="Số nhiệm vụ con"
               value={quest?.taskCount ?? quest?.tasks?.length ?? 0}
+              tone="lime"
             />
+            <InfoCard label="Chiến dịch" value={campaignName} tone="sky" />
             <InfoCard
               label="Ngày tạo"
               value={formatVNDatetime(quest?.createdAt)}
+              tone="violet"
             />
             <InfoCard
               label="Cập nhật lần cuối"
               value={formatVNDatetime(quest?.updatedAt)}
+              tone="amber"
             />
           </div>
 
-          {/* ── Thông tin chung ── */}
           <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
             <SectionHeading
               icon={<AssignmentIcon sx={{ fontSize: 16 }} />}
@@ -265,10 +276,9 @@ export default function QuestDetailsModal({
             />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Campaign */}
               {!quest?.isStandalone && (
                 <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex-shrink-0 rounded-lg bg-blue-50 p-1.5 text-blue-500">
+                  <span className="mt-0.5 shrink-0 rounded-lg bg-blue-50 p-1.5 text-blue-500">
                     <CampaignIcon sx={{ fontSize: 16 }} />
                   </span>
                   <div>
@@ -282,12 +292,7 @@ export default function QuestDetailsModal({
                 </div>
               )}
 
-              {/* Description */}
-              <div
-                className={
-                  !quest?.isStandalone ? 'sm:col-span-2' : 'sm:col-span-2'
-                }
-              >
+              <div className="sm:col-span-2">
                 <p className="mb-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
                   Mô tả
                 </p>
@@ -300,7 +305,6 @@ export default function QuestDetailsModal({
             </div>
           </div>
 
-          {/* ── Task list ── */}
           <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
             <SectionHeading
               icon={<EmojiEventsIcon sx={{ fontSize: 16 }} />}
@@ -312,23 +316,27 @@ export default function QuestDetailsModal({
                 {quest.tasks.map((task, index) => (
                   <div
                     key={task.questTaskId}
-                    className="rounded-xl border border-gray-100 bg-gray-50 p-4 transition-shadow hover:shadow-sm"
+                    className="rounded-xl border border-gray-100 bg-linear-to-r from-white to-slate-50 p-4 transition-shadow hover:shadow-sm"
                   >
-                    {/* Task header */}
-                    <div className="mb-3 flex items-center gap-2">
-                      <span
-                        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                        style={{ background: '#8bcf3f' }}
-                      >
-                        {index + 1}
-                      </span>
-                      <p className="text-sm font-bold text-gray-800">
-                        {QUEST_TASK_TYPE_LABELS[task.type]}
-                      </p>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                          style={{ background: '#8bcf3f' }}
+                        >
+                          {index + 1}
+                        </span>
+                        <p className="text-sm font-bold text-gray-800">
+                          Nhiệm vụ {index + 1}
+                        </p>
+                      </div>
+
+                      <TaskTypeBadge
+                        label={QUEST_TASK_TYPE_LABELS[task.type]}
+                      />
                     </div>
 
-                    {/* Task details grid */}
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
                         <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
                           Mục tiêu
@@ -342,12 +350,14 @@ export default function QuestDetailsModal({
                         <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
                           Loại thưởng
                         </p>
-                        <p className="mt-0.5 text-sm font-semibold text-gray-800">
-                          {QUEST_REWARD_TYPE_LABELS[task.rewardType]}
-                        </p>
+                        <div className="mt-1">
+                          <RewardTypeBadge
+                            label={QUEST_REWARD_TYPE_LABELS[task.rewardType]}
+                          />
+                        </div>
                       </div>
 
-                      <div className="col-span-2 rounded-lg border border-gray-200 bg-white px-3 py-2 sm:col-span-1">
+                      <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
                         <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
                           Giá trị thưởng
                         </p>
@@ -359,10 +369,14 @@ export default function QuestDetailsModal({
                     </div>
 
                     {task.description && (
-                      <p className="mt-3 text-xs leading-relaxed text-gray-500">
-                        <span className="font-semibold">Mô tả:</span>{' '}
-                        {task.description}
-                      </p>
+                      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                        <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                          Mô tả nhiệm vụ con
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-gray-600">
+                          {task.description}
+                        </p>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -378,13 +392,6 @@ export default function QuestDetailsModal({
           </div>
         </div>
       </DialogContent>
-
-      {/* ── Footer ── */}
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} color="inherit" variant="outlined">
-          Đóng
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }
