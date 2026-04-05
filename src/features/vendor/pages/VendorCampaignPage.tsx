@@ -267,6 +267,12 @@ export default function VendorCampaignPage(): JSX.Element {
           return <span className="text-xs text-gray-400">-</span>;
         }
 
+        if (new Date(row.endDate) < new Date()) {
+          return (
+            <span className="text-xs text-gray-400 italic">Đã kết thúc</span>
+          );
+        }
+
         return (
           <Box className="flex items-center gap-2">
             <Tooltip title="Quản lý chi nhánh" arrow>

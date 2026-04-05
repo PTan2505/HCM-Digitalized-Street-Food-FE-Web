@@ -206,6 +206,7 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
     },
     {
       label: <EditIcon fontSize="small" />,
@@ -213,6 +214,7 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
+      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
     },
   ];
 
@@ -246,6 +248,7 @@ export default function CampaignPage(): JSX.Element {
           actions={actions}
           loading={status === 'pending'}
           emptyMessage="Chưa có chiến dịch nào"
+          noActionsMessage="Đã kết thúc"
         />
       </Box>
 
