@@ -14,10 +14,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
+import usePayment from '@features/vendor/hooks/usePayment';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
@@ -47,7 +49,7 @@ const StatusBadge = ({
   };
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -59,6 +61,7 @@ function BranchPage(): JSX.Element {
   const status = useAppSelector(selectVendorStatus);
   const { onGetMyVendor, onUpdateVendorName, onDeleteBranch, onGetUserById } =
     useVendor();
+  const { onCreatePaymentLink } = usePayment();
   const location = useLocation();
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [formModalOpen, setFormModalOpen] = useState(false);
@@ -80,6 +83,7 @@ function BranchPage(): JSX.Element {
   const [managerNameById, setManagerNameById] = useState<
     Record<number, string>
   >({});
+  const [payingBranchId, setPayingBranchId] = useState<number | null>(null);
   const requestedManagerIdsRef = useRef<Set<number>>(new Set());
   const [showOnboardingGuide, setShowOnboardingGuide] = useState(() => {
     return (
@@ -197,6 +201,29 @@ function BranchPage(): JSX.Element {
 
   const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
 
+  const canRegisterPackage = (branch: Branch): boolean => {
+    return (
+      !branch.isSubscribed &&
+      branch.isVerified &&
+      branch.licenseStatus === 'Accept' &&
+      hasAnySubscribedBranch
+    );
+  };
+
+  const handleRegisterPackagePayment = async (
+    branch: Branch
+  ): Promise<void> => {
+    setPayingBranchId(branch.branchId);
+    try {
+      const res = await onCreatePaymentLink({ branchId: branch.branchId });
+      if (res.success && res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      }
+    } finally {
+      setPayingBranchId(null);
+    }
+  };
+
   const handleOpenCreateModal = (): void => {
     if (branches.length === 0) {
       setFormMode({ type: 'createVendor' });
@@ -234,7 +261,7 @@ function BranchPage(): JSX.Element {
       key: 'addressDetail',
       label: 'Địa chỉ',
       render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-secondary block max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">
+        <Box className="text-table-text-secondary block max-w-75 overflow-hidden text-ellipsis whitespace-nowrap">
           {typeof value === 'string' ? value : '-'}
         </Box>
       ),
@@ -394,6 +421,16 @@ function BranchPage(): JSX.Element {
     //   show: (branch: Branch): boolean => branch.isSubscribed,
     // },
     {
+      label: <PaymentIcon fontSize="small" />,
+      menuLabel: 'Thanh toán đăng ký gói',
+      onClick: (branch: Branch): void => {
+        void handleRegisterPackagePayment(branch);
+      },
+      color: 'success' as const,
+      show: (branch: Branch): boolean => canRegisterPackage(branch),
+      disabled: (branch: Branch): boolean => payingBranchId === branch.branchId,
+    },
+    {
       label: <RateReviewIcon fontSize="small" />,
       menuLabel: 'Phản hồi về chi nhánh',
       onClick: (branch: Branch): void => {
@@ -404,14 +441,14 @@ function BranchPage(): JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Quản lý chi nhánh
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Tên cửa hàng:{' '}
             {isEditingName ? (
               <span className="inline-flex items-center gap-1">
@@ -423,7 +460,7 @@ function BranchPage(): JSX.Element {
                     if (e.key === 'Enter') handleSaveName();
                     if (e.key === 'Escape') handleCancelEditName();
                   }}
-                  className="rounded border border-[var(--color-primary-400)] px-1.5 py-0.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[var(--color-primary-300)]"
+                  className="border-primary-400 focus:ring-primary-300 rounded border px-1.5 py-0.5 text-sm font-semibold outline-none focus:ring-2"
                   autoFocus
                 />
                 <IconButton
@@ -463,7 +500,7 @@ function BranchPage(): JSX.Element {
         </div>
         <button
           onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
         >
           <AddIcon fontSize="small" />
           {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}

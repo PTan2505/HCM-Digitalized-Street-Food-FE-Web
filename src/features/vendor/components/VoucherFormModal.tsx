@@ -3,16 +3,16 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  IconButton,
   CircularProgress,
 } from '@mui/material';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 import { VoucherSchema } from '@features/vendor/utils/voucherSchema';
 import type { VoucherFormData } from '@features/vendor/utils/voucherSchema';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface VoucherFormModalProps {
   isOpen: boolean;
@@ -81,7 +81,7 @@ export default function VoucherFormModal({
     watch,
     setValue,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<VoucherFormData>({
     resolver: zodResolver(VoucherSchema),
     defaultValues: {
@@ -254,27 +254,21 @@ export default function VoucherFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        {openedFromCampaign
-          ? voucher
-            ? `Cập nhật "${voucher.name}" của chiến dịch ${campaignName ?? ''}`
-            : `Thêm voucher cho chiến dịch ${campaignName ?? ''}`
-          : voucher
-            ? 'Cập nhật voucher'
-            : 'Thêm voucher mới'}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={(theme) => ({
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          {/* <CloseIcon /> */}
-        </IconButton>
-      </DialogTitle>
+      <VendorModalHeader
+        title={
+          openedFromCampaign
+            ? voucher
+              ? 'Cập nhật voucher chiến dịch'
+              : 'Thêm voucher cho chiến dịch'
+            : voucher
+              ? 'Cập nhật voucher'
+              : 'Thêm voucher mới'
+        }
+        subtitle={campaignName ?? voucher?.name ?? ''}
+        icon={<LocalOfferIcon />}
+        iconTone="voucher"
+        onClose={onClose}
+      />
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
@@ -588,7 +582,7 @@ export default function VoucherFormModal({
                       className="peer sr-only"
                     />
                     <div
-                      className="peer h-6 w-11 rounded-full after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      className="peer h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
                       style={{
                         backgroundColor: watchedIsActive
                           ? '#8bcf3f'
@@ -603,7 +597,7 @@ export default function VoucherFormModal({
           </div>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
@@ -611,7 +605,7 @@ export default function VoucherFormModal({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === 'pending'}
+            disabled={status === 'pending' || (voucher !== null && !isDirty)}
             startIcon={
               status === 'pending' ? <CircularProgress size={20} /> : null
             }

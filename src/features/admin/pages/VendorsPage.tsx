@@ -50,7 +50,7 @@ export default function VendorsPage(): JSX.Element {
     null
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     void onGetAllVendors({ pageNumber: currentPage, pageSize });

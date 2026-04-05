@@ -1,5 +1,4 @@
 import type { ChangeEvent, JSX } from 'react';
-import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import { Box, Button, TextField, Typography } from '@mui/material';
 
 export const OrderCompletionPanel = ({
@@ -51,7 +50,7 @@ export const OrderCompletionPanel = ({
             borderColor: 'var(--color-primary-600)',
           },
           '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'var(--color-primary-600)',
+            borderColor: 'var(--color-primary-700)',
           },
           '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
             {
@@ -64,8 +63,13 @@ export const OrderCompletionPanel = ({
         color="primary"
         onClick={() => void onCompleteOrderByCode()}
         disabled={verificationCode.length !== 6 || isCompletingByCode}
-        startIcon={<VerifiedUserOutlinedIcon />}
         className="bg-primary-600 hover:bg-primary-700 h-10 font-bold whitespace-nowrap text-white"
+        sx={{
+          border: '1px solid var(--color-primary-600)',
+          '&:hover': {
+            borderColor: 'var(--color-primary-700)',
+          },
+        }}
       >
         Hoàn tất đơn
       </Button>

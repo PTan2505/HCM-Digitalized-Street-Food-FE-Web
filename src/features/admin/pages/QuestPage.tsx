@@ -89,7 +89,7 @@ export default function QuestPage(): JSX.Element {
   } = useQuest();
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);

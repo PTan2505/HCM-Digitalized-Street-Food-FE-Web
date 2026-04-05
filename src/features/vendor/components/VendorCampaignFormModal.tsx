@@ -4,23 +4,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  IconButton,
   CircularProgress,
   Tooltip,
   Chip,
+  IconButton,
 } from '@mui/material';
 import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
   Delete as DeleteIcon,
+  Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
 import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import useVoucher from '@features/vendor/hooks/useVoucher';
 
 interface VendorCampaignFormModalProps {
   isOpen: boolean;
@@ -95,6 +97,7 @@ export default function VendorCampaignFormModal({
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
+  const { onGetVouchersByCampaignId } = useVoucher();
 
   const subscribedBranches = useMemo(
     () =>
@@ -110,7 +113,7 @@ export default function VendorCampaignFormModal({
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<VendorCampaignFormData>({
     resolver: zodResolver(VendorCampaignSchema),
     defaultValues: {
@@ -130,6 +133,8 @@ export default function VendorCampaignFormModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [hasExistingVouchers, setHasExistingVouchers] = useState(false);
+  const [isCheckingVouchers, setIsCheckingVouchers] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -165,12 +170,48 @@ export default function VendorCampaignFormModal({
   }, [isOpen, campaign, reset]);
 
   useEffect(() => {
-    return () => {
+    return (): void => {
       if (imagePreviewUrl) {
         URL.revokeObjectURL(imagePreviewUrl);
       }
     };
   }, [imagePreviewUrl]);
+
+  useEffect(() => {
+    if (!isOpen || !campaign) {
+      setHasExistingVouchers(false);
+      setIsCheckingVouchers(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkVoucherExists = async (): Promise<void> => {
+      setIsCheckingVouchers(true);
+
+      try {
+        const vouchers = await onGetVouchersByCampaignId(campaign.campaignId);
+        if (!isCancelled) {
+          setHasExistingVouchers(vouchers.length > 0);
+        }
+      } catch {
+        if (!isCancelled) {
+          // Fallback safe mode: allow editing when voucher check fails.
+          setHasExistingVouchers(false);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsCheckingVouchers(false);
+        }
+      }
+    };
+
+    void checkVoucherExists();
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isOpen, campaign, onGetVouchersByCampaignId]);
 
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
@@ -223,6 +264,7 @@ export default function VendorCampaignFormModal({
   const existingImageUrl = campaign?.imageUrl ?? null;
   const displayImageUrl =
     imagePreviewUrl ?? (isImageRemoved ? null : existingImageUrl);
+  const hasImageChanged = imageFile !== null || isImageRemoved;
 
   const inputClass = (hasError: boolean): string =>
     `w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
@@ -241,6 +283,8 @@ export default function VendorCampaignFormModal({
   );
 
   const watchedIsActive = watch('isActive');
+  const isCampaignScheduleLocked =
+    isEditMode && (isCheckingVouchers || hasExistingVouchers);
 
   return (
     <Dialog
@@ -258,21 +302,13 @@ export default function VendorCampaignFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={(theme) => ({
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          {/* <CloseIcon /> */}
-        </IconButton>
-      </DialogTitle>
+      <VendorModalHeader
+        title={campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
+        subtitle={campaign?.name ?? ''}
+        icon={<CampaignIcon />}
+        iconTone="campaign"
+        onClose={onClose}
+      />
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
           dividers
@@ -515,6 +551,12 @@ export default function VendorCampaignFormModal({
             {/* ── SECTION 4: Thời gian chiến dịch ── */}
             <div>
               {sectionLabel('Thời gian chiến dịch')}
+              {isEditMode && hasExistingVouchers && (
+                <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                  Campaign đã có voucher nên không thể chỉnh sửa thời gian tổ
+                  chức.
+                </p>
+              )}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -525,7 +567,8 @@ export default function VendorCampaignFormModal({
                     type="datetime-local"
                     {...register('startDate')}
                     min={getTodayMinVN()}
-                    className={inputClass(!!errors.startDate)}
+                    disabled={isCampaignScheduleLocked}
+                    className={`${inputClass(!!errors.startDate)} ${isCampaignScheduleLocked ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
                   />
                   {errors.startDate && (
                     <p className="mt-1 text-xs text-red-500">
@@ -542,9 +585,9 @@ export default function VendorCampaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('endDate')}
-                    disabled={!startDate}
+                    disabled={!startDate || isCampaignScheduleLocked}
                     min={startDate || getTodayMinVN()}
-                    className={inputClass(!!errors.endDate)}
+                    className={`${inputClass(!!errors.endDate)} ${!startDate || isCampaignScheduleLocked ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
                   />
                   {errors.endDate && (
                     <p className="mt-1 text-xs text-red-500">
@@ -577,7 +620,7 @@ export default function VendorCampaignFormModal({
                       className="peer sr-only"
                     />
                     <div
-                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
                       style={{
                         backgroundColor: watchedIsActive
                           ? '#8bcf3f'
@@ -591,7 +634,7 @@ export default function VendorCampaignFormModal({
             </div>
           </div>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
@@ -599,7 +642,10 @@ export default function VendorCampaignFormModal({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === 'pending'}
+            disabled={
+              status === 'pending' ||
+              (isEditMode && !isDirty && !hasImageChanged)
+            }
             startIcon={
               status === 'pending' ? <CircularProgress size={20} /> : null
             }

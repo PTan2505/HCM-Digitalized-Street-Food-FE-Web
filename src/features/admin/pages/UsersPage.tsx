@@ -9,14 +9,13 @@ import type {
 import { axiosApi } from '@lib/api/apiInstance';
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Button,
 } from '@mui/material';
-import { FilterAltOff as FilterAltOffIcon } from '@mui/icons-material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -34,7 +33,7 @@ interface AdminPagination {
 
 const DEFAULT_PAGINATION: AdminPagination = {
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 5,
   totalPages: 1,
   totalCount: 0,
   hasPrevious: false,
@@ -142,7 +141,7 @@ export default function UsersPage(): JSX.Element {
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [pagination, setPagination] =
     useState<AdminPagination>(DEFAULT_PAGINATION);
   const [processingUserId, setProcessingUserId] = useState<number | null>(null);
@@ -258,7 +257,7 @@ export default function UsersPage(): JSX.Element {
 
   useEffect(() => {
     setPage(1);
-    setPageSize(10);
+    setPageSize(5);
     setSearchKeyword('');
   }, [roleFilter]);
 
@@ -418,24 +417,14 @@ export default function UsersPage(): JSX.Element {
     <div>
       <h1 className="mb-6 text-2xl font-bold">{pageTitle}</h1>
 
-      <Box className="mb-4 rounded-2xl border border-slate-200 bg-linear-to-r from-slate-50 to-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-table-text-primary text-sm font-bold tracking-wide uppercase">
-            Bộ lọc người dùng
-          </p>
-          <Button
-            variant="text"
-            size="small"
-            startIcon={<FilterAltOffIcon fontSize="small" />}
-            onClick={() => setSearchKeyword('')}
-            disabled={searchKeyword.trim().length === 0}
-          >
-            Bỏ lọc
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-          <div className="lg:col-span-6">
+      <Box
+        className="mb-4 flex flex-col gap-4 rounded-xl border border-gray-100 p-5 shadow-sm"
+        sx={{
+          background: 'linear-gradient(to right, #ffffff, #f8fafc)',
+        }}
+      >
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="w-full sm:w-96">
             <UserSearchableSelect
               value={searchKeyword}
               onChange={setSearchKeyword}
