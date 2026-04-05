@@ -23,6 +23,7 @@ interface VoucherFormModalProps {
   fixedCampaignId?: number | null;
   campaignStartDate?: string | null;
   campaignEndDate?: string | null;
+  campaignName?: string | null;
 }
 
 const toLocalDatetimeValue = (isoStr: string | null): string => {
@@ -70,7 +71,9 @@ export default function VoucherFormModal({
   fixedCampaignId,
   campaignStartDate,
   campaignEndDate,
+  campaignName,
 }: VoucherFormModalProps): React.JSX.Element | null {
+  const openedFromCampaign = fixedCampaignId !== undefined;
   const {
     register,
     handleSubmit,
@@ -252,7 +255,13 @@ export default function VoucherFormModal({
       }}
     >
       <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        {voucher ? 'Cập nhật voucher' : 'Thêm voucher mới'}
+        {openedFromCampaign
+          ? voucher
+            ? `Cập nhật "${voucher.name}" của chiến dịch ${campaignName ?? ''}`
+            : `Thêm voucher cho chiến dịch ${campaignName ?? ''}`
+          : voucher
+            ? 'Cập nhật voucher'
+            : 'Thêm voucher mới'}
         <IconButton
           aria-label="close"
           onClick={onClose}
