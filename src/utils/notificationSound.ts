@@ -1,6 +1,7 @@
 import { Howl } from 'howler';
 import NewOrderSound from '@assets/sounds/NewOrder.m4a';
 import NewFeedbackSound from '@assets/sounds/NewFeedback.m4a';
+import { playGeminiTTS } from './geminiTTS';
 
 const feedbackHowl = new Howl({
   src: [NewFeedbackSound],
@@ -14,7 +15,10 @@ const orderHowl = new Howl({
   preload: true,
 });
 
-export const playNotificationSound = (type?: string): void => {
+export const playNotificationSound = (
+  type?: string,
+  message?: string
+): void => {
   try {
     if (type === 'NewOrder') {
       orderHowl.play();
@@ -23,5 +27,10 @@ export const playNotificationSound = (type?: string): void => {
     }
   } catch (error) {
     console.warn('Could not play notification sound:', error);
+  }
+
+  // Đọc nội dung thông báo bằng Gemini TTS
+  if (message) {
+    void playGeminiTTS(message);
   }
 };

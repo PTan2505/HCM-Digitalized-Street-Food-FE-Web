@@ -210,8 +210,8 @@ export default function CamPaignFormModal({
   const handleFormSubmit = async (data: CampaignFormData): Promise<void> => {
     const payload: CampaignFormData = {
       ...data,
-      registrationStartDate: toIsoZulu(data.registrationStartDate),
-      registrationEndDate: toIsoZulu(data.registrationEndDate),
+      registrationStartDate: toIsoZulu(data.registrationStartDate) ?? '',
+      registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
       isActive: data.isActive,
@@ -437,7 +437,7 @@ export default function CamPaignFormModal({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu đăng ký
+                  Ngày bắt đầu đăng ký <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -458,7 +458,7 @@ export default function CamPaignFormModal({
               </div>
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc đăng ký
+                  Ngày kết thúc đăng ký <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="datetime-local"

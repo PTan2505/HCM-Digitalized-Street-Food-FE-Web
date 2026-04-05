@@ -120,7 +120,7 @@ export const useNotifications = (
         if (data.type !== 'NewFeedback' && data.type !== 'NewOrder') return;
 
         console.log('📬 New notification:', data);
-        playNotificationSound(data.type);
+        playNotificationSound(data.type, data.message);
         toast.info(CustomNotification, {
           data: {
             title: data.title,
