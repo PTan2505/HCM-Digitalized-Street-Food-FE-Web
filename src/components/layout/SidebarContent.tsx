@@ -35,6 +35,8 @@ interface SidebarContentProps {
   settingsPath?: string;
   onLogout?: () => void;
   onLogoClick?: () => void;
+  onNavigateItemClick?: () => void;
+  onUserInfoClick?: () => void;
 }
 
 const SidebarContent = ({
@@ -43,6 +45,8 @@ const SidebarContent = ({
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
   onLogoClick,
+  onNavigateItemClick,
+  onUserInfoClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
@@ -66,8 +70,19 @@ const SidebarContent = ({
   };
 
   return (
-    <Box className="bg-gradient-moderator flex flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-      <Box className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4">
+    <Box className="bg-gradient-moderator flex min-h-0 flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+      <Box
+        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4"
+        sx={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        }}
+      >
         {/* Logo/Brand */}
         <Box
           onClick={onLogoClick}
@@ -160,6 +175,7 @@ const SidebarContent = ({
                           <Link
                             key={child.name}
                             to={child.href ?? '#'}
+                            onClick={() => onNavigateItemClick?.()}
                             className="block no-underline"
                           >
                             <Box
@@ -197,7 +213,10 @@ const SidebarContent = ({
               >
                 <Link
                   to={item.href ?? '#'}
-                  onClick={item.onClick}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    onNavigateItemClick?.();
+                  }}
                   className="no-underline"
                 >
                   <Box
@@ -267,7 +286,10 @@ const SidebarContent = ({
               placement="right"
               disableHoverListener={!collapsed}
             >
-              <Box className="flex items-center overflow-hidden px-3 py-2">
+              <Box
+                className="flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
+                onClick={onUserInfoClick}
+              >
                 <Avatar
                   src={userInfo?.avatarUrl ?? undefined}
                   className="shrink-0 bg-[var(--color-moderator-active-bg)] text-[var(--color-moderator-active-text)] transition-[width,height] duration-300 ease-in-out"

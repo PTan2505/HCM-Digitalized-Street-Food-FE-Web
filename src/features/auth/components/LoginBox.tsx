@@ -7,7 +7,7 @@ type Props = {
 
 export const LoginBoxBlur = (props: Props): JSX.Element => {
   return (
-    <Box className="relative flex min-h-147.5 w-full max-w-140 items-center justify-center overflow-hidden rounded-[40px] border border-white/50 bg-white/20 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl md:p-10">
+    <Box className="relative flex min-h-[420px] w-full max-w-140 items-center justify-center overflow-hidden rounded-3xl border border-white/50 bg-white/20 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl sm:min-h-[520px] sm:rounded-[40px] sm:p-8 md:p-10 lg:min-h-147.5">
       {/* Hiệu ứng bóng kính (Liquid Glass highlight) */}
       <div className="pointer-events-none absolute -top-[50%] -left-[50%] h-[200%] w-[200%] rotate-45 bg-linear-to-b from-white/30 to-transparent opacity-40 mix-blend-overlay" />
 

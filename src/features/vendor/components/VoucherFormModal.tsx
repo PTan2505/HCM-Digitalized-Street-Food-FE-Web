@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -21,6 +21,8 @@ interface VoucherFormModalProps {
   voucher: Voucher | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   fixedCampaignId?: number | null;
+  campaignStartDate?: string | null;
+  campaignEndDate?: string | null;
 }
 
 const toLocalDatetimeValue = (isoStr: string | null): string => {
@@ -66,12 +68,15 @@ export default function VoucherFormModal({
   voucher,
   status,
   fixedCampaignId,
+  campaignStartDate,
+  campaignEndDate,
 }: VoucherFormModalProps): React.JSX.Element | null {
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     control,
     formState: { errors },
   } = useForm<VoucherFormData>({
@@ -95,10 +100,67 @@ export default function VoucherFormModal({
   });
 
   const watchedType = watch('type');
-  const startDate = watch('startDate');
+  const watchedIsActive = watch('isActive');
+
+  // --- Type-switch memory: save & restore per-type values ---
+  type DiscountMemory = {
+    discountValue: number;
+    maxDiscountValue: number | null;
+  };
+  const typeMemory = useRef<{
+    AMOUNT: DiscountMemory;
+    PERCENT: DiscountMemory;
+  }>({
+    AMOUNT: { discountValue: 0, maxDiscountValue: null },
+    PERCENT: { discountValue: 0, maxDiscountValue: null },
+  });
+  const prevTypeRef = useRef<'AMOUNT' | 'PERCENT'>('AMOUNT');
+
+  useEffect(() => {
+    const prevType = prevTypeRef.current;
+    if (prevType === watchedType) return;
+
+    // Save current values for the type we're leaving
+    typeMemory.current[prevType] = {
+      discountValue: watch('discountValue') ?? 0,
+      maxDiscountValue: watch('maxDiscountValue') ?? null,
+    };
+
+    // Restore saved values for the type we're entering
+    const mem = typeMemory.current[watchedType];
+    setValue('discountValue', mem.discountValue, { shouldValidate: false });
+    setValue('maxDiscountValue', mem.maxDiscountValue, {
+      shouldValidate: false,
+    });
+
+    prevTypeRef.current = watchedType;
+  }, [watchedType]);
+
+  // Derive fixed date strings from campaign props
+  const fixedStartDate = campaignStartDate
+    ? toLocalDatetimeValue(campaignStartDate)
+    : null;
+  const fixedEndDate = campaignEndDate
+    ? toLocalDatetimeValue(campaignEndDate)
+    : null;
 
   useEffect(() => {
     if (isOpen) {
+      // Reset type-switch memory whenever the form is freshly opened
+      const initDiscount = voucher?.discountValue ?? 0;
+      const initMax = voucher?.maxDiscountValue ?? null;
+      const initType = voucher?.type ?? 'AMOUNT';
+      typeMemory.current = {
+        AMOUNT: {
+          discountValue: initType === 'AMOUNT' ? initDiscount : 0,
+          maxDiscountValue: null,
+        },
+        PERCENT: {
+          discountValue: initType === 'PERCENT' ? initDiscount : 0,
+          maxDiscountValue: initType === 'PERCENT' ? initMax : null,
+        },
+      };
+      prevTypeRef.current = initType;
       if (voucher) {
         reset({
           name: voucher.name,
@@ -110,9 +172,9 @@ export default function VoucherFormModal({
           minAmountRequired: voucher.minAmountRequired,
           quantity: voucher.quantity,
           redeemPoint: voucher.redeemPoint,
-          startDate: toLocalDatetimeValue(voucher.startDate),
-          endDate: toLocalDatetimeValue(voucher.endDate),
-          expiredDate: toLocalDatetimeValue(voucher.expiredDate),
+          startDate: fixedStartDate ?? toLocalDatetimeValue(voucher.startDate),
+          endDate: fixedEndDate ?? toLocalDatetimeValue(voucher.endDate),
+          expiredDate: null,
           isActive: voucher.isActive,
           campaignId:
             fixedCampaignId !== undefined
@@ -130,15 +192,15 @@ export default function VoucherFormModal({
           minAmountRequired: 0,
           quantity: 0,
           redeemPoint: 0,
-          startDate: '',
-          endDate: '',
+          startDate: fixedStartDate ?? '',
+          endDate: fixedEndDate ?? '',
           expiredDate: null,
           isActive: true,
           campaignId: fixedCampaignId !== undefined ? fixedCampaignId : null,
         });
       }
     }
-  }, [isOpen, voucher, reset, fixedCampaignId]);
+  }, [isOpen, voucher, reset, fixedCampaignId, fixedStartDate, fixedEndDate]);
 
   const handleFormSubmit = async (data: VoucherFormData): Promise<void> => {
     const payload: VoucherCreate = {
@@ -146,7 +208,8 @@ export default function VoucherFormModal({
       type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
-      expiredDate: toIsoZulu(data.expiredDate),
+      expiredDate: null,
+      redeemPoint: 0,
       description: data.description ?? null,
       maxDiscountValue:
         data.type === 'AMOUNT' ? null : (data.maxDiscountValue ?? null),
@@ -163,21 +226,28 @@ export default function VoucherFormModal({
         : 'border-gray-300 focus:ring-amber-200'
     }`;
 
+  const sectionLabel = (text: string): React.JSX.Element => (
+    <p
+      className="mb-3 text-xs font-bold uppercase"
+      style={{ color: '#8bcf3f' }}
+    >
+      {text}
+    </p>
+  );
+
   return (
     <Dialog
       open={isOpen}
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      scroll="body"
-      sx={{
-        '& .MuiDialog-container': {
-          overflowY: 'hidden',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         },
       }}
     >
@@ -201,310 +271,325 @@ export default function VoucherFormModal({
         <DialogContent
           dividers
           sx={{
-            overflowY: 'hidden',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
+            overflowY: 'auto',
+            maxHeight: 'calc(90vh - 150px)',
           }}
         >
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Tên voucher <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('name')}
-                  className={inputClass(!!errors.name)}
-                  placeholder="Nhập tên voucher"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.name.message}
-                  </p>
-                )}
+          <div className="flex flex-col gap-6">
+            {/* ── SECTION 1: Thông tin cơ bản ── */}
+            <div>
+              {sectionLabel('Thông tin cơ bản')}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Tên voucher <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register('name')}
+                    className={inputClass(!!errors.name)}
+                    placeholder="Nhập tên voucher"
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Mã voucher <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register('voucherCode')}
+                    className={inputClass(!!errors.voucherCode)}
+                    placeholder="VD: SUMMER2025"
+                  />
+                  {errors.voucherCode && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.voucherCode.message}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Mã voucher <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('voucherCode')}
-                  className={inputClass(!!errors.voucherCode)}
-                  placeholder="VD: SUMMER2025"
-                />
-                {errors.voucherCode && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.voucherCode.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Loại giảm giá <span className="text-red-500">*</span>
-                </label>
-                <select
-                  {...register('type')}
-                  className={inputClass(!!errors.type)}
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* ── SECTION 2: Cấu hình giảm giá ── */}
+            <div>
+              {sectionLabel('Cấu hình giảm giá')}
+              <div className="flex flex-col gap-4">
+                {/* Row: Loại + Giá trị giảm + Giảm tối đa (chỉ khi PERCENT) */}
+                <div
+                  className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+                    watchedType === 'PERCENT' ? 'lg:grid-cols-3' : ''
+                  }`}
                 >
-                  <option value="AMOUNT">Giảm theo số tiền</option>
-                  <option value="PERCENT">Giảm theo %</option>
-                </select>
-                {errors.type && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.type.message}
-                  </p>
-                )}
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Loại giảm giá <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      {...register('type')}
+                      className={inputClass(!!errors.type)}
+                    >
+                      <option value="AMOUNT">Giảm theo số tiền</option>
+                      <option value="PERCENT">Giảm theo %</option>
+                    </select>
+                    {errors.type && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.type.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Giá trị giảm <span className="text-red-500">*</span>
+                      <span className="ml-1 text-xs font-normal text-gray-500">
+                        {watchedType === 'PERCENT' ? '(%)' : '(VNĐ)'}
+                      </span>
+                    </label>
+                    <Controller
+                      control={control}
+                      name="discountValue"
+                      render={({ field }) => (
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          min={0}
+                          max={watchedType === 'PERCENT' ? 100 : undefined}
+                          step="0.01"
+                          className={inputClass(!!errors.discountValue)}
+                          value={
+                            watchedType === 'PERCENT'
+                              ? String(field.value ?? 0)
+                              : formatNumberWithDots(field.value)
+                          }
+                          onChange={(e) => {
+                            const nextValue =
+                              watchedType === 'PERCENT'
+                                ? Number(e.target.value.replace(/[^0-9]/g, ''))
+                                : parseNumberInput(e.target.value);
+                            const clamped =
+                              watchedType === 'PERCENT'
+                                ? Math.min(nextValue, 100)
+                                : nextValue;
+                            field.onChange(clamped);
+                          }}
+                        />
+                      )}
+                    />
+                    {errors.discountValue && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.discountValue.message}
+                      </p>
+                    )}
+                  </div>
+                  {watchedType === 'PERCENT' && (
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold text-gray-700">
+                        Giảm tối đa{' '}
+                        <span className="text-xs font-normal text-gray-500">
+                          (VNĐ, tùy chọn)
+                        </span>
+                      </label>
+                      <Controller
+                        control={control}
+                        name="maxDiscountValue"
+                        render={({ field }) => (
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            min={0}
+                            step="0.01"
+                            placeholder="Không giới hạn"
+                            className={inputClass(!!errors.maxDiscountValue)}
+                            value={formatNumberWithDots(field.value)}
+                            onChange={(e) => {
+                              const nextValue = parseNumberInput(
+                                e.target.value
+                              );
+                              field.onChange(
+                                e.target.value === '' ? null : nextValue
+                              );
+                            }}
+                          />
+                        )}
+                      />
+                      {errors.maxDiscountValue && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {errors.maxDiscountValue.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Row: Đơn hàng tối thiểu */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Đơn hàng tối thiểu{' '}
+                      <span className="text-xs font-normal text-gray-500">
+                        (VNĐ)
+                      </span>{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <Controller
+                      control={control}
+                      name="minAmountRequired"
+                      render={({ field }) => (
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          min={0}
+                          step="0.01"
+                          placeholder="0"
+                          className={inputClass(!!errors.minAmountRequired)}
+                          value={formatNumberWithDots(field.value)}
+                          onChange={(e) => {
+                            field.onChange(parseNumberInput(e.target.value));
+                          }}
+                        />
+                      )}
+                    />
+                    {errors.minAmountRequired && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.minAmountRequired.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Giá trị giảm <span className="text-red-500">*</span>
-                  <span className="ml-1 text-xs font-normal text-gray-500">
-                    {watchedType === 'PERCENT' ? '(%)' : '(VNĐ)'}
-                  </span>
-                </label>
-                <Controller
-                  control={control}
-                  name="discountValue"
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      max={watchedType === 'PERCENT' ? 100 : undefined}
-                      step="0.01"
-                      className={inputClass(!!errors.discountValue)}
-                      value={
-                        watchedType === 'PERCENT'
-                          ? String(field.value ?? 0)
-                          : formatNumberWithDots(field.value)
-                      }
-                      onChange={(e) => {
-                        const nextValue =
-                          watchedType === 'PERCENT'
-                            ? Number(e.target.value.replace(/[^0-9]/g, ''))
-                            : parseNumberInput(e.target.value);
-                        const clamped =
-                          watchedType === 'PERCENT'
-                            ? Math.min(nextValue, 100)
-                            : nextValue;
-                        field.onChange(clamped);
-                      }}
-                    />
-                  )}
-                />
-                {errors.discountValue && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.discountValue.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Giảm tối đa (VNĐ)
-                  <span className="ml-1 text-xs font-normal text-gray-500">
-                    {watchedType === 'AMOUNT' ? '(Không áp dụng)' : ''}
-                  </span>
-                </label>
-                <Controller
-                  control={control}
-                  name="maxDiscountValue"
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      step="0.01"
-                      disabled={watchedType === 'AMOUNT'}
-                      className={`${inputClass(!!errors.maxDiscountValue)} ${watchedType === 'AMOUNT' ? 'cursor-not-allowed bg-gray-100' : ''}`}
-                      value={
-                        watchedType === 'AMOUNT'
-                          ? ''
-                          : formatNumberWithDots(field.value)
-                      }
-                      onChange={(e) => {
-                        const nextValue = parseNumberInput(e.target.value);
-                        field.onChange(
-                          e.target.value === '' ? null : nextValue
-                        );
-                      }}
-                    />
-                  )}
-                />
-                {errors.maxDiscountValue && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.maxDiscountValue.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Đơn hàng tối thiểu (VNĐ){' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  control={control}
-                  name="minAmountRequired"
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      step="0.01"
-                      className={inputClass(!!errors.minAmountRequired)}
-                      value={formatNumberWithDots(field.value)}
-                      onChange={(e) => {
-                        field.onChange(parseNumberInput(e.target.value));
-                      }}
-                    />
-                  )}
-                />
-                {errors.minAmountRequired && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.minAmountRequired.message}
-                  </p>
-                )}
-              </div>
-            </div>
+            <hr className="border-gray-100" />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Số lượng <span className="text-red-500">*</span>
-                </label>
-                <Controller
-                  control={control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      step={1}
-                      className={inputClass(!!errors.quantity)}
-                      value={formatNumberWithDots(field.value)}
-                      onChange={(e) => {
-                        field.onChange(parseNumberInput(e.target.value));
-                      }}
-                    />
-                  )}
-                />
-                {errors.quantity && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.quantity.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Điểm đổi (Redeem Point)
-                </label>
-                <Controller
-                  control={control}
-                  name="redeemPoint"
-                  render={({ field }) => (
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      min={0}
-                      step={1}
-                      className={inputClass(!!errors.redeemPoint)}
-                      value={formatNumberWithDots(field.value)}
-                      onChange={(e) => {
-                        field.onChange(parseNumberInput(e.target.value));
-                      }}
-                    />
-                  )}
-                />
-                {errors.redeemPoint && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.redeemPoint.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('startDate')}
-                  step="60"
-                  className={inputClass(!!errors.startDate)}
-                />
-                {errors.startDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.startDate.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('endDate')}
-                  min={startDate || undefined}
-                  step="60"
-                  className={inputClass(!!errors.endDate)}
-                />
-                {errors.endDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.endDate.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày hết hạn (tùy chọn)
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('expiredDate')}
-                  step="60"
-                  className={inputClass(!!errors.expiredDate)}
-                />
-              </div>
-            </div>
-
+            {/* ── SECTION 3: Số lượng & Thời hiệu lực ── */}
             <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Mô tả
-              </label>
-              <textarea
-                {...register('description')}
-                rows={3}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                placeholder="Nhập mô tả voucher"
-              />
-              {errors.description && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.description.message}
-                </p>
-              )}
+              {sectionLabel('Số lượng & Thời hiệu lực')}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {/* Số lượng */}
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Số lượng phát hành <span className="text-red-500">*</span>
+                  </label>
+                  <Controller
+                    control={control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        min={0}
+                        step={1}
+                        placeholder="0"
+                        className={inputClass(!!errors.quantity)}
+                        value={formatNumberWithDots(field.value)}
+                        onChange={(e) => {
+                          field.onChange(parseNumberInput(e.target.value));
+                        }}
+                      />
+                    )}
+                  />
+                  {errors.quantity && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.quantity.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Thời gian hiệu lực — hiển thị dạng info badge */}
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Thời gian hiệu lực{' '}
+                    <span className="text-xs font-normal text-gray-400">
+                      (theo chiến dịch)
+                    </span>
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+                    <span className="text-xs text-gray-500">Từ</span>
+                    <span
+                      className="rounded-md px-2.5 py-1 text-sm font-semibold"
+                      style={{
+                        background: '#f3fde8',
+                        color: '#4a7a18',
+                        outline: '1px solid #b8e07a',
+                      }}
+                    >
+                      {fixedStartDate ? fixedStartDate.replace('T', ' ') : '—'}
+                    </span>
+                    <span className="text-xs text-gray-500">đến</span>
+                    <span
+                      className="rounded-md px-2.5 py-1 text-sm font-semibold"
+                      style={{
+                        background: '#f3fde8',
+                        color: '#4a7a18',
+                        outline: '1px solid #b8e07a',
+                      }}
+                    >
+                      {fixedEndDate ? fixedEndDate.replace('T', ' ') : '—'}
+                    </span>
+                  </div>
+                  {/* Hidden inputs để form validation với zod vẫn pass */}
+                  <input type="hidden" {...register('startDate')} />
+                  <input type="hidden" {...register('endDate')} />
+                </div>
+              </div>
             </div>
 
+            <hr className="border-gray-100" />
+
+            {/* ── SECTION 4: Thông tin thêm ── */}
             <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Trạng thái hoạt động
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  {...register('isActive')}
-                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
-                />
-                Kích hoạt voucher
-              </label>
+              {sectionLabel('Thông tin thêm')}
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Mô tả
+                  </label>
+                  <textarea
+                    {...register('description')}
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                    placeholder="Nhập mô tả voucher (không bắt buộc)"
+                  />
+                  {errors.description && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.description.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Toggle switch cho isActive */}
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Kích hoạt voucher
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Voucher sẽ hiển thị và có thể sử dụng ngay khi được kích
+                      hoạt
+                    </p>
+                  </div>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      type="checkbox"
+                      {...register('isActive')}
+                      className="peer sr-only"
+                    />
+                    <div
+                      className="peer h-6 w-11 rounded-full after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      style={{
+                        backgroundColor: watchedIsActive
+                          ? '#8bcf3f'
+                          : '#d1d5db',
+                        transition: 'background-color 0.2s',
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </DialogContent>

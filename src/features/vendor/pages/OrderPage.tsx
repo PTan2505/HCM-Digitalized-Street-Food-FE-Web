@@ -117,14 +117,14 @@ export default function OrderPage(): JSX.Element {
   ): Promise<void> => {
     await onDecideVendorOrder({ orderId, approve });
 
-    if (selectedBranchId === 'all') {
-      await onGetVendorOrders({ pageNumber, pageSize });
-    } else {
-      await onGetVendorBranchOrders({
-        branchId: selectedBranchId,
-        params: { pageNumber, pageSize },
-      });
-    }
+    // if (selectedBranchId === 'all') {
+    //   await onGetVendorOrders({ pageNumber, pageSize });
+    // } else {
+    //   await onGetVendorBranchOrders({
+    //     branchId: selectedBranchId,
+    //     params: { pageNumber, pageSize },
+    //   });
+    // }
   };
 
   const handleVerificationCodeChange = (

@@ -20,8 +20,6 @@ import {
 } from '@slices/campaign';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 
-const PAGE_SIZE = 10;
-
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
   const date = new Date(isoStr);
@@ -68,9 +66,11 @@ export default function CampaignPage(): JSX.Element {
     onCreateCampaign,
     onUpdateCampaign,
     onPostCampaignImage,
+    onDeleteCampaignImage,
   } = useCampaign();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
@@ -80,11 +80,11 @@ export default function CampaignPage(): JSX.Element {
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
-      await onGetCampaigns(page, PAGE_SIZE);
+      await onGetCampaigns(page, pageSize);
     } catch (err) {
       console.error('Failed to fetch campaigns', err);
     }
-  }, [onGetCampaigns, page]);
+  }, [onGetCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchCampaigns();
@@ -106,11 +106,16 @@ export default function CampaignPage(): JSX.Element {
 
   const handleSubmit = async (
     data: CampaignFormData,
-    imageFile: File | null
+    imageFile: File | null,
+    isImageRemoved?: boolean
   ): Promise<void> => {
     try {
       if (editingCampaign) {
         await onUpdateCampaign(editingCampaign.campaignId, data);
+
+        if (isImageRemoved && !imageFile) {
+          await onDeleteCampaignImage(editingCampaign.campaignId);
+        }
 
         if (imageFile) {
           const formData = new FormData();
@@ -198,14 +203,18 @@ export default function CampaignPage(): JSX.Element {
         setSelectedCampaign(row);
         setOpenVoucherModal(true);
       },
+      tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
     },
     {
       label: <EditIcon fontSize="small" />,
       onClick: (row: Campaign): void => handleOpenModal(row),
+      tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
+      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
     },
   ];
 
@@ -239,21 +248,24 @@ export default function CampaignPage(): JSX.Element {
           actions={actions}
           loading={status === 'pending'}
           emptyMessage="Chưa có chiến dịch nào"
+          noActionsMessage="Đã kết thúc"
         />
       </Box>
 
       {/* Pagination */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-        <Pagination
-          currentPage={page}
-          totalPages={Math.ceil((totalCount ?? 0) / PAGE_SIZE)}
-          totalCount={totalCount ?? 0}
-          pageSize={PAGE_SIZE}
-          hasPrevious={page > 1}
-          hasNext={page < Math.ceil((totalCount ?? 0) / PAGE_SIZE)}
-          onPageChange={setPage}
-        />
-      </Box>
+      <Pagination
+        currentPage={page}
+        totalPages={Math.ceil((totalCount ?? 0) / pageSize)}
+        totalCount={totalCount ?? 0}
+        pageSize={pageSize}
+        hasPrevious={page > 1}
+        hasNext={page < Math.ceil((totalCount ?? 0) / pageSize)}
+        onPageChange={setPage}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(1);
+        }}
+      />
 
       {/* Form Modal */}
       <CamPaignFormModal

@@ -4,8 +4,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
-  DialogActions,
   IconButton,
   Box,
   Button,
@@ -26,6 +24,7 @@ import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVouchers, selectVoucherStatus } from '@slices/voucher';
 import VoucherFormModal from '@features/vendor/components/VoucherFormModal';
 import VoucherDetailsModal from '@features/vendor/components/VoucherDetailsModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface VendorCampaignVoucherModalProps {
   isOpen: boolean;
@@ -63,7 +62,7 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -173,10 +172,10 @@ export default function VendorCampaignVoucherModal({
       label: 'Tên voucher',
       render: (_: unknown, row: Voucher): JSX.Element => (
         <Box>
-          <div className="font-semibold text-[var(--color-table-text-primary)]">
+          <div className="text-table-text-primary font-semibold">
             {row.name}
           </div>
-          <div className="text-xs text-[var(--color-table-text-secondary)]">
+          <div className="text-table-text-secondary text-xs">
             {row.voucherCode}
           </div>
         </Box>
@@ -204,7 +203,7 @@ export default function VendorCampaignVoucherModal({
         );
 
         return (
-          <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+          <span className="text-table-text-primary text-sm font-medium">
             {remainingQuantity}
           </span>
         );
@@ -214,7 +213,7 @@ export default function VendorCampaignVoucherModal({
       key: 'quantity',
       label: 'Số lượng',
       render: (value: unknown): JSX.Element => (
-        <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+        <span className="text-table-text-primary text-sm font-medium">
           {value as number}
         </span>
       ),
@@ -223,7 +222,7 @@ export default function VendorCampaignVoucherModal({
       key: 'startDate',
       label: 'Thời gian hiệu lực',
       render: (_: unknown, row: Voucher): JSX.Element => (
-        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+        <Box className="text-table-text-secondary text-sm">
           <div>Từ: {formatVNDatetime(row.startDate)}</div>
           <div>Đến: {formatVNDatetime(row.endDate)}</div>
         </Box>
@@ -284,7 +283,21 @@ export default function VendorCampaignVoucherModal({
 
   return (
     <>
-      <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        maxWidth="lg"
+        fullWidth
+        scroll="paper"
+        PaperProps={{
+          sx: {
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          },
+        }}
+      >
         <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
           Voucher của chiến dịch: {campaign.name}
           <IconButton
@@ -300,7 +313,13 @@ export default function VendorCampaignVoucherModal({
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent
+          dividers
+          sx={{
+            overflowY: 'auto',
+            maxHeight: 'calc(90vh - 150px)',
+          }}
+        >
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
@@ -331,42 +350,22 @@ export default function VendorCampaignVoucherModal({
         voucher={editingVoucher}
         status={status}
         fixedCampaignId={campaign.campaignId}
+        campaignStartDate={campaign.startDate}
+        campaignEndDate={campaign.endDate}
       />
 
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-voucher-title"
-        aria-describedby="delete-voucher-description"
-      >
-        <DialogTitle id="delete-voucher-title">
-          Xác nhận xóa voucher
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-voucher-description">
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa voucher"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa voucher &quot;{deletingVoucher?.name}
             &quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
 
       <VoucherDetailsModal
         isOpen={openDetailsModal}

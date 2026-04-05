@@ -5,8 +5,12 @@ export const CampaignSchema = z
     name: z.string().min(1, 'Tên chiến dịch không được để trống'),
     description: z.string().nullable(),
     targetSegment: z.string().nullable(),
-    registrationStartDate: z.string().nullable(),
-    registrationEndDate: z.string().nullable(),
+    registrationStartDate: z
+      .string()
+      .min(1, 'Ngày bắt đầu đăng ký không được để trống'),
+    registrationEndDate: z
+      .string()
+      .min(1, 'Ngày kết thúc đăng ký không được để trống'),
     startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
     endDate: z.string().min(1, 'Ngày kết thúc không được để trống'),
     isActive: z.boolean(),

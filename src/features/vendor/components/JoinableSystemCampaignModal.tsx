@@ -24,8 +24,6 @@ interface JoinableSystemCampaignModalProps {
   joinedCampaignIds?: number[];
 }
 
-const PAGE_SIZE = 10;
-
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
   const date = new Date(isoStr);
@@ -80,6 +78,7 @@ export default function JoinableSystemCampaignModal({
     useVendorCampaign();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [joiningCampaignIds, setJoiningCampaignIds] = useState<Set<number>>(
     new Set()
   );
@@ -96,17 +95,17 @@ export default function JoinableSystemCampaignModal({
 
   const fetchJoinableCampaigns = useCallback(async (): Promise<void> => {
     if (!isOpen) return;
-    await onGetJoinableSystemCampaigns(page, PAGE_SIZE);
-  }, [isOpen, onGetJoinableSystemCampaigns, page]);
+    await onGetJoinableSystemCampaigns(page, pageSize);
+  }, [isOpen, onGetJoinableSystemCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchJoinableCampaigns();
   }, [fetchJoinableCampaigns]);
 
   const totalPages = useMemo(() => {
-    const pages = Math.ceil((totalCount ?? 0) / PAGE_SIZE);
+    const pages = Math.ceil((totalCount ?? 0) / pageSize);
     return pages > 0 ? pages : 1;
-  }, [totalCount]);
+  }, [totalCount, pageSize]);
 
   const joinedCampaignIdSet = useMemo(
     () => new Set(joinedCampaignIds),
@@ -283,17 +282,19 @@ export default function JoinableSystemCampaignModal({
               maxHeight="none"
             />
 
-            <Box sx={{ mt: 3 }}>
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                totalCount={totalCount ?? 0}
-                pageSize={PAGE_SIZE}
-                hasPrevious={page > 1}
-                hasNext={page < totalPages}
-                onPageChange={setPage}
-              />
-            </Box>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalCount={totalCount ?? 0}
+              pageSize={pageSize}
+              hasPrevious={page > 1}
+              hasNext={page < totalPages}
+              onPageChange={setPage}
+              onPageSizeChange={(newPageSize) => {
+                setPageSize(newPageSize);
+                setPage(1);
+              }}
+            />
           </div>
 
           {/* Modal Footer */}

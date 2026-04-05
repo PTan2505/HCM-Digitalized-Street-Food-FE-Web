@@ -216,6 +216,7 @@ function RegistrationHistoryPage(): JSX.Element {
         loading={status === 'pending'}
         emptyMessage="Chưa có lịch sử đăng ký nào"
         actions={actions}
+        maxHeight="calc(100vh - 240px)"
       />
 
       <BranchDetailsModal

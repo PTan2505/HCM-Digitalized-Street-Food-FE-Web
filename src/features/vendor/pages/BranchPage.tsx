@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  Box,
-  IconButton,
-  Tooltip as MuiTooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
@@ -23,7 +14,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
-import CampaignIcon from '@mui/icons-material/Campaign';
 import { Add as AddIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -40,7 +30,7 @@ import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetail
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
-import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
+// import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
 
 const StatusBadge = ({
   label,
@@ -86,7 +76,7 @@ function BranchPage(): JSX.Element {
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
   const [managerBranch, setManagerBranch] = useState<Branch | null>(null);
-  const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
+  // const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
   const [managerNameById, setManagerNameById] = useState<
     Record<number, string>
   >({});
@@ -394,15 +384,15 @@ function BranchPage(): JSX.Element {
       },
       color: 'info' as const,
     },
-    {
-      label: <CampaignIcon fontSize="small" />,
-      menuLabel: 'Quản lý chiến dịch',
-      onClick: (branch: Branch): void => {
-        setCampaignBranch(branch);
-      },
-      color: 'warning' as const,
-      show: (branch: Branch): boolean => branch.isSubscribed,
-    },
+    // {
+    //   label: <CampaignIcon fontSize="small" />,
+    //   menuLabel: 'Quản lý chiến dịch',
+    //   onClick: (branch: Branch): void => {
+    //     setCampaignBranch(branch);
+    //   },
+    //   color: 'warning' as const,
+    //   show: (branch: Branch): boolean => branch.isSubscribed,
+    // },
     {
       label: <RateReviewIcon fontSize="small" />,
       menuLabel: 'Phản hồi về chi nhánh',
@@ -487,6 +477,7 @@ function BranchPage(): JSX.Element {
         loading={status === 'pending'}
         emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
         actions={actions}
+        maxHeight="calc(100vh - 240px)"
       />
 
       <BranchDetailsModal
@@ -551,46 +542,29 @@ function BranchPage(): JSX.Element {
         }}
       />
 
-      <BranchCampaignManagementModal
+      {/* <BranchCampaignManagementModal
         isOpen={campaignBranch !== null}
         onClose={() => setCampaignBranch(null)}
         branch={campaignBranch}
-      />
+      /> */}
 
       <OnboardingGuideModal
         open={showOnboardingGuide}
         onClose={() => setShowOnboardingGuide(false)}
       />
 
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-branch-dialog-title"
-        aria-describedby="delete-branch-dialog-description"
-      >
-        <DialogTitle id="delete-branch-dialog-title">
-          Xác nhận xóa chi nhánh
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-branch-dialog-description">
-            Bạn có chắc chắn muốn xóa chi nhánh &quot;
-            {deletingBranch?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa chi nhánh"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa chi nhánh &quot;{deletingBranch?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

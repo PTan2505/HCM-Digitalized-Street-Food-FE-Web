@@ -46,9 +46,6 @@ export default function VoucherDetailsModal({
 }: VoucherDetailsModalProps): JSX.Element | null {
   if (!isOpen || !voucher) return null;
 
-  const campaignName =
-    campaign?.name ?? (voucher.campaignId ? `ID: ${voucher.campaignId}` : '-');
-
   const DetailItem = ({
     label,
     value,
@@ -174,7 +171,29 @@ export default function VoucherDetailsModal({
             <DetailItem label="Số lượng đã dùng" value={voucher.usedQuantity} />
           </div>
           <div>
-            <DetailItem label="Chiến dịch" value={campaignName} />
+            <DetailItem
+              label="Phân loại"
+              value={
+                voucher.campaignId ? (
+                  <Chip
+                    label={`Thuộc về chiến dịch: ${
+                      campaign?.name ?? `ID ${voucher.campaignId}`
+                    }`}
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                    sx={{ fontWeight: 'bold' }}
+                  />
+                ) : (
+                  <Chip
+                    label="Thuộc về MarketPlace"
+                    size="small"
+                    color="secondary"
+                    sx={{ fontWeight: 'bold' }}
+                  />
+                )
+              }
+            />
           </div>
 
           <div>

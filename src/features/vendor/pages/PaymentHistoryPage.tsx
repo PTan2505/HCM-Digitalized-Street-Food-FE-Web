@@ -81,7 +81,7 @@ function PaymentHistoryPage(): JSX.Element {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box className="max-w-[220px] overflow-hidden text-sm text-ellipsis whitespace-nowrap">
+        <Box className="max-w-[400px] overflow-hidden text-sm text-ellipsis whitespace-nowrap">
           {typeof value === 'string' ? value : '-'}
         </Box>
       ),
@@ -158,7 +158,7 @@ function PaymentHistoryPage(): JSX.Element {
         rowKey="id"
         loading={status === 'pending'}
         emptyMessage="Chưa có giao dịch nào"
-        maxHeight="none"
+        maxHeight="calc(100vh - 240px)"
       />
     </div>
   );

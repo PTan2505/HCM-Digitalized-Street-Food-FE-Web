@@ -4,14 +4,7 @@ import { type WorkSchedule, type DayOff } from '../types/workSchedule';
 import AddressSection from './AddressSection';
 import OperatingInfoSection from './OperatingInfoSection';
 import DocumentsSection from './DocumentsSection';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface BranchSectionProps {
   branch: Branch;
@@ -127,35 +120,18 @@ export default function BranchSection({
       />
 
       {/* Dialog xác nhận xóa */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleDeleteCancel}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa chi nhánh
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+        onConfirm={handleDeleteConfirm}
+        title="Xác nhận xóa chi nhánh"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa chi nhánh này không? Hành động này không
             thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="inherit">
-            Hủy
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
     </div>
   );
 }

@@ -140,13 +140,14 @@ export const deleteCampaignImage = createAppAsyncThunk(
 export const getVendorCampaigns = createAppAsyncThunk(
   'campaign/getVendorCampaigns',
   async (
-    payload: { pageNumber: number; pageSize: number },
+    payload: { pageNumber: number; pageSize: number; vendorId?: number },
     { rejectWithValue }
   ) => {
     try {
       const response = await axiosApi.vendorCampaignApi.getVendorCampaigns(
         payload.pageNumber,
-        payload.pageSize
+        payload.pageSize,
+        payload.vendorId
       );
       return response;
     } catch (error) {
@@ -270,6 +271,62 @@ export const getSystemCampaignDetails = createAppAsyncThunk(
     try {
       const response =
         await axiosApi.vendorCampaignApi.getSystemCampaignDetails(campaignId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getBranchesOfACampaign = createAppAsyncThunk(
+  'campaign/getBranchesOfACampaign',
+  async (
+    payload: { campaignId: number; pageNumber?: number; pageSize?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.vendorCampaignApi.getBranchesOfACampaign(
+        payload.campaignId,
+        payload.pageNumber,
+        payload.pageSize
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const addBranchesToACampaign = createAppAsyncThunk(
+  'campaign/addBranchesToACampaign',
+  async (
+    payload: { campaignId: number; branchIds: number[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.vendorCampaignApi.addBranchesToACampaign(
+        payload.campaignId,
+        payload.branchIds
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const removeBranchesFromACampaign = createAppAsyncThunk(
+  'campaign/removeBranchesFromACampaign',
+  async (
+    payload: { campaignId: number; branchIds: number[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response =
+        await axiosApi.vendorCampaignApi.removeBranchesFromACampaign(
+          payload.campaignId,
+          payload.branchIds
+        );
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -402,6 +459,48 @@ export const campaignSlice = createSlice({
           state.branchTotalCount += 1;
         }
       })
+      .addCase(addBranchesToACampaign.fulfilled, (state, action) => {
+        const payload = action.payload;
+        if (payload) {
+          const index = state.vendorCampaigns.findIndex(
+            (c) => c.campaignId === payload.campaignId
+          );
+          if (index !== -1) {
+            const campaign = state.vendorCampaigns[index];
+            campaign.branchIds = payload.branchIds;
+
+            if (payload.branchIds.length === 1) {
+              campaign.createdByBranchId = payload.branchIds[0];
+            } else {
+              campaign.createdByBranchId = null;
+              if (!campaign.createdByBranchId && !campaign.createdByVendorId) {
+                campaign.createdByVendorId = -1;
+              }
+            }
+          }
+        }
+      })
+      .addCase(removeBranchesFromACampaign.fulfilled, (state, action) => {
+        const payload = action.payload;
+        if (payload) {
+          const index = state.vendorCampaigns.findIndex(
+            (c) => c.campaignId === payload.campaignId
+          );
+          if (index !== -1) {
+            const campaign = state.vendorCampaigns[index];
+            campaign.branchIds = payload.branchIds;
+
+            if (payload.branchIds.length === 1) {
+              campaign.createdByBranchId = payload.branchIds[0];
+            } else {
+              campaign.createdByBranchId = null;
+              if (!campaign.createdByBranchId && !campaign.createdByVendorId) {
+                campaign.createdByVendorId = -1;
+              }
+            }
+          }
+        }
+      })
       .addMatcher(
         isPending(
           getAllCampaigns,
@@ -417,7 +516,10 @@ export const campaignSlice = createSlice({
           getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
-          deleteCampaignImage
+          deleteCampaignImage,
+          getBranchesOfACampaign,
+          addBranchesToACampaign,
+          removeBranchesFromACampaign
         ),
         (state) => {
           state.status = 'pending';
@@ -438,7 +540,10 @@ export const campaignSlice = createSlice({
           getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
-          deleteCampaignImage
+          deleteCampaignImage,
+          getBranchesOfACampaign,
+          addBranchesToACampaign,
+          removeBranchesFromACampaign
         ),
         (state) => {
           state.status = 'succeeded';
@@ -460,7 +565,10 @@ export const campaignSlice = createSlice({
           getSystemCampaignDetails,
           getCampaignImage,
           postCampaignImage,
-          deleteCampaignImage
+          deleteCampaignImage,
+          getBranchesOfACampaign,
+          addBranchesToACampaign,
+          removeBranchesFromACampaign
         ),
         (state, action) => {
           state.status = 'failed';

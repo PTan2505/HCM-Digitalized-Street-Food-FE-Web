@@ -3,9 +3,11 @@ import type {
   CampaignDetailsResponse,
   VendorCampaignCreate,
   VendorCampaignUpdate,
-  VendorCampaignListResponse,
   JoinSystemCampaignResponse,
   JoinSystemCampaignRequest,
+  CampaignBranchesResponse,
+  GetBranchesOfCampaignResponse,
+  VendorCampaignListResponse,
 } from '@features/vendor/types/campaign';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -19,11 +21,12 @@ export class VendorCampaignApi {
 
   async getVendorCampaigns(
     pageNumber: number,
-    pageSize: number
+    pageSize: number,
+    vendorId?: number
   ): Promise<VendorCampaignListResponse> {
     const res = await this.apiClient.get<VendorCampaignListResponse>({
       url: apiUrl.campaign.GetOrPostVendorCampaign,
-      params: { pageNumber, pageSize },
+      params: { pageNumber, pageSize, vendorId },
     });
     return res.data;
   }
@@ -106,6 +109,46 @@ export class VendorCampaignApi {
   ): Promise<CampaignDetailsResponse> {
     const res = await this.apiClient.get<CampaignDetailsResponse>({
       url: apiUrl.campaign.GetDetailsOfASystemCampaign(campaignId),
+    });
+    return res.data;
+  }
+
+  async getBranchesOfACampaign(
+    campaignId: number,
+    pageNumber: number = 1,
+    pageSize: number = 100
+  ): Promise<GetBranchesOfCampaignResponse> {
+    const res = await this.apiClient.get<GetBranchesOfCampaignResponse>({
+      url: apiUrl.campaign.GetBranchesOfACampaign(campaignId),
+      params: { pageNumber, pageSize },
+    });
+    return res.data;
+  }
+
+  async addBranchesToACampaign(
+    campaignId: number,
+    branchIds: number[]
+  ): Promise<CampaignBranchesResponse> {
+    const res = await this.apiClient.post<
+      CampaignBranchesResponse,
+      { branchIds: number[] }
+    >({
+      url: apiUrl.campaign.AddBranchesToACampaign(campaignId),
+      data: { branchIds },
+    });
+    return res.data;
+  }
+
+  async removeBranchesFromACampaign(
+    campaignId: number,
+    branchIds: number[]
+  ): Promise<CampaignBranchesResponse> {
+    const res = await this.apiClient.post<
+      CampaignBranchesResponse,
+      { branchIds: number[] }
+    >({
+      url: apiUrl.campaign.RemoveBranchesFromACampaign(campaignId),
+      data: { branchIds },
     });
     return res.data;
   }

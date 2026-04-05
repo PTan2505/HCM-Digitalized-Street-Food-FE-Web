@@ -13,22 +13,32 @@ import {
   LocalDining as SparklesIcon,
   Group as UserGroupIcon,
   Person as UserCircleIcon,
+  People as PeopleIcon,
   Menu as Bars3Icon,
   Close as XMarkIcon,
   Loyalty as ShoppingBagIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
   Campaign as CampaignIcon,
+  Assignment as AssignmentIcon,
   LocalOffer as LocalOfferIcon,
+  Settings as SettingsIcon,
+  Verified as VerifiedIcon,
 } from '@mui/icons-material';
-import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
+import { useAppSelector } from '@hooks/reduxHooks';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
+  {
+    name: 'Xác minh người bán',
+    href: '/admin/verification',
+    icon: VerifiedIcon,
+  },
   {
     name: 'Quản lý cửa hàng',
     href: '/admin/vendors',
@@ -38,6 +48,48 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý danh mục',
     href: '/admin/category',
     icon: RectangleStackIcon,
+  },
+  {
+    name: 'Quản lý khẩu vị',
+    href: '/admin/taste',
+    icon: SparklesIcon,
+  },
+  {
+    name: 'Quản lý người dùng',
+    icon: PeopleIcon,
+    children: [
+      {
+        name: 'Khách hàng',
+        href: '/admin/users/customer',
+        icon: UserCircleIcon,
+      },
+      {
+        name: 'Đối tác',
+        href: '/admin/users/vendor',
+        icon: BuildingStorefrontIcon,
+      },
+      {
+        name: 'Hệ thống',
+        href: '/admin/users/system',
+        icon: UserGroupIcon,
+      },
+    ],
+  },
+  {
+    name: 'Chế độ ăn',
+    icon: UserGroupIcon,
+    children: [
+      {
+        name: 'Quản lý chế độ ăn',
+        href: '/admin/user-dietary',
+        icon: UserGroupIcon,
+      },
+      {
+        name: 'Chế độ ăn của người dùng',
+        href: '/admin/users-with-dietary',
+        icon: UserCircleIcon,
+      },
+    ],
   },
   {
     name: 'Huy hiệu',
@@ -56,19 +108,30 @@ const navigation: NavigationItem[] = [
     ],
   },
   {
-    name: 'Quản lý khẩu vị',
-    href: '/admin/taste',
-    icon: SparklesIcon,
-  },
-  {
     name: 'Quản lý tag phản hồi',
     href: '/admin/feedback-tag',
     icon: ChatBubbleOutlineIcon,
   },
   {
     name: 'Quản lý chiến dịch',
-    href: '/admin/campaign',
     icon: CampaignIcon,
+    children: [
+      {
+        name: 'Từ hệ thống',
+        href: '/admin/campaign',
+        icon: CampaignIcon,
+      },
+      {
+        name: 'Từ cửa hàng',
+        href: '/admin/campaign/vendor',
+        icon: BuildingStorefrontIcon,
+      },
+    ],
+  },
+  {
+    name: 'Quản lý nhiệm vụ',
+    href: '/admin/quest',
+    icon: AssignmentIcon,
   },
   {
     name: 'Quản lý voucher',
@@ -76,26 +139,16 @@ const navigation: NavigationItem[] = [
     icon: LocalOfferIcon,
   },
   {
-    name: 'Chế độ ăn',
-    icon: UserGroupIcon,
-    children: [
-      {
-        name: 'Quản lý chế độ ăn',
-        href: '/admin/user-dietary',
-        icon: UserGroupIcon,
-      },
-      {
-        name: 'Chế độ ăn của người dùng',
-        href: '/admin/users-with-dietary',
-        icon: UserCircleIcon,
-      },
-    ],
+    name: 'Cấu hình hệ thống',
+    href: '/admin/setting',
+    icon: SettingsIcon,
   },
 ];
 
 function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -135,14 +188,14 @@ function AdminLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
@@ -152,6 +205,8 @@ function AdminLayout(): JSX.Element {
             settingsPath="/admin/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -169,6 +224,7 @@ function AdminLayout(): JSX.Element {
           settingsPath="/admin/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -220,11 +276,15 @@ function AdminLayout(): JSX.Element {
 
         {/* Page content */}
         <Box component="main" className="py-6">
-          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <Box className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />
           </Box>
         </Box>
       </Box>
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </Box>
   );
 }
