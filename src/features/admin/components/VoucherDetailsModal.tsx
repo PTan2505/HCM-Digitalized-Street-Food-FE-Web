@@ -58,10 +58,6 @@ export default function VoucherDetailsModal({
 
   if (!isOpen || !voucher) return null;
 
-  const campaignName =
-    campaigns.find((c) => c.campaignId === voucher.campaignId)?.name ??
-    (voucher.campaignId ? `ID: ${voucher.campaignId}` : '-');
-
   const DetailItem = ({
     label,
     value,
@@ -178,7 +174,32 @@ export default function VoucherDetailsModal({
             <DetailItem label="Số lượng phát hành" value={voucher.quantity} />
           </div>
           <div>
-            <DetailItem label="Chiến dịch" value={campaignName} />
+            <DetailItem
+              label="Phân loại"
+              value={
+                voucher.campaignId ? (
+                  <Chip
+                    label={`Thuộc về chiến dịch: ${
+                      campaigns.find((c) => c.campaignId === voucher.campaignId)
+                        ?.name ?? `ID ${voucher.campaignId}`
+                    }`}
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                    sx={{ fontWeight: 'bold' }}
+                  />
+                ) : (
+                  <Chip
+                    label="Thuộc về MarketPlace"
+                    size="small"
+                    color="secondary"
+                    sx={{
+                      fontWeight: 'bold',
+                    }}
+                  />
+                )
+              }
+            />
           </div>
 
           <div>
