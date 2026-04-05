@@ -137,7 +137,7 @@ export default function QuestPage(): JSX.Element {
 
       if (imageFile && savedQuest.questId) {
         const formData = new FormData();
-        formData.append('image', imageFile);
+        formData.append('imageFile', imageFile);
         await onPostQuestImage(savedQuest.questId, formData);
       }
 
