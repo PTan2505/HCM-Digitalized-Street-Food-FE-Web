@@ -94,7 +94,6 @@ export default function CamPaignFormModal({
   campaign,
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
-  const isEditMode = campaign !== null;
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
@@ -249,6 +248,24 @@ export default function CamPaignFormModal({
   const displayImageUrl =
     imagePreviewUrl ?? (isImageRemoved ? null : existingImageUrl);
 
+  const inputClass = (hasError: boolean): string =>
+    `w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+      hasError
+        ? 'border-red-500 focus:ring-red-200'
+        : 'border-gray-300 focus:ring-amber-200'
+    }`;
+
+  const sectionLabel = (text: string): React.JSX.Element => (
+    <p
+      className="mb-3 text-xs font-bold uppercase"
+      style={{ color: '#8bcf3f' }}
+    >
+      {text}
+    </p>
+  );
+
+  const watchedIsActive = watch('isActive');
+
   return (
     <Dialog
       open={isOpen}
@@ -265,20 +282,8 @@ export default function CamPaignFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
+      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
         {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
-        {/* <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={(theme) => ({
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          <CloseIcon />
-        </IconButton> */}
       </DialogTitle>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
@@ -288,262 +293,263 @@ export default function CamPaignFormModal({
             maxHeight: 'calc(90vh - 150px)',
           }}
         >
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Tên chiến dịch <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('name')}
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.name
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                  placeholder="Nhập tên chiến dịch"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Phân khúc mục tiêu
-                </label>
-                <input
-                  {...register('targetSegment')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                  placeholder="Nhập phân khúc (ví dụ: Học sinh, Sinh viên)"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Trạng thái hoạt động
-                </label>
-                <label className="inline-flex h-10.5 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700">
+          <div className="flex flex-col gap-6">
+            {/* ── SECTION 1: Thông tin cơ bản ── */}
+            <div>
+              {sectionLabel('Thông tin cơ bản')}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Tên chiến dịch <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="checkbox"
-                    {...register('isActive')}
-                    className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
+                    {...register('name')}
+                    className={inputClass(!!errors.name)}
+                    placeholder="Nhập tên chiến dịch"
                   />
-                  Kích hoạt chiến dịch
-                </label>
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Phân khúc mục tiêu
+                  </label>
+                  <input
+                    {...register('targetSegment')}
+                    className={inputClass(false)}
+                    placeholder="VD: Học sinh, Sinh viên"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Mô tả
-              </label>
-              <textarea
-                {...register('description')}
-                rows={3}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                placeholder="Nhập mô tả chiến dịch"
-              />
-            </div>
+            <hr className="border-gray-100" />
 
+            {/* ── SECTION 2: Nội dung & Hình ảnh ── */}
             <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Ảnh chiến dịch
-              </label>
-              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                {displayImageUrl ? (
-                  <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-300 bg-white shadow-sm transition-colors">
-                    <img
-                      src={displayImageUrl}
-                      alt="Campaign"
-                      className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
+              {sectionLabel('Nội dung & Hình ảnh')}
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Mô tả
+                  </label>
+                  <textarea
+                    {...register('description')}
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                    placeholder="Nhập mô tả chiến dịch"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Ảnh banner chiến dịch
+                  </label>
+                  <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    {displayImageUrl ? (
+                      <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition-colors">
+                        <img
+                          src={displayImageUrl}
+                          alt="Campaign"
+                          className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
+                        />
+
+                        <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
+                          <Tooltip title="Đổi ảnh khác" arrow>
+                            <IconButton
+                              onClick={() => fileInputRef.current?.click()}
+                              sx={{
+                                bgcolor: 'rgba(255,255,255,0.95)',
+                                color: 'var(--color-primary-600)',
+                                '&:hover': {
+                                  bgcolor: 'white',
+                                  transform: 'scale(1.1)',
+                                },
+                                transition: 'all 0.2s',
+                                width: 44,
+                                height: 44,
+                              }}
+                            >
+                              <AddPhotoAlternateIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Xoá ảnh hiện tại" arrow>
+                            <IconButton
+                              onClick={handleClearSelectedImage}
+                              sx={{
+                                bgcolor: 'rgba(255,255,255,0.95)',
+                                color: '#ef4444',
+                                '&:hover': {
+                                  bgcolor: '#fee2e2',
+                                  color: '#b91c1c',
+                                  transform: 'scale(1.1)',
+                                },
+                                transition: 'all 0.2s',
+                                width: 44,
+                                height: 44,
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <div className="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors group-hover:text-amber-600">
+                          <AddPhotoAlternateIcon fontSize="medium" />
+                        </div>
+                        <div className="mt-3 text-center">
+                          <p className="text-sm font-semibold text-gray-700">
+                            Nhấn để tải ảnh lên
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Kích thước khuyên dùng: 1200x675 (16:9)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-center text-xs text-gray-500">
+                      Định dạng hỗ trợ: JPG, PNG, WEBP.
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
                     />
-
-                    {/* Actions Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
-                      <Tooltip title="Đổi ảnh khác" arrow>
-                        <IconButton
-                          onClick={() => fileInputRef.current?.click()}
-                          sx={{
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                            color: 'var(--color-primary-600)',
-                            '&:hover': {
-                              bgcolor: 'white',
-                              transform: 'scale(1.1)',
-                            },
-                            transition: 'all 0.2s',
-                            width: 44,
-                            height: 44,
-                          }}
-                        >
-                          <AddPhotoAlternateIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Xoá ảnh hiện tại" arrow>
-                        <IconButton
-                          onClick={handleClearSelectedImage}
-                          sx={{
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                            color: '#ef4444',
-                            '&:hover': {
-                              bgcolor: '#fee2e2',
-                              color: '#b91c1c',
-                              transform: 'scale(1.1)',
-                            },
-                            transition: 'all 0.2s',
-                            width: 44,
-                            height: 44,
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
                   </div>
-                ) : (
-                  <div
-                    className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="group-hover:text-primary-600 flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors">
-                      <AddPhotoAlternateIcon fontSize="medium" />
-                    </div>
-                    <div className="mt-3 text-center">
-                      <p className="text-sm font-semibold text-gray-700">
-                        Nhấn để tải ảnh lên
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Kích thước khuyên dùng: 1200x675 (16:9)
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-center text-xs text-gray-500">
-                  Định dạng hỗ trợ: JPG, PNG, WEBP.
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu đăng ký <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('registrationStartDate')}
-                  min={isEditMode ? undefined : getTodayMinVN()}
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.registrationStartDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.registrationStartDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.registrationStartDate.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc đăng ký <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('registrationEndDate')}
-                  disabled={!isEditMode && !registrationStartDate}
-                  min={
-                    isEditMode
-                      ? undefined
-                      : (registrationStartDate ?? undefined)
-                  }
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.registrationEndDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : !isEditMode && !registrationStartDate
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
-                        : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.registrationEndDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.registrationEndDate.message}
-                  </p>
-                )}
-              </div>
+            <hr className="border-gray-100" />
 
-              <div className="hidden xl:block" />
+            {/* ── SECTION 3: Thời gian đăng ký ── */}
+            <div>
+              {sectionLabel('Thời gian đăng ký')}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Bắt đầu đăng ký <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    {...register('registrationStartDate')}
+                    min={getTodayMinVN()}
+                    className={inputClass(!!errors.registrationStartDate)}
+                  />
+                  {errors.registrationStartDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.registrationStartDate.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Kết thúc đăng ký <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    {...register('registrationEndDate')}
+                    disabled={!registrationStartDate}
+                    min={registrationStartDate || getTodayMinVN()}
+                    className={inputClass(!!errors.registrationEndDate)}
+                  />
+                  {errors.registrationEndDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.registrationEndDate.message}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu chiến dịch{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('startDate')}
-                  disabled={!isEditMode && !registrationEndDate}
-                  min={
-                    isEditMode ? undefined : (registrationEndDate ?? undefined)
-                  }
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.startDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : !isEditMode && !registrationEndDate
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
-                        : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.startDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.startDate.message}
-                  </p>
-                )}
-              </div>
+            <hr className="border-gray-100" />
 
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc chiến dịch{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('endDate')}
-                  disabled={!isEditMode && !startDate}
-                  min={isEditMode ? undefined : (startDate ?? undefined)}
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.endDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : !isEditMode && !startDate
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
-                        : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.endDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.endDate.message}
-                  </p>
-                )}
-              </div>
+            {/* ── SECTION 4: Thời gian chiến dịch ── */}
+            <div>
+              {sectionLabel('Thời gian chiến dịch')}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Bắt đầu chiến dịch <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    {...register('startDate')}
+                    disabled={!registrationEndDate}
+                    min={registrationEndDate || getTodayMinVN()}
+                    className={inputClass(!!errors.startDate)}
+                  />
+                  {errors.startDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.startDate.message}
+                    </p>
+                  )}
+                </div>
 
-              <div className="hidden xl:block" />
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Kết thúc chiến dịch <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    {...register('endDate')}
+                    disabled={!startDate}
+                    min={startDate || getTodayMinVN()}
+                    className={inputClass(!!errors.endDate)}
+                  />
+                  {errors.endDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.endDate.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* ── SECTION 5: Thiết lập khác ── */}
+            <div>
+              {sectionLabel('Thiết lập khác')}
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Trạng thái hoạt động
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Bật để cho phép chiến dịch hoạt động trên hệ thống
+                    </p>
+                  </div>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      type="checkbox"
+                      {...register('isActive')}
+                      className="peer sr-only"
+                    />
+                    <div
+                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      style={{
+                        backgroundColor: watchedIsActive
+                          ? '#8bcf3f'
+                          : '#d1d5db',
+                        transition: 'background-color 0.2s',
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </DialogContent>

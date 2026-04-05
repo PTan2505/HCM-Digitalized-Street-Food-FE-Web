@@ -1,24 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { JSX } from 'react';
-import { Box, Chip } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   ConfirmationNumber as VoucherIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
+import VoucherFormModal from '@features/admin/components/VoucherFormModal';
 import type { Campaign } from '@features/admin/types/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
+import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectCampaigns,
   selectCampaignStatus,
   selectCampaignTotalCount,
 } from '@slices/campaign';
+import { selectVoucherStatus } from '@slices/voucher';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import type { VoucherCreate } from '@custom-types/voucher';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -57,9 +70,19 @@ const StatusBadge = ({
   );
 };
 
+/**
+ * "Post-create" flow states:
+ *  idle          → no post-create flow running
+ *  prompt        → asking "Tạo voucher ngay?" dialog
+ *  creating      → VoucherFormModal open
+ *  done_one      → voucher created, asking "Tạo thêm / Thôi"
+ */
+type PostCreateStep = 'idle' | 'prompt' | 'creating' | 'done_one';
+
 export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
   const status = useAppSelector(selectCampaignStatus);
+  const voucherStatus = useAppSelector(selectVoucherStatus);
   const totalCount = useAppSelector(selectCampaignTotalCount);
   const {
     onGetCampaigns,
@@ -68,6 +91,7 @@ export default function CampaignPage(): JSX.Element {
     onPostCampaignImage,
     onDeleteCampaignImage,
   } = useCampaign();
+  const { onCreateVoucher } = useVoucher();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -77,6 +101,11 @@ export default function CampaignPage(): JSX.Element {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
+
+  // Post-create flow
+  const [postCreateStep, setPostCreateStep] = useState<PostCreateStep>('idle');
+  const newCampaignRef = useRef<Campaign | null>(null);
+  const voucherCreatedCountRef = useRef(0);
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -111,6 +140,7 @@ export default function CampaignPage(): JSX.Element {
   ): Promise<void> => {
     try {
       if (editingCampaign) {
+        // ── Edit flow (unchanged) ──
         await onUpdateCampaign(editingCampaign.campaignId, data);
 
         if (isImageRemoved && !imageFile) {
@@ -122,7 +152,10 @@ export default function CampaignPage(): JSX.Element {
           formData.append('image', imageFile);
           await onPostCampaignImage(editingCampaign.campaignId, formData);
         }
+
+        handleCloseModal();
       } else {
+        // ── Create flow → trigger post-create ──
         const createdCampaign = await onCreateCampaign(data);
 
         if (imageFile) {
@@ -130,20 +163,53 @@ export default function CampaignPage(): JSX.Element {
           formData.append('image', imageFile);
           await onPostCampaignImage(createdCampaign.campaignId, formData);
         }
+
+        // Close campaign form, start post-create prompt
+        handleCloseModal();
+        newCampaignRef.current = createdCampaign;
+        voucherCreatedCountRef.current = 0;
+        setPostCreateStep('prompt');
       }
-      handleCloseModal();
-      // void fetchCampaigns();
     } catch (err) {
       console.error('Failed to save campaign', err);
     }
   };
 
+  // ── Post-create: user chooses to create a voucher ──
+  const handleStartVoucherCreation = (): void => {
+    setPostCreateStep('creating');
+  };
+
+  // ── Post-create: user skips voucher creation ──
+  const handleSkipVoucher = (): void => {
+    newCampaignRef.current = null;
+    voucherCreatedCountRef.current = 0;
+    setPostCreateStep('idle');
+  };
+
+  // ── Post-create: VoucherFormModal submit ──
+  const handleVoucherSubmit = async (data: VoucherCreate): Promise<void> => {
+    await onCreateVoucher(data);
+    voucherCreatedCountRef.current += 1;
+    setPostCreateStep('done_one');
+  };
+
+  // ── Post-create: create another voucher → reset form by toggling step ──
+  const handleCreateAnother = (): void => {
+    // Go back to 'prompt' for a frame so VoucherFormModal unmounts+remounts (fresh form)
+    setPostCreateStep('prompt');
+    // Immediately go to 'creating' after paint
+    window.setTimeout(() => setPostCreateStep('creating'), 0);
+  };
+
+  // ── Post-create: done ──
+  const handleDoneVoucher = (): void => {
+    newCampaignRef.current = null;
+    voucherCreatedCountRef.current = 0;
+    setPostCreateStep('idle');
+  };
+
   const columns = [
-    // {
-    //   key: 'campaignId',
-    //   label: 'ID',
-    //   style: { width: '60px' },
-    // },
     {
       key: 'name',
       label: 'Tên chiến dịch',
@@ -206,6 +272,7 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
     },
     {
       label: <EditIcon fontSize="small" />,
@@ -213,8 +280,11 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
+      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
     },
   ];
+
+  const newCampaign = newCampaignRef.current;
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
@@ -246,6 +316,7 @@ export default function CampaignPage(): JSX.Element {
           actions={actions}
           loading={status === 'pending'}
           emptyMessage="Chưa có chiến dịch nào"
+          noActionsMessage="Đã kết thúc"
         />
       </Box>
 
@@ -264,7 +335,7 @@ export default function CampaignPage(): JSX.Element {
         }}
       />
 
-      {/* Form Modal */}
+      {/* Form Modal (create / edit) */}
       <CamPaignFormModal
         isOpen={openModal}
         onClose={handleCloseModal}
@@ -273,12 +344,143 @@ export default function CampaignPage(): JSX.Element {
         status={status}
       />
 
-      {/* Campaign Voucher Modal */}
+      {/* Campaign Voucher Modal (from table row action) */}
       <CampaignVoucherModal
         isOpen={openVoucherModal}
         onClose={() => setOpenVoucherModal(false)}
         campaign={selectedCampaign}
       />
+
+      {/* ══════════════════════════════════════════════════════
+          POST-CREATE FLOW — Step 1: Prompt
+          "Bạn muốn tạo voucher cho chiến dịch vừa tạo không?"
+         ══════════════════════════════════════════════════════ */}
+      <Dialog
+        open={postCreateStep === 'prompt'}
+        onClose={handleSkipVoucher}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
+      >
+        {/* Green accent header */}
+        <div
+          className="flex items-center gap-3 px-6 py-4"
+          style={{
+            background: 'linear-gradient(135deg, #8bcf3f 0%, #6aaa28 100%)',
+          }}
+        >
+          <CheckCircleIcon sx={{ color: 'white', fontSize: 28 }} />
+          <div>
+            <p className="text-xs font-semibold text-white/70">
+              Chiến dịch đã được tạo thành công!
+            </p>
+            <p className="text-base font-bold text-white">
+              {newCampaign?.name ?? ''}
+            </p>
+          </div>
+        </div>
+
+        <DialogContent sx={{ pt: 3 }}>
+          <p className="text-sm text-gray-600">
+            Bạn có muốn tạo{' '}
+            <span className="font-semibold text-gray-800">voucher</span> cho
+            chiến dịch này ngay bây giờ không?
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
+            Bạn cũng có thể thực hiện sau từ danh sách chiến dịch.
+          </p>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button
+            onClick={handleSkipVoucher}
+            color="inherit"
+            variant="outlined"
+          >
+            Tạo voucher sau
+          </Button>
+          <Button
+            onClick={handleStartVoucherCreation}
+            variant="contained"
+            color="primary"
+          >
+            Tạo voucher ngay
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ══════════════════════════════════════════════════════
+          POST-CREATE FLOW — Step 2: VoucherFormModal
+         ══════════════════════════════════════════════════════ */}
+      {postCreateStep === 'creating' && newCampaign !== null && (
+        <VoucherFormModal
+          isOpen
+          onClose={handleSkipVoucher}
+          onSubmit={handleVoucherSubmit}
+          voucher={null}
+          status={voucherStatus}
+          fixedCampaignId={newCampaign.campaignId}
+          campaignStartDate={newCampaign.startDate}
+          campaignEndDate={newCampaign.endDate}
+          campaignName={newCampaign.name}
+        />
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+          POST-CREATE FLOW — Step 3: "Tạo thêm / Thôi"
+         ══════════════════════════════════════════════════════ */}
+      <Dialog
+        open={postCreateStep === 'done_one'}
+        onClose={handleDoneVoucher}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
+      >
+        <div
+          className="flex items-center gap-3 px-6 py-4"
+          style={{
+            background: 'linear-gradient(135deg, #8bcf3f 0%, #6aaa28 100%)',
+          }}
+        >
+          <CheckCircleIcon sx={{ color: 'white', fontSize: 28 }} />
+          <div>
+            <p className="text-xs font-semibold text-white/70">
+              Voucher đã được tạo!
+            </p>
+            <p className="text-base font-bold text-white">
+              {newCampaign?.name ?? ''}
+            </p>
+          </div>
+        </div>
+
+        <DialogContent sx={{ pt: 3 }}>
+          <p className="text-sm text-gray-600">
+            Đã tạo{' '}
+            <span className="font-semibold text-gray-800">
+              {voucherCreatedCountRef.current}
+            </span>{' '}
+            voucher. Bạn muốn tiếp tục tạo thêm voucher cho chiến dịch này
+            không?
+          </p>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button
+            onClick={handleDoneVoucher}
+            color="inherit"
+            variant="outlined"
+          >
+            Thôi, xong rồi
+          </Button>
+          <Button
+            onClick={handleCreateAnother}
+            variant="contained"
+            color="primary"
+          >
+            Tiếp tục tạo voucher
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
