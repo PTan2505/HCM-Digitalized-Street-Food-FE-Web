@@ -14,6 +14,7 @@ import {
   isFulfilled,
   isPending,
   isRejected,
+  type PayloadAction,
 } from '@reduxjs/toolkit';
 
 type PaginationState = {
@@ -190,6 +191,14 @@ export const orderSlice = createSlice({
   initialState,
   reducers: {
     resetOrderState: () => initialState,
+    addNewOrder: (state, action: PayloadAction<OrderDetailsResponse>) => {
+      const exists = state.orders.some(
+        (o) => o.orderId === action.payload.orderId
+      );
+      if (!exists) {
+        state.orders.unshift(action.payload);
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -235,6 +244,11 @@ export const orderSlice = createSlice({
           targetOrder.finalAmount = action.payload.finalAmount;
           targetOrder.updatedAt = new Date().toISOString();
         }
+        if (state.selectedOrder?.orderId === action.payload.orderId) {
+          state.selectedOrder.status = action.payload.status;
+          state.selectedOrder.finalAmount = action.payload.finalAmount;
+          state.selectedOrder.updatedAt = new Date().toISOString();
+        }
       })
       .addCase(completeVendorOrder.fulfilled, (state, action) => {
         const targetOrder = state.orders.find(
@@ -244,6 +258,11 @@ export const orderSlice = createSlice({
           targetOrder.status = action.payload.status;
           targetOrder.finalAmount = action.payload.finalAmount;
           targetOrder.updatedAt = new Date().toISOString();
+        }
+        if (state.selectedOrder?.orderId === action.payload.orderId) {
+          state.selectedOrder.status = action.payload.status;
+          state.selectedOrder.finalAmount = action.payload.finalAmount;
+          state.selectedOrder.updatedAt = new Date().toISOString();
         }
       })
       .addCase(getOrderDetails.fulfilled, (state, action) => {
@@ -265,7 +284,7 @@ export const orderSlice = createSlice({
   },
 });
 
-export const { resetOrderState } = orderSlice.actions;
+export const { resetOrderState, addNewOrder } = orderSlice.actions;
 
 export default orderSlice.reducer;
 

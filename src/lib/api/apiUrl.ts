@@ -57,7 +57,11 @@ export const apiUrl = {
     },
   },
   user: {
+    getUsers: '/User',
     getUserById: (id: number): string => `/User/${id}`,
+    banUser: (id: number): string => `/User/${id}/ban`,
+    unbanUser: (id: number): string => `/User/${id}/unban`,
+    promoteModerator: (id: number): string => `/User/${id}/promote-moderator`,
     search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
@@ -187,7 +191,7 @@ export const apiUrl = {
     DeleteAImageOfACampaign: (campaignId: number): string =>
       `/Campaign/${campaignId}/image`,
     GetBranchesOfACampaign: (campaignId: number): string =>
-      `/Campaign/vendor/${campaignId}/branches`,
+      `/Campaign/system/${campaignId}/branches`,
     AddBranchesToACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches/add`,
     RemoveBranchesFromACampaign: (campaignId: number): string =>

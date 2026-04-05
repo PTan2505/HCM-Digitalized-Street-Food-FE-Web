@@ -180,7 +180,7 @@ export default function VendorCampaignPage(): JSX.Element {
             createImageFormData(imageFile)
           );
         }
-        await fetchCampaigns();
+        // await fetchCampaigns();
       }
       handleCloseModal();
     } catch (err) {
@@ -265,6 +265,12 @@ export default function VendorCampaignPage(): JSX.Element {
       render: (_: unknown, row: VendorCampaign): JSX.Element => {
         if (row.isSystemCampaign) {
           return <span className="text-xs text-gray-400">-</span>;
+        }
+
+        if (new Date(row.endDate) < new Date()) {
+          return (
+            <span className="text-xs text-gray-400 italic">Đã kết thúc</span>
+          );
         }
 
         return (

@@ -30,6 +30,10 @@ export const ENV = {
   maps: {
     openMapApiKey: import.meta.env.VITE_OPENMAP_API_KEY as string | undefined,
   },
+  // TTS
+  tts: {
+    geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY as string | undefined,
+  },
 };
 
 // Helper to validate required env vars on app startup

@@ -69,7 +69,6 @@ export default function OrderDetailsModal({
         orderId: order.orderId,
         approve,
       });
-      await onGetOrderDetails(order.orderId);
     } finally {
       setIsSubmittingDecision(false);
     }
@@ -90,7 +89,6 @@ export default function OrderDetailsModal({
         orderId: order.orderId,
         verificationCode,
       });
-      await onGetOrderDetails(order.orderId);
       setVerificationCode('');
     } finally {
       setIsSubmittingComplete(false);
@@ -206,14 +204,14 @@ export default function OrderDetailsModal({
                         : `Tại bàn ${order.table ?? '-'}`}
                     </span>
                   </div>
-                  <div>
+                  {/* <div>
                     <span className="mb-1 block text-xs text-gray-500">
                       Thanh toán
                     </span>
                     <span className="font-semibold text-gray-800">
                       {getPaymentMethodText(order.paymentMethod)}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Amount summary */}

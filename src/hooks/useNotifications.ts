@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import CustomNotification from '@components/CustomNotification';
 import type { NotificationDto } from '@custom-types/notification';
 import { playNotificationSound } from '@utils/notificationSound';
+import { useAppDispatch } from '@hooks/reduxHooks';
+import { addNewOrder } from '@slices/order';
 
 export type { NotificationDto } from '@custom-types/notification';
 
@@ -22,6 +24,7 @@ interface UseNotificationsReturn {
 export const useNotifications = (
   token: string | null
 ): UseNotificationsReturn => {
+  const dispatch = useAppDispatch();
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
@@ -117,7 +120,7 @@ export const useNotifications = (
         if (data.type !== 'NewFeedback' && data.type !== 'NewOrder') return;
 
         console.log('📬 New notification:', data);
-        playNotificationSound(data.type);
+        playNotificationSound(data.type, data.message);
         toast.info(CustomNotification, {
           data: {
             title: data.title,
@@ -126,6 +129,17 @@ export const useNotifications = (
         });
         setNotifications((prev) => [data, ...prev]);
         setUnreadCount((prev) => prev + 1);
+
+        if (data.type === 'NewOrder' && data.referenceId) {
+          axiosApi.orderApi
+            .getOrderDetails(data.referenceId)
+            .then((order) => {
+              dispatch(addNewOrder(order));
+            })
+            .catch((err) => {
+              console.error('Failed to fetch new order detail:', err);
+            });
+        }
       };
 
       signalRService.on<NotificationDto>('ReceiveNotification', handler);
@@ -161,7 +175,7 @@ export const useNotifications = (
       });
       signalRService.disconnect();
     };
-  }, [token, fetchInitialData]);
+  }, [token, fetchInitialData, dispatch]);
 
   return {
     isConnected,

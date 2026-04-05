@@ -19,6 +19,7 @@ import AdminVendorCampaignPage from '@features/admin/pages/AdminVendorCampaignPa
 import AdminQuestPage from '@features/admin/pages/QuestPage';
 import AdminSettingPage from '@features/admin/pages/SettingPage';
 import AdminVoucherPage from '@features/admin/pages/VoucherPage';
+import AdminVendorVerificationPage from '@features/admin/pages/VendorVerificationPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -46,6 +47,7 @@ import EditUserProfilePage from '@features/user/pages/EditUserProfilePage';
 import { createBrowserRouter, Navigate } from 'react-router';
 import AdminLayout from './routes/AdminLayout';
 import HomePage from '@features/home/pages/HomePage';
+import DeepLinkRedirectPage from '@features/home/pages/DeepLinkRedirectPage';
 import PaymentSuccess from '@features/vendor/pages/PaymentSuccess';
 import PaymentCancel from '@features/vendor/pages/PaymentCancel';
 
@@ -77,6 +79,10 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.PAYMENT_CANCEL,
     element: <PaymentCancel />,
+  },
+  {
+    path: '*',
+    element: <DeepLinkRedirectPage />,
   },
   {
     path: ROUTES.ROOT,
@@ -225,7 +231,27 @@ export const router = createBrowserRouter([
             path: ROUTES.ADMIN.PATHS.USER_WITH_DIETARY,
             element: <UsersWithDietaryPreferencesPage />,
           },
-          { path: ROUTES.ADMIN.PATHS.USERS, element: <AdminUsersPage /> },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS,
+            element: (
+              <Navigate
+                to={`/${ROUTES.ADMIN.BASE.replace('/', '')}/${ROUTES.ADMIN.PATHS.USERS_CUSTOMER}`}
+                replace
+              />
+            ),
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS_CUSTOMER,
+            element: <AdminUsersPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS_VENDOR,
+            element: <AdminUsersPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.USERS_SYSTEM,
+            element: <AdminUsersPage />,
+          },
           { path: ROUTES.ADMIN.PATHS.VENDORS, element: <AdminVendorsPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
@@ -253,6 +279,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.VOUCHER,
             element: <AdminVoucherPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.VERIFICATION,
+            element: <AdminVendorVerificationPage />,
           },
         ],
       },

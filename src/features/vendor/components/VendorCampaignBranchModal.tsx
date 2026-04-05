@@ -64,8 +64,9 @@ export default function VendorCampaignBranchModal({
     setIsLoading(true);
     try {
       const res = await onGetBranchesOfACampaign(campaign.campaignId);
-      setInitialIds(res.branchIds ?? []);
-      setSelectedIds(res.branchIds ?? []);
+      const fetchedBranchIds = res.items?.map((item) => item.branchId) ?? [];
+      setInitialIds(fetchedBranchIds);
+      setSelectedIds(fetchedBranchIds);
     } catch (err) {
       console.error(err);
       setInitialIds([]);

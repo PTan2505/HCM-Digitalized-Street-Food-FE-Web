@@ -221,6 +221,34 @@ const Table = <T extends object>({
           onClose={() => setMenuState({ anchorEl: null, row: null })}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          PaperProps={{
+            elevation: 0,
+            sx: {
+              overflow: 'visible',
+              filter: 'drop-shadow(0px 8px 24px rgba(0,0,0,0.12))',
+              mt: 1,
+              borderRadius: '16px',
+              minWidth: 240,
+              border: '1px solid',
+              borderColor: 'divider',
+              p: 1,
+              '&::before': {
+                content: '""',
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                right: 14,
+                width: 12,
+                height: 12,
+                bgcolor: 'background.paper',
+                transform: 'translateY(-50%) rotate(45deg)',
+                zIndex: 0,
+                borderLeft: '1px solid',
+                borderTop: '1px solid',
+                borderColor: 'divider',
+              },
+            },
+          }}
         >
           {actions
             .filter((a) => !a.show || (menuState.row && a.show(menuState.row)))
@@ -238,15 +266,54 @@ const Table = <T extends object>({
                   setMenuState({ anchorEl: null, row: null });
                 }}
                 sx={{
-                  gap: 1.5,
                   color: action.color ? `${action.color}.main` : 'text.primary',
-                  minWidth: 180,
+                  borderRadius: '10px',
+                  mb: 0.5,
+                  px: 2,
+                  py: 1.2,
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:last-child': {
+                    mb: 0,
+                  },
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    transform: 'translateX(4px)',
+                  },
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  {action.label}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    width: '100%',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 24,
+                      height: 24,
+                      '& > svg': {
+                        fontSize: '1.25rem',
+                      },
+                    }}
+                  >
+                    {action.label}
+                  </Box>
                   {action.menuLabel && (
-                    <Typography variant="body2">{action.menuLabel}</Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {action.menuLabel}
+                    </Typography>
                   )}
                 </Box>
               </MenuItem>

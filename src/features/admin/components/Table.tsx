@@ -23,11 +23,12 @@ interface Column<T> {
 }
 
 interface Action<T> {
-  label: string | React.ReactNode;
+  label: string | React.ReactNode | ((row: T) => React.ReactNode);
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
   tooltip?: string;
+  show?: (row: T) => boolean;
 }
 
 interface TableProps<T extends object> {
@@ -40,6 +41,7 @@ interface TableProps<T extends object> {
   maxHeight?: string | 'none';
   actions?: Action<T>[];
   onRowClick?: (row: T) => void;
+  noActionsMessage?: React.ReactNode;
 }
 
 const Table = <T extends object>({
@@ -52,6 +54,7 @@ const Table = <T extends object>({
   maxHeight = '600px',
   actions,
   onRowClick,
+  noActionsMessage = '-',
 }: TableProps<T>): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
 
@@ -153,31 +156,53 @@ const Table = <T extends object>({
                         }}
                       >
                         <Box className="flex gap-2">
-                          {actions.map((action, index) => {
-                            const actionButton = (
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  action.onClick(row);
-                                }}
-                                color={action.color ?? 'primary'}
-                                variant={action.variant ?? 'text'}
-                                size="small"
-                              >
-                                {action.label}
-                              </Button>
+                          {((): React.ReactNode => {
+                            const visibleActions = actions.filter(
+                              (action) => !action.show || action.show(row)
                             );
-
-                            if (!action.tooltip) {
-                              return <Box key={index}>{actionButton}</Box>;
+                            if (visibleActions.length === 0) {
+                              return (
+                                <span className="text-xs font-medium text-gray-400 italic">
+                                  {noActionsMessage}
+                                </span>
+                              );
                             }
+                            return visibleActions.map((action, index) => {
+                              const label =
+                                typeof action.label === 'function'
+                                  ? action.label(row)
+                                  : action.label;
+                              const actionButton = (
+                                <Box key={index}>
+                                  <Button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      action.onClick(row);
+                                    }}
+                                    color={action.color ?? 'primary'}
+                                    variant={action.variant ?? 'text'}
+                                    size="small"
+                                  >
+                                    {label}
+                                  </Button>
+                                </Box>
+                              );
 
-                            return (
-                              <Tooltip key={index} title={action.tooltip} arrow>
-                                <Box>{actionButton}</Box>
-                              </Tooltip>
-                            );
-                          })}
+                              if (!action.tooltip) {
+                                return actionButton;
+                              }
+
+                              return (
+                                <Tooltip
+                                  key={index}
+                                  title={action.tooltip}
+                                  arrow
+                                >
+                                  {actionButton}
+                                </Tooltip>
+                              );
+                            });
+                          })()}
                         </Box>
                       </TableCell>
                     )}

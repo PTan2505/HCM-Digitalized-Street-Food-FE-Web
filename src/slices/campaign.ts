@@ -280,10 +280,16 @@ export const getSystemCampaignDetails = createAppAsyncThunk(
 
 export const getBranchesOfACampaign = createAppAsyncThunk(
   'campaign/getBranchesOfACampaign',
-  async (campaignId: number, { rejectWithValue }) => {
+  async (
+    payload: { campaignId: number; pageNumber?: number; pageSize?: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const response =
-        await axiosApi.vendorCampaignApi.getBranchesOfACampaign(campaignId);
+      const response = await axiosApi.vendorCampaignApi.getBranchesOfACampaign(
+        payload.campaignId,
+        payload.pageNumber,
+        payload.pageSize
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -460,7 +466,17 @@ export const campaignSlice = createSlice({
             (c) => c.campaignId === payload.campaignId
           );
           if (index !== -1) {
-            state.vendorCampaigns[index].branchIds = payload.branchIds;
+            const campaign = state.vendorCampaigns[index];
+            campaign.branchIds = payload.branchIds;
+
+            if (payload.branchIds.length === 1) {
+              campaign.createdByBranchId = payload.branchIds[0];
+            } else {
+              campaign.createdByBranchId = null;
+              if (!campaign.createdByBranchId && !campaign.createdByVendorId) {
+                campaign.createdByVendorId = -1;
+              }
+            }
           }
         }
       })
@@ -471,7 +487,17 @@ export const campaignSlice = createSlice({
             (c) => c.campaignId === payload.campaignId
           );
           if (index !== -1) {
-            state.vendorCampaigns[index].branchIds = payload.branchIds;
+            const campaign = state.vendorCampaigns[index];
+            campaign.branchIds = payload.branchIds;
+
+            if (payload.branchIds.length === 1) {
+              campaign.createdByBranchId = payload.branchIds[0];
+            } else {
+              campaign.createdByBranchId = null;
+              if (!campaign.createdByBranchId && !campaign.createdByVendorId) {
+                campaign.createdByVendorId = -1;
+              }
+            }
           }
         }
       })
