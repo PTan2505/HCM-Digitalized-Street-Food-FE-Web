@@ -265,7 +265,6 @@ export default function CamPaignFormModal({
     </p>
   );
 
-  const watchedIsActive = watch('isActive');
   const hasCampaignChanges = isDirty || imageFile !== null || isImageRemoved;
 
   return (
@@ -300,6 +299,11 @@ export default function CamPaignFormModal({
           }}
         >
           <div className="flex flex-col gap-6">
+            <input
+              type="checkbox"
+              className="hidden"
+              {...register('isActive')}
+            />
             {/* ── SECTION 1: Thông tin cơ bản ── */}
             <div>
               {sectionLabel('Thông tin cơ bản')}
@@ -519,41 +523,6 @@ export default function CamPaignFormModal({
                       {errors.endDate.message}
                     </p>
                   )}
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* ── SECTION 5: Thiết lập khác ── */}
-            <div>
-              {sectionLabel('Thiết lập khác')}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">
-                      Trạng thái hoạt động
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Bật để cho phép chiến dịch hoạt động trên hệ thống
-                    </p>
-                  </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input
-                      type="checkbox"
-                      {...register('isActive')}
-                      className="peer sr-only"
-                    />
-                    <div
-                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                      style={{
-                        backgroundColor: watchedIsActive
-                          ? '#8bcf3f'
-                          : '#d1d5db',
-                        transition: 'background-color 0.2s',
-                      }}
-                    />
-                  </label>
                 </div>
               </div>
             </div>

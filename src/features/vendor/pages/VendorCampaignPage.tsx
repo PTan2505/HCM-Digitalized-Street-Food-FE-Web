@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { JSX, MouseEvent } from 'react';
 import {
   Box,
@@ -15,13 +15,23 @@ import {
   Storefront as StorefrontIcon,
   GroupAdd as GroupAddIcon,
   CheckCircle as CheckCircleIcon,
+  HelpOutline as HelpOutlineIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
 import VendorCampaignVoucherModal from '@features/vendor/components/VendorCampaignVoucherModal';
 import VendorCampaignBranchModal from '@features/vendor/components/VendorCampaignBranchModal';
 import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSystemCampaignModal';
+import VendorCampaignDetailModal from '@features/vendor/components/VendorCampaignDetailModal';
 import VoucherFormModal from '@features/vendor/components/VoucherFormModal';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
@@ -38,6 +48,7 @@ import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSche
 import type { Branch } from '@features/vendor/types/vendor';
 import type { VoucherCreate } from '@custom-types/voucher';
 import useVoucher from '@features/vendor/hooks/useVoucher';
+import { getCampaignManagementTourSteps } from '@features/vendor/utils/campaignManagementTourSteps';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -51,6 +62,12 @@ const formatVNDatetime = (isoStr: string | null): string => {
     hour: '2-digit',
     minute: '2-digit',
   });
+};
+
+const isBeforeCampaignStart = (startDate: string): boolean => {
+  const startTime = new Date(startDate).getTime();
+  if (Number.isNaN(startTime)) return false;
+  return startTime > Date.now();
 };
 
 const StatusBadge = ({
@@ -94,6 +111,7 @@ export default function VendorCampaignPage(): JSX.Element {
   const {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
+    onGetCampaignDetail,
     onUpdateVendorCampaign,
     onPostCampaignImage,
     onDeleteCampaignImage,
@@ -106,18 +124,25 @@ export default function VendorCampaignPage(): JSX.Element {
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [openBranchModal, setOpenBranchModal] = useState(false);
+  const [openDetailModal, setOpenDetailModal] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isJoinableModalOpen, setIsJoinableModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<VendorCampaign | null>(
     null
   );
   const [selectedCampaign, setSelectedCampaign] =
     useState<VendorCampaign | null>(null);
+  const [detailCampaign, setDetailCampaign] = useState<VendorCampaign | null>(
+    null
+  );
   const [branchOptions, setBranchOptions] = useState<Branch[]>([]);
 
   // Post-create flow
   const [postCreateStep, setPostCreateStep] = useState<PostCreateStep>('idle');
   const newCampaignRef = useRef<VendorCampaign | null>(null);
   const voucherCreatedCountRef = useRef(0);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -151,6 +176,10 @@ export default function VendorCampaignPage(): JSX.Element {
   }, [fetchBranchOptions]);
 
   const handleOpenModal = (campaign?: VendorCampaign): void => {
+    if (campaign?.isActive) {
+      return;
+    }
+
     setEditingCampaign(campaign ?? null);
     setOpenModal(true);
   };
@@ -158,6 +187,23 @@ export default function VendorCampaignPage(): JSX.Element {
   const handleCloseModal = (): void => {
     setOpenModal(false);
     setEditingCampaign(null);
+  };
+
+  const handleOpenDetailModal = async (
+    campaign: VendorCampaign
+  ): Promise<void> => {
+    setOpenDetailModal(true);
+    setDetailCampaign(campaign);
+    setIsDetailLoading(true);
+
+    try {
+      const campaignDetail = await onGetCampaignDetail(campaign.campaignId);
+      setDetailCampaign(campaignDetail);
+    } catch (err) {
+      console.error('Failed to fetch campaign detail', err);
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
 
   const storeCampaigns = campaigns.filter(
@@ -176,13 +222,21 @@ export default function VendorCampaignPage(): JSX.Element {
     isImageRemoved?: boolean
   ): Promise<void> => {
     try {
+      if (editingCampaign?.isActive) {
+        return;
+      }
+
+      const normalizedIsActive = isBeforeCampaignStart(data.startDate)
+        ? false
+        : data.isActive;
+
       const payload = {
         name: data.name,
         description: data.description ?? null,
         targetSegment: data.targetSegment ?? null,
         startDate: data.startDate,
         endDate: data.endDate,
-        isActive: data.isActive,
+        isActive: normalizedIsActive,
         branchIds: data.branchIds,
       };
 
@@ -258,6 +312,28 @@ export default function VendorCampaignPage(): JSX.Element {
 
   const newCampaign = newCampaignRef.current;
 
+  const startCampaignTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getCampaignManagementTourSteps({
+      hasRows: storeCampaigns.length > 0,
+    });
+  }, [storeCampaigns.length]);
+
   const columns = [
     // {
     //   key: 'campaignId',
@@ -308,17 +384,15 @@ export default function VendorCampaignPage(): JSX.Element {
         </Box>
       ),
     },
-    // {
-    //   key: 'targetSegment',
-    //   label: 'Phân khúc',
-    //   render: (value: unknown): JSX.Element => (
-    //     <Chip
-    //       label={typeof value === 'string' && value ? value : 'Tất cả'}
-    //       size="small"
-    //       variant="outlined"
-    //     />
-    //   ),
-    // },
+    {
+      key: 'targetSegment',
+      label: 'Phân khúc',
+      render: (value: unknown): JSX.Element => (
+        <Box className="text-table-text-primary">
+          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+        </Box>
+      ),
+    },
     {
       key: 'isActive',
       label: 'Hoạt động',
@@ -337,55 +411,74 @@ export default function VendorCampaignPage(): JSX.Element {
           return <span className="text-xs text-gray-400">-</span>;
         }
 
-        if (new Date(row.endDate) < new Date()) {
-          return (
-            <span className="text-xs text-gray-400 italic">Đã kết thúc</span>
-          );
-        }
+        const isEnded = new Date(row.endDate) < new Date();
+        const isLocked = row.isActive || isEnded;
 
         return (
           <Box className="flex items-center gap-2">
-            <Tooltip title="Quản lý chi nhánh" arrow>
+            <Tooltip title="Xem chi tiết" arrow>
               <Button
                 size="small"
                 color="info"
                 variant="outlined"
                 onClick={(event: MouseEvent<HTMLButtonElement>) => {
                   event.stopPropagation();
-                  setSelectedCampaign(row);
-                  setOpenBranchModal(true);
+                  void handleOpenDetailModal(row);
                 }}
               >
-                <StorefrontIcon fontSize="small" />
+                <VisibilityIcon fontSize="small" />
               </Button>
             </Tooltip>
-            <Tooltip title="Quản lý voucher" arrow>
-              <Button
-                size="small"
-                color="warning"
-                variant="outlined"
-                onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                  event.stopPropagation();
-                  setSelectedCampaign(row);
-                  setOpenVoucherModal(true);
-                }}
-              >
-                <VoucherIcon fontSize="small" />
-              </Button>
-            </Tooltip>
-            <Tooltip title="Chỉnh sửa chiến dịch" arrow>
-              <Button
-                size="small"
-                color="primary"
-                variant="outlined"
-                onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                  event.stopPropagation();
-                  handleOpenModal(row);
-                }}
-              >
-                <EditIcon fontSize="small" />
-              </Button>
-            </Tooltip>
+
+            {!isLocked ? (
+              <>
+                <Tooltip title="Quản lý chi nhánh" arrow>
+                  <Button
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                      event.stopPropagation();
+                      setSelectedCampaign(row);
+                      setOpenBranchModal(true);
+                    }}
+                  >
+                    <StorefrontIcon fontSize="small" />
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Quản lý voucher" arrow>
+                  <Button
+                    size="small"
+                    color="warning"
+                    variant="outlined"
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                      event.stopPropagation();
+                      setSelectedCampaign(row);
+                      setOpenVoucherModal(true);
+                    }}
+                  >
+                    <VoucherIcon fontSize="small" />
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Chỉnh sửa chiến dịch" arrow>
+                  <Button
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                      event.stopPropagation();
+                      handleOpenModal(row);
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </Button>
+                </Tooltip>
+              </>
+            ) : (
+              <span className="text-xs text-gray-400 italic">
+                {row.isActive ? 'Đang hoạt động' : 'Đã kết thúc'}
+              </span>
+            )}
           </Box>
         );
       },
@@ -394,12 +487,54 @@ export default function VendorCampaignPage(): JSX.Element {
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="campaign-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý chiến dịch
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý chiến dịch
+            </h1>
+            <button
+              type="button"
+              onClick={startCampaignTour}
+              aria-label="Mở hướng dẫn quản lý chiến dịch"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý các chương trình khuyến mãi và chiến dịch của quán
           </p>
@@ -407,6 +542,7 @@ export default function VendorCampaignPage(): JSX.Element {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleOpenModal()}
+            data-tour="campaign-create-button"
             className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
           >
             <AddIcon fontSize="small" />
@@ -416,6 +552,7 @@ export default function VendorCampaignPage(): JSX.Element {
             onClick={() => {
               setIsJoinableModalOpen(true);
             }}
+            data-tour="campaign-join-button"
             className="flex items-center gap-2 rounded-lg border border-[var(--color-primary-600)] bg-white px-4 py-2 font-semibold text-[var(--color-primary-700)] transition-colors hover:bg-[var(--color-primary-50)]"
           >
             <GroupAddIcon fontSize="small" />
@@ -425,7 +562,7 @@ export default function VendorCampaignPage(): JSX.Element {
       </div>
 
       {/* Table Content */}
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box sx={{ flex: 1, minHeight: 0 }} data-tour="campaign-table-wrapper">
         <Table
           columns={columns}
           maxHeight="none"
@@ -433,23 +570,26 @@ export default function VendorCampaignPage(): JSX.Element {
           rowKey="campaignId"
           loading={status === 'pending'}
           emptyMessage="Chưa có chiến dịch cửa hàng nào"
+          tourId="vendor-campaign"
         />
       </Box>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={page}
-        totalPages={Math.ceil((totalCount ?? 0) / pageSize)}
-        totalCount={totalCount ?? 0}
-        pageSize={pageSize}
-        hasPrevious={page > 1}
-        hasNext={page < Math.ceil((totalCount ?? 0) / pageSize)}
-        onPageChange={setPage}
-        onPageSizeChange={(newPageSize) => {
-          setPageSize(newPageSize);
-          setPage(1);
-        }}
-      />
+      <div data-tour="campaign-pagination">
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil((totalCount ?? 0) / pageSize)}
+          totalCount={totalCount ?? 0}
+          pageSize={pageSize}
+          hasPrevious={page > 1}
+          hasNext={page < Math.ceil((totalCount ?? 0) / pageSize)}
+          onPageChange={setPage}
+          onPageSizeChange={(newPageSize) => {
+            setPageSize(newPageSize);
+            setPage(1);
+          }}
+        />
+      </div>
 
       {/* Form Modal */}
       <VendorCampaignFormModal
@@ -486,6 +626,13 @@ export default function VendorCampaignPage(): JSX.Element {
         mode="detail"
         vendorBranchIds={branchOptions.map((branch) => branch.branchId)}
         vendorBranches={branchOptions}
+      />
+
+      <VendorCampaignDetailModal
+        isOpen={openDetailModal}
+        onClose={() => setOpenDetailModal(false)}
+        campaign={detailCampaign}
+        isLoading={isDetailLoading}
       />
 
       {/* ══════════════════════════════════════════════════════

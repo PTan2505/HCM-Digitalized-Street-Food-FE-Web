@@ -33,6 +33,13 @@ export class CampaignApi {
     return res.data;
   }
 
+  async getCampaignDetail(id: number): Promise<Campaign> {
+    const res = await this.apiClient.get<Campaign>({
+      url: apiUrl.campaign.GetCampaignDetail(id),
+    });
+    return res.data;
+  }
+
   async updateCampaign(id: number, data: CampaignUpdate): Promise<Campaign> {
     const res = await this.apiClient.put<Campaign, CampaignUpdate>({
       url: apiUrl.campaign.UpdateCampaign(id),
