@@ -23,6 +23,7 @@ interface Column<T> {
 }
 
 interface Action<T> {
+  id?: string;
   label: string | React.ReactNode | ((row: T) => React.ReactNode);
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
@@ -42,6 +43,7 @@ interface TableProps<T extends object> {
   actions?: Action<T>[];
   onRowClick?: (row: T) => void;
   noActionsMessage?: React.ReactNode;
+  tourId?: string;
 }
 
 const Table = <T extends object>({
@@ -55,6 +57,7 @@ const Table = <T extends object>({
   actions,
   onRowClick,
   noActionsMessage = '-',
+  tourId,
 }: TableProps<T>): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
 
@@ -62,6 +65,7 @@ const Table = <T extends object>({
     <TableContainer
       component={Paper}
       className="border-table-border rounded-lg border shadow-sm"
+      data-tour-table={tourId}
       style={{ maxHeight: maxHeight === 'none' ? undefined : maxHeight }}
     >
       <MuiTable stickyHeader>
@@ -115,6 +119,7 @@ const Table = <T extends object>({
                   <TableRow
                     key={String(rowKeyValue)}
                     hover
+                    data-tour-row-index={rowIndex}
                     onClick={() => onRowClick?.(row)}
                     className={`hover:bg-table-row-hover last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
                     style={{ height: '60px' }}
@@ -175,6 +180,11 @@ const Table = <T extends object>({
                               const actionButton = (
                                 <Box key={index}>
                                   <Button
+                                    data-tour-action={
+                                      tourId && action.id
+                                        ? `${tourId}:${action.id}`
+                                        : undefined
+                                    }
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       action.onClick(row);
