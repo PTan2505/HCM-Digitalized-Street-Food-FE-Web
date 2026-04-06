@@ -79,6 +79,13 @@ export class VendorCampaignApi {
     return res.data;
   }
 
+  async getCampaignDetail(campaignId: number): Promise<VendorCampaign> {
+    const res = await this.apiClient.get<VendorCampaign>({
+      url: apiUrl.campaign.GetCampaignDetail(campaignId),
+    });
+    return res.data;
+  }
+
   async getJoinableSystemCampaigns(
     pageNumber: number,
     pageSize: number
