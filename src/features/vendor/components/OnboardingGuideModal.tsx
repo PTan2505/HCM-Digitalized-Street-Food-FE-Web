@@ -7,11 +7,13 @@ import { CheckCircleIcon } from '@heroicons/react/24/outline';
 interface OnboardingGuideModalProps {
   open: boolean;
   onClose: () => void;
+  onStartTour?: () => void;
 }
 
 export default function OnboardingGuideModal({
   open,
   onClose,
+  onStartTour,
 }: OnboardingGuideModalProps): JSX.Element {
   return (
     <Dialog
@@ -88,6 +90,14 @@ export default function OnboardingGuideModal({
 
         {/* Footer with button */}
         <div className="border-t border-gray-100 bg-gray-50 px-6 py-6">
+          {onStartTour && (
+            <button
+              onClick={onStartTour}
+              className="border-primary-600 text-primary-700 hover:bg-primary-50 mb-3 w-full cursor-pointer rounded-lg border bg-white px-4 py-3 font-semibold transition-all duration-200"
+            >
+              Bắt đầu hướng dẫn chi tiết chi nhánh
+            </button>
+          )}
           <button
             onClick={onClose}
             className="w-full cursor-pointer rounded-lg bg-gradient-to-r from-[#7ab82d] to-[#9fd356] px-4 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:from-[#5f9324] hover:to-[#7ab82d] hover:shadow-md active:scale-95"
