@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
@@ -16,6 +16,14 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PaymentIcon from '@mui/icons-material/Payment';
 import { Add as AddIcon } from '@mui/icons-material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -32,6 +40,7 @@ import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetail
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
+import { getBranchManagementTourSteps } from '@features/vendor/utils/branchManagementTourSteps';
 // import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
 
 const StatusBadge = ({
@@ -91,6 +100,8 @@ function BranchPage(): JSX.Element {
         ?.fromEditProfile ?? false
     );
   });
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const handleStartEditName = (): void => {
     setEditedName(myVendor?.name ?? '');
@@ -238,6 +249,29 @@ function BranchPage(): JSX.Element {
     setFormModalOpen(true);
   };
 
+  const startBranchTour = (): void => {
+    setShowOnboardingGuide(false);
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getBranchManagementTourSteps({
+      hasBranchRows: verifiedBranches.length > 0,
+    });
+  }, [verifiedBranches.length]);
+
   const handleFormSuccess = (): void => {
     // Slice already handles branch update/create
   };
@@ -347,6 +381,7 @@ function BranchPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'view',
       label: <VisibilityIcon fontSize="small" />,
       menuLabel: 'Xem chi tiết',
       onClick: (branch: Branch): void => {
@@ -355,6 +390,7 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       menuLabel: 'Cập nhật chi nhánh',
       onClick: (branch: Branch): void => {
@@ -363,6 +399,7 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
       onClick: (branch: Branch): void => {
@@ -371,6 +408,7 @@ function BranchPage(): JSX.Element {
       color: 'error' as const,
     },
     {
+      id: 'images',
       label: <ImageIcon fontSize="small" />,
       menuLabel: 'Cập nhật ảnh quán',
       onClick: (branch: Branch): void => {
@@ -379,6 +417,7 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      id: 'schedule',
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý thời gian hoạt động',
       onClick: (branch: Branch): void => {
@@ -387,6 +426,7 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      id: 'dayoff',
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý ngày nghỉ',
       onClick: (branch: Branch): void => {
@@ -395,6 +435,7 @@ function BranchPage(): JSX.Element {
       color: 'error' as const,
     },
     {
+      id: 'dish',
       label: <RestaurantMenuIcon fontSize="small" />,
       menuLabel: 'Quản lý menu',
       onClick: (branch: Branch): void => {
@@ -404,6 +445,7 @@ function BranchPage(): JSX.Element {
       show: (branch: Branch): boolean => branch.isSubscribed,
     },
     {
+      id: 'manager',
       label: <ManageAccountsIcon fontSize="small" />,
       menuLabel: 'Cập nhật người quản lý',
       onClick: (branch: Branch): void => {
@@ -422,6 +464,7 @@ function BranchPage(): JSX.Element {
     // },
     {
       label: <PaymentIcon fontSize="small" />,
+      id: 'payment',
       menuLabel: 'Thanh toán đăng ký gói',
       onClick: (branch: Branch): void => {
         void handleRegisterPackagePayment(branch);
@@ -431,6 +474,7 @@ function BranchPage(): JSX.Element {
       disabled: (branch: Branch): boolean => payingBranchId === branch.branchId,
     },
     {
+      id: 'feedback',
       label: <RateReviewIcon fontSize="small" />,
       menuLabel: 'Phản hồi về chi nhánh',
       onClick: (branch: Branch): void => {
@@ -442,9 +486,57 @@ function BranchPage(): JSX.Element {
 
   return (
     <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+        styles={{
+          tooltip: {
+            borderRadius: 14,
+          },
+          buttonPrimary: {
+            borderRadius: 10,
+            fontWeight: 700,
+          },
+          buttonBack: {
+            borderRadius: 10,
+            fontWeight: 700,
+          },
+          buttonSkip: {
+            borderRadius: 10,
+            fontWeight: 700,
+          },
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="branch-page-header"
+      >
+        <div data-tour="vendor-store-name">
           <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Quản lý chi nhánh
           </h1>
@@ -498,24 +590,38 @@ function BranchPage(): JSX.Element {
             )}
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
-        >
-          <AddIcon fontSize="small" />
-          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={startBranchTour}
+            className="border-primary-300 text-primary-700 hover:bg-primary-50 inline-flex items-center gap-2 rounded-lg border px-4 py-2 font-semibold transition-colors"
+          >
+            <HelpOutlineIcon fontSize="small" />
+            Hướng dẫn
+          </button>
+          <button
+            onClick={handleOpenCreateModal}
+            data-tour="branch-create-button"
+            className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
+          >
+            <AddIcon fontSize="small" />
+            {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
+          </button>
+        </div>
       </div>
 
-      <Table
-        columns={columns}
-        data={verifiedBranches}
-        rowKey="branchId"
-        loading={status === 'pending'}
-        emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
-        actions={actions}
-        maxHeight="calc(100vh - 240px)"
-      />
+      <div data-tour="branch-table-wrapper">
+        <Table
+          columns={columns}
+          data={verifiedBranches}
+          rowKey="branchId"
+          loading={status === 'pending'}
+          emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
+          actions={actions}
+          maxHeight="calc(100vh - 240px)"
+          tourId="vendor-branch"
+        />
+      </div>
 
       <BranchDetailsModal
         isOpen={selectedBranch !== null}
@@ -588,6 +694,7 @@ function BranchPage(): JSX.Element {
       <OnboardingGuideModal
         open={showOnboardingGuide}
         onClose={() => setShowOnboardingGuide(false)}
+        onStartTour={startBranchTour}
       />
 
       <DeleteConfirmationDialog
