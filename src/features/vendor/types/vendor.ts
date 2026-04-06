@@ -30,6 +30,10 @@ export interface Branch {
   updatedAt: string | null;
   isVerified: boolean;
   avgRating: number;
+  totalReviewCount?: number;
+  totalRatingSum?: number;
+  tierId?: number;
+  tierName?: string;
   isActive: boolean;
   isSubscribed: boolean;
   daysRemaining: number | null;

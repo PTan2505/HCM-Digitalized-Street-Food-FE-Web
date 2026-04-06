@@ -18,6 +18,7 @@ import {
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import VendorDetailModal from '@features/admin/components/VendorDetailModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { AdminVendor } from '@features/admin/types/vendor';
 import useVendor from '@features/admin/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -49,7 +50,7 @@ export default function VendorsPage(): JSX.Element {
     null
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
     void onGetAllVendors({ pageNumber: currentPage, pageSize });
@@ -136,16 +137,16 @@ export default function VendorsPage(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'vendorId',
-      label: 'ID',
-      style: { width: '60px', maxWidth: '60px' },
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-medium">
-          {String(value)}
-        </Box>
-      ),
-    },
+    // {
+    //   key: 'vendorId',
+    //   label: 'ID',
+    //   style: { width: '60px', maxWidth: '60px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <Box className="text-table-text-primary font-medium">
+    //       {String(value)}
+    //     </Box>
+    //   ),
+    // },
     {
       key: 'name',
       label: 'Tên cửa hàng',
@@ -202,6 +203,7 @@ export default function VendorsPage(): JSX.Element {
       onClick: (row: AdminVendor): void => {
         void handleViewDetail(row);
       },
+      tooltip: 'Xem chi tiết cửa hàng',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
@@ -214,12 +216,14 @@ export default function VendorsPage(): JSX.Element {
           handleReactivate(row);
         }
       },
+      tooltip: 'Tạm ngưng hoặc kích hoạt lại',
       color: 'warning' as const,
       variant: 'outlined' as const,
     },
     {
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => handleDelete(row),
+      tooltip: 'Xóa cửa hàng',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -262,41 +266,18 @@ export default function VendorsPage(): JSX.Element {
         onPageSizeChange={handlePageSizeChange}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa cửa hàng
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa cửa hàng"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa cửa hàng &quot;{selectedVendor?.name}
             &quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDialog}
-            color="primary"
-            className="font-semibold"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-semibold"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
 
       {/* Suspend Confirmation Dialog */}
       <Dialog

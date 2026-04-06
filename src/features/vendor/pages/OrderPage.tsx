@@ -60,7 +60,7 @@ export default function OrderPage(): JSX.Element {
   const [selectedBranchId, setSelectedBranchId] =
     useState<SelectedBranch>('all');
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [detailOrder, setDetailOrder] = useState<VendorOrder | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);
@@ -117,14 +117,14 @@ export default function OrderPage(): JSX.Element {
   ): Promise<void> => {
     await onDecideVendorOrder({ orderId, approve });
 
-    if (selectedBranchId === 'all') {
-      await onGetVendorOrders({ pageNumber, pageSize });
-    } else {
-      await onGetVendorBranchOrders({
-        branchId: selectedBranchId,
-        params: { pageNumber, pageSize },
-      });
-    }
+    // if (selectedBranchId === 'all') {
+    //   await onGetVendorOrders({ pageNumber, pageSize });
+    // } else {
+    //   await onGetVendorBranchOrders({
+    //     branchId: selectedBranchId,
+    //     params: { pageNumber, pageSize },
+    //   });
+    // }
   };
 
   const handleVerificationCodeChange = (
@@ -198,11 +198,11 @@ export default function OrderPage(): JSX.Element {
 
   const columns = useMemo(
     () => [
-      {
-        key: 'orderId',
-        label: 'Mã đơn',
-        style: { width: '90px' },
-      },
+      // {
+      //   key: 'orderId',
+      //   label: 'Mã đơn',
+      //   style: { width: '90px' },
+      // },
       {
         key: 'branchName',
         label: 'Chi nhánh',

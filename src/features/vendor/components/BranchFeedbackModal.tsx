@@ -10,21 +10,14 @@ import {
   selectBranchFeedbacksPagination,
   selectFeedbackStatus,
 } from '@slices/feedback';
-import CloseIcon from '@mui/icons-material/Close';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import StarIcon from '@mui/icons-material/Star';
 import SendIcon from '@mui/icons-material/Send';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface BranchFeedbackModalProps {
   isOpen: boolean;
@@ -66,7 +59,7 @@ export default function BranchFeedbackModal({
   const branchId = branch?.branchId;
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [draftReplies, setDraftReplies] = useState<Record<number, string>>({});
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
   const [editingIds, setEditingIds] = useState<Set<number>>(new Set());
@@ -94,7 +87,7 @@ export default function BranchFeedbackModal({
   useEffect(() => {
     if (!isOpen) {
       setPageNumber(1);
-      setPageSize(10);
+      setPageSize(5);
       setDraftReplies({});
       setProcessingIds(new Set());
       setEditingIds(new Set());
@@ -215,30 +208,13 @@ export default function BranchFeedbackModal({
         className="mx-4 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-4">
-          <div className="min-w-0">
-            <p className="text-primary-700 mb-1 text-xs font-semibold tracking-wide uppercase">
-              Chi nhánh đang xem
-            </p>
-            <h2 className="text-table-text-primary truncate text-lg leading-tight font-bold">
-              {branch.name}
-            </h2>
-            <div className="mt-1 inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs text-gray-600">
-              Mã chi nhánh: #{branch.branchId}
-            </div>
-          </div>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #f3f4f6',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
+        <VendorModalHeader
+          title="Đánh giá chi nhánh"
+          subtitle={`${branch.name}`}
+          icon={<RateReviewIcon />}
+          iconTone="branch"
+          onClose={onClose}
+        />
 
         <div className="flex-1 overflow-y-auto p-6">
           {status === 'pending' && feedbacks.length === 0 ? (
@@ -442,36 +418,17 @@ export default function BranchFeedbackModal({
           />
         </div>
 
-        <Dialog
+        <DeleteConfirmationDialog
           open={deleteTarget !== null}
           onClose={handleCloseDeleteConfirm}
-          aria-labelledby="delete-feedback-reply-dialog-title"
-          aria-describedby="delete-feedback-reply-dialog-description"
-        >
-          <DialogTitle id="delete-feedback-reply-dialog-title">
-            Xác nhận xóa phản hồi
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="delete-feedback-reply-dialog-description">
-              Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDeleteConfirm} color="primary">
-              Hủy
-            </Button>
-            <Button
-              onClick={() =>
-                deleteTarget && void handleDeleteReply(deleteTarget.feedbackId)
-              }
-              color="error"
-              variant="contained"
-              autoFocus
-            >
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={() => {
+            if (deleteTarget) void handleDeleteReply(deleteTarget.feedbackId);
+          }}
+          title="Xác nhận xóa phản hồi"
+          confirmationMessage={
+            <>Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?</>
+          }
+        />
       </div>
     </div>
   );

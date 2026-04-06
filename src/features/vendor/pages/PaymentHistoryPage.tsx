@@ -67,21 +67,21 @@ function PaymentHistoryPage(): JSX.Element {
     amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
   const columns = [
-    {
-      key: 'id',
-      label: 'ID',
-      style: { width: '60px' },
-    },
-    {
-      key: 'branchId',
-      label: 'Chi nhánh',
-      style: { width: '100px' },
-    },
+    // {
+    //   key: 'id',
+    //   label: 'ID',
+    //   style: { width: '60px' },
+    // },
+    // {
+    //   key: 'branchId',
+    //   label: 'Chi nhánh',
+    //   style: { width: '100px' },
+    // },
     {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box className="max-w-[220px] overflow-hidden text-sm text-ellipsis whitespace-nowrap">
+        <Box className="max-w-[400px] overflow-hidden text-sm text-ellipsis whitespace-nowrap">
           {typeof value === 'string' ? value : '-'}
         </Box>
       ),
@@ -96,16 +96,16 @@ function PaymentHistoryPage(): JSX.Element {
         </span>
       ),
     },
-    {
-      key: 'paymentMethod',
-      label: 'Phương thức',
-      style: { width: '130px' },
-      render: (value: unknown): React.ReactNode => (
-        <span className="text-sm">
-          {typeof value === 'string' ? value : '-'}
-        </span>
-      ),
-    },
+    // {
+    //   key: 'paymentMethod',
+    //   label: 'Phương thức',
+    //   style: { width: '130px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <span className="text-sm">
+    //       {typeof value === 'string' ? value : '-'}
+    //     </span>
+    //   ),
+    // },
     {
       key: 'status',
       label: 'Trạng thái',

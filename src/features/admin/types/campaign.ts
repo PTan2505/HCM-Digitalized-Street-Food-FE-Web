@@ -9,9 +9,11 @@ export interface Campaign {
   registrationEndDate: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
+  imageUrl?: string | null;
 }
 
 export interface CampaignCreate {
@@ -22,6 +24,7 @@ export interface CampaignCreate {
   registrationEndDate: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
 }
 
 export interface CampaignUpdate {
@@ -32,9 +35,18 @@ export interface CampaignUpdate {
   registrationEndDate: string | null;
   startDate: string;
   endDate: string;
+  isActive: boolean;
 }
 
 export interface CampaignListResponse {
   totalCount: number;
   items: Campaign[];
 }
+
+export interface PostCampaignImage {
+  image: File;
+}
+
+export type PostCampaignImageResponse = string;
+
+export type GetCampaignImageResponse = string;

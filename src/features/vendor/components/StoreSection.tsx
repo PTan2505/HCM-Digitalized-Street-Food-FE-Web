@@ -103,14 +103,10 @@ export default function StoreSection({
             </p>
             <p>
               <strong>
-                Ví dụ, nếu tên cửa hàng là ABC thì tên chi nhánh sẽ là ABC 1
-                trong trường hợp bạn để trống trường này
+                Ví dụ, nếu tên cửa hàng là ABC thì tên chi nhánh khi hiển thị
+                phía người dùng sẽ là ABC 1 trong trường hợp bạn để trống trường
+                này
               </strong>
-            </p>
-            <p>
-              <span className="font-semibold">Nếu có nhiều chi nhánh:</span> Hãy
-              tạo chi nhánh chính trước. Sau khi được duyệt, bạn mới có thể tiếp
-              tục đăng ký các chi nhánh còn lại.
             </p>
           </div>
         )}
