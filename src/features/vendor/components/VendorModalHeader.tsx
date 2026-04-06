@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
+import { IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface VendorModalHeaderProps {
   title: string;
   subtitle?: string;
   icon: ReactNode;
-  iconTone?: 'branch' | 'dish' | 'campaign' | 'voucher' | 'default';
+  iconTone?: 'branch' | 'dish' | 'campaign' | 'voucher' | 'order' | 'default';
   onClose?: () => void;
   disableClose?: boolean;
   rightActions?: ReactNode;
@@ -21,35 +21,38 @@ export default function VendorModalHeader({
   disableClose = false,
   rightActions,
 }: VendorModalHeaderProps): React.JSX.Element {
-  const iconToneClassByType: Record<string, string> = {
+  const iconToneClass: Record<string, string> = {
     branch: 'bg-emerald-100 text-emerald-700',
     dish: 'bg-amber-100 text-amber-700',
     campaign: 'bg-indigo-100 text-indigo-700',
     voucher: 'bg-sky-100 text-sky-700',
+    order: 'bg-rose-100 text-rose-600',
     default: 'bg-orange-100 text-orange-600',
   };
 
   return (
-    <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/70 px-8 py-5">
-      <Box className="flex min-w-0 items-center gap-3">
-        <Box
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconToneClassByType[iconTone]}`}
+    <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/70 px-8 py-5">
+      {/* Left: icon + title block */}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconToneClass[iconTone]}`}
         >
           {icon}
-        </Box>
-        <Box className="min-w-0">
-          <Typography className="text-table-text-primary truncate text-xl font-bold md:text-2xl">
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-2xl leading-tight font-bold text-[var(--color-table-text-primary)]">
             {title}
-          </Typography>
+          </p>
           {subtitle ? (
-            <Typography className="text-table-text-secondary mt-0.5 truncate text-sm font-medium">
+            <p className="mt-0.5 truncate text-sm font-medium text-[var(--color-table-text-secondary)]">
               {subtitle}
-            </Typography>
+            </p>
           ) : null}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      <Box className="flex items-center gap-2">
+      {/* Right: actions + close */}
+      <div className="ml-4 flex shrink-0 items-center gap-2">
         {rightActions}
         {onClose ? (
           <IconButton
@@ -65,7 +68,7 @@ export default function VendorModalHeader({
             <CloseIcon fontSize="small" />
           </IconButton>
         ) : null}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

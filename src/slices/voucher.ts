@@ -66,7 +66,7 @@ export const getVoucherById = createAppAsyncThunk(
 
 export const createVoucher = createAppAsyncThunk(
   'voucher/createVoucher',
-  async (payload: VoucherCreate, { rejectWithValue }) => {
+  async (payload: VoucherCreate[], { rejectWithValue }) => {
     try {
       const response = await axiosApi.voucherApi.createVoucher(payload);
       return response;
@@ -118,9 +118,10 @@ export const voucherSlice = createSlice({
         state.vouchers = action.payload;
       })
       .addCase(createVoucher.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.vouchers.unshift(action.payload);
-        }
+        // API trả Voucher[] — unshift tất cả vào đầu danh sách
+        action.payload.forEach((voucher) => {
+          state.vouchers.unshift(voucher);
+        });
       })
       .addCase(updateVoucher.fulfilled, (state, action) => {
         if (action.payload) {
