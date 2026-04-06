@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { JSX, MouseEvent } from 'react';
 import {
   Box,
@@ -15,7 +15,15 @@ import {
   Storefront as StorefrontIcon,
   GroupAdd as GroupAddIcon,
   CheckCircle as CheckCircleIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
@@ -38,6 +46,7 @@ import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSche
 import type { Branch } from '@features/vendor/types/vendor';
 import type { VoucherCreate } from '@custom-types/voucher';
 import useVoucher from '@features/vendor/hooks/useVoucher';
+import { getCampaignManagementTourSteps } from '@features/vendor/utils/campaignManagementTourSteps';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -118,6 +127,8 @@ export default function VendorCampaignPage(): JSX.Element {
   const [postCreateStep, setPostCreateStep] = useState<PostCreateStep>('idle');
   const newCampaignRef = useRef<VendorCampaign | null>(null);
   const voucherCreatedCountRef = useRef(0);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -258,6 +269,28 @@ export default function VendorCampaignPage(): JSX.Element {
 
   const newCampaign = newCampaignRef.current;
 
+  const startCampaignTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getCampaignManagementTourSteps({
+      hasRows: storeCampaigns.length > 0,
+    });
+  }, [storeCampaigns.length]);
+
   const columns = [
     // {
     //   key: 'campaignId',
@@ -394,12 +427,54 @@ export default function VendorCampaignPage(): JSX.Element {
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="campaign-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý chiến dịch
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý chiến dịch
+            </h1>
+            <button
+              type="button"
+              onClick={startCampaignTour}
+              aria-label="Mở hướng dẫn quản lý chiến dịch"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý các chương trình khuyến mãi và chiến dịch của quán
           </p>
@@ -407,6 +482,7 @@ export default function VendorCampaignPage(): JSX.Element {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleOpenModal()}
+            data-tour="campaign-create-button"
             className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
           >
             <AddIcon fontSize="small" />
@@ -416,6 +492,7 @@ export default function VendorCampaignPage(): JSX.Element {
             onClick={() => {
               setIsJoinableModalOpen(true);
             }}
+            data-tour="campaign-join-button"
             className="flex items-center gap-2 rounded-lg border border-[var(--color-primary-600)] bg-white px-4 py-2 font-semibold text-[var(--color-primary-700)] transition-colors hover:bg-[var(--color-primary-50)]"
           >
             <GroupAddIcon fontSize="small" />
@@ -425,7 +502,7 @@ export default function VendorCampaignPage(): JSX.Element {
       </div>
 
       {/* Table Content */}
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box sx={{ flex: 1, minHeight: 0 }} data-tour="campaign-table-wrapper">
         <Table
           columns={columns}
           maxHeight="none"
@@ -433,23 +510,26 @@ export default function VendorCampaignPage(): JSX.Element {
           rowKey="campaignId"
           loading={status === 'pending'}
           emptyMessage="Chưa có chiến dịch cửa hàng nào"
+          tourId="vendor-campaign"
         />
       </Box>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={page}
-        totalPages={Math.ceil((totalCount ?? 0) / pageSize)}
-        totalCount={totalCount ?? 0}
-        pageSize={pageSize}
-        hasPrevious={page > 1}
-        hasNext={page < Math.ceil((totalCount ?? 0) / pageSize)}
-        onPageChange={setPage}
-        onPageSizeChange={(newPageSize) => {
-          setPageSize(newPageSize);
-          setPage(1);
-        }}
-      />
+      <div data-tour="campaign-pagination">
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil((totalCount ?? 0) / pageSize)}
+          totalCount={totalCount ?? 0}
+          pageSize={pageSize}
+          hasPrevious={page > 1}
+          hasNext={page < Math.ceil((totalCount ?? 0) / pageSize)}
+          onPageChange={setPage}
+          onPageSizeChange={(newPageSize) => {
+            setPageSize(newPageSize);
+            setPage(1);
+          }}
+        />
+      </div>
 
       {/* Form Modal */}
       <VendorCampaignFormModal
