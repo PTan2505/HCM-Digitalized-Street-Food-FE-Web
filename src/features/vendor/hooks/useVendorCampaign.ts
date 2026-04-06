@@ -16,6 +16,7 @@ import {
   addBranchesToACampaign,
   removeBranchesFromACampaign,
 } from '@slices/campaign';
+import { axiosApi } from '@lib/api/apiInstance';
 import type {
   VendorCampaign,
   CampaignDetailsResponse,
@@ -35,6 +36,7 @@ const useVendorCampaign = (): {
   onCreateVendorCampaign: (
     data: VendorCampaignCreate
   ) => Promise<VendorCampaign>;
+  onGetCampaignDetail: (campaignId: number) => Promise<VendorCampaign>;
   onUpdateVendorCampaign: (
     id: number,
     data: VendorCampaignUpdate
@@ -95,6 +97,13 @@ const useVendorCampaign = (): {
       return await dispatch(createVendorCampaign(data)).unwrap();
     },
     [dispatch]
+  );
+
+  const onGetCampaignDetail = useCallback(
+    async (campaignId: number): Promise<VendorCampaign> => {
+      return await axiosApi.vendorCampaignApi.getCampaignDetail(campaignId);
+    },
+    []
   );
 
   const onUpdateVendorCampaign = useCallback(
@@ -221,6 +230,7 @@ const useVendorCampaign = (): {
   return {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
+    onGetCampaignDetail,
     onUpdateVendorCampaign,
     onGetCampaignImage,
     onPostCampaignImage,

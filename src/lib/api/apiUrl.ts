@@ -177,6 +177,8 @@ export const apiUrl = {
   campaign: {
     GetOrPostSystemCampaign: '/Campaign/system',
     GetOrPostVendorCampaign: '/Campaign/vendor',
+    GetCampaignDetail: (campaignId: number): string =>
+      `/Campaign/${campaignId}`,
     GetOrPostBranchCampaign: (branchId: number): string =>
       `/Campaign/branch/${branchId}`,
     GetJoinableSystemCampaigns: '/Campaign/system/joinable',
