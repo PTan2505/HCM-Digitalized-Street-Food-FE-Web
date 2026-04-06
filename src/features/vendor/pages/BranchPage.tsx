@@ -537,9 +537,20 @@ function BranchPage(): JSX.Element {
         data-tour="branch-page-header"
       >
         <div data-tour="vendor-store-name">
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Quản lý chi nhánh
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý chi nhánh
+            </h1>
+            <button
+              type="button"
+              onClick={startBranchTour}
+              aria-label="Mở hướng dẫn quản lý chi nhánh"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Tên cửa hàng:{' '}
             {isEditingName ? (
@@ -590,24 +601,14 @@ function BranchPage(): JSX.Element {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={startBranchTour}
-            className="border-primary-300 text-primary-700 hover:bg-primary-50 inline-flex items-center gap-2 rounded-lg border px-4 py-2 font-semibold transition-colors"
-          >
-            <HelpOutlineIcon fontSize="small" />
-            Hướng dẫn
-          </button>
-          <button
-            onClick={handleOpenCreateModal}
-            data-tour="branch-create-button"
-            className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
-          >
-            <AddIcon fontSize="small" />
-            {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
-          </button>
-        </div>
+        <button
+          onClick={handleOpenCreateModal}
+          data-tour="branch-create-button"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
+        >
+          <AddIcon fontSize="small" />
+          {branches.length === 0 ? 'Tạo cửa hàng mới' : 'Thêm chi nhánh'}
+        </button>
       </div>
 
       <div data-tour="branch-table-wrapper">
