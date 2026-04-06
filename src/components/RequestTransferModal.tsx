@@ -102,7 +102,7 @@ export default function RequestTransferModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5 shrink-0">
+        <Box className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5">
           <Box className="flex items-center gap-3">
             <Box>
               <Typography
@@ -188,13 +188,17 @@ export default function RequestTransferModal({
                         {...field}
                         options={bankList}
                         value={selectedOption}
-                        onChange={(_, newValue) => field.onChange(newValue?.bin ?? '')}
+                        onChange={(_, newValue) =>
+                          field.onChange(newValue?.bin ?? '')
+                        }
                         getOptionLabel={(option) => option.shortName}
                         filterOptions={(options, state) => {
                           const inputValue = state.inputValue.toLowerCase();
                           return options.filter(
                             (option) =>
-                              option.shortName.toLowerCase().includes(inputValue) ||
+                              option.shortName
+                                .toLowerCase()
+                                .includes(inputValue) ||
                               option.name.toLowerCase().includes(inputValue) ||
                               option.bankCode.toLowerCase().includes(inputValue)
                           );
@@ -213,18 +217,24 @@ export default function RequestTransferModal({
                                 backgroundColor: 'white',
                                 paddingRight: '9px !important',
                                 '& fieldset': {
-                                  borderColor: errors.toBin ? '#ef4444' : '#e5e7eb',
+                                  borderColor: errors.toBin
+                                    ? '#ef4444'
+                                    : '#e5e7eb',
                                   transition: 'all 0.2s',
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: errors.toBin ? '#ef4444' : '#d1d5db',
+                                  borderColor: errors.toBin
+                                    ? '#ef4444'
+                                    : '#d1d5db',
                                 },
                                 '&.Mui-focused fieldset': {
-                                  borderColor: errors.toBin ? '#ef4444' : 'var(--color-primary-500)',
+                                  borderColor: errors.toBin
+                                    ? '#ef4444'
+                                    : 'var(--color-primary-500)',
                                   borderWidth: '1px',
                                 },
                                 '& .MuiOutlinedInput-input': {
-                                  padding: '4px 8px !important', 
+                                  padding: '4px 8px !important',
                                   lineHeight: '1.5',
                                 },
                               },
@@ -235,43 +245,58 @@ export default function RequestTransferModal({
                                 <img
                                   src={selectedOption.bankLogoUrl}
                                   alt={selectedOption.shortName}
-                                  className="h-6 w-6 ml-1 object-contain rounded-sm"
+                                  className="ml-1 h-6 w-6 rounded-sm object-contain"
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = 'none';
                                   }}
                                 />
                               ) : (
                                 <svg
-                                    className="h-5 w-5 ml-1 text-gray-400 shrink-0"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={1.5}
-                                      d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11m16-11v11M8 10v11m8-11v11"
-                                    />
-                                  </svg>
+                                  className="ml-1 h-5 w-5 shrink-0 text-gray-400"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11m16-11v11M8 10v11m8-11v11"
+                                  />
+                                </svg>
                               ),
                             }}
                           />
                         )}
                         renderOption={(props, option, { selected }) => (
-                          <li {...props} key={option.bin} className={`${props.className} hover:bg-gray-50 flex items-center gap-3 px-4 py-3`}>
+                          <li
+                            {...props}
+                            key={option.bin}
+                            className={`${props.className} flex items-center gap-3 px-4 py-3 hover:bg-gray-50`}
+                          >
                             <img
                               src={option.bankLogoUrl}
                               alt={option.shortName}
                               className="h-8 w-8 shrink-0 rounded object-contain"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).style.display =
+                                  'none';
                               }}
                             />
                             <Box className="min-w-0 flex-1">
-                              <Typography className={`truncate text-sm ${selected ? 'font-semibold text-[var(--color-primary-600)]' : 'font-medium text-gray-800'}`}>
+                              <Typography
+                                className={`truncate text-sm ${selected ? 'font-semibold text-[var(--color-primary-600)]' : 'font-medium text-gray-800'}`}
+                              >
                                 {option.shortName}{' '}
-                                <span className={selected ? 'font-normal text-[var(--color-primary-500)]/80' : 'font-normal text-gray-500'}>
+                                <span
+                                  className={
+                                    selected
+                                      ? 'font-normal text-[var(--color-primary-500)]/80'
+                                      : 'font-normal text-gray-500'
+                                  }
+                                >
                                   ({option.bankCode})
                                 </span>
                               </Typography>
@@ -344,7 +369,7 @@ export default function RequestTransferModal({
         </Box>
 
         {/* Modal Actions */}
-        <Box className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/80 px-8 py-5 shrink-0">
+        <Box className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/80 px-8 py-5">
           <Button
             onClick={onClose}
             disabled={isSubmitting}
