@@ -41,6 +41,8 @@ export interface DishState {
   // Branch dishes
   branchDishes: CreateOrUpdateDishResponse[];
   branchDishesPagination: PaginationState;
+  // Map branchId -> totalCount (dùng để check branch nào đã subscribed mà chưa có món ăn)
+  branchDishCountMap: Record<number, number>;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -50,6 +52,7 @@ const initialState: DishState = {
   vendorDishesPagination: { ...defaultPagination },
   branchDishes: [],
   branchDishesPagination: { ...defaultPagination },
+  branchDishCountMap: {},
   status: 'idle',
   error: null,
 };
@@ -286,6 +289,9 @@ export const dishSlice = createSlice({
           hasPrevious: action.payload.hasPrevious,
           hasNext: action.payload.hasNext,
         };
+        // Lưu totalCount cho branch này vào map (dùng để check onboarding)
+        const branchId = action.meta.arg.branchId;
+        state.branchDishCountMap[branchId] = action.payload.totalCount;
       })
       .addCase(assignDishToBranch.fulfilled, (state, action) => {
         if (action.payload) {
@@ -369,3 +375,7 @@ export const selectBranchDishes = (
 export const selectBranchDishesPagination = (
   state: RootState
 ): DishState['branchDishesPagination'] => state.dish.branchDishesPagination;
+
+export const selectBranchDishCountMap = (
+  state: RootState
+): Record<number, number> => state.dish.branchDishCountMap;
