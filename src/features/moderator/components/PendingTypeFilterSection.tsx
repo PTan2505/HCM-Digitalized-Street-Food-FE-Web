@@ -1,5 +1,4 @@
 import type { PendingRegistrationType } from '@features/moderator/types/branch';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import {
   Box,
   MenuItem,

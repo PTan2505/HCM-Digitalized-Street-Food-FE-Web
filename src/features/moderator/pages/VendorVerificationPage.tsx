@@ -1,6 +1,5 @@
 import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
 import Pagination from '@features/moderator/components/Pagination';
-import PendingTypeFilterSection from '@features/moderator/components/PendingTypeFilterSection';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
 import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
@@ -25,11 +24,25 @@ import {
   selectPendingRegistrationsPagination,
 } from '@slices/branch';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const VERIFICATION_TYPE_BY_PATH: Record<string, PendingRegistrationType> = {
+  'ghost-pin': 0,
+  vendor: 1,
+  'ownership-request': 2,
+};
+
+const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
+  0: 'Xác minh - Ghost Pin chờ duyệt',
+  1: 'Xác minh - Quán ăn chờ duyệt',
+  2: 'Xác minh - Yêu cầu sở hữu Ghost Pin',
+};
 
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
   const status = useAppSelector(selectBranchStatus);
+  const location = useLocation();
   const {
     onGetPendingRegistrations,
     onVerifyBranchRegistration,
@@ -37,7 +50,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   } = useBranch();
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [pendingType, setPendingType] = useState<PendingRegistrationType>(1);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -61,6 +74,13 @@ export default function VendorVerificationPage(): React.JSX.Element {
       }
     >
   >({});
+
+  useEffect(() => {
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const typeSegment = pathSegments[pathSegments.length - 1];
+    const routeType = VERIFICATION_TYPE_BY_PATH[typeSegment];
+    setPendingType(routeType ?? 1);
+  }, [location.pathname]);
 
   useEffect(() => {
     void onGetPendingRegistrations({ pageNumber, pageSize, type: pendingType });
@@ -117,14 +137,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setPageSize(newPageSize);
     setPageNumber(1);
   }, []);
-
-  const handlePendingTypeChange = useCallback(
-    (type: PendingRegistrationType): void => {
-      setPendingType(type);
-      setPageNumber(1);
-    },
-    []
-  );
 
   const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
     try {
@@ -321,24 +333,10 @@ export default function VendorVerificationPage(): React.JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Xác minh người bán
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
-            Quản lý và xử lý các yêu cầu đăng ký chi nhánh
-          </p>
-        </div>
-      </div>
-
-      {/* Table */}
-      <PendingTypeFilterSection
-        value={pendingType}
-        onFilterChange={handlePendingTypeChange}
-      />
+    <div className="font-(--font-nunito)">
+      <h1 className="text-table-text-primary mb-6 text-2xl font-bold">
+        {TITLE_BY_PENDING_TYPE[pendingType]}
+      </h1>
 
       {/* Table */}
       <Table

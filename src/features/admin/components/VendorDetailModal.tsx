@@ -15,13 +15,14 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Divider,
   Rating,
   Typography,
 } from '@mui/material';
 import BranchLocationPreviewMap from '@features/admin/components/BranchLocationPreviewMap';
 import type { JSX } from 'react';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface VendorDetailModalProps {
   open: boolean;
@@ -67,11 +68,13 @@ export default function VendorDetailModal({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle className="border-b border-gray-300">
-        <Typography variant="h5" component="div" className="font-bold">
-          Chi tiết cửa hàng
-        </Typography>
-      </DialogTitle>
+      <AppModalHeader
+        title="Chi tiết cửa hàng"
+        subtitle={vendorDetail?.name ?? ''}
+        icon={<StorefrontIcon />}
+        iconTone="admin"
+        onClose={onClose}
+      />
       <DialogContent className="mt-4">
         {vendorDetail && (
           <Box>

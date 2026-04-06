@@ -10,7 +10,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   IconButton,
   Tooltip,
 } from '@mui/material';
@@ -43,6 +42,7 @@ import {
 } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import type { Voucher } from '@custom-types/voucher';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface QuestFormModalProps {
   isOpen: boolean;
@@ -56,7 +56,27 @@ interface RewardOption {
   id: number;
   label: string;
   hint: string;
+  searchText?: string;
 }
+
+const formatCurrencyVND = (value: number): string => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const buildVoucherDiscountText = (voucher: Voucher): string => {
+  if (voucher.type === 'PERCENT') {
+    const maxCapText = voucher.maxDiscountValue
+      ? `, tối đa ${formatCurrencyVND(voucher.maxDiscountValue)}`
+      : '';
+    return `Giảm ${voucher.discountValue}%${maxCapText}`;
+  }
+
+  return `Giảm ${formatCurrencyVND(voucher.discountValue)}`;
+};
 
 const defaultTask = {
   type: QuestTaskType.REVIEW,
@@ -110,7 +130,7 @@ export default function QuestFormModal({
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<QuestFormInput, unknown, QuestFormData>({
     resolver: zodResolver(QuestSchema),
     defaultValues,
@@ -119,6 +139,7 @@ export default function QuestFormModal({
   const isStandalone = watch('isStandalone');
   const watchedIsActive = watch('isActive');
   const campaignId = watch('campaignId');
+  const hasQuestChanges = isDirty || selectedImageFile !== null;
 
   const selectedCampaign = useMemo(() => {
     if (!campaignId) {
@@ -164,7 +185,7 @@ export default function QuestFormModal({
       badgeOptions.map((badge) => ({
         id: badge.badgeId,
         label: badge.badgeName,
-        hint: `ID: ${badge.badgeId}`,
+        hint: ``,
       })),
     [badgeOptions]
   );
@@ -174,7 +195,10 @@ export default function QuestFormModal({
       voucherOptions.map((voucher) => ({
         id: voucher.voucherId,
         label: voucher.name,
-        hint: voucher.voucherCode,
+        hint: `${buildVoucherDiscountText(voucher)} | Đơn tối thiểu ${formatCurrencyVND(
+          voucher.minAmountRequired
+        )}`,
+        searchText: `${voucher.name} ${voucher.voucherCode} ${voucher.discountValue} ${voucher.minAmountRequired}`,
       })),
     [voucherOptions]
   );
@@ -394,9 +418,13 @@ export default function QuestFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        {quest ? 'Chỉnh sửa nhiệm vụ' : 'Tạo nhiệm vụ mới'}
-      </DialogTitle>
+      <AppModalHeader
+        title={quest ? 'Chỉnh sửa nhiệm vụ' : 'Tạo nhiệm vụ mới'}
+        subtitle={quest?.title ?? ''}
+        icon={<AddIcon />}
+        iconTone="admin"
+        onClose={onClose}
+      />
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
@@ -428,7 +456,7 @@ export default function QuestFormModal({
                       className="peer sr-only"
                     />
                     <div
-                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
                       style={{
                         backgroundColor: isStandalone ? '#8bcf3f' : '#d1d5db',
                         transition: 'background-color 0.2s',
@@ -853,7 +881,7 @@ export default function QuestFormModal({
                             ? rewardOptions.slice(0, 8)
                             : rewardOptions
                                 .filter((option) =>
-                                  `${option.label}`
+                                  `${option.label} ${option.searchText ?? option.hint}`
                                     .toLowerCase()
                                     .includes(normalizedRewardQuery)
                                 )
@@ -939,6 +967,9 @@ export default function QuestFormModal({
                                         <p className="font-medium text-gray-800">
                                           {option.label}
                                         </p>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                          {option.hint}
+                                        </p>
                                       </button>
                                     ))
                                   ) : (
@@ -1008,7 +1039,7 @@ export default function QuestFormModal({
                       className="peer sr-only"
                     />
                     <div
-                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
+                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
                       style={{
                         backgroundColor: watchedIsActive
                           ? '#8bcf3f'
@@ -1023,7 +1054,7 @@ export default function QuestFormModal({
           </div>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
@@ -1031,7 +1062,9 @@ export default function QuestFormModal({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === 'pending'}
+            disabled={
+              status === 'pending' || (quest !== null && !hasQuestChanges)
+            }
             startIcon={
               status === 'pending' ? <CircularProgress size={20} /> : null
             }
