@@ -72,16 +72,16 @@ function PaymentHistoryPage(): JSX.Element {
     //   label: 'ID',
     //   style: { width: '60px' },
     // },
-    {
-      key: 'branchId',
-      label: 'Chi nhánh',
-      style: { width: '100px' },
-    },
+    // {
+    //   key: 'branchId',
+    //   label: 'Chi nhánh',
+    //   style: { width: '100px' },
+    // },
     {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box className="max-w-[220px] overflow-hidden text-sm text-ellipsis whitespace-nowrap">
+        <Box className="max-w-[400px] overflow-hidden text-sm text-ellipsis whitespace-nowrap">
           {typeof value === 'string' ? value : '-'}
         </Box>
       ),

@@ -7,6 +7,7 @@ import type {
   SubmitImagesResponse,
   GetImagesResponse,
   CreateOrUpdateBranchResponse,
+  Branch,
   UpdateVendorNameRequest,
   UpdateVendorNameResponse,
   UpdateDietaryPreferencesOfMyVendorRequest,
@@ -28,6 +29,32 @@ import type {
 } from '@features/vendor/types/workSchedule';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
+
+// type BranchListResponse = {
+//   currentPage: number;
+//   pageSize: number;
+//   totalPages: number;
+//   totalCount: number;
+//   hasPrevious: boolean;
+//   hasNext: boolean;
+//   items: Branch[];
+// };
+
+// const isBranchListResponse = (data: unknown): data is BranchListResponse => {
+//   if (!data || typeof data !== 'object') return false;
+//   if (
+//     !('items' in data) ||
+//     !Array.isArray((data as { items: unknown }).items)
+//   ) {
+//     return false;
+//   }
+//   return (
+//     'currentPage' in data &&
+//     'pageSize' in data &&
+//     'totalPages' in data &&
+//     'totalCount' in data
+//   );
+// };
 
 export class VendorApi {
   private apiClient: ApiClient;
@@ -98,11 +125,26 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getBranches(vendorId: number): Promise<void> {
-  //   await this.apiClient.get({
-  //     url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
-  //   });
-  // }
+  async getBranches(vendorId: number): Promise<Branch[]> {
+    const res = await this.apiClient.get<unknown>({
+      url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
+    });
+
+    if (Array.isArray(res.data)) {
+      return res.data as Branch[];
+    }
+
+    if (
+      res.data &&
+      typeof res.data === 'object' &&
+      'items' in res.data &&
+      Array.isArray((res.data as { items: unknown }).items)
+    ) {
+      return (res.data as { items: Branch[] }).items;
+    }
+
+    return [];
+  }
 
   async updateBranch(
     branchId: number,

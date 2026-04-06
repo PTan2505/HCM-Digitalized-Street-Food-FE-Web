@@ -16,6 +16,7 @@ import type {
   ClaimBranchResponse,
   SearchUsersResponse,
   AssignBranchManagerRequest,
+  Branch,
 } from '@features/vendor/types/vendor';
 import type { UserLookupResponse } from '@features/user/api/profileApi';
 
@@ -46,6 +47,7 @@ import {
   getImages,
   deleteImage,
   createBranch,
+  getBranchesByVendor,
   updateBranch,
   deleteBranch,
   updateVendorName,
@@ -100,6 +102,7 @@ export default function useVendor(): {
     vendorId: number;
     data: VendorRegistrationRequest;
   }) => Promise<CreateOrUpdateBranchResponse>;
+  onGetBranchesByVendor: (vendorId: number) => Promise<Branch[]>;
   onUpdateBranch: (payload: {
     branchId: number;
     data: VendorRegistrationRequest;
@@ -265,6 +268,13 @@ export default function useVendor(): {
     [dispatch]
   );
 
+  const onGetBranchesByVendor = useCallback(
+    async (vendorId: number): Promise<Branch[]> => {
+      return await dispatch(getBranchesByVendor(vendorId)).unwrap();
+    },
+    [dispatch]
+  );
+
   const onUpdateBranch = useCallback(
     async (payload: {
       branchId: number;
@@ -373,6 +383,7 @@ export default function useVendor(): {
     onGetImages,
     onDeleteImage,
     onCreateBranch,
+    onGetBranchesByVendor,
     onUpdateBranch,
     onDeleteBranch,
     onUpdateVendorName,

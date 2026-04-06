@@ -3,7 +3,7 @@ import type {
   Voucher,
   VoucherCreate,
   VoucherUpdate,
-} from '@features/admin/types/voucher';
+} from '@custom-types/voucher';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -52,9 +52,21 @@ export const getVouchersByCampaignId = createAppAsyncThunk(
   }
 );
 
+export const getVoucherById = createAppAsyncThunk(
+  'voucher/getVoucherById',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await axiosApi.voucherApi.getVoucherById(id);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const createVoucher = createAppAsyncThunk(
   'voucher/createVoucher',
-  async (payload: VoucherCreate, { rejectWithValue }) => {
+  async (payload: VoucherCreate[], { rejectWithValue }) => {
     try {
       const response = await axiosApi.voucherApi.createVoucher(payload);
       return response;
@@ -106,9 +118,10 @@ export const voucherSlice = createSlice({
         state.vouchers = action.payload;
       })
       .addCase(createVoucher.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.vouchers.unshift(action.payload);
-        }
+        // API trả Voucher[] — unshift tất cả vào đầu danh sách
+        action.payload.forEach((voucher) => {
+          state.vouchers.unshift(voucher);
+        });
       })
       .addCase(updateVoucher.fulfilled, (state, action) => {
         if (action.payload) {
@@ -130,6 +143,7 @@ export const voucherSlice = createSlice({
         isPending(
           getAllVouchers,
           getVouchersByCampaignId,
+          getVoucherById,
           createVoucher,
           updateVoucher,
           deleteVoucher
@@ -142,6 +156,7 @@ export const voucherSlice = createSlice({
         isFulfilled(
           getAllVouchers,
           getVouchersByCampaignId,
+          getVoucherById,
           createVoucher,
           updateVoucher,
           deleteVoucher
@@ -155,6 +170,7 @@ export const voucherSlice = createSlice({
         isRejected(
           getAllVouchers,
           getVouchersByCampaignId,
+          getVoucherById,
           createVoucher,
           updateVoucher,
           deleteVoucher

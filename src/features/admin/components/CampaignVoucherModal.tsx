@@ -1,28 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
+import { Dialog, DialogContent, Box, Button, Chip } from '@mui/material';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  IconButton,
-  Box,
-  Button,
-} from '@mui/material';
-import {
-  Close as CloseIcon,
   Add as AddIcon,
+  Visibility as VisibilityIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import type { Campaign } from '@features/admin/types/campaign';
-import type { Voucher, VoucherCreate } from '@features/admin/types/voucher';
+import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVouchers, selectVoucherStatus } from '@slices/voucher';
 import VoucherFormModal from './VoucherFormModal';
+import VoucherDetailsModal from './VoucherDetailsModal';
+import AppModalHeader from '@components/AppModalHeader';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 
 interface CampaignVoucherModalProps {
   isOpen: boolean;
@@ -44,6 +39,35 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
+const formatCurrency = (value: number): string =>
+  new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(value);
+
+const StatusBadge = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default';
+}): JSX.Element => {
+  const colors = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+
+  return (
+    <span
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+    >
+      {label}
+    </span>
+  );
+};
+
 export default function CampaignVoucherModal({
   isOpen,
   onClose,
@@ -63,6 +87,8 @@ export default function CampaignVoucherModal({
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingVoucher, setDeletingVoucher] = useState<Voucher | null>(null);
+  const [openDetailsModal, setOpenDetailsModal] = useState(false);
+  const [viewingVoucher, setViewingVoucher] = useState<Voucher | null>(null);
 
   const fetchVouchers = useCallback(async () => {
     if (campaign) {
@@ -92,12 +118,17 @@ export default function CampaignVoucherModal({
     setEditingVoucher(null);
   };
 
-  const handleFormSubmit = async (data: VoucherCreate): Promise<void> => {
+  const handleFormSubmit = async (
+    data: VoucherCreate | VoucherCreate[]
+  ): Promise<void> => {
     try {
       if (editingVoucher) {
-        await onUpdateVoucher(editingVoucher.voucherId, data);
+        // update chỉ nhận đơn lẻ — lấy phần tử đầu nếu là mảng
+        const single = Array.isArray(data) ? data[0] : data;
+        await onUpdateVoucher(editingVoucher.voucherId, single);
       } else {
-        await onCreateVoucher(data);
+        const items = Array.isArray(data) ? data : [data];
+        await onCreateVoucher(items);
       }
       handleCloseForm();
       void fetchVouchers();
@@ -129,74 +160,159 @@ export default function CampaignVoucherModal({
     setDeletingVoucher(null);
   };
 
+  const handleOpenDetails = (voucher: Voucher): void => {
+    setViewingVoucher(voucher);
+    setOpenDetailsModal(true);
+  };
+
+  const handleCloseDetails = (): void => {
+    setOpenDetailsModal(false);
+    setViewingVoucher(null);
+  };
+
   const columns = [
-    { key: 'voucherId', label: 'ID', style: { width: '60px' } },
-    { key: 'name', label: 'Tên Voucher' },
-    { key: 'voucherCode', label: 'Mã Code' },
+    {
+      key: 'name',
+      label: 'Tên voucher',
+      style: { width: '180px', maxWidth: '240px' },
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <Box className="w-55 min-w-0">
+          <div
+            className="text-table-text-primary truncate font-semibold"
+            title={row.name}
+          >
+            {row.name}
+          </div>
+          <div
+            className="text-table-text-secondary truncate text-xs"
+            title={row.voucherCode}
+          >
+            {row.voucherCode}
+          </div>
+        </Box>
+      ),
+    },
     {
       key: 'type',
-      label: 'Loại',
-      render: (value: unknown): JSX.Element | string =>
-        value === 'AMOUNT' ? 'Tiền mặt' : 'Phần trăm',
+      label: 'Loại voucher',
+      render: (value: unknown): JSX.Element => (
+        <Chip
+          label={value === 'PERCENT' ? 'Phần trăm' : 'Giá tiền'}
+          size="small"
+          color={value === 'PERCENT' ? 'info' : 'primary'}
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      key: 'availableQuantity',
+      label: 'Số lượng còn lại',
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const remainingQuantity = Math.max(
+          row.quantity - (row.usedQuantity ?? 0),
+          0
+        );
+
+        return (
+          <span className="text-table-text-primary text-sm font-medium">
+            {remainingQuantity}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'quantity',
+      label: 'Số lượng',
+      render: (value: unknown): JSX.Element => (
+        <span className="text-table-text-primary text-sm font-medium">
+          {value as number}
+        </span>
+      ),
+    },
+    {
+      key: 'startDate',
+      label: 'Thời gian hiệu lực',
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <Box className="text-table-text-secondary text-sm">
+          <div>Từ: {formatVNDatetime(row.startDate)}</div>
+          <div>Đến: {formatVNDatetime(row.endDate)}</div>
+        </Box>
+      ),
     },
     {
       key: 'discountValue',
-      label: 'Giá trị',
-      render: (value: unknown, row: Voucher): JSX.Element | string =>
-        row.type === 'AMOUNT'
-          ? `${(value as number).toLocaleString()} VNĐ`
-          : `${value as number}%`,
-    },
-    { key: 'quantity', label: 'Số lượng' },
-    {
-      key: 'startDate',
-      label: 'Thời gian',
-      render: (_: unknown, row: Voucher): JSX.Element => (
-        <div className="text-xs">
-          <div>Từ: {formatVNDatetime(row.startDate)}</div>
-          <div>Đến: {formatVNDatetime(row.endDate)}</div>
-        </div>
+      label: 'Giá trị giảm',
+      render: (value: unknown, row: Voucher): JSX.Element => (
+        <span className="text-table-text-primary text-sm font-semibold">
+          {row.type === 'PERCENT'
+            ? `${value as number}%`
+            : formatCurrency(value as number)}
+        </span>
       ),
     },
-  ];
-
-  const actions = [
     {
-      label: <EditIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        handleOpenForm(row);
-      },
-      color: 'primary' as const,
-      variant: 'outlined' as const,
+      key: 'isActive',
+      label: 'Hoạt động',
+      render: (value: unknown): JSX.Element => (
+        <StatusBadge
+          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          type={value === true ? 'success' : 'error'}
+        />
+      ),
     },
     {
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        handleDelete(row);
-      },
-      color: 'error' as const,
-      variant: 'outlined' as const,
+      key: 'actions',
+      label: 'Thao tác',
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <Box className="flex items-center gap-2">
+          <Button
+            size="small"
+            color="info"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleOpenDetails(row);
+            }}
+          >
+            <VisibilityIcon fontSize="small" />
+          </Button>
+          <Button
+            size="small"
+            color="primary"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleOpenForm(row);
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </Button>
+          <Button
+            size="small"
+            color="error"
+            variant="outlined"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleDelete(row);
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </Button>
+        </Box>
+      ),
     },
   ];
 
   return (
     <>
       <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
-        <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-          Voucher của chiến dịch: {campaign.name}
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={(theme) => ({
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: theme.palette.grey[500],
-            })}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
+        <AppModalHeader
+          title="Voucher chiến dịch"
+          subtitle={campaign.name}
+          icon={<LocalOfferIcon />}
+          iconTone="voucher"
+          onClose={onClose}
+        />
         <DialogContent dividers>
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
@@ -211,9 +327,9 @@ export default function CampaignVoucherModal({
           <Box sx={{ minHeight: '400px' }}>
             <Table
               columns={columns}
+              maxHeight="none"
               data={vouchers}
               rowKey="voucherId"
-              actions={actions}
               loading={status === 'pending'}
               emptyMessage="Chiến dịch này chưa có voucher nào"
             />
@@ -228,43 +344,29 @@ export default function CampaignVoucherModal({
         voucher={editingVoucher}
         status={status}
         fixedCampaignId={campaign.campaignId}
+        campaignStartDate={campaign.startDate}
+        campaignEndDate={campaign.endDate}
+        campaignName={campaign.name}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-voucher-title"
-        aria-describedby="delete-voucher-description"
-      >
-        <DialogTitle id="delete-voucher-title">
-          Xác nhận xóa voucher
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-voucher-description">
-            Bạn có chắc chắn muốn xóa voucher &quot;
-            {deletingVoucher?.name}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa voucher"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa voucher &quot;{deletingVoucher?.name}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
+
+      <VoucherDetailsModal
+        isOpen={openDetailsModal}
+        onClose={handleCloseDetails}
+        voucher={viewingVoucher}
+      />
     </>
   );
 }

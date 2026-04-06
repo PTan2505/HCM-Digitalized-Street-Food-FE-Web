@@ -2,7 +2,7 @@ import type {
   Voucher,
   VoucherCreate,
   VoucherUpdate,
-} from '@features/admin/types/voucher';
+} from '@custom-types/voucher';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
@@ -27,8 +27,15 @@ export class VoucherApi {
     return res.data;
   }
 
-  async createVoucher(data: VoucherCreate): Promise<Voucher> {
-    const res = await this.apiClient.post<Voucher, VoucherCreate>({
+  async getVoucherById(id: number): Promise<Voucher> {
+    const res = await this.apiClient.get<Voucher>({
+      url: apiUrl.voucher.UpdateOrDeleteVoucher(id),
+    });
+    return res.data;
+  }
+
+  async createVoucher(data: VoucherCreate[]): Promise<Voucher[]> {
+    const res = await this.apiClient.post<Voucher[], VoucherCreate[]>({
       url: apiUrl.voucher.GetOrPostVouchers,
       data,
     });

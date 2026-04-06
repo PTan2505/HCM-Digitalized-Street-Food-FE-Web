@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { Box, Checkbox, CircularProgress, Chip } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import SaveIcon from '@mui/icons-material/Save';
 import Table from '@features/vendor/components/Table';
 import useVendor from '@features/vendor/hooks/useVendor';
 import useDietary from '@features/admin/hooks/useDietary';
@@ -141,7 +140,7 @@ export default function DietaryPreferencesPage(): JSX.Element {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-secondary block max-w-[560px]">
+        <Box className="text-table-text-secondary block max-w-140">
           {typeof value === 'string' && value.trim() !== '' ? value : '-'}
         </Box>
       ),
@@ -175,13 +174,13 @@ export default function DietaryPreferencesPage(): JSX.Element {
   const loading = vendorStatus === 'pending' || dietaryStatus === 'pending';
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Chế độ ăn của cửa hàng
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Chọn các chế độ ăn phù hợp mà cửa hàng của bạn đang phục vụ
           </p>
         </div>
@@ -189,13 +188,9 @@ export default function DietaryPreferencesPage(): JSX.Element {
         <button
           onClick={() => void handleSave()}
           disabled={loading || isSaving || !isDirty}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
         >
-          {isSaving ? (
-            <CircularProgress size={16} color="inherit" />
-          ) : (
-            <SaveIcon fontSize="small" />
-          )}
+          {isSaving ? <CircularProgress size={16} color="inherit" /> : null}
           {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>
       </div>
@@ -217,6 +212,7 @@ export default function DietaryPreferencesPage(): JSX.Element {
         rowKey="dietaryPreferenceId"
         loading={loading}
         emptyMessage="Chưa có chế độ ăn nào"
+        maxHeight="calc(100vh - 240px)"
       />
     </div>
   );

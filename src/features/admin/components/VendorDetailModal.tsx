@@ -15,12 +15,14 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Divider,
   Rating,
   Typography,
 } from '@mui/material';
+import BranchLocationPreviewMap from '@features/admin/components/BranchLocationPreviewMap';
 import type { JSX } from 'react';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface VendorDetailModalProps {
   open: boolean;
@@ -33,6 +35,17 @@ export default function VendorDetailModal({
   onClose,
   vendorDetail,
 }: VendorDetailModalProps): JSX.Element {
+  const ownerDisplayName = vendorDetail?.vendorOwner
+    ? `${vendorDetail.vendorOwner.firstName ?? ''} ${vendorDetail.vendorOwner.lastName ?? ''}`.trim()
+    : (vendorDetail?.vendorOwnerName ?? '-');
+
+  const branches = Array.isArray(vendorDetail?.branches)
+    ? vendorDetail.branches
+    : [];
+  const dietaryPreferences = Array.isArray(vendorDetail?.dietaryPreferences)
+    ? vendorDetail.dietaryPreferences
+    : [];
+
   const getBranchVerificationStatus = (isVerified: boolean): JSX.Element => {
     return isVerified ? (
       <Chip
@@ -55,11 +68,13 @@ export default function VendorDetailModal({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle className="border-b">
-        <Typography variant="h5" component="div" className="font-bold">
-          Chi tiết cửa hàng
-        </Typography>
-      </DialogTitle>
+      <AppModalHeader
+        title="Chi tiết cửa hàng"
+        subtitle={vendorDetail?.name ?? ''}
+        icon={<StorefrontIcon />}
+        iconTone="admin"
+        onClose={onClose}
+      />
       <DialogContent className="mt-4">
         {vendorDetail && (
           <Box>
@@ -83,8 +98,7 @@ export default function VendorDetailModal({
                       Chủ cửa hàng
                     </Typography>
                     <Typography variant="body1" className="font-medium">
-                      {vendorDetail.vendorOwner.firstName}{' '}
-                      {vendorDetail.vendorOwner.lastName}
+                      {ownerDisplayName}
                     </Typography>
                   </Box>
                   <Box>
@@ -95,6 +109,18 @@ export default function VendorDetailModal({
                       {new Date(vendorDetail.createdAt).toLocaleDateString(
                         'vi-VN'
                       )}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Cập nhật gần nhất
+                    </Typography>
+                    <Typography variant="body1">
+                      {vendorDetail.updatedAt
+                        ? new Date(vendorDetail.updatedAt).toLocaleDateString(
+                            'vi-VN'
+                          )
+                        : '-'}
                     </Typography>
                   </Box>
                   <Box>
@@ -115,22 +141,50 @@ export default function VendorDetailModal({
                       />
                     </Box>
                   </Box>
+                  <Box className="sm:col-span-2">
+                    <Typography variant="body2" color="text.secondary">
+                      Khẩu vị cửa hàng
+                    </Typography>
+                    <Box className="mt-1 flex flex-wrap gap-2">
+                      {dietaryPreferences.length > 0 ? (
+                        dietaryPreferences.map((item, index) => (
+                          <Chip
+                            key={`${item.dietaryId ?? index}`}
+                            label={item.name ?? 'Không xác định'}
+                            size="small"
+                            color="default"
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="body2">Chưa thiết lập</Typography>
+                      )}
+                    </Box>
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
 
             {/* Branches */}
             <Typography variant="h6" className="mb-3 font-semibold">
-              Chi nhánh ({vendorDetail.branches.length})
+              Chi nhánh ({branches.length})
             </Typography>
-            {vendorDetail.branches.map((branch, index) => (
+            {branches.map((branch, index) => (
               <Card key={branch.branchId} className="mb-3 shadow-sm">
                 <CardContent>
                   <Box className="mb-3 flex items-start justify-between">
                     <Typography variant="h6" className="font-semibold">
                       Chi nhánh #{index + 1}: {branch.name}
                     </Typography>
-                    {getBranchVerificationStatus(branch.isVerified)}
+                    <Box className="flex items-center gap-2">
+                      {branch.tierName && (
+                        <Chip
+                          label={branch.tierName}
+                          size="small"
+                          color="info"
+                        />
+                      )}
+                      {getBranchVerificationStatus(branch.isVerified)}
+                    </Box>
                   </Box>
 
                   <Divider className="my-3" />
@@ -167,8 +221,7 @@ export default function VendorDetailModal({
                       <Box className="flex items-start gap-2">
                         <LocationOnIcon fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {branch.addressDetail}, {branch.branchName},{' '}
-                          {branch.ward}, {branch.city}
+                          {branch.addressDetail}, {branch.ward}, {branch.city}
                         </Typography>
                       </Box>
                     </Box>
@@ -189,9 +242,12 @@ export default function VendorDetailModal({
                           size="small"
                         />
                         <Typography variant="body2" color="text.secondary">
-                          ({branch.avgRating.toFixed(1)})
+                          ({Number(branch.avgRating ?? 0).toFixed(1)})
                         </Typography>
                       </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {branch.totalReviewCount ?? 0} đánh giá
+                      </Typography>
                     </Box>
 
                     {/* Status */}
@@ -215,7 +271,31 @@ export default function VendorDetailModal({
                           size="small"
                           color={branch.isSubscribed ? 'primary' : 'default'}
                         />
+                        {branch.daysRemaining !== null &&
+                          branch.daysRemaining !== undefined && (
+                            <Chip
+                              label={`Còn ${branch.daysRemaining} ngày`}
+                              size="small"
+                              color="warning"
+                            />
+                          )}
                       </Box>
+                    </Box>
+
+                    {/* Subscription */}
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        className="mb-2 font-semibold"
+                      >
+                        Gói đăng ký
+                      </Typography>
+                      <Typography variant="body2">
+                        Tier: {branch.tierName ?? '-'}
+                      </Typography>
+                      <Typography variant="body2">
+                        Hết hạn: {branch.subscriptionExpiresAt ?? '-'}
+                      </Typography>
                     </Box>
 
                     {/* Map */}
@@ -226,16 +306,10 @@ export default function VendorDetailModal({
                       >
                         Vị trí trên bản đồ
                       </Typography>
-                      <Box className="overflow-hidden rounded-lg border">
-                        <iframe
-                          width="100%"
-                          height="250"
-                          frameBorder="0"
-                          style={{ border: 0 }}
-                          src={`https://www.google.com/maps?q=${branch.lat},${branch.long}&hl=vi&z=15&output=embed`}
-                          allowFullScreen
-                        />
-                      </Box>
+                      <BranchLocationPreviewMap
+                        lat={branch.lat}
+                        lng={branch.long}
+                      />
                     </Box>
 
                     {/* License */}
@@ -295,7 +369,7 @@ export default function VendorDetailModal({
           </Box>
         )}
       </DialogContent>
-      <DialogActions className="border-t">
+      <DialogActions className="border-t border-gray-300">
         <Button
           onClick={onClose}
           color="primary"

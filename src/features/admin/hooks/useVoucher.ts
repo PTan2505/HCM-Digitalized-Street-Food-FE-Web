@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import {
   getAllVouchers,
   getVouchersByCampaignId,
+  getVoucherById,
   createVoucher,
   updateVoucher,
   deleteVoucher,
@@ -11,12 +12,13 @@ import type {
   VoucherCreate,
   VoucherUpdate,
   Voucher,
-} from '@features/admin/types/voucher';
+} from '@custom-types/voucher';
 
 const useVoucher = (): {
   onGetVouchers: () => Promise<Voucher[]>;
   onGetVouchersByCampaignId: (campaignId: number) => Promise<Voucher[]>;
-  onCreateVoucher: (data: VoucherCreate) => Promise<Voucher>;
+  onGetVoucherById: (id: number) => Promise<Voucher>;
+  onCreateVoucher: (data: VoucherCreate[]) => Promise<Voucher[]>;
   onUpdateVoucher: (id: number, data: VoucherUpdate) => Promise<Voucher>;
   onDeleteVoucher: (id: number) => Promise<number>;
 } => {
@@ -33,8 +35,15 @@ const useVoucher = (): {
     [dispatch]
   );
 
+  const onGetVoucherById = useCallback(
+    async (id: number): Promise<Voucher> => {
+      return await dispatch(getVoucherById(id)).unwrap();
+    },
+    [dispatch]
+  );
+
   const onCreateVoucher = useCallback(
-    async (data: VoucherCreate): Promise<Voucher> => {
+    async (data: VoucherCreate[]): Promise<Voucher[]> => {
       return await dispatch(createVoucher(data)).unwrap();
     },
     [dispatch]
@@ -57,6 +66,7 @@ const useVoucher = (): {
   return {
     onGetVouchers,
     onGetVouchersByCampaignId,
+    onGetVoucherById,
     onCreateVoucher,
     onUpdateVoucher,
     onDeleteVoucher,
