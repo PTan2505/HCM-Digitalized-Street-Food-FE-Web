@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
 import {
@@ -6,7 +6,15 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import VoucherFormModal from '@features/admin/components/VoucherFormModal';
 import VoucherDetailsModal from '@features/admin/components/VoucherDetailsModal';
@@ -15,6 +23,7 @@ import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVouchers, selectVoucherStatus } from '@slices/voucher';
+import { getVoucherManagementTourSteps } from '@features/admin/utils/voucherManagementTourSteps';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -50,7 +59,7 @@ const StatusBadge = ({
   };
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -71,6 +80,8 @@ export default function VoucherPage(): JSX.Element {
 
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [viewingVoucher, setViewingVoucher] = useState<Voucher | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const fetchVouchers = useCallback(async (): Promise<void> => {
     try {
@@ -143,6 +154,28 @@ export default function VoucherPage(): JSX.Element {
     setDeletingVoucher(null);
   };
 
+  const startVoucherTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getVoucherManagementTourSteps({
+      hasRows: vouchers.length > 0,
+    });
+  }, [vouchers.length]);
+
   const columns = [
     // {
     //   key: 'voucherId',
@@ -154,10 +187,10 @@ export default function VoucherPage(): JSX.Element {
       label: 'Tên voucher',
       render: (_: unknown, row: Voucher): JSX.Element => (
         <Box>
-          <div className="font-semibold text-[var(--color-table-text-primary)]">
+          <div className="text-table-text-primary font-semibold">
             {row.name}
           </div>
-          <div className="text-xs text-[var(--color-table-text-secondary)]">
+          <div className="text-table-text-secondary text-xs">
             {row.voucherCode}
           </div>
         </Box>
@@ -210,7 +243,7 @@ export default function VoucherPage(): JSX.Element {
         );
 
         return (
-          <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+          <span className="text-table-text-primary text-sm font-medium">
             {remainingQuantity}
           </span>
         );
@@ -220,7 +253,7 @@ export default function VoucherPage(): JSX.Element {
       key: 'quantity',
       label: 'Số lượng',
       render: (value: unknown): JSX.Element => (
-        <span className="text-sm font-medium text-[var(--color-table-text-primary)]">
+        <span className="text-table-text-primary text-sm font-medium">
           {value as number}
         </span>
       ),
@@ -229,7 +262,7 @@ export default function VoucherPage(): JSX.Element {
       key: 'startDate',
       label: 'Thời gian hiệu lực',
       render: (_: unknown, row: Voucher): JSX.Element => (
-        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+        <Box className="text-table-text-secondary text-sm">
           <div>Từ: {formatVNDatetime(row.startDate)}</div>
           <div>Đến: {formatVNDatetime(row.endDate)}</div>
         </Box>
@@ -249,6 +282,7 @@ export default function VoucherPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'view',
       label: <VisibilityIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenDetailsModal(row),
       tooltip: 'Xem chi tiết voucher',
@@ -256,6 +290,7 @@ export default function VoucherPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenModal(row),
       tooltip: 'Chỉnh sửa voucher',
@@ -263,6 +298,7 @@ export default function VoucherPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Voucher): void => {
         void handleDelete(row);
@@ -274,20 +310,63 @@ export default function VoucherPage(): JSX.Element {
   ];
 
   return (
-    <div className="flex h-full flex-col font-[var(--font-nunito)]">
+    <div className="flex h-full flex-col font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="voucher-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý Voucher
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý Voucher
+            </h1>
+            <button
+              type="button"
+              onClick={startVoucherTour}
+              aria-label="Mở hướng dẫn quản lý voucher"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
             Quản lý các voucher giảm giá trong hệ thống
           </p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          data-tour="voucher-create-button"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
         >
           <AddIcon fontSize="small" />
           Thêm voucher
@@ -295,7 +374,7 @@ export default function VoucherPage(): JSX.Element {
       </div>
 
       {/* Table */}
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box sx={{ flex: 1, minHeight: 0 }} data-tour="voucher-table-wrapper">
         <Table
           columns={columns}
           data={vouchers}
@@ -303,6 +382,7 @@ export default function VoucherPage(): JSX.Element {
           actions={actions}
           loading={status === 'pending'}
           emptyMessage="Chưa có voucher nào"
+          tourId="admin-voucher"
         />
       </Box>
 
