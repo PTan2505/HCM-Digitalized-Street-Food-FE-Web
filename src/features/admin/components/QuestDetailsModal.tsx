@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, Chip } from '@mui/material';
+import { Dialog, DialogContent } from '@mui/material';
 import {
   EmojiEvents as EmojiEventsIcon,
   Campaign as CampaignIcon,
@@ -123,6 +123,22 @@ const RewardTypeBadge = ({ label }: { label: string }): JSX.Element => (
   </span>
 );
 
+const QuestTypeBadge = ({
+  isStandalone,
+}: {
+  isStandalone?: boolean;
+}): JSX.Element => (
+  <span
+    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+      isStandalone
+        ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+        : 'border-cyan-200 bg-cyan-50 text-cyan-700'
+    }`}
+  >
+    {isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
+  </span>
+);
+
 export default function QuestDetailsModal({
   isOpen,
   onClose,
@@ -224,7 +240,7 @@ export default function QuestDetailsModal({
         }}
       >
         <div className="flex flex-col gap-6">
-          <div className="rounded-2xl border border-slate-200 bg-linear-to-r from-white to-slate-50 p-5 shadow-sm">
+          {/* <div className="rounded-2xl border border-slate-200 bg-linear-to-r from-white to-slate-50 p-5 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="max-w-2xl">
                 <p className="text-table-text-primary text-base font-bold">
@@ -248,7 +264,7 @@ export default function QuestDetailsModal({
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <InfoCard
@@ -275,32 +291,94 @@ export default function QuestDetailsModal({
               title="Thông tin chung"
             />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {!quest?.isStandalone && (
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 shrink-0 rounded-lg bg-blue-50 p-1.5 text-blue-500">
-                    <CampaignIcon sx={{ fontSize: 16 }} />
-                  </span>
-                  <div>
-                    <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                      Chiến dịch
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-gray-800">
-                      {campaignName}
-                    </p>
-                  </div>
+            <div className="flex flex-col gap-4">
+              <div className="space-y-4">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="mb-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                    Tiêu đề
+                  </p>
+                  <p className="text-base font-bold text-gray-800">
+                    {quest?.title ?? '—'}
+                  </p>
                 </div>
-              )}
 
-              <div className="sm:col-span-2">
-                <p className="mb-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                  Mô tả
-                </p>
-                <p className="text-sm leading-relaxed text-gray-700">
-                  {quest?.description ?? (
-                    <span className="text-gray-400 italic">Không có mô tả</span>
+                <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="mb-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                    Mô tả
+                  </p>
+                  <p className="min-h-16 text-sm leading-relaxed text-gray-700">
+                    {quest?.description ?? (
+                      <span className="text-gray-400 italic">
+                        Không có mô tả
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                    <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                      Trạng thái
+                    </p>
+                    <div className="mt-2 min-h-7">
+                      <StatusBadge
+                        label={quest?.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+                        type={quest?.isActive ? 'success' : 'error'}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                    <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                      Kiểu nhiệm vụ
+                    </p>
+                    <div className="mt-2 min-h-7">
+                      <QuestTypeBadge isStandalone={quest?.isStandalone} />
+                    </div>
+                  </div>
+
+                  {!quest?.isStandalone && (
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-3 sm:col-span-2 xl:col-span-1">
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 shrink-0 rounded-lg bg-blue-100 p-1.5 text-blue-600">
+                          <CampaignIcon sx={{ fontSize: 16 }} />
+                        </span>
+                        <div>
+                          <p className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">
+                            Chiến dịch
+                          </p>
+                          <p className="mt-1 line-clamp-2 text-sm font-semibold text-gray-800">
+                            {campaignName}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                  Ảnh quest
                 </p>
+                <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm">
+                  {quest?.imageUrl ? (
+                    <img
+                      src={quest.imageUrl}
+                      alt={
+                        quest?.title
+                          ? `Ảnh nhiệm vụ ${quest.title}`
+                          : 'Ảnh nhiệm vụ'
+                      }
+                      className="aspect-video w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex aspect-video items-center justify-center px-4 text-center text-sm text-gray-400">
+                      Chưa có ảnh cho nhiệm vụ này.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
