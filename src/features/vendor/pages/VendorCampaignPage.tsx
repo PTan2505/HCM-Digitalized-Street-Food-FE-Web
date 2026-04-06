@@ -81,7 +81,7 @@ const StatusBadge = ({
  *  idle      → no post-create flow running
  *  prompt    → asking "Tạo voucher ngay?" dialog
  *  creating  → VoucherFormModal open
- *  done_one  → voucher created, asking "Tạo thêm / Thôi"
+ *  done_one  → voucher(s) created, asking "Tạo thêm / Thôi"
  */
 type PostCreateStep = 'idle' | 'prompt' | 'creating' | 'done_one';
 
@@ -234,13 +234,16 @@ export default function VendorCampaignPage(): JSX.Element {
   };
 
   // ── Post-create: VoucherFormModal submit ──
-  const handleVoucherSubmit = async (data: VoucherCreate): Promise<void> => {
-    await onCreateVoucher(data);
-    voucherCreatedCountRef.current += 1;
+  const handleVoucherSubmit = async (
+    data: VoucherCreate | VoucherCreate[]
+  ): Promise<void> => {
+    const items = Array.isArray(data) ? data : [data];
+    await onCreateVoucher(items);
+    voucherCreatedCountRef.current += items.length;
     setPostCreateStep('done_one');
   };
 
-  // ── Post-create: create another voucher → reset form by toggling step ──
+  // ── Post-create: create another batch ──
   const handleCreateAnother = (): void => {
     setPostCreateStep('prompt');
     window.setTimeout(() => setPostCreateStep('creating'), 0);

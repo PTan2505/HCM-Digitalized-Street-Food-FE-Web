@@ -112,12 +112,16 @@ export default function VendorCampaignVoucherModal({
     setEditingVoucher(null);
   };
 
-  const handleFormSubmit = async (data: VoucherCreate): Promise<void> => {
+  const handleFormSubmit = async (
+    data: VoucherCreate | VoucherCreate[]
+  ): Promise<void> => {
     try {
       if (editingVoucher) {
-        await onUpdateVoucher(editingVoucher.voucherId, data);
+        const single = Array.isArray(data) ? data[0] : data;
+        await onUpdateVoucher(editingVoucher.voucherId, single);
       } else {
-        await onCreateVoucher(data);
+        const items = Array.isArray(data) ? data : [data];
+        await onCreateVoucher(items);
       }
       handleCloseForm();
       void fetchVouchers();
