@@ -347,7 +347,7 @@ export default function BranchFormModal({
             {mode.type === 'createVendor' && (
               <div className="mb-12">
                 <h2 className="mb-6 text-lg font-semibold text-gray-800">
-                  2. Chế độ ăn phù hợp
+                  2. Chế độ ăn của cửa hàng
                 </h2>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Chọn chế độ ăn <span className="text-red-500">*</span>
