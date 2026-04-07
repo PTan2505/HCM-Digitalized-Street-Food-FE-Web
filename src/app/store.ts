@@ -15,6 +15,7 @@ import campaignReducer from '@slices/campaign';
 import questReducer from '@slices/quest';
 import settingReducer from '@slices/setting';
 import voucherReducer from '@slices/voucher';
+import vendorDashboardReducer from '@slices/vendorDashboard';
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
     quest: questReducer,
     setting: settingReducer,
     voucher: voucherReducer,
+    vendorDashboard: vendorDashboardReducer,
   },
 });
 
