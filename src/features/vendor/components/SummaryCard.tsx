@@ -28,7 +28,7 @@ export default function SummaryCard({
       {/* Decorative Blob */}
       {/* <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary-50 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 pointer-events-none"></div> */}
 
-      <div className="relative z-10 flex items-start justify-between">
+      <div className="relative flex items-start justify-between">
         <div>
           <p className="mb-2 text-sm font-semibold tracking-wide text-gray-500">
             {title}
@@ -43,7 +43,7 @@ export default function SummaryCard({
       </div>
 
       {(subtitle !== undefined || trend !== undefined) && (
-        <div className="relative z-10 mt-5">
+        <div className="relative mt-5">
           {subtitle && (
             <p className="text-sm font-medium text-gray-500">{subtitle}</p>
           )}
