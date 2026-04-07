@@ -1,5 +1,6 @@
 import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
+import { ROUTES } from '@constants/routes';
 import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
@@ -7,7 +8,9 @@ import {
   BarChart as ChartBarIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  Verified as ShoppingBagIcon,
+  LocationOn as LocationOnIcon,
+  Storefront as StorefrontIcon,
+  FactCheck as FactCheckIcon,
   Close as XMarkIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -19,13 +22,38 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation = [
-  { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
   {
-    name: 'Xác minh người bán',
-    href: '/moderator/verification',
-    icon: ShoppingBagIcon,
+    name: 'Dashboard',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.REVENUE}`,
+    icon: ChartBarIcon,
+  },
+  {
+    name: 'Quán Ăn Chờ Duyệt',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`,
+    icon: StorefrontIcon,
+  },
+  {
+    name: 'Ghost Pin Chờ Duyệt',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`,
+    icon: LocationOnIcon,
+  },
+  {
+    name: 'Yêu Cầu Sở Hữu Ghost Pin',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST}`,
+    icon: FactCheckIcon,
   },
 ];
+
+const titleByPath: Record<string, string> = {
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.REVENUE}`]:
+    'Dashboard - Tổng quan doanh thu',
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`]:
+    'Xác minh - Ghost Pin chờ duyệt',
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`]:
+    'Xác minh - Quán ăn chờ duyệt',
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST}`]:
+    'Xác minh - Yêu cầu sở hữu Ghost Pin',
+};
 
 function ModeratorLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,6 +79,8 @@ function ModeratorLayout(): JSX.Element {
     role: MODERATOR_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
+  const pageTitle =
+    titleByPath[location.pathname] ?? 'Dashboard - Tổng quan doanh thu';
 
   return (
     <Box className="min-h-screen bg-white text-gray-900">
@@ -139,8 +169,7 @@ function ModeratorLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {navigation.find((item) => item.href === location.pathname)
-                    ?.name ?? 'Dashboard'}
+                  {pageTitle}
                 </Typography>
               </Box>
             </Box>

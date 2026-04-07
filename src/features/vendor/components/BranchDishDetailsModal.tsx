@@ -5,13 +5,11 @@ import type { CreateOrUpdateDishResponse } from '@features/vendor/types/dish';
 import type { DishFilterValues } from '@features/vendor/components/DishFilterSection';
 import DishFilterSection from '@features/vendor/components/DishFilterSection';
 import useDish from '@features/vendor/hooks/useDish';
-import CloseIcon from '@mui/icons-material/Close';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import SaveIcon from '@mui/icons-material/Save';
-import IconButton from '@mui/material/IconButton';
-import { Checkbox, Switch, CircularProgress } from '@mui/material';
+import { Checkbox, Switch } from '@mui/material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Link } from 'react-router-dom';
 import {
@@ -56,7 +54,7 @@ export default function BranchDishDetailsModal({
   );
 
   // ─── Local UI state ──────────────────────────────────────────
-  const [vendorPageSize, setVendorPageSize] = useState(10);
+  const [vendorPageSize, setVendorPageSize] = useState(5);
   const [filters, setFilters] = useState<DishFilterValues>({});
   const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
   const [isApplying, setIsApplying] = useState(false);
@@ -265,19 +263,17 @@ export default function BranchDishDetailsModal({
               <img
                 src={dish.imageUrl}
                 alt={dish.name}
-                className="h-10 w-10 flex-shrink-0 rounded-lg object-cover shadow-sm"
+                className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-sm"
               />
             ) : (
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-400">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-200 text-gray-400">
                 <RestaurantMenuIcon sx={{ fontSize: 18 }} />
               </div>
             )}
             <div className="min-w-0">
               <p
                 className={`truncate text-sm font-semibold ${
-                  isAssigned
-                    ? 'text-[var(--color-table-text-primary)]'
-                    : 'text-gray-400'
+                  isAssigned ? 'text-table-text-primary' : 'text-gray-400'
                 }`}
               >
                 {dish.name}
@@ -344,7 +340,7 @@ export default function BranchDishDetailsModal({
               }}
             />
             <span
-              className={`min-w-[56px] text-[11px] font-bold ${
+              className={`min-w-14 text-[11px] font-bold ${
                 !isAssigned
                   ? 'text-gray-300'
                   : isSoldOut
@@ -374,36 +370,13 @@ export default function BranchDishDetailsModal({
         className="mx-4 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ─── Modal Header ─────────────────────────────────── */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-              <RestaurantMenuIcon />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Quản lý thực đơn
-              </h2>
-              <p className="mt-0.5 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                  #{branch.branchId}
-                </span>
-                {branch.name}
-              </p>
-            </div>
-          </div>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #f3f4f6',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
+        <VendorModalHeader
+          title="Quản lý thực đơn"
+          subtitle={`${branch.name}`}
+          icon={<RestaurantMenuIcon />}
+          iconTone="dish"
+          onClose={onClose}
+        />
 
         {/* ─── Modal Content ────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -430,13 +403,8 @@ export default function BranchDishDetailsModal({
             <button
               onClick={() => void handleApply()}
               disabled={status === 'pending' || isApplying || !isDirty}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="bg-primary-600 hover:bg-primary-700 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              {isApplying ? (
-                <CircularProgress size={16} color="inherit" />
-              ) : (
-                <SaveIcon fontSize="small" />
-              )}
               {isApplying ? 'Đang áp dụng...' : 'Áp dụng'}
             </button>
           </div>
@@ -453,7 +421,7 @@ export default function BranchDishDetailsModal({
                   Không tìm thấy món ăn nào. Vui lòng tạo món ăn mới tại trang{' '}
                   <Link
                     to="/vendor/dish"
-                    className="font-semibold text-[var(--color-primary-600)] underline hover:text-[var(--color-primary-700)]"
+                    className="text-primary-600 hover:text-primary-700 font-semibold underline"
                   >
                     Quản lý món ăn
                   </Link>{' '}
@@ -462,22 +430,21 @@ export default function BranchDishDetailsModal({
               }
             />
           </div>
-        </div>
 
-        {/* ─── Pagination Footer ─────────────────────────────── */}
-        <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-3">
           {vendorPagination.totalCount > 0 && (
-            <Pagination
-              currentPage={vendorPagination.currentPage}
-              totalPages={vendorPagination.totalPages}
-              totalCount={vendorPagination.totalCount}
-              pageSize={vendorPagination.pageSize}
-              hasPrevious={vendorPagination.hasPrevious}
-              hasNext={vendorPagination.hasNext}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              pageSizeOptions={[5, 10, 20]}
-            />
+            <div className="mt-4">
+              <Pagination
+                currentPage={vendorPagination.currentPage}
+                totalPages={vendorPagination.totalPages}
+                totalCount={vendorPagination.totalCount}
+                pageSize={vendorPagination.pageSize}
+                hasPrevious={vendorPagination.hasPrevious}
+                hasNext={vendorPagination.hasNext}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                pageSizeOptions={[5, 10, 20]}
+              />
+            </div>
           )}
         </div>
       </div>

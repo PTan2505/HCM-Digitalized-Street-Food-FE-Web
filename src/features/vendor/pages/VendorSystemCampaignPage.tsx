@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import { Visibility as VisibilityIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import SystemCampaignDetailsModal from '@features/vendor/components/SystemCampaignDetailsModal';
@@ -44,7 +45,7 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -90,7 +91,7 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       key: 'name',
       label: 'Tên chiến dịch hệ thống',
       render: (value: unknown): React.ReactNode => (
-        <Box className="font-semibold text-[var(--color-table-text-primary)]">
+        <Box className="text-table-text-primary font-semibold">
           {typeof value === 'string' ? value : String(value)}
         </Box>
       ),
@@ -99,7 +100,7 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       key: 'startDate',
       label: 'Thời gian diễn ra',
       render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+        <Box className="text-table-text-secondary text-sm">
           <div>Từ: {formatVNDatetime(row.startDate)}</div>
           <div>Đến: {formatVNDatetime(row.endDate)}</div>
         </Box>
@@ -110,9 +111,7 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       label: 'Phân khúc',
       render: (value: unknown): React.ReactNode => (
         <Box className="text-table-text-primary">
-          {typeof value === 'string' && value.trim().length > 0
-            ? value
-            : 'Tất cả'}
+          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
         </Box>
       ),
     },
@@ -132,27 +131,29 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       label: 'Hành động',
       style: { width: '160px' },
       render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <button
+        <Button
+          size="small"
+          color="info"
+          variant="outlined"
           onClick={() => {
             setDetailsCampaignId(row.campaignId);
             setIsDetailsModalOpen(true);
           }}
-          className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
-          Chi tiết
-        </button>
+          <VisibilityIcon fontSize="small" />
+        </Button>
       ),
     },
   ];
 
   return (
-    <div className="flex h-full flex-col font-[var(--font-nunito)]">
+    <div className="flex h-full flex-col font-(--font-nunito)">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Chiến dịch hệ thống
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Theo dõi và tham gia các chiến dịch do hệ thống tạo
           </p>
         </div>

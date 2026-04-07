@@ -15,11 +15,11 @@ import type {
   AddWorkScheduleFormData,
   EditWorkScheduleFormData,
 } from '@features/vendor/utils/workScheduleSchema';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import IconButton from '@mui/material/IconButton';
 import { CircularProgress, Tooltip } from '@mui/material';
@@ -27,6 +27,7 @@ import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectWorkSchedules, selectVendorStatus } from '@slices/vendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface WorkScheduleModalProps {
   isOpen: boolean;
@@ -218,28 +219,17 @@ export default function WorkScheduleModal({
           className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Thời gian hoạt động
-              </h2>
-              <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                  #{branch.branchId}
-                </span>
-                {branch.name}
-                {schedules.length > 0 && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                    {schedules.length}/7 ngày
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {availableWeekdays.length > 0 && !showAddForm && (
+          <VendorModalHeader
+            title="Thời gian hoạt động"
+            subtitle={`${branch.name}${schedules.length > 0 ? ` - ${schedules.length.toString()}/7 ngày` : ''}`}
+            icon={<EventBusyIcon />}
+            iconTone="branch"
+            onClose={onClose}
+            rightActions={
+              availableWeekdays.length > 0 && !showAddForm ? (
                 <Tooltip title="Thêm lịch">
                   <button
+                    type="button"
                     className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                     onClick={() => setShowAddForm(true)}
                   >
@@ -247,20 +237,9 @@ export default function WorkScheduleModal({
                     Thêm lịch
                   </button>
                 </Tooltip>
-              )}
-              <IconButton
-                size="small"
-                onClick={onClose}
-                sx={{
-                  bgcolor: 'white',
-                  border: '1px solid #f3f4f6',
-                  '&:hover': { bgcolor: '#f3f4f6' },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </div>
-          </div>
+              ) : null
+            }
+          />
 
           {/* Body */}
           <div className="flex flex-1 flex-col overflow-y-auto px-8 py-6">
@@ -427,6 +406,11 @@ export default function WorkScheduleModal({
               <div className="space-y-2">
                 {sortedSchedules.map((item) => {
                   const isEditing = editingId === item.workScheduleId;
+                  const originalOpenTime = item.openTime.slice(0, 5);
+                  const originalCloseTime = item.closeTime.slice(0, 5);
+                  const isEditUnchanged =
+                    editForm.openTime === originalOpenTime &&
+                    editForm.closeTime === originalCloseTime;
                   const dayName =
                     WEEKDAY_VI[item.weekday] ??
                     WEEKDAY_MAP[item.weekday] ??
@@ -442,7 +426,7 @@ export default function WorkScheduleModal({
                       }`}
                     >
                       {/* Weekday badge */}
-                      <div className="flex min-w-[90px] items-center justify-center">
+                      <div className="flex min-w-22.5 items-center justify-center">
                         <span className="inline-block rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
                           {dayName}
                         </span>
@@ -513,7 +497,9 @@ export default function WorkScheduleModal({
                                   size="small"
                                   onClick={() => void handleSaveEdit(item)}
                                   disabled={
-                                    status === 'pending' || !isEditValid
+                                    status === 'pending' ||
+                                    !isEditValid ||
+                                    isEditUnchanged
                                   }
                                   sx={{ color: '#16a34a' }}
                                 >

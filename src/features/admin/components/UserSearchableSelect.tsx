@@ -1,5 +1,10 @@
-import { InputAdornment, TextField } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import {
+  IconButton,
+  InputAdornment,
+  OutlinedInput,
+  Typography,
+} from '@mui/material';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 import type { JSX } from 'react';
 
 interface UserSearchableSelectProps {
@@ -14,33 +19,51 @@ export default function UserSearchableSelect({
   roleFilterLabel,
 }: UserSearchableSelectProps): JSX.Element {
   return (
-    <TextField
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      label={`Tìm ${roleFilterLabel}`}
-      placeholder="Nhập từ khóa để tìm người dùng"
-      size="small"
-      fullWidth
-      InputProps={{
-        startAdornment: (
+    <div>
+      <Typography className="mb-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+        Tìm kiếm {roleFilterLabel}
+      </Typography>
+
+      <OutlinedInput
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Nhập từ khóa để tìm người dùng"
+        size="small"
+        fullWidth
+        sx={{
+          bgcolor: 'white',
+          borderRadius: '0.5rem',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--color-primary-600)',
+            transition: 'border-color 180ms ease, box-shadow 180ms ease',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--color-primary-700)',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'var(--color-primary-600)',
+          },
+        }}
+        startAdornment={
           <InputAdornment position="start">
-            <SearchIcon fontSize="small" className="text-slate-400" />
+            <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
           </InputAdornment>
-        ),
-      }}
-      sx={{
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: 'var(--color-primary-300)',
-          transition: 'border-color 180ms ease, box-shadow 180ms ease',
-        },
-        '&:hover .MuiOutlinedInput-notchedOutline': {
-          borderColor: 'var(--color-primary-500)',
-        },
-        '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-          borderColor: 'var(--color-primary-600)',
-          borderWidth: '2px',
-        },
-      }}
-    />
+        }
+        endAdornment={
+          value ? (
+            <InputAdornment position="end">
+              <IconButton
+                size="small"
+                onClick={() => onChange('')}
+                edge="end"
+                aria-label="Xóa từ khóa tìm kiếm"
+              >
+                <ClearIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null
+        }
+      />
+    </div>
   );
 }

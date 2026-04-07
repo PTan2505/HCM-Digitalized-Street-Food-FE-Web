@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -15,10 +14,12 @@ import {
 import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
   Delete as DeleteIcon,
+  Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import type { Campaign } from '@features/admin/types/campaign';
 import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface CamPaignFormModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export default function CamPaignFormModal({
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<CampaignFormData>({
     resolver: zodResolver(CampaignSchema),
     defaultValues: {
@@ -264,7 +265,7 @@ export default function CamPaignFormModal({
     </p>
   );
 
-  const watchedIsActive = watch('isActive');
+  const hasCampaignChanges = isDirty || imageFile !== null || isImageRemoved;
 
   return (
     <Dialog
@@ -282,9 +283,13 @@ export default function CamPaignFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
-      </DialogTitle>
+      <AppModalHeader
+        title={campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
+        subtitle={campaign?.name ?? ''}
+        icon={<CampaignIcon />}
+        iconTone="campaign"
+        onClose={onClose}
+      />
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
           dividers
@@ -294,6 +299,11 @@ export default function CamPaignFormModal({
           }}
         >
           <div className="flex flex-col gap-6">
+            <input
+              type="checkbox"
+              className="hidden"
+              {...register('isActive')}
+            />
             {/* ── SECTION 1: Thông tin cơ bản ── */}
             <div>
               {sectionLabel('Thông tin cơ bản')}
@@ -516,44 +526,9 @@ export default function CamPaignFormModal({
                 </div>
               </div>
             </div>
-
-            <hr className="border-gray-100" />
-
-            {/* ── SECTION 5: Thiết lập khác ── */}
-            <div>
-              {sectionLabel('Thiết lập khác')}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">
-                      Trạng thái hoạt động
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Bật để cho phép chiến dịch hoạt động trên hệ thống
-                    </p>
-                  </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input
-                      type="checkbox"
-                      {...register('isActive')}
-                      className="peer sr-only"
-                    />
-                    <div
-                      className="peer h-6 w-11 rounded-full bg-gray-300 transition-all after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                      style={{
-                        backgroundColor: watchedIsActive
-                          ? '#8bcf3f'
-                          : '#d1d5db',
-                        transition: 'background-color 0.2s',
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
           </div>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
@@ -561,7 +536,9 @@ export default function CamPaignFormModal({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === 'pending'}
+            disabled={
+              status === 'pending' || (campaign !== null && !hasCampaignChanges)
+            }
             startIcon={
               status === 'pending' ? <CircularProgress size={20} /> : null
             }

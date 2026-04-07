@@ -106,6 +106,23 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION,
+            element: (
+              <Navigate
+                to={`/${ROUTES.MODERATOR.BASE.replace('/', '')}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`}
+                replace
+              />
+            ),
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN,
+            element: <ModeratorVendorVerificationPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR,
+            element: <ModeratorVendorVerificationPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST,
             element: <ModeratorVendorVerificationPage />,
           },
           {

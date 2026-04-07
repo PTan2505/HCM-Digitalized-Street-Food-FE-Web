@@ -3,22 +3,22 @@ import type { JSX } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   ConfirmationNumber as VoucherIcon,
   CheckCircle as CheckCircleIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
+import CampaignDetailModal from '@features/admin/components/CampaignDetailModal';
 import VoucherFormModal from '@features/admin/components/VoucherFormModal';
 import type { Campaign } from '@features/admin/types/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
@@ -45,6 +45,15 @@ const formatVNDatetime = (isoStr: string | null): string => {
     hour: '2-digit',
     minute: '2-digit',
   });
+};
+
+const hasRegistrationStarted = (
+  registrationStartDate: string | null
+): boolean => {
+  if (!registrationStartDate) return false;
+  const startTime = new Date(registrationStartDate).getTime();
+  if (Number.isNaN(startTime)) return false;
+  return startTime <= Date.now();
 };
 
 const StatusBadge = ({
@@ -87,6 +96,7 @@ export default function CampaignPage(): JSX.Element {
   const {
     onGetCampaigns,
     onCreateCampaign,
+    onGetCampaignDetail,
     onUpdateCampaign,
     onPostCampaignImage,
     onDeleteCampaignImage,
@@ -97,10 +107,13 @@ export default function CampaignPage(): JSX.Element {
   const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
+  const [openDetailModal, setOpenDetailModal] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
+  const [detailCampaign, setDetailCampaign] = useState<Campaign | null>(null);
 
   // Post-create flow
   const [postCreateStep, setPostCreateStep] = useState<PostCreateStep>('idle');
@@ -120,6 +133,10 @@ export default function CampaignPage(): JSX.Element {
   }, [fetchCampaigns]);
 
   const handleOpenModal = (campaign?: Campaign): void => {
+    if (campaign && hasRegistrationStarted(campaign.registrationStartDate)) {
+      return;
+    }
+
     if (campaign) {
       setEditingCampaign(campaign);
     } else {
@@ -140,6 +157,10 @@ export default function CampaignPage(): JSX.Element {
   ): Promise<void> => {
     try {
       if (editingCampaign) {
+        if (hasRegistrationStarted(editingCampaign.registrationStartDate)) {
+          return;
+        }
+
         // ── Edit flow (unchanged) ──
         await onUpdateCampaign(editingCampaign.campaignId, data);
 
@@ -175,6 +196,21 @@ export default function CampaignPage(): JSX.Element {
     }
   };
 
+  const handleOpenDetailModal = async (row: Campaign): Promise<void> => {
+    setOpenDetailModal(true);
+    setDetailCampaign(row);
+    setIsDetailLoading(true);
+
+    try {
+      const campaignDetail = await onGetCampaignDetail(row.campaignId);
+      setDetailCampaign(campaignDetail);
+    } catch (err) {
+      console.error('Failed to fetch campaign detail', err);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
   // ── Post-create: user chooses to create a voucher ──
   const handleStartVoucherCreation = (): void => {
     setPostCreateStep('creating');
@@ -188,9 +224,12 @@ export default function CampaignPage(): JSX.Element {
   };
 
   // ── Post-create: VoucherFormModal submit ──
-  const handleVoucherSubmit = async (data: VoucherCreate): Promise<void> => {
-    await onCreateVoucher(data);
-    voucherCreatedCountRef.current += 1;
+  const handleVoucherSubmit = async (
+    data: VoucherCreate | VoucherCreate[]
+  ): Promise<void> => {
+    const items = Array.isArray(data) ? data : [data];
+    await onCreateVoucher(items);
+    voucherCreatedCountRef.current += items.length;
     setPostCreateStep('done_one');
   };
 
@@ -243,11 +282,9 @@ export default function CampaignPage(): JSX.Element {
       key: 'targetSegment',
       label: 'Phân khúc',
       render: (value: unknown): JSX.Element => (
-        <Chip
-          label={typeof value === 'string' ? value : 'Tất cả'}
-          size="small"
-          variant="outlined"
-        />
+        <Box className="text-table-text-primary">
+          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+        </Box>
       ),
     },
     {
@@ -264,6 +301,16 @@ export default function CampaignPage(): JSX.Element {
 
   const actions = [
     {
+      label: <VisibilityIcon fontSize="small" />,
+      onClick: (row: Campaign): void => {
+        void handleOpenDetailModal(row);
+      },
+      tooltip: 'Xem chi tiết chiến dịch',
+      color: 'info' as const,
+      variant: 'outlined' as const,
+      show: (): boolean => true,
+    },
+    {
       label: <VoucherIcon fontSize="small" />,
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
@@ -272,7 +319,9 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
+      show: (row: Campaign): boolean =>
+        new Date(row.endDate) >= new Date() &&
+        !hasRegistrationStarted(row.registrationStartDate),
     },
     {
       label: <EditIcon fontSize="small" />,
@@ -280,7 +329,9 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean => new Date(row.endDate) >= new Date(),
+      show: (row: Campaign): boolean =>
+        new Date(row.endDate) >= new Date() &&
+        !hasRegistrationStarted(row.registrationStartDate),
     },
   ];
 
@@ -349,6 +400,13 @@ export default function CampaignPage(): JSX.Element {
         isOpen={openVoucherModal}
         onClose={() => setOpenVoucherModal(false)}
         campaign={selectedCampaign}
+      />
+
+      <CampaignDetailModal
+        isOpen={openDetailModal}
+        onClose={() => setOpenDetailModal(false)}
+        campaign={detailCampaign}
+        isLoading={isDetailLoading}
       />
 
       {/* ══════════════════════════════════════════════════════

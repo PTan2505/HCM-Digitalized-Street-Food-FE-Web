@@ -8,6 +8,7 @@ import {
   postCampaignImage,
   deleteCampaignImage,
 } from '@slices/campaign';
+import { axiosApi } from '@lib/api/apiInstance';
 import type {
   CampaignCreate,
   CampaignUpdate,
@@ -21,6 +22,7 @@ const useCampaign = (): {
     pageSize: number
   ) => Promise<CampaignListResponse>;
   onCreateCampaign: (data: CampaignCreate) => Promise<Campaign>;
+  onGetCampaignDetail: (id: number) => Promise<Campaign>;
   onUpdateCampaign: (id: number, data: CampaignUpdate) => Promise<Campaign>;
   onGetCampaignImage: (id: number) => Promise<string[]>;
   onPostCampaignImage: (id: number, data: FormData) => Promise<string>;
@@ -43,6 +45,13 @@ const useCampaign = (): {
       return await dispatch(createCampaign(data)).unwrap();
     },
     [dispatch]
+  );
+
+  const onGetCampaignDetail = useCallback(
+    async (id: number): Promise<Campaign> => {
+      return await axiosApi.campaignApi.getCampaignDetail(id);
+    },
+    []
   );
 
   const onUpdateCampaign = useCallback(
@@ -76,6 +85,7 @@ const useCampaign = (): {
   return {
     onGetCampaigns,
     onCreateCampaign,
+    onGetCampaignDetail,
     onUpdateCampaign,
     onGetCampaignImage,
     onPostCampaignImage,

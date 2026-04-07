@@ -13,6 +13,7 @@ interface AdminUsersTableProps {
   processingUserId: number | null;
   onToggleBan: (user: AdminUserItem) => void;
   onPromoteModerator: (user: AdminUserItem) => void;
+  tourId?: string;
 }
 
 const mapRoleLabel = (role: string | number | null | undefined): string => {
@@ -69,6 +70,7 @@ export default function AdminUsersTable({
   processingUserId,
   onToggleBan,
   onPromoteModerator,
+  tourId,
 }: AdminUsersTableProps): JSX.Element {
   return (
     <Table
@@ -109,10 +111,12 @@ export default function AdminUsersTable({
       loading={loading}
       emptyMessage="Không có người dùng"
       rowKey="id"
+      tourId={tourId}
       actions={
         roleFilter === 'user'
           ? [
               {
+                id: 'toggle-ban',
                 label: (row: AdminUserItem): string =>
                   isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
                 onClick: (row): void => {
@@ -130,6 +134,7 @@ export default function AdminUsersTable({
                     : 'Khóa hoặc mở khóa tài khoản',
               },
               {
+                id: 'promote-moderator',
                 label: 'Thêm Moderator',
                 onClick: (row): void => {
                   if (processingUserId !== null) {

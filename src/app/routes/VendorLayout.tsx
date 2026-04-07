@@ -7,6 +7,7 @@ import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
 import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
+import OnboardingMissingBranchDishModal from '@features/vendor/components/OnboardingMissingBranchDishModal';
 import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
 import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMissingDishModal';
 import useDish from '@features/vendor/hooks/useDish';
@@ -41,7 +42,10 @@ import {
   selectMyVendor,
   selectBranchScheduleMap,
 } from '@slices/vendor';
-import { selectVendorDishesPagination } from '@slices/dish';
+import {
+  selectVendorDishesPagination,
+  selectBranchDishCountMap,
+} from '@slices/dish';
 import type { JSX } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -123,7 +127,12 @@ const navigation = [
 ];
 
 function VendorLayout(): JSX.Element {
-  type PendingOnboardingModal = 'branch' | 'dish' | 'dietary' | null;
+  type PendingOnboardingModal =
+    | 'branch'
+    | 'dish'
+    | 'dietary'
+    | 'branchDish'
+    | null;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -135,6 +144,7 @@ function VendorLayout(): JSX.Element {
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
+  const [isBranchDishModalOpen, setIsBranchDishModalOpen] = useState(false);
   // isInitialCheckDone: tránh hiển thị badge trước khi fetch lần đầu xong
   const [isInitialCheckDone, setIsInitialCheckDone] = useState(false);
   const [pendingOnboardingModal, setPendingOnboardingModal] =
@@ -143,13 +153,14 @@ function VendorLayout(): JSX.Element {
   const navigate = useNavigate();
   const { onLogout } = useLogin();
   const { onGetVendorBalance, onVendorRequestTransfer } = usePayment();
-  const { onGetDishesOfAVendor } = useDish();
+  const { onGetDishesOfAVendor, onGetDishesByBranch } = useDish();
   const {
     onGetMyVendor,
     onGetDietaryPreferencesOfMyVendor,
     onGetWorkSchedules,
   } = useVendor();
   const hasShownDietaryModalRef = useRef(false);
+  const hasShownBranchDishModalRef = useRef(false);
   const user = useAppSelector(selectUser);
   const accountBalance = useAppSelector(selectVendorAccountBalance);
   // Đọc reactive từ Redux store - tự cập nhật khi trang con thay đổi dữ liệu
@@ -159,6 +170,7 @@ function VendorLayout(): JSX.Element {
   const vendorDishesPagination = useAppSelector(selectVendorDishesPagination);
   const myVendor = useAppSelector(selectMyVendor);
   const branchScheduleMap = useAppSelector(selectBranchScheduleMap);
+  const branchDishCountMap = useAppSelector(selectBranchDishCountMap);
   const isVendor = user?.role === ROLES.VENDOR;
 
   // Badge được tính reactive từ Redux state (không cần re-fetch khi navigate)
@@ -176,6 +188,11 @@ function VendorLayout(): JSX.Element {
     [myVendor]
   );
 
+  const subscribedBranches = useMemo(
+    () => (myVendor?.branches ?? []).filter((branch) => branch.isSubscribed),
+    [myVendor]
+  );
+
   const missingScheduleBranches = useMemo(
     () =>
       isInitialCheckDone
@@ -185,6 +202,21 @@ function VendorLayout(): JSX.Element {
         : [],
     [isInitialCheckDone, acceptedBranches, branchScheduleMap]
   );
+
+  // Chi nhánh đã subscribed mà chưa có món ăn nào được gán
+  const missingBranchDishBranches = useMemo(
+    () =>
+      isInitialCheckDone
+        ? subscribedBranches.filter(
+            (branch) =>
+              branchDishCountMap[branch.branchId] !== undefined &&
+              branchDishCountMap[branch.branchId] === 0
+          )
+        : [],
+    [isInitialCheckDone, subscribedBranches, branchDishCountMap]
+  );
+
+  const isBranchDishMissing = missingBranchDishBranches.length > 0;
 
   const isBranchScheduleMissing = missingScheduleBranches.length > 0;
 
@@ -196,15 +228,16 @@ function VendorLayout(): JSX.Element {
     .filter((item) => !item.isForVendor || isVendor)
     .map((item) => {
       if (item.href === vendorBranchPath) {
+        const hasBadge = isBranchScheduleMissing || isBranchDishMissing;
         return {
           ...item,
-          badgeText: isBranchScheduleMissing ? 'Cập nhật' : undefined,
+          badgeText: hasBadge ? 'Cập nhật' : undefined,
           onClick: (): void => {
-            if (!isBranchScheduleMissing) {
-              return;
+            if (isBranchScheduleMissing) {
+              setPendingOnboardingModal('branch');
+            } else if (isBranchDishMissing) {
+              setPendingOnboardingModal('branchDish');
             }
-
-            setPendingOnboardingModal('branch');
           },
         };
       }
@@ -297,6 +330,15 @@ function VendorLayout(): JSX.Element {
     ) {
       setIsDietaryModalOpen(true);
       setPendingOnboardingModal(null);
+      return;
+    }
+
+    if (
+      pendingOnboardingModal === 'branchDish' &&
+      location.pathname === vendorBranchPath
+    ) {
+      setIsBranchDishModalOpen(true);
+      setPendingOnboardingModal(null);
     }
   }, [
     location.pathname,
@@ -317,6 +359,18 @@ function VendorLayout(): JSX.Element {
       hasShownDietaryModalRef.current = true;
     }
   }, [isInitialCheckDone, isDietaryMissing]);
+
+  // Hiển thị branchDish modal 1 lần nếu có chi nhánh subscribed chưa có món ăn
+  useEffect(() => {
+    if (
+      isInitialCheckDone &&
+      isBranchDishMissing &&
+      !hasShownBranchDishModalRef.current
+    ) {
+      setIsBranchDishModalOpen(true);
+      hasShownBranchDishModalRef.current = true;
+    }
+  }, [isInitialCheckDone, isBranchDishMissing]);
 
   useEffect(() => {
     if (!isVendor) {
@@ -348,7 +402,11 @@ function VendorLayout(): JSX.Element {
           (branch) => branch.licenseStatus === 'Accept'
         );
 
-        // Chạy song song: fetch dish, dietary, và work schedules cho tất cả branches
+        const subscribedBranchList = (vendor.branches ?? []).filter(
+          (branch) => branch.isSubscribed
+        );
+
+        // Chạy song song: fetch dish, dietary, work schedules, và branch dishes
         await Promise.all([
           // Fetch dishes để cập nhật vendorDishesPagination vào store
           onGetDishesOfAVendor({
@@ -367,6 +425,25 @@ function VendorLayout(): JSX.Element {
                 } catch (error) {
                   console.error(
                     `Error checking work schedules for branch ${branch.branchId}:`,
+                    error
+                  );
+                }
+              })
+            );
+          })(),
+          // Kiểm tra số lượng món ăn cho từng branch đã subscribed
+          // (kết quả lưu vào branchDishCountMap trong Redux - VendorLayout tự reactive)
+          (async (): Promise<void> => {
+            await Promise.all(
+              subscribedBranchList.map(async (branch) => {
+                try {
+                  await onGetDishesByBranch({
+                    branchId: branch.branchId,
+                    params: { pageNumber: 1, pageSize: 1 },
+                  });
+                } catch (error) {
+                  console.error(
+                    `Error checking dishes for branch ${branch.branchId}:`,
                     error
                   );
                 }
@@ -594,6 +671,11 @@ function VendorLayout(): JSX.Element {
       <OnboardingMissingDishModal
         open={isDishModalOpen}
         onClose={() => setIsDishModalOpen(false)}
+      />
+      <OnboardingMissingBranchDishModal
+        open={isBranchDishModalOpen}
+        missingBranches={missingBranchDishBranches}
+        onClose={() => setIsBranchDishModalOpen(false)}
       />
       <UpdateUserProfileModal
         isOpen={isProfileModalOpen}

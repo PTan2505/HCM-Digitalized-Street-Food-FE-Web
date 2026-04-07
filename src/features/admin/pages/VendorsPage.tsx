@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import {
   Box,
@@ -14,7 +14,15 @@ import {
   Delete as DeleteIcon,
   Block as BlockIcon,
   Visibility as VisibilityIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import VendorDetailModal from '@features/admin/components/VendorDetailModal';
@@ -28,6 +36,7 @@ import {
   selectAdminVendorStatus,
   selectAdminVendorDetail,
 } from '@slices/vendor';
+import { getVendorsManagementTourSteps } from '@features/admin/utils/vendorsManagementTourSteps';
 
 export default function VendorsPage(): JSX.Element {
   const vendors = useAppSelector(selectAdminVendors);
@@ -50,7 +59,9 @@ export default function VendorsPage(): JSX.Element {
     null
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     void onGetAllVendors({ pageNumber: currentPage, pageSize });
@@ -136,6 +147,28 @@ export default function VendorsPage(): JSX.Element {
     setCurrentPage(1);
   };
 
+  const startVendorsTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getVendorsManagementTourSteps({
+      hasRows: vendors.length > 0,
+    });
+  }, [vendors.length]);
+
   const columns = [
     // {
     //   key: 'vendorId',
@@ -199,6 +232,7 @@ export default function VendorsPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'view',
       label: <VisibilityIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => {
         void handleViewDetail(row);
@@ -208,6 +242,7 @@ export default function VendorsPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'toggle-active',
       label: <BlockIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => {
         if (row.isActive) {
@@ -221,6 +256,7 @@ export default function VendorsPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => handleDelete(row),
       tooltip: 'Xóa cửa hàng',
@@ -231,12 +267,54 @@ export default function VendorsPage(): JSX.Element {
 
   return (
     <div>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="vendors-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Quản lý cửa hàng
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý cửa hàng
+            </h1>
+            <button
+              type="button"
+              onClick={startVendorsTour}
+              aria-label="Mở hướng dẫn quản lý cửa hàng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Quản lý danh sách các cửa hàng đăng ký trong hệ thống
           </p>
@@ -244,27 +322,32 @@ export default function VendorsPage(): JSX.Element {
       </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={vendors}
-        rowKey="vendorId"
-        actions={actions}
-        loading={status === 'pending'}
-        emptyMessage="Chưa có cửa hàng nào"
-        maxHeight="none"
-      />
+      <div data-tour="vendors-table-wrapper">
+        <Table
+          columns={columns}
+          data={vendors}
+          rowKey="vendorId"
+          actions={actions}
+          loading={status === 'pending'}
+          emptyMessage="Chưa có cửa hàng nào"
+          maxHeight="none"
+          tourId="admin-vendors"
+        />
+      </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="vendors-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
 
       <DeleteConfirmationDialog
         open={openDeleteDialog}

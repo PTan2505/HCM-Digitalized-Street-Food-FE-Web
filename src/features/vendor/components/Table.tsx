@@ -27,6 +27,7 @@ interface Column<T> {
 }
 
 interface Action<T> {
+  id?: string;
   label: string | React.ReactNode;
   menuLabel?: React.ReactNode;
   onClick: (row: T) => void;
@@ -46,6 +47,7 @@ interface TableProps<T extends object> {
   maxHeight?: string | 'none';
   actions?: Action<T>[];
   onRowClick?: (row: T) => void;
+  tourId?: string;
 }
 
 const Table = <T extends object>({
@@ -58,6 +60,7 @@ const Table = <T extends object>({
   maxHeight = '600px',
   actions,
   onRowClick,
+  tourId,
 }: TableProps<T>): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
   const [menuState, setMenuState] = useState<{
@@ -70,6 +73,7 @@ const Table = <T extends object>({
       <TableContainer
         component={Paper}
         className="border-table-border rounded-lg border shadow-sm"
+        data-tour-table={tourId}
         style={{
           maxHeight: maxHeight === 'none' ? undefined : maxHeight,
           overflowY: maxHeight === 'none' ? undefined : 'auto',
@@ -134,6 +138,7 @@ const Table = <T extends object>({
                     <TableRow
                       key={String(rowKeyValue)}
                       hover
+                      data-tour-row-index={rowIndex}
                       onClick={() => onRowClick?.(row)}
                       className={`hover:bg-table-row-hover last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
                       style={{ height: '60px' }}
@@ -184,6 +189,7 @@ const Table = <T extends object>({
                               <Tooltip title="Xem thêm" placement="top" arrow>
                                 <IconButton
                                   size="small"
+                                  data-tour-action-trigger={tourId}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setMenuState({
@@ -218,6 +224,7 @@ const Table = <T extends object>({
         <Menu
           anchorEl={menuState.anchorEl}
           open={Boolean(menuState.anchorEl)}
+          data-tour-menu={tourId}
           onClose={() => setMenuState({ anchorEl: null, row: null })}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
@@ -255,6 +262,9 @@ const Table = <T extends object>({
             .map((action, index) => (
               <MenuItem
                 key={index}
+                data-tour-action={
+                  tourId && action.id ? `${tourId}:${action.id}` : undefined
+                }
                 disabled={
                   menuState.row
                     ? (action.disabled?.(menuState.row) ?? false)
