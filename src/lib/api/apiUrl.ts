@@ -216,4 +216,9 @@ export const apiUrl = {
     GetVouchersOfACampaign: (campaignId: number): string =>
       `/vouchers/campaign/${campaignId}`,
   },
+  vendorDashboard: {
+    getRevenue: '/VendorDashboard/revenue',
+    getVouchers: '/VendorDashboard/vouchers',
+    getDishes: '/VendorDashboard/dishes',
+  },
 };

@@ -23,6 +23,7 @@ import { SettingApi } from '@features/admin/api/settingApi';
 import { VendorCampaignApi } from '@features/vendor/api/campaignApi';
 import { VoucherApi } from '@features/admin/api/voucherApi';
 import { UserAdminApi } from '@features/admin/api/userAdminApi';
+import { DashboardApi } from '@features/vendor/api/dashboardApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -53,4 +54,5 @@ export const axiosApi = {
   vendorCampaignApi: new VendorCampaignApi(axiosClient),
   voucherApi: new VoucherApi(axiosClient),
   userAdminApi: new UserAdminApi(axiosClient),
+  dashboardApi: new DashboardApi(axiosClient),
 };
