@@ -569,7 +569,7 @@ function VendorLayout(): JSX.Element {
         }`}
       >
         {/* Top navigation */}
-        <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+        <Box className="sticky top-0 z-30 border-b border-gray-200 bg-white shadow-sm">
           <Box className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <Box className="flex items-center gap-4">
               <IconButton
