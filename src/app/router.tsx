@@ -14,6 +14,7 @@ import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
+import AdminBranchPage from '@features/admin/pages/BranchPage';
 import AdminCampaignPage from '@features/admin/pages/CampaignPage';
 import AdminVendorCampaignPage from '@features/admin/pages/AdminVendorCampaignPage';
 import AdminQuestPage from '@features/admin/pages/QuestPage';
@@ -27,6 +28,7 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
+import ModeratorBranchPage from '@features/moderator/pages/BranchPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import DishManagementPage from '@features/manager/pages/DishManagementPage';
@@ -136,6 +138,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.MODERATOR.PATHS.CASHOUT,
             element: <ModeratorCashoutPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.BRANCH,
+            element: <ModeratorBranchPage />,
           },
         ],
       },
@@ -270,6 +276,7 @@ export const router = createBrowserRouter([
             element: <AdminUsersPage />,
           },
           { path: ROUTES.ADMIN.PATHS.VENDORS, element: <AdminVendorsPage /> },
+          { path: ROUTES.ADMIN.PATHS.BRANCH, element: <AdminBranchPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
           { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },

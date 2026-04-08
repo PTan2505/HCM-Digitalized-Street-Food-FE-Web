@@ -45,6 +45,11 @@ const navigation: NavigationItem[] = [
     icon: BuildingStorefrontIcon,
   },
   {
+    name: 'Xem thông tin chi nhánh',
+    href: '/admin/branch',
+    icon: BuildingStorefrontIcon,
+  },
+  {
     name: 'Quản lý danh mục',
     href: '/admin/category',
     icon: RectangleStackIcon,

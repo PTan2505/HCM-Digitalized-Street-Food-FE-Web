@@ -15,9 +15,9 @@ interface PendingTypeFilterSectionProps {
 }
 
 const TYPE_LABELS: Record<PendingRegistrationType, string> = {
-  0: 'Danh sách ghost pin đang chờ duyệt',
+  0: 'Danh sách quán ăn do reviewer chia sẻ (chờ duyệt)',
   1: 'Danh sách quán ăn đang chờ duyệt',
-  2: 'Danh sách ghost pin được yêu cầu quyền sở hữu đang chờ duyệt',
+  2: 'Danh sách yêu cầu quyền sở hữu quán (chờ duyệt)',
 };
 
 const TYPE_OPTIONS: PendingRegistrationType[] = [0, 1, 2];
