@@ -20,6 +20,7 @@ import {
   selectCampaignStatus,
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
+  selectVendorCampaigns,
 } from '@slices/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
@@ -83,10 +84,14 @@ export default function JoinableSystemCampaignModal({
   joinedCampaignIds = [],
 }: JoinableSystemCampaignModalProps): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
+  const vendorCampaigns = useAppSelector(selectVendorCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
-  const { onGetJoinableSystemCampaigns, onJoinBranchToSystemCampaign } =
-    useVendorCampaign();
+  const {
+    onGetJoinableSystemCampaigns,
+    onJoinBranchToSystemCampaign,
+    onGetVendorCampaigns,
+  } = useVendorCampaign();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -109,8 +114,10 @@ export default function JoinableSystemCampaignModal({
   useEffect(() => {
     if (!isOpen) {
       setIsTourRunning(false);
+    } else {
+      void onGetVendorCampaigns(1, 1000);
     }
-  }, [isOpen]);
+  }, [isOpen, onGetVendorCampaigns]);
 
   const fetchJoinableCampaigns = useCallback(async (): Promise<void> => {
     if (!isOpen) return;
@@ -252,9 +259,21 @@ export default function JoinableSystemCampaignModal({
       style: { width: '160px' },
       render: (_: unknown, row: VendorCampaign): React.ReactNode => {
         const isJoining = joiningCampaignIds.has(row.campaignId);
-        const isAlreadyJoined = joinedCampaignIdSet.has(row.campaignId);
+        const isAlreadyJoined =
+          joinedCampaignIdSet.has(row.campaignId) ||
+          vendorCampaigns.some(
+            (vc) => vc.isSystemCampaign && vc.campaignId === row.campaignId
+          );
 
         if (mode === 'detail') {
+          if (isAlreadyJoined) {
+            return (
+              <span className="text-primary-600 text-sm font-semibold">
+                Đã tham gia
+              </span>
+            );
+          }
+
           return (
             <button
               onClick={() => {

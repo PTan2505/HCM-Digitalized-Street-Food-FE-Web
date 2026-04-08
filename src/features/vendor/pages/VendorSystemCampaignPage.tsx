@@ -12,6 +12,7 @@ import {
   selectCampaignStatus,
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
+  selectVendorCampaigns,
 } from '@slices/campaign';
 import { selectMyVendor } from '@slices/vendor';
 
@@ -54,10 +55,12 @@ const StatusBadge = ({
 
 export default function VendorSystemCampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
+  const vendorCampaigns = useAppSelector(selectVendorCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
   const myVendor = useAppSelector(selectMyVendor);
-  const { onGetJoinableSystemCampaigns } = useVendorCampaign();
+  const { onGetJoinableSystemCampaigns, onGetVendorCampaigns } =
+    useVendorCampaign();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -68,11 +71,14 @@ export default function VendorSystemCampaignPage(): JSX.Element {
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
-      await onGetJoinableSystemCampaigns(page, pageSize);
+      await Promise.all([
+        onGetJoinableSystemCampaigns(page, pageSize),
+        onGetVendorCampaigns(1, 1000),
+      ]);
     } catch (error) {
       console.error('Failed to fetch system campaigns', error);
     }
-  }, [onGetJoinableSystemCampaigns, page, pageSize]);
+  }, [onGetJoinableSystemCampaigns, onGetVendorCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchCampaigns();
@@ -130,19 +136,33 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       key: 'detailsAction',
       label: 'Hành động',
       style: { width: '160px' },
-      render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <Button
-          size="small"
-          color="info"
-          variant="outlined"
-          onClick={() => {
-            setDetailsCampaignId(row.campaignId);
-            setIsDetailsModalOpen(true);
-          }}
-        >
-          <VisibilityIcon fontSize="small" />
-        </Button>
-      ),
+      render: (_: unknown, row: VendorCampaign): React.ReactNode => {
+        const isAlreadyJoined = vendorCampaigns.some(
+          (vc) => vc.isSystemCampaign && vc.campaignId === row.campaignId
+        );
+
+        if (isAlreadyJoined) {
+          return (
+            <span className="text-primary-600 text-sm font-semibold">
+              Đã tham gia
+            </span>
+          );
+        }
+
+        return (
+          <Button
+            size="small"
+            color="info"
+            variant="outlined"
+            onClick={() => {
+              setDetailsCampaignId(row.campaignId);
+              setIsDetailsModalOpen(true);
+            }}
+          >
+            <VisibilityIcon fontSize="small" />
+          </Button>
+        );
+      },
     },
   ];
 
