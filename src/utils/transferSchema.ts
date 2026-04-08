@@ -4,17 +4,17 @@ export const transferSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(1, 'Vui long nhap noi dung yeu cau rut tien')
-    .max(200, 'Noi dung toi da 200 ky tu'),
+    .min(1, 'Vui lòng nhập nội dung yêu cầu rút tiền')
+    .max(200, 'Nội dung tối đa 200 ký tự'),
   toAccountNumber: z
     .string()
     .trim()
-    .regex(/^[0-9]{6,20}$/, 'So tai khoan chi gom 6-20 chu so'),
-  toBin: z.string().trim().min(1, 'Vui long chon ngan hang'),
+    .regex(/^[0-9]{6,20}$/, 'Số tài khoản chỉ gồm 6-20 chữ số'),
+  toBin: z.string().trim().min(1, 'Vui lòng chọn ngân hàng'),
   amount: z
     .number()
-    .int('So tien phai la so nguyen')
-    .min(1000, 'So tien rut toi thieu la 1,000 VND'),
+    .int('Số tiền phải là số nguyên')
+    .min(1000, 'Số tiền rút tối thiểu là 1.000 VNĐ'),
 });
 
 export type RequestTransferFormValues = z.infer<typeof transferSchema>;

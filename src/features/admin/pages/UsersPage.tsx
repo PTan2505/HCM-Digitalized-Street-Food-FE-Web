@@ -16,9 +16,18 @@ import {
   DialogTitle,
   Button,
 } from '@mui/material';
+import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
+import { getUsersManagementTourSteps } from '@features/admin/utils/usersManagementTourSteps';
 
 type ConfirmActionType = 'toggleBan' | 'promoteModerator' | null;
 
@@ -151,6 +160,8 @@ export default function UsersPage(): JSX.Element {
     useState<ConfirmActionType>(null);
   const [selectedActionUser, setSelectedActionUser] =
     useState<AdminUserItem | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const pageTitle =
     roleFilter === 'vendor'
@@ -413,12 +424,78 @@ export default function UsersPage(): JSX.Element {
     return 'Thêm Moderator';
   }, [confirmActionType, selectedActionUser]);
 
+  const startUsersTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getUsersManagementTourSteps({
+      hasRows: users.length > 0,
+      isUserRolePage: roleFilter === 'user',
+    });
+  }, [roleFilter, users.length]);
+
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">{pageTitle}</h1>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div
+        className="mb-6 flex items-start gap-2"
+        data-tour="users-page-header"
+      >
+        <h1 className="text-2xl font-bold">{pageTitle}</h1>
+        <button
+          type="button"
+          onClick={startUsersTour}
+          aria-label="Mở hướng dẫn quản lý người dùng"
+          title="Hướng dẫn"
+          className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+        >
+          <HelpOutlineIcon sx={{ fontSize: 18 }} />
+        </button>
+      </div>
 
       <Box
         className="mb-4 flex flex-col gap-4 rounded-xl border border-gray-100 p-5 shadow-sm"
+        data-tour="users-search-wrapper"
         sx={{
           background: 'linear-gradient(to right, #ffffff, #f8fafc)',
         }}
@@ -434,14 +511,17 @@ export default function UsersPage(): JSX.Element {
         </div>
       </Box>
 
-      <AdminUsersTable
-        users={users}
-        loading={loading}
-        roleFilter={roleFilter}
-        processingUserId={processingUserId}
-        onToggleBan={handleOpenConfirmToggleBan}
-        onPromoteModerator={handleOpenConfirmPromoteModerator}
-      />
+      <div data-tour="users-table-wrapper">
+        <AdminUsersTable
+          users={users}
+          loading={loading}
+          roleFilter={roleFilter}
+          processingUserId={processingUserId}
+          onToggleBan={handleOpenConfirmToggleBan}
+          onPromoteModerator={handleOpenConfirmPromoteModerator}
+          tourId="admin-users"
+        />
+      </div>
 
       <Dialog
         open={confirmActionType !== null}
@@ -474,19 +554,21 @@ export default function UsersPage(): JSX.Element {
         </DialogActions>
       </Dialog>
 
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={setPage}
-        onPageSizeChange={(nextPageSize): void => {
-          setPageSize(nextPageSize);
-          setPage(1);
-        }}
-      />
+      <div data-tour="users-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={setPage}
+          onPageSizeChange={(nextPageSize): void => {
+            setPageSize(nextPageSize);
+            setPage(1);
+          }}
+        />
+      </div>
     </div>
   );
 }
