@@ -112,49 +112,47 @@ export default function AdminUsersTable({
       emptyMessage="Không có người dùng"
       rowKey="id"
       tourId={tourId}
-      actions={
-        [
-          {
-            id: 'toggle-ban',
-            label: (row: AdminUserItem): string =>
-              isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
-            onClick: (row): void => {
-              if (processingUserId !== null) {
-                return;
-              }
+      actions={[
+        {
+          id: 'toggle-ban',
+          label: (row: AdminUserItem): string =>
+            isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
+          onClick: (row): void => {
+            if (processingUserId !== null) {
+              return;
+            }
 
-              onToggleBan(row);
-            },
-            variant: 'outlined',
-            color: 'warning',
-            tooltip:
-              processingUserId !== null
-                ? 'Đang cập nhật trạng thái...'
-                : 'Khóa hoặc mở khóa tài khoản',
+            onToggleBan(row);
           },
-          ...(roleFilter === 'user'
-            ? [
-                {
-                  id: 'promote-moderator',
-                  label: 'Thêm Moderator',
-                  onClick: (row: AdminUserItem): void => {
-                    if (processingUserId !== null) {
-                      return;
-                    }
+          variant: 'outlined',
+          color: 'warning',
+          tooltip:
+            processingUserId !== null
+              ? 'Đang cập nhật trạng thái...'
+              : 'Khóa hoặc mở khóa tài khoản',
+        },
+        ...(roleFilter === 'user'
+          ? [
+              {
+                id: 'promote-moderator',
+                label: 'Thêm Moderator',
+                onClick: (row: AdminUserItem): void => {
+                  if (processingUserId !== null) {
+                    return;
+                  }
 
-                    onPromoteModerator(row);
-                  },
-                  variant: 'outlined' as const,
-                  color: 'info' as const,
-                  tooltip:
-                    processingUserId !== null
-                      ? 'Đang cập nhật vai trò...'
-                      : 'Nâng quyền thành moderator',
+                  onPromoteModerator(row);
                 },
-              ]
-            : []),
-        ]
-      }
+                variant: 'outlined' as const,
+                color: 'info' as const,
+                tooltip:
+                  processingUserId !== null
+                    ? 'Đang cập nhật vai trò...'
+                    : 'Nâng quyền thành moderator',
+              },
+            ]
+          : []),
+      ]}
     />
   );
 }

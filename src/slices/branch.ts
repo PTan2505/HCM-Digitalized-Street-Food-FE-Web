@@ -11,6 +11,10 @@ import type {
   VerifyRegistrationRequest,
   RejectRegistrationRequest,
 } from '@features/moderator/types/branch';
+import type {
+  BranchAdmin,
+  GetBranchesAdminParams,
+} from '@features/admin/types/branch';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import {
@@ -31,6 +35,15 @@ export interface BranchState {
     hasPrevious: boolean;
     hasNext: boolean;
   };
+  adminBranches: BranchAdmin[];
+  adminBranchesPagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalCount: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+  };
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -39,6 +52,15 @@ const initialState: BranchState = {
   pendingRegistrations: [],
   activeBranches: [],
   pendingRegistrationsPagination: {
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalCount: 0,
+    hasPrevious: false,
+    hasNext: false,
+  },
+  adminBranches: [],
+  adminBranchesPagination: {
     currentPage: 1,
     pageSize: 10,
     totalPages: 1,
@@ -112,6 +134,18 @@ export const rejectBranchRegistration = createAppAsyncThunk(
   }
 );
 
+export const getAdminBranches = createAppAsyncThunk(
+  'admin/getAdminBranches',
+  async (params: GetBranchesAdminParams | undefined, { rejectWithValue }) => {
+    try {
+      const response = await axiosApi.branchAdminApi.getBranches(params);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const branchSlice = createSlice({
   name: 'branch',
   initialState,
@@ -149,12 +183,24 @@ const branchSlice = createSlice({
           );
         }
       })
+      .addCase(getAdminBranches.fulfilled, (state, action) => {
+        state.adminBranches = action.payload.items;
+        state.adminBranchesPagination = {
+          currentPage: action.payload.currentPage,
+          pageSize: action.payload.pageSize,
+          totalPages: action.payload.totalPages,
+          totalCount: action.payload.totalCount,
+          hasPrevious: action.payload.hasPrevious,
+          hasNext: action.payload.hasNext,
+        };
+      })
       .addMatcher(
         isPending(
           getActiveBranches,
           getPendingRegistrations,
           verifyBranchRegistration,
-          rejectBranchRegistration
+          rejectBranchRegistration,
+          getAdminBranches
         ),
         (state) => {
           state.status = 'pending';
@@ -165,7 +211,8 @@ const branchSlice = createSlice({
           getActiveBranches,
           getPendingRegistrations,
           verifyBranchRegistration,
-          rejectBranchRegistration
+          rejectBranchRegistration,
+          getAdminBranches
         ),
         (state) => {
           state.status = 'succeeded';
@@ -176,7 +223,8 @@ const branchSlice = createSlice({
           getActiveBranches,
           getPendingRegistrations,
           verifyBranchRegistration,
-          rejectBranchRegistration
+          rejectBranchRegistration,
+          getAdminBranches
         ),
         (state, action) => {
           state.status = 'failed';
@@ -205,3 +253,11 @@ export const selectPendingRegistrationsPagination = (
   state: RootState
 ): BranchState['pendingRegistrationsPagination'] =>
   state.branch.pendingRegistrationsPagination;
+
+export const selectAdminBranches = (state: RootState): BranchAdmin[] =>
+  state.branch.adminBranches;
+
+export const selectAdminBranchesPagination = (
+  state: RootState
+): BranchState['adminBranchesPagination'] =>
+  state.branch.adminBranchesPagination;

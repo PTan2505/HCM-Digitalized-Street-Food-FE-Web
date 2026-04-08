@@ -33,9 +33,9 @@ const VERIFICATION_TYPE_BY_PATH: Record<string, PendingRegistrationType> = {
 };
 
 const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
-  0: 'Xác minh - Ghost Pin chờ duyệt',
+  0: 'Xác minh - Quán reviewer chia sẻ',
   1: 'Xác minh - Quán ăn chờ duyệt',
-  2: 'Xác minh - Yêu cầu sở hữu Ghost Pin',
+  2: 'Xác minh - Yêu cầu sở hữu quán',
 };
 
 export default function VendorVerificationPage(): React.JSX.Element {

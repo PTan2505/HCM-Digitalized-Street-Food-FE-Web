@@ -221,4 +221,7 @@ export const apiUrl = {
     getVouchers: '/VendorDashboard/vouchers',
     getDishes: '/VendorDashboard/dishes',
   },
+  branch: {
+    getBranches: '/Branch',
+  },
 };

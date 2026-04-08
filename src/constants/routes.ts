@@ -21,6 +21,7 @@ export const ROUTES = {
       POSTS: 'posts',
       USERS: 'users',
       CASHOUT: 'cashout',
+      BRANCH: 'branch',
     },
   },
 
@@ -61,6 +62,7 @@ export const ROUTES = {
       BADGE: 'badge',
       USER_WITH_DIETARY: 'users-with-dietary',
       CATEGORY: 'category',
+      BRANCH: 'branch',
       TASTE: 'taste',
       FEEDBACK_TAG: 'feedback-tag',
       CAMPAIGN: 'campaign',
