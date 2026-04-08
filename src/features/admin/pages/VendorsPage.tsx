@@ -13,6 +13,7 @@ import {
 import {
   Delete as DeleteIcon,
   Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Visibility as VisibilityIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -242,18 +243,26 @@ export default function VendorsPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      id: 'toggle-active',
+      id: 'suspend',
       label: <BlockIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => {
-        if (row.isActive) {
-          handleSuspend(row);
-        } else {
-          handleReactivate(row);
-        }
+        handleSuspend(row);
       },
-      tooltip: 'Tạm ngưng hoặc kích hoạt lại',
+      tooltip: 'Tạm ngưng cửa hàng',
       color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: AdminVendor): boolean => row.isActive,
+    },
+    {
+      id: 'reactivate',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
+      onClick: (row: AdminVendor): void => {
+        handleReactivate(row);
+      },
+      tooltip: 'Kích hoạt lại cửa hàng',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: AdminVendor): boolean => !row.isActive,
     },
     {
       id: 'delete',
