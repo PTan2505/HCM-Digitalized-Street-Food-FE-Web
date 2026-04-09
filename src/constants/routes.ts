@@ -50,6 +50,7 @@ export const ROUTES = {
     BASE: '/admin',
     // Child paths
     PATHS: {
+      DASHBOARD: 'dashboard',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       BADGE_USERS: 'badge-users',

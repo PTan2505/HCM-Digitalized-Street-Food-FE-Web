@@ -21,6 +21,7 @@ import AdminQuestPage from '@features/admin/pages/QuestPage';
 import AdminSettingPage from '@features/admin/pages/SettingPage';
 import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import AdminVendorVerificationPage from '@features/admin/pages/VendorVerificationPage';
+import AdminDashboardPage from '@features/admin/pages/DashboardPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -96,7 +97,12 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.MODERATOR.PATHS.REVENUE} replace />,
+            element: (
+              <Navigate
+                to={ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}
+                replace
+              />
+            ),
           },
           {
             path: ROUTES.MODERATOR.PATHS.REVENUE,
@@ -235,7 +241,11 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.ADMIN.PATHS.REVENUE} replace />,
+            element: <Navigate to={ROUTES.ADMIN.PATHS.DASHBOARD} replace />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.DASHBOARD,
+            element: <AdminDashboardPage />,
           },
           { path: ROUTES.ADMIN.PATHS.REVENUE, element: <AdminRevenuePage /> },
           {

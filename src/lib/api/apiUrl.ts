@@ -221,6 +221,12 @@ export const apiUrl = {
     getVouchers: '/VendorDashboard/vouchers',
     getDishes: '/VendorDashboard/dishes',
   },
+  adminDashboard: {
+    getUserSignUps: '/AdminDashboard/user-signups',
+    getMoney: '/AdminDashboard/money',
+    getCompensation: '/AdminDashboard/compensation',
+    getUserToVendorConversions: '/AdminDashboard/user-to-vendor-conversions',
+  },
   branch: {
     getBranches: '/Branch',
   },
