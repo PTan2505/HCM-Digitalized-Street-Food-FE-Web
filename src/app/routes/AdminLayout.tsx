@@ -24,6 +24,7 @@ import {
   Settings as SettingsIcon,
   Verified as VerifiedIcon,
 } from '@mui/icons-material';
+import FoodBankIcon from '@mui/icons-material/FoodBank';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectUser } from '@slices/auth';
@@ -33,7 +34,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: ChartBarIcon },
   {
     name: 'Xác minh người bán',
     href: '/admin/verification',
@@ -50,12 +51,12 @@ const navigation: NavigationItem[] = [
     icon: BuildingStorefrontIcon,
   },
   {
-    name: 'Quản lý danh mục',
+    name: 'Quản lý danh mục món ăn',
     href: '/admin/category',
     icon: RectangleStackIcon,
   },
   {
-    name: 'Quản lý khẩu vị',
+    name: 'Quản lý khẩu vị món ăn',
     href: '/admin/taste',
     icon: SparklesIcon,
   },
@@ -82,12 +83,12 @@ const navigation: NavigationItem[] = [
   },
   {
     name: 'Chế độ ăn',
-    icon: UserGroupIcon,
+    icon: FoodBankIcon,
     children: [
       {
         name: 'Quản lý chế độ ăn',
         href: '/admin/user-dietary',
-        icon: UserGroupIcon,
+        icon: FoodBankIcon,
       },
       {
         name: 'Chế độ ăn của người dùng',

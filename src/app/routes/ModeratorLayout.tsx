@@ -5,7 +5,6 @@ import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
   Menu as Bars3Icon,
-  BarChart as ChartBarIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   LocationOn as LocationOnIcon,
@@ -22,11 +21,11 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation = [
-  {
-    name: 'Dashboard',
-    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.REVENUE}`,
-    icon: ChartBarIcon,
-  },
+  // {
+  //   name: 'Dashboard',
+  //   href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.REVENUE}`,
+  //   icon: ChartBarIcon,
+  // },
   {
     name: 'Quán Ăn Chờ Duyệt',
     href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`,
@@ -50,8 +49,6 @@ const navigation = [
 ];
 
 const titleByPath: Record<string, string> = {
-  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.REVENUE}`]:
-    'Dashboard - Tổng quan doanh thu',
   [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`]:
     'Xác minh - Quán reviewer chia sẻ',
   [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`]:
@@ -87,7 +84,7 @@ function ModeratorLayout(): JSX.Element {
     avatarUrl: user?.avatarUrl ?? null,
   };
   const pageTitle =
-    titleByPath[location.pathname] ?? 'Dashboard - Tổng quan doanh thu';
+    titleByPath[location.pathname] ?? 'Xác minh - Quán ăn chờ duyệt';
 
   return (
     <Box className="min-h-screen bg-white text-gray-900">

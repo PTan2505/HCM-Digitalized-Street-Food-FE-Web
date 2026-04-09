@@ -606,7 +606,7 @@ export default function VoucherFormModal({
       ...data,
       type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
       startDate: toIsoZulu(data.startDate) ?? '',
-      endDate: toIsoZulu(data.endDate) ?? '',
+      endDate: toIsoZulu(data.endDate) ?? null,
       expiredDate: null,
       redeemPoint: data.redeemPoint ?? 0,
       campaignId: null,
@@ -1035,7 +1035,7 @@ export default function VoucherFormModal({
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Ngày kết thúc <span className="text-red-500">*</span>
+                      Ngày kết thúc
                     </label>
                     <input
                       type="datetime-local"
@@ -1046,6 +1046,12 @@ export default function VoucherFormModal({
                         !!singleForm.formState.errors.endDate
                       )}
                     />
+                    {!voucher && (
+                      <p className="mt-1 text-[11px] text-gray-400 italic">
+                        * Nếu không chọn, voucher sẽ tồn tại vô hạn kể từ ngày
+                        bắt đầu
+                      </p>
+                    )}
                     {singleForm.formState.errors.endDate && (
                       <p className="mt-1 text-xs text-red-500">
                         {singleForm.formState.errors.endDate.message}
