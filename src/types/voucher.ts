@@ -12,7 +12,7 @@ export interface Voucher {
   remain?: number;
   redeemPoint: number;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   expiredDate: string | null;
   isActive: boolean;
   campaignId: number | null;
@@ -31,7 +31,7 @@ export interface VoucherCreate {
   quantity: number;
   redeemPoint: number;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   expiredDate: string | null;
   isActive: boolean;
   campaignId: number | null;
