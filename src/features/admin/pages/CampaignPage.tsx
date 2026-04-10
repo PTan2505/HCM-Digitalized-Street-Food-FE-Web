@@ -336,6 +336,10 @@ export default function CampaignPage(): JSX.Element {
   ];
 
   const newCampaign = newCampaignRef.current;
+  const isUrgentVoucherCreation =
+    newCampaign?.registrationStartDate != null &&
+    new Date(newCampaign.registrationStartDate).toDateString() ===
+      new Date().toDateString();
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
@@ -415,7 +419,15 @@ export default function CampaignPage(): JSX.Element {
          ══════════════════════════════════════════════════════ */}
       <Dialog
         open={postCreateStep === 'prompt'}
-        onClose={handleSkipVoucher}
+        onClose={(event, reason) => {
+          if (
+            isUrgentVoucherCreation &&
+            (reason === 'backdropClick' || reason === 'escapeKeyDown')
+          ) {
+            return;
+          }
+          handleSkipVoucher();
+        }}
         maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
@@ -447,16 +459,27 @@ export default function CampaignPage(): JSX.Element {
           <p className="mt-1 text-xs text-gray-400">
             Bạn cũng có thể thực hiện sau từ danh sách chiến dịch.
           </p>
+          {newCampaign?.registrationStartDate && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
+              thêm voucher cho chiến dịch{' '}
+              <span className="font-semibold">{newCampaign.name}</span> khi
+              chiến dịch đã bắt đầu mở đăng ký (
+              {formatVNDatetime(newCampaign.registrationStartDate)}).
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-          <Button
-            onClick={handleSkipVoucher}
-            color="inherit"
-            variant="outlined"
-          >
-            Tạo voucher sau
-          </Button>
+          {!isUrgentVoucherCreation && (
+            <Button
+              onClick={handleSkipVoucher}
+              color="inherit"
+              variant="outlined"
+            >
+              Tạo voucher sau
+            </Button>
+          )}
           <Button
             onClick={handleStartVoucherCreation}
             variant="contained"
@@ -481,6 +504,7 @@ export default function CampaignPage(): JSX.Element {
           campaignStartDate={newCampaign.startDate}
           campaignEndDate={newCampaign.endDate}
           campaignName={newCampaign.name}
+          disableCancel={isUrgentVoucherCreation}
         />
       )}
 
@@ -520,6 +544,15 @@ export default function CampaignPage(): JSX.Element {
             voucher. Bạn muốn tiếp tục tạo thêm voucher cho chiến dịch này
             không?
           </p>
+          {newCampaign?.registrationStartDate && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
+              thêm voucher cho chiến dịch{' '}
+              <span className="font-semibold">{newCampaign.name}</span> khi
+              chiến dịch đã bắt đầu mở đăng ký (
+              {formatVNDatetime(newCampaign.registrationStartDate)}).
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
