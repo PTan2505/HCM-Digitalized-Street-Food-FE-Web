@@ -21,6 +21,7 @@ export const ROUTES = {
       POSTS: 'posts',
       USERS: 'users',
       CASHOUT: 'cashout',
+      BRANCH: 'branch',
     },
   },
 
@@ -49,6 +50,7 @@ export const ROUTES = {
     BASE: '/admin',
     // Child paths
     PATHS: {
+      DASHBOARD: 'dashboard',
       REVENUE: 'revenue',
       TRANSACTIONS: 'transactions',
       BADGE_USERS: 'badge-users',
@@ -61,6 +63,7 @@ export const ROUTES = {
       BADGE: 'badge',
       USER_WITH_DIETARY: 'users-with-dietary',
       CATEGORY: 'category',
+      BRANCH: 'branch',
       TASTE: 'taste',
       FEEDBACK_TAG: 'feedback-tag',
       CAMPAIGN: 'campaign',

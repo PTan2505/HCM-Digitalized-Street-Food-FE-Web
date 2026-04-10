@@ -1,23 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
-import useDashboard from '@features/vendor/hooks/useDashboard';
+import { Tooltip } from '@mui/material';
+import { Users, DollarSign, AlertCircle, UserCheck } from 'lucide-react';
+import useDashboard from '@features/admin/hooks/useDashboard';
 import SummaryCard from '@features/vendor/components/SummaryCard';
-import RevenueLineChart from '@features/vendor/components/RevenueLineChart';
-import DishBarChart from '@features/vendor/components/DishBarChart';
-import VoucherBarChart from '@features/vendor/components/VoucherBarChart';
+import AdminSignupsChart from '@features/admin/components/AdminSignupsChart';
+import AdminMoneyChart from '@features/admin/components/AdminMoneyChart';
+import AdminCompensationChart from '@features/admin/components/AdminCompensationChart';
+import AdminConversionsChart from '@features/admin/components/AdminConversionsChart';
 
 export default function DashboardPage(): React.JSX.Element {
   const {
-    revenue,
-    vouchers,
-    dishes,
-    onGetRevenue,
-    onGetVouchers,
-    onGetDishes,
+    userSignUps,
+    money,
+    compensation,
+    conversions,
     status,
+    onGetUserSignUps,
+    onGetMoney,
+    onGetCompensation,
+    onGetConversions,
   } = useDashboard();
 
-  // Default to the last 30 days which is a standard logical period for dashoards
+  // Default to the last 30 days which is a standard logical period for dashboards
   const [dateRange, setDateRange] = useState(() => {
     const end = new Date();
     const start = new Date();
@@ -36,15 +40,29 @@ export default function DashboardPage(): React.JSX.Element {
   );
 
   useEffect(() => {
-    // Re-fetch revenue based on selected dates
-    onGetRevenue({
+    onGetUserSignUps({
       fromDate: dateRange.fromDate,
       toDate: dateRange.toDate,
     });
-    // Fetch dishes and vouchers
-    onGetVouchers();
-    onGetDishes();
-  }, [dateRange, onGetDishes, onGetRevenue, onGetVouchers]);
+    onGetMoney({
+      fromDate: dateRange.fromDate,
+      toDate: dateRange.toDate,
+    });
+    onGetCompensation({
+      fromDate: dateRange.fromDate,
+      toDate: dateRange.toDate,
+    });
+    onGetConversions({
+      fromDate: dateRange.fromDate,
+      toDate: dateRange.toDate,
+    });
+  }, [
+    dateRange,
+    onGetUserSignUps,
+    onGetMoney,
+    onGetCompensation,
+    onGetConversions,
+  ]);
 
   const handleFilterApply = (): void => {
     const start = new Date(startDateInput);
@@ -79,11 +97,16 @@ export default function DashboardPage(): React.JSX.Element {
     }).format(value);
   };
 
-  const totalDishesSold =
-    dishes?.topDishes?.reduce(
-      (acc, curr) => acc + curr.totalQuantityOrdered,
-      0
-    ) ?? 0;
+  const totalRevenue =
+    (money?.totalBranchRegistrationAmount ?? 0) +
+    (money?.totalSystemCampaignAmount ?? 0);
+
+  const isInitialLoading =
+    status === 'pending' &&
+    !userSignUps &&
+    !money &&
+    !compensation &&
+    !conversions;
 
   return (
     <div className="font-(--font-nunito)">
@@ -92,11 +115,11 @@ export default function DashboardPage(): React.JSX.Element {
         <div>
           <div className="mb-1 flex items-start gap-2">
             <h1 className="text-table-text-primary text-3xl font-bold">
-              Bảng điều khiển hoạt động
+              Bảng điều khiển hệ thống
             </h1>
           </div>
           <p className="text-table-text-secondary text-sm">
-            Giám sát doanh thu và hiệu suất kinh doanh của bạn
+            Giám sát hiệu suất và các chỉ số tài chính của hệ thống
           </p>
         </div>
       </div>
@@ -162,7 +185,7 @@ export default function DashboardPage(): React.JSX.Element {
         </div>
       </div>
 
-      {status === 'pending' && !revenue ? (
+      {isInitialLoading ? (
         <div className="flex h-64 flex-col items-center justify-center gap-4">
           <div className="border-primary-600 h-10 w-10 animate-spin rounded-full border-b-2"></div>
           <span className="text-sm font-medium text-gray-500">
@@ -172,40 +195,108 @@ export default function DashboardPage(): React.JSX.Element {
       ) : (
         <div className="animate-in fade-in relative w-full space-y-8 duration-700">
           {/* Loading overlay for refetches */}
-          {status === 'pending' && revenue !== null && (
+          {status === 'pending' && !isInitialLoading && (
             <div className="absolute inset-0 z-10 flex justify-center rounded-xl bg-white/50 pt-20 backdrop-blur-[1px]">
               <div className="border-primary-600 h-8 w-8 animate-spin rounded-full border-b-2"></div>
             </div>
           )}
 
           {/* Cards metrics */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Tooltip
+              title={
+                <div className="flex min-w-[220px] flex-col gap-1.5 p-1.5">
+                  <div className="mb-1 border-b border-gray-100 pb-2">
+                    <span className="mb-1 block text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                      Chi tiết doanh thu
+                    </span>
+                    <span className="text-xl font-bold text-gray-900">
+                      {formatCurrency(totalRevenue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      Đăng ký chi nhánh
+                    </span>
+                    <span className="text-sm font-bold text-emerald-600">
+                      {formatCurrency(
+                        money?.totalBranchRegistrationAmount ?? 0
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                      <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                      Chiến dịch hệ thống
+                    </span>
+                    <span className="text-sm font-bold text-amber-600">
+                      {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
+                    </span>
+                  </div>
+                </div>
+              }
+              placement="bottom"
+              arrow
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    boxShadow:
+                      '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #f3f4f6',
+                    px: 1.5,
+                    py: 1.5,
+                  },
+                },
+                arrow: {
+                  sx: {
+                    color: '#ffffff',
+                    '&::before': {
+                      border: '1px solid #f3f4f6',
+                    },
+                  },
+                },
+              }}
+            >
+              <div className="cursor-pointer transition-transform hover:scale-[1.02]">
+                <SummaryCard
+                  title="Tổng doanh thu"
+                  value={formatCurrency(totalRevenue)}
+                  icon={DollarSign}
+                />
+              </div>
+            </Tooltip>
             <SummaryCard
-              title="Tổng doanh thu"
-              value={formatCurrency(revenue?.totalRevenue ?? 0)}
-              icon={DollarSign}
+              title="Tổng chi phí bồi thường"
+              value={formatCurrency(compensation?.totalCompensationAmount ?? 0)}
+              icon={AlertCircle}
             />
             <SummaryCard
-              title="Tổng đơn hàng"
-              value={revenue?.totalOrders ?? 0}
-              icon={ShoppingBag}
+              title="Người dùng đăng ký"
+              value={userSignUps?.totalSignupCount ?? 0}
+              icon={Users}
             />
             <SummaryCard
-              title="Món ăn bán ra"
-              value={totalDishesSold}
-              icon={TrendingUp}
+              title="Chuyển đổi người bán"
+              value={conversions?.totalConversionCount ?? 0}
+              icon={UserCheck}
             />
           </div>
 
-          {/* Timeseries Revenue */}
-          <div className="w-full">
-            <RevenueLineChart data={revenue?.dailyRevenues ?? []} />
+          {/* Money and Compensation */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <AdminMoneyChart data={money?.dailyAmounts ?? []} />
+            <AdminCompensationChart
+              data={compensation?.dailyCompensations ?? []}
+            />
           </div>
 
-          {/* Grouped analytics */}
+          {/* Users metrics */}
           <div className="grid grid-cols-1 gap-6 pb-12 lg:grid-cols-2">
-            <DishBarChart data={dishes?.topDishes ?? []} />
-            <VoucherBarChart data={vouchers?.voucherUsages ?? []} />
+            <AdminSignupsChart data={userSignUps?.dailySignups ?? []} />
+            <AdminConversionsChart data={conversions?.dailyConversions ?? []} />
           </div>
         </div>
       )}

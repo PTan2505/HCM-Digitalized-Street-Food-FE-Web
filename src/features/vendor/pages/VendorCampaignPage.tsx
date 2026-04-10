@@ -206,9 +206,11 @@ export default function VendorCampaignPage(): JSX.Element {
     }
   };
 
-  const storeCampaigns = campaigns.filter(
-    (campaign) => !campaign.isSystemCampaign
-  );
+  // const storeCampaigns = campaigns.filter(
+  //   (campaign) => !campaign.isSystemCampaign
+  // );
+
+  const storeCampaigns = campaigns;
 
   const createImageFormData = (file: File): FormData => {
     const formData = new FormData();
