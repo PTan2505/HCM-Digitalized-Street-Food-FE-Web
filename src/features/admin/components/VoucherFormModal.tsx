@@ -34,6 +34,7 @@ interface VoucherFormModalProps {
   campaignStartDate?: string | null;
   campaignEndDate?: string | null;
   campaignName?: string | null;
+  disableCancel?: boolean;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -481,6 +482,7 @@ export default function VoucherFormModal({
   campaignStartDate,
   campaignEndDate,
   campaignName,
+  disableCancel = false,
 }: VoucherFormModalProps): React.JSX.Element | null {
   const openedFromCampaign = fixedCampaignId !== undefined;
 
@@ -674,7 +676,7 @@ export default function VoucherFormModal({
     return (
       <Dialog
         open={isOpen}
-        onClose={onClose}
+        onClose={disableCancel ? undefined : onClose}
         maxWidth="md"
         fullWidth
         scroll="paper"
@@ -696,7 +698,7 @@ export default function VoucherFormModal({
           subtitle={campaignName ?? voucher?.name ?? ''}
           icon={<LocalOfferIcon />}
           iconTone="voucher"
-          onClose={onClose}
+          onClose={disableCancel ? undefined : onClose}
         />
 
         <form onSubmit={multiForm.handleSubmit(handleMultiSubmit)}>
@@ -749,9 +751,11 @@ export default function VoucherFormModal({
               {fields.length} voucher sẽ được tạo
             </span>
             <div className="flex gap-2">
-              <Button onClick={onClose} color="inherit">
-                Hủy
-              </Button>
+              {!disableCancel && (
+                <Button onClick={onClose} color="inherit">
+                  Hủy
+                </Button>
+              )}
               <Button
                 type="submit"
                 variant="contained"
@@ -774,7 +778,7 @@ export default function VoucherFormModal({
   return (
     <Dialog
       open={isOpen}
-      onClose={onClose}
+      onClose={disableCancel ? undefined : onClose}
       maxWidth="md"
       fullWidth
       scroll="paper"
@@ -796,7 +800,7 @@ export default function VoucherFormModal({
         subtitle={voucher?.name ?? campaignName ?? ''}
         icon={<LocalOfferIcon />}
         iconTone="voucher"
-        onClose={onClose}
+        onClose={disableCancel ? undefined : onClose}
       />
 
       <form onSubmit={singleForm.handleSubmit(handleSingleSubmit)}>
@@ -1150,9 +1154,11 @@ export default function VoucherFormModal({
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 1 }}>
-          <Button onClick={onClose} color="inherit">
-            Hủy
-          </Button>
+          {!disableCancel && (
+            <Button onClick={onClose} color="inherit">
+              Hủy
+            </Button>
+          )}
           <Button
             type="submit"
             variant="contained"
