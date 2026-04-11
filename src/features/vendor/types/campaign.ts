@@ -5,9 +5,12 @@ export interface VendorCampaign {
   name: string;
   description: string | null;
   targetSegment: string | null;
+  registrationStartDate?: string | null;
+  registrationEndDate?: string | null;
   startDate: string;
   endDate: string;
   isActive: boolean;
+  isRegisterable: boolean;
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
@@ -21,7 +24,6 @@ export interface VendorCampaignCreate {
   targetSegment: string | null;
   startDate: string;
   endDate: string;
-  isActive: boolean;
   branchIds: number[] | null;
 }
 
@@ -31,7 +33,6 @@ export interface VendorCampaignUpdate {
   targetSegment: string | null;
   startDate: string;
   endDate: string;
-  isActive: boolean;
   branchIds: number[] | null;
 }
 

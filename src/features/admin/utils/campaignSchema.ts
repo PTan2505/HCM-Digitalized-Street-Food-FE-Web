@@ -13,7 +13,6 @@ export const CampaignSchema = z
       .min(1, 'Ngày kết thúc đăng ký không được để trống'),
     startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
     endDate: z.string().min(1, 'Ngày kết thúc không được để trống'),
-    isActive: z.boolean(),
   })
   .superRefine((data, ctx) => {
     const {

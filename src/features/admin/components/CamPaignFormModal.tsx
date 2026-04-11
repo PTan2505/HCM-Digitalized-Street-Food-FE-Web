@@ -117,7 +117,6 @@ export default function CamPaignFormModal({
       registrationEndDate: '',
       startDate: '',
       endDate: '',
-      isActive: true,
     },
   });
 
@@ -141,7 +140,6 @@ export default function CamPaignFormModal({
           ),
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
-          isActive: campaign.isActive,
         });
       } else {
         reset({
@@ -152,7 +150,6 @@ export default function CamPaignFormModal({
           registrationEndDate: '',
           startDate: '',
           endDate: '',
-          isActive: true,
         });
       }
 
@@ -214,7 +211,6 @@ export default function CamPaignFormModal({
       registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
-      isActive: data.isActive,
     };
     await onSubmit(payload, imageFile, isImageRemoved);
   };
@@ -299,11 +295,6 @@ export default function CamPaignFormModal({
           }}
         >
           <div className="flex flex-col gap-6">
-            <input
-              type="checkbox"
-              className="hidden"
-              {...register('isActive')}
-            />
             {/* ── SECTION 1: Thông tin cơ bản ── */}
             <div>
               {sectionLabel('Thông tin cơ bản')}
