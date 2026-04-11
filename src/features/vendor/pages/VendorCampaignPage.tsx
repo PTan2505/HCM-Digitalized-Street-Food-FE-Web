@@ -228,17 +228,12 @@ export default function VendorCampaignPage(): JSX.Element {
         return;
       }
 
-      const normalizedIsActive = isBeforeCampaignStart(data.startDate)
-        ? false
-        : data.isActive;
-
       const payload = {
         name: data.name,
         description: data.description ?? null,
         targetSegment: data.targetSegment ?? null,
         startDate: data.startDate,
         endDate: data.endDate,
-        isActive: normalizedIsActive,
         branchIds: data.branchIds,
       };
 
@@ -313,6 +308,11 @@ export default function VendorCampaignPage(): JSX.Element {
   };
 
   const newCampaign = newCampaignRef.current;
+  const isUrgentVoucherCreation =
+    newCampaign != null &&
+    (newCampaign.isActive ||
+      new Date(newCampaign.startDate).toDateString() ===
+        new Date().toDateString());
 
   const startCampaignTour = (): void => {
     setTourInstanceKey((prev) => prev + 1);
@@ -395,26 +395,59 @@ export default function VendorCampaignPage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'isActive',
-      label: 'Hoạt động',
-      render: (value: unknown): JSX.Element => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
-          type={value === true ? 'success' : 'error'}
-        />
-      ),
-    },
+    // {
+    //   key: 'isActive',
+    //   label: 'Hoạt động',
+    //   render: (value: unknown): JSX.Element => (
+    //     <StatusBadge
+    //       label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+    //       type={value === true ? 'success' : 'error'}
+    //     />
+    //   ),
+    // },
     {
       key: 'actions',
       label: 'Thao tác',
       render: (_: unknown, row: VendorCampaign): JSX.Element => {
         if (row.isSystemCampaign) {
-          return <span className="text-xs text-gray-400">-</span>;
+          // return <span className="text-xs text-gray-400">-</span>;
+          return (
+            <Box className="flex items-center gap-2">
+              <Tooltip title="Xem chi tiết" arrow>
+                <Button
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                    event.stopPropagation();
+                    void handleOpenDetailModal(row);
+                  }}
+                >
+                  <VisibilityIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Xem chi nhánh đã tham gia" arrow>
+                <Button
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                    event.stopPropagation();
+                    setSelectedCampaign(row);
+                    setOpenBranchModal(true);
+                  }}
+                >
+                  <StorefrontIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+            </Box>
+          );
         }
 
         const isEnded = new Date(row.endDate) < new Date();
+        const isStarted = new Date(row.startDate) > new Date();
         const isLocked = row.isActive || isEnded;
+        // const isLocked = isEnded;
 
         return (
           <Box className="flex items-center gap-2">
@@ -431,8 +464,49 @@ export default function VendorCampaignPage(): JSX.Element {
                 <VisibilityIcon fontSize="small" />
               </Button>
             </Tooltip>
+            <Tooltip title="Quản lý chi nhánh" arrow>
+              <Button
+                size="small"
+                color="info"
+                variant="outlined"
+                onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                  event.stopPropagation();
+                  setSelectedCampaign(row);
+                  setOpenBranchModal(true);
+                }}
+              >
+                <StorefrontIcon fontSize="small" />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Quản lý voucher" arrow>
+              <Button
+                size="small"
+                color="warning"
+                variant="outlined"
+                onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                  event.stopPropagation();
+                  setSelectedCampaign(row);
+                  setOpenVoucherModal(true);
+                }}
+              >
+                <VoucherIcon fontSize="small" />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Chỉnh sửa chiến dịch" arrow>
+              <Button
+                size="small"
+                color="primary"
+                variant="outlined"
+                onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                  event.stopPropagation();
+                  handleOpenModal(row);
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </Button>
+            </Tooltip>
 
-            {!isLocked ? (
+            {/* {!isLocked ? (
               <>
                 <Tooltip title="Quản lý chi nhánh" arrow>
                   <Button
@@ -480,7 +554,7 @@ export default function VendorCampaignPage(): JSX.Element {
               <span className="text-xs text-gray-400 italic">
                 {row.isActive ? 'Đang hoạt động' : 'Đã kết thúc'}
               </span>
-            )}
+            )} */}
           </Box>
         );
       },
@@ -624,7 +698,10 @@ export default function VendorCampaignPage(): JSX.Element {
 
       <JoinableSystemCampaignModal
         isOpen={isJoinableModalOpen}
-        onClose={() => setIsJoinableModalOpen(false)}
+        onClose={() => {
+          setIsJoinableModalOpen(false);
+          void fetchCampaigns();
+        }}
         mode="detail"
         vendorBranchIds={branchOptions.map((branch) => branch.branchId)}
         vendorBranches={branchOptions}
@@ -642,7 +719,15 @@ export default function VendorCampaignPage(): JSX.Element {
          ══════════════════════════════════════════════════════ */}
       <Dialog
         open={postCreateStep === 'prompt'}
-        onClose={handleSkipVoucher}
+        onClose={(event, reason) => {
+          if (
+            isUrgentVoucherCreation &&
+            (reason === 'backdropClick' || reason === 'escapeKeyDown')
+          ) {
+            return;
+          }
+          handleSkipVoucher();
+        }}
         maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
@@ -674,16 +759,30 @@ export default function VendorCampaignPage(): JSX.Element {
           <p className="mt-1 text-xs text-gray-400">
             Bạn cũng có thể thực hiện sau từ danh sách chiến dịch.
           </p>
+          {(newCampaign?.isActive ?? newCampaign?.startDate) && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
+              thêm voucher cho chiến dịch{' '}
+              <span className="font-semibold">{newCampaign?.name}</span> khi
+              chiến dịch đã được kích hoạt hoặc đã bắt đầu diễn ra (
+              {newCampaign?.startDate
+                ? formatVNDatetime(newCampaign.startDate)
+                : ''}
+              ).
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-          <Button
-            onClick={handleSkipVoucher}
-            color="inherit"
-            variant="outlined"
-          >
-            Tạo voucher sau
-          </Button>
+          {!isUrgentVoucherCreation && (
+            <Button
+              onClick={handleSkipVoucher}
+              color="inherit"
+              variant="outlined"
+            >
+              Tạo voucher sau
+            </Button>
+          )}
           <Button
             onClick={handleStartVoucherCreation}
             variant="contained"
@@ -708,6 +807,7 @@ export default function VendorCampaignPage(): JSX.Element {
           campaignStartDate={newCampaign.startDate}
           campaignEndDate={newCampaign.endDate}
           campaignName={newCampaign.name}
+          disableCancel={isUrgentVoucherCreation}
         />
       )}
 
@@ -747,6 +847,18 @@ export default function VendorCampaignPage(): JSX.Element {
             voucher. Bạn muốn tiếp tục tạo thêm voucher cho chiến dịch này
             không?
           </p>
+          {(newCampaign?.isActive ?? newCampaign?.startDate) && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
+              thêm voucher cho chiến dịch{' '}
+              <span className="font-semibold">{newCampaign?.name}</span> khi
+              chiến dịch đã được kích hoạt hoặc đã bắt đầu diễn ra (
+              {newCampaign?.startDate
+                ? formatVNDatetime(newCampaign.startDate)
+                : ''}
+              ).
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>

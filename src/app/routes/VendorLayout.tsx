@@ -411,7 +411,7 @@ function VendorLayout(): JSX.Element {
           // Fetch dishes để cập nhật vendorDishesPagination vào store
           onGetDishesOfAVendor({
             vendorId: vendor.vendorId,
-            params: { pageNumber: 1, pageSize: 1 },
+            params: { pageNumber: 1, pageSize: 5 },
           }),
           // Fetch dietary preferences để cập nhật myVendorDietaryPreferences vào store
           onGetDietaryPreferencesOfMyVendor({ vendorId: vendor.vendorId }),
@@ -439,7 +439,7 @@ function VendorLayout(): JSX.Element {
                 try {
                   await onGetDishesByBranch({
                     branchId: branch.branchId,
-                    params: { pageNumber: 1, pageSize: 1 },
+                    params: { pageNumber: 1, pageSize: 5 },
                   });
                 } catch (error) {
                   console.error(

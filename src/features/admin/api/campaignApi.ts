@@ -3,6 +3,7 @@ import type {
   CampaignUpdate,
   Campaign,
   CampaignListResponse,
+  CampaignBranchListResponse,
 } from '@features/admin/types/campaign';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -20,6 +21,18 @@ export class CampaignApi {
   ): Promise<CampaignListResponse> {
     const res = await this.apiClient.get<CampaignListResponse>({
       url: apiUrl.campaign.GetOrPostSystemCampaign,
+      params: { pageNumber, pageSize },
+    });
+    return res.data;
+  }
+
+  async getBranchesOfACampaign(
+    campaignId: number,
+    pageNumber: number = 1,
+    pageSize: number = 100
+  ): Promise<CampaignBranchListResponse> {
+    const res = await this.apiClient.get<CampaignBranchListResponse>({
+      url: apiUrl.campaign.GetBranchesOfACampaign(campaignId),
       params: { pageNumber, pageSize },
     });
     return res.data;
