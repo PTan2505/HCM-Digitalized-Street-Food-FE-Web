@@ -94,11 +94,11 @@ export default function AdminUsersTable({
           label: 'Số điện thoại',
           render: (value) => getDisplayText(value),
         },
-        {
-          key: 'role',
-          label: 'Vai trò',
-          render: (value) => mapRoleLabel(value as string | number | null),
-        },
+        // {
+        //   key: 'role',
+        //   label: 'Vai trò',
+        //   render: (value) => mapRoleLabel(value as string | number | null),
+        // },
         {
           key: 'status',
           label: 'Trạng thái',
@@ -112,47 +112,47 @@ export default function AdminUsersTable({
       emptyMessage="Không có người dùng"
       rowKey="id"
       tourId={tourId}
-      actions={
-        roleFilter === 'user'
-          ? [
-              {
-                id: 'toggle-ban',
-                label: (row: AdminUserItem): string =>
-                  isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
-                onClick: (row): void => {
-                  if (processingUserId !== null) {
-                    return;
-                  }
+      actions={[
+        {
+          id: 'toggle-ban',
+          label: (row: AdminUserItem): string =>
+            isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
+          onClick: (row): void => {
+            if (processingUserId !== null) {
+              return;
+            }
 
-                  onToggleBan(row);
-                },
-                variant: 'outlined',
-                color: 'warning',
-                tooltip:
-                  processingUserId !== null
-                    ? 'Đang cập nhật trạng thái...'
-                    : 'Khóa hoặc mở khóa tài khoản',
-              },
+            onToggleBan(row);
+          },
+          variant: 'outlined',
+          color: 'warning',
+          tooltip:
+            processingUserId !== null
+              ? 'Đang cập nhật trạng thái...'
+              : 'Khóa hoặc mở khóa tài khoản',
+        },
+        ...(roleFilter === 'user'
+          ? [
               {
                 id: 'promote-moderator',
                 label: 'Thêm Moderator',
-                onClick: (row): void => {
+                onClick: (row: AdminUserItem): void => {
                   if (processingUserId !== null) {
                     return;
                   }
 
                   onPromoteModerator(row);
                 },
-                variant: 'outlined',
-                color: 'info',
+                variant: 'outlined' as const,
+                color: 'info' as const,
                 tooltip:
                   processingUserId !== null
                     ? 'Đang cập nhật vai trò...'
                     : 'Nâng quyền thành moderator',
               },
             ]
-          : undefined
-      }
+          : []),
+      ]}
     />
   );
 }

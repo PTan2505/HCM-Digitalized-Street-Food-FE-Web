@@ -12,6 +12,7 @@ import {
   selectCampaignStatus,
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
+  selectVendorCampaigns,
 } from '@slices/campaign';
 import { selectMyVendor } from '@slices/vendor';
 
@@ -29,35 +30,50 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const StatusBadge = ({
-  label,
-  type,
-}: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
-}): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
+const colorMap: Record<string, string> = {
+  success: 'bg-green-100 text-green-700 border-green-200',
+  error: 'bg-red-100 text-red-700 border-red-200',
+  warning: 'bg-amber-100 text-amber-700 border-amber-200',
+  default: 'bg-slate-100 text-slate-700 border-slate-200',
+  info: 'bg-blue-100 text-blue-700 border-blue-200',
+};
 
-  return (
-    <span
-      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
-    >
-      {label}
-    </span>
-  );
+const getCampaignStatus = (
+  row: VendorCampaign
+): { label: string; type: string } => {
+  const now = Date.now();
+  const regStart = row.registrationStartDate
+    ? new Date(row.registrationStartDate).getTime()
+    : null;
+  const regEnd = row.registrationEndDate
+    ? new Date(row.registrationEndDate).getTime()
+    : null;
+  const start = new Date(row.startDate).getTime();
+  const end = new Date(row.endDate).getTime();
+
+  if (row.isActive && !row.isRegisterable)
+    return { label: 'Đang hoạt động', type: 'success' };
+  if (row.isRegisterable && !row.isActive)
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  if (!row.isActive && !row.isRegisterable) {
+    if (now > end) return { label: 'Đã kết thúc', type: 'error' };
+    if (regEnd !== null && now > regEnd && now < start)
+      return { label: 'Chưa bắt đầu', type: 'warning' };
+    if (regStart !== null && now < regStart)
+      return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+    return { label: 'Chưa bắt đầu', type: 'warning' };
+  }
+  return { label: 'Không xác định', type: 'default' };
 };
 
 export default function VendorSystemCampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
+  const vendorCampaigns = useAppSelector(selectVendorCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
   const myVendor = useAppSelector(selectMyVendor);
-  const { onGetJoinableSystemCampaigns } = useVendorCampaign();
+  const { onGetJoinableSystemCampaigns, onGetVendorCampaigns } =
+    useVendorCampaign();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -68,11 +84,14 @@ export default function VendorSystemCampaignPage(): JSX.Element {
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
-      await onGetJoinableSystemCampaigns(page, pageSize);
+      await Promise.all([
+        onGetJoinableSystemCampaigns(page, pageSize),
+        onGetVendorCampaigns(1, 1000),
+      ]);
     } catch (error) {
       console.error('Failed to fetch system campaigns', error);
     }
-  }, [onGetJoinableSystemCampaigns, page, pageSize]);
+  }, [onGetJoinableSystemCampaigns, onGetVendorCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchCampaigns();
@@ -116,33 +135,51 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       ),
     },
     {
-      key: 'isActive',
+      key: 'status',
       label: 'Hoạt động',
-      style: { width: '140px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
-          type={value === true ? 'success' : 'error'}
-        />
-      ),
+      style: { width: '160px' },
+      render: (_: unknown, row: VendorCampaign): React.ReactNode => {
+        const { label, type } = getCampaignStatus(row);
+        return (
+          <span
+            className={`inline-flex min-w-[130px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colorMap[type]}`}
+          >
+            {label}
+          </span>
+        );
+      },
     },
     {
       key: 'detailsAction',
       label: 'Hành động',
       style: { width: '160px' },
-      render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <Button
-          size="small"
-          color="info"
-          variant="outlined"
-          onClick={() => {
-            setDetailsCampaignId(row.campaignId);
-            setIsDetailsModalOpen(true);
-          }}
-        >
-          <VisibilityIcon fontSize="small" />
-        </Button>
-      ),
+      render: (_: unknown, row: VendorCampaign): React.ReactNode => {
+        const isAlreadyJoined = vendorCampaigns.some(
+          (vc) => vc.isSystemCampaign && vc.campaignId === row.campaignId
+        );
+
+        if (isAlreadyJoined) {
+          return (
+            <span className="text-primary-600 text-sm font-semibold">
+              Đã tham gia
+            </span>
+          );
+        }
+
+        return (
+          <Button
+            size="small"
+            color="info"
+            variant="outlined"
+            onClick={() => {
+              setDetailsCampaignId(row.campaignId);
+              setIsDetailsModalOpen(true);
+            }}
+          >
+            <VisibilityIcon fontSize="small" />
+          </Button>
+        );
+      },
     },
   ];
 

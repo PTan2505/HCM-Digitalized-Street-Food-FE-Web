@@ -36,6 +36,16 @@ import { selectTastes } from '@slices/taste';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 // import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
 
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
+};
+
 interface DishFormModalProps {
   isOpen: boolean;
   isEditMode: boolean;
@@ -261,17 +271,25 @@ export default function DishFormModal({
                   render={({ field }) => (
                     <>
                       <input
-                        {...field}
-                        type="number"
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        value={field.value === 0 ? '' : field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        type="text"
+                        inputMode="numeric"
+                        onChange={(e) =>
+                          field.onChange(parseNumberInput(e.target.value))
+                        }
+                        value={
+                          field.value === 0
+                            ? ''
+                            : formatNumberWithDots(field.value)
+                        }
                         className={`focus:ring-primary-500 w-full rounded-xl border px-4 py-2.5 transition-all outline-none ${
                           errors.price
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                             : 'focus:border-primary-500 border-gray-200 hover:border-gray-300'
                         }`}
-                        placeholder="Ví dụ: 50000"
-                        min="0"
+                        placeholder="Ví dụ: 50.000"
                       />
                       {errors.price && (
                         <p className="mt-1 text-xs text-red-500">

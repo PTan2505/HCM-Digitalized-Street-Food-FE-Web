@@ -411,7 +411,7 @@ function VendorLayout(): JSX.Element {
           // Fetch dishes để cập nhật vendorDishesPagination vào store
           onGetDishesOfAVendor({
             vendorId: vendor.vendorId,
-            params: { pageNumber: 1, pageSize: 1 },
+            params: { pageNumber: 1, pageSize: 5 },
           }),
           // Fetch dietary preferences để cập nhật myVendorDietaryPreferences vào store
           onGetDietaryPreferencesOfMyVendor({ vendorId: vendor.vendorId }),
@@ -439,7 +439,7 @@ function VendorLayout(): JSX.Element {
                 try {
                   await onGetDishesByBranch({
                     branchId: branch.branchId,
-                    params: { pageNumber: 1, pageSize: 1 },
+                    params: { pageNumber: 1, pageSize: 5 },
                   });
                 } catch (error) {
                   console.error(
@@ -569,7 +569,7 @@ function VendorLayout(): JSX.Element {
         }`}
       >
         {/* Top navigation */}
-        <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+        <Box className="sticky top-0 z-30 border-b border-gray-200 bg-white shadow-sm">
           <Box className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <Box className="flex items-center gap-4">
               <IconButton

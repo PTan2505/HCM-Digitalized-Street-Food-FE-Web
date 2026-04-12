@@ -122,7 +122,6 @@ export default function VendorCampaignFormModal({
       targetSegment: '',
       startDate: '',
       endDate: '',
-      isActive: true,
       branchIds: null,
     },
   });
@@ -146,7 +145,6 @@ export default function VendorCampaignFormModal({
           targetSegment: campaign.targetSegment ?? '',
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
-          isActive: campaign.isActive,
           branchIds: campaign.branchIds ?? null,
         });
       } else {
@@ -156,7 +154,6 @@ export default function VendorCampaignFormModal({
           targetSegment: '',
           startDate: '',
           endDate: '',
-          isActive: true,
           branchIds: null,
         });
       }
@@ -230,7 +227,6 @@ export default function VendorCampaignFormModal({
       ...data,
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
-      isActive: data.isActive,
     };
     await onSubmit(payload, imageFile, isImageRemoved);
   };
@@ -323,12 +319,6 @@ export default function VendorCampaignFormModal({
                 Chiến dịch đang hoạt động nên không thể chỉnh sửa.
               </p>
             )}
-
-            <input
-              type="checkbox"
-              className="hidden"
-              {...register('isActive')}
-            />
 
             <fieldset
               className="m-0 min-w-0 border-0 p-0"
