@@ -445,7 +445,7 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('registrationStartDate')}
-                    min={getTodayMinVN()}
+                    min={campaign ? undefined : getTodayMinVN()}
                     className={inputClass(!!errors.registrationStartDate)}
                   />
                   {errors.registrationStartDate && (
@@ -461,8 +461,12 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('registrationEndDate')}
-                    disabled={!registrationStartDate}
-                    min={registrationStartDate || getTodayMinVN()}
+                    disabled={!campaign && !registrationStartDate}
+                    min={
+                      campaign
+                        ? undefined
+                        : registrationStartDate || getTodayMinVN()
+                    }
                     className={inputClass(!!errors.registrationEndDate)}
                   />
                   {errors.registrationEndDate && (
@@ -487,8 +491,12 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('startDate')}
-                    disabled={!registrationEndDate}
-                    min={registrationEndDate || getTodayMinVN()}
+                    disabled={!campaign && !registrationEndDate}
+                    min={
+                      campaign
+                        ? undefined
+                        : registrationEndDate || getTodayMinVN()
+                    }
                     className={inputClass(!!errors.startDate)}
                   />
                   {errors.startDate && (
@@ -505,8 +513,8 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('endDate')}
-                    disabled={!startDate}
-                    min={startDate || getTodayMinVN()}
+                    disabled={!campaign && !startDate}
+                    min={campaign ? undefined : startDate || getTodayMinVN()}
                     className={inputClass(!!errors.endDate)}
                   />
                   {errors.endDate && (
