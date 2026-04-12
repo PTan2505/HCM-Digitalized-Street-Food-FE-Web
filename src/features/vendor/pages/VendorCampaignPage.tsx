@@ -176,9 +176,9 @@ export default function VendorCampaignPage(): JSX.Element {
   }, [fetchBranchOptions]);
 
   const handleOpenModal = (campaign?: VendorCampaign): void => {
-    if (campaign?.isActive) {
-      return;
-    }
+    // if (campaign?.isActive) {
+    //   return;
+    // }
 
     setEditingCampaign(campaign ?? null);
     setOpenModal(true);
@@ -224,9 +224,9 @@ export default function VendorCampaignPage(): JSX.Element {
     isImageRemoved?: boolean
   ): Promise<void> => {
     try {
-      if (editingCampaign?.isActive) {
-        return;
-      }
+      // if (editingCampaign?.isActive) {
+      //   return;
+      // }
 
       const payload = {
         name: data.name,
