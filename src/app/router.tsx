@@ -2,6 +2,7 @@ import ManagerLayout from '@app/routes/ManagerLayout';
 import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
 import VendorLayout from '@app/routes/VendorLayout';
+import UserLayout from '@app/routes/UserLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
@@ -233,6 +234,32 @@ export const router = createBrowserRouter([
             path: ROUTES.VENDOR.PATHS.CAMPAIGN_SYSTEM,
             element: <VendorSystemCampaignPage />,
           },
+        ],
+      },
+      {
+        path: ROUTES.USER.BASE,
+        element: <UserLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.USER.PATHS.BRANCH} replace />,
+          },
+          {
+            path: ROUTES.USER.PATHS.BRANCH,
+            element: <VendorBranchPage />,
+          },
+          {
+            path: ROUTES.USER.PATHS.GHOST_PIN,
+            element: <GhostPinPage />,
+          },
+          {
+            path: ROUTES.USER.PATHS.REGISTRATION_HISTORY,
+            element: <VendorRegistrationHistoryPage />,
+          },
+          // {
+          //   path: ROUTES.USER.PATHS.PAYMENT_HISTORY,
+          //   element: <VendorPaymentHistoryPage />,
+          // },
         ],
       },
       {
