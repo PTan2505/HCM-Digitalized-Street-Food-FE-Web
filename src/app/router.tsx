@@ -14,12 +14,14 @@ import UserBadgeManagement from '@features/admin/pages/UserBadgeManagementPage';
 import AdminUsersPage from '@features/admin/pages/UsersPage';
 import UsersWithDietaryPreferencesPage from '@features/admin/pages/UsersWithDietaryPreferencesPage';
 import AdminVendorsPage from '@features/admin/pages/VendorsPage';
+import AdminBranchPage from '@features/admin/pages/BranchPage';
 import AdminCampaignPage from '@features/admin/pages/CampaignPage';
 import AdminVendorCampaignPage from '@features/admin/pages/AdminVendorCampaignPage';
 import AdminQuestPage from '@features/admin/pages/QuestPage';
 import AdminSettingPage from '@features/admin/pages/SettingPage';
 import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import AdminVendorVerificationPage from '@features/admin/pages/VendorVerificationPage';
+import AdminDashboardPage from '@features/admin/pages/DashboardPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
 import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
@@ -27,6 +29,7 @@ import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
 import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
+import ModeratorBranchPage from '@features/moderator/pages/BranchPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import DishManagementPage from '@features/manager/pages/DishManagementPage';
@@ -94,7 +97,12 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.MODERATOR.PATHS.REVENUE} replace />,
+            element: (
+              <Navigate
+                to={ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}
+                replace
+              />
+            ),
           },
           {
             path: ROUTES.MODERATOR.PATHS.REVENUE,
@@ -136,6 +144,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.MODERATOR.PATHS.CASHOUT,
             element: <ModeratorCashoutPage />,
+          },
+          {
+            path: ROUTES.MODERATOR.PATHS.BRANCH,
+            element: <ModeratorBranchPage />,
           },
         ],
       },
@@ -229,7 +241,11 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.ADMIN.PATHS.REVENUE} replace />,
+            element: <Navigate to={ROUTES.ADMIN.PATHS.DASHBOARD} replace />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.DASHBOARD,
+            element: <AdminDashboardPage />,
           },
           { path: ROUTES.ADMIN.PATHS.REVENUE, element: <AdminRevenuePage /> },
           {
@@ -270,6 +286,7 @@ export const router = createBrowserRouter([
             element: <AdminUsersPage />,
           },
           { path: ROUTES.ADMIN.PATHS.VENDORS, element: <AdminVendorsPage /> },
+          { path: ROUTES.ADMIN.PATHS.BRANCH, element: <AdminBranchPage /> },
           { path: ROUTES.ADMIN.PATHS.BADGE, element: <AdminBadgePage /> },
           { path: ROUTES.ADMIN.PATHS.CATEGORY, element: <AdminCategoryPage /> },
           { path: ROUTES.ADMIN.PATHS.TASTE, element: <AdminTastePage /> },

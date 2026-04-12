@@ -14,6 +14,7 @@ import type {
   CampaignUpdate,
   Campaign,
   CampaignListResponse,
+  CampaignBranchListResponse,
 } from '@features/admin/types/campaign';
 
 const useCampaign = (): {
@@ -21,6 +22,11 @@ const useCampaign = (): {
     pageNumber: number,
     pageSize: number
   ) => Promise<CampaignListResponse>;
+  onGetBranchesOfACampaign: (
+    campaignId: number,
+    pageNumber?: number,
+    pageSize?: number
+  ) => Promise<CampaignBranchListResponse>;
   onCreateCampaign: (data: CampaignCreate) => Promise<Campaign>;
   onGetCampaignDetail: (id: number) => Promise<Campaign>;
   onUpdateCampaign: (id: number, data: CampaignUpdate) => Promise<Campaign>;
@@ -50,6 +56,21 @@ const useCampaign = (): {
   const onGetCampaignDetail = useCallback(
     async (id: number): Promise<Campaign> => {
       return await axiosApi.campaignApi.getCampaignDetail(id);
+    },
+    []
+  );
+
+  const onGetBranchesOfACampaign = useCallback(
+    async (
+      campaignId: number,
+      pageNumber: number = 1,
+      pageSize: number = 5
+    ): Promise<CampaignBranchListResponse> => {
+      return await axiosApi.campaignApi.getBranchesOfACampaign(
+        campaignId,
+        pageNumber,
+        pageSize
+      );
     },
     []
   );
@@ -84,6 +105,7 @@ const useCampaign = (): {
 
   return {
     onGetCampaigns,
+    onGetBranchesOfACampaign,
     onCreateCampaign,
     onGetCampaignDetail,
     onUpdateCampaign,

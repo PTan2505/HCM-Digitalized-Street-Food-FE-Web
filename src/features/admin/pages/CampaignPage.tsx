@@ -13,6 +13,7 @@ import {
   ConfirmationNumber as VoucherIcon,
   CheckCircle as CheckCircleIcon,
   Visibility as VisibilityIcon,
+  Storefront as StorefrontIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
@@ -20,6 +21,7 @@ import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
 import CampaignDetailModal from '@features/admin/components/CampaignDetailModal';
 import VoucherFormModal from '@features/admin/components/VoucherFormModal';
+import CampaignBranchModal from '@features/admin/components/CampaignBranchModal';
 import type { Campaign } from '@features/admin/types/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
 import useVoucher from '@features/admin/hooks/useVoucher';
@@ -88,6 +90,48 @@ const StatusBadge = ({
  */
 type PostCreateStep = 'idle' | 'prompt' | 'creating' | 'done_one';
 
+type CampaignStatusInfo = {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
+};
+
+const getCampaignStatus = (row: Campaign): CampaignStatusInfo => {
+  const now = Date.now();
+  const regStart = row.registrationStartDate
+    ? new Date(row.registrationStartDate).getTime()
+    : null;
+  const regEnd = row.registrationEndDate
+    ? new Date(row.registrationEndDate).getTime()
+    : null;
+  const start = new Date(row.startDate).getTime();
+  const end = new Date(row.endDate).getTime();
+
+  if (row.isActive && !row.isRegisterable) {
+    // Đang trong thời gian chiến dịch hoạt động
+    return { label: 'Đang hoạt động', type: 'success' };
+  }
+  if (row.isRegisterable && !row.isActive) {
+    // Đang trong thời gian mở đăng ký
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  }
+  if (!row.isActive && !row.isRegisterable) {
+    if (now > end) {
+      return { label: 'Đã kết thúc', type: 'error' };
+    }
+    if (regEnd !== null && now > regEnd && now < start) {
+      // Đã qua đăng ký nhưng chưa bắt đầu
+      return { label: 'Chưa bắt đầu', type: 'warning' };
+    }
+    if (regStart !== null && now < regStart) {
+      // Chưa tới thời gian đăng ký
+      return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+    }
+    // Fallback: chưa bắt đầu
+    return { label: 'Chưa bắt đầu', type: 'warning' };
+  }
+  return { label: 'Không xác định', type: 'default' };
+};
+
 export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
   const status = useAppSelector(selectCampaignStatus);
@@ -107,6 +151,7 @@ export default function CampaignPage(): JSX.Element {
   const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
+  const [openBranchModal, setOpenBranchModal] = useState(false);
   const [openDetailModal, setOpenDetailModal] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
@@ -288,14 +333,25 @@ export default function CampaignPage(): JSX.Element {
       ),
     },
     {
-      key: 'isActive',
+      key: 'status',
       label: 'Hoạt động',
-      render: (value: unknown): JSX.Element => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
-          type={value === true ? 'success' : 'error'}
-        />
-      ),
+      render: (_: unknown, row: Campaign): JSX.Element => {
+        const { label, type } = getCampaignStatus(row);
+        const colorMap: Record<string, string> = {
+          success: 'bg-green-100 text-green-700 border-green-200',
+          error: 'bg-red-100 text-red-700 border-red-200',
+          warning: 'bg-amber-100 text-amber-700 border-amber-200',
+          default: 'bg-slate-100 text-slate-700 border-slate-200',
+          info: 'bg-blue-100 text-blue-700 border-blue-200',
+        };
+        return (
+          <span
+            className={`inline-flex min-w-[130px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colorMap[type]}`}
+          >
+            {label}
+          </span>
+        );
+      },
     },
   ];
 
@@ -311,6 +367,17 @@ export default function CampaignPage(): JSX.Element {
       show: (): boolean => true,
     },
     {
+      label: <StorefrontIcon fontSize="small" />,
+      onClick: (row: Campaign): void => {
+        setSelectedCampaign(row);
+        setOpenBranchModal(true);
+      },
+      tooltip: 'Xem chi nhánh tham gia',
+      color: 'info' as const,
+      variant: 'outlined' as const,
+      show: (): boolean => true,
+    },
+    {
       label: <VoucherIcon fontSize="small" />,
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
@@ -319,9 +386,7 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean =>
-        new Date(row.endDate) >= new Date() &&
-        !hasRegistrationStarted(row.registrationStartDate),
+      show: (row: Campaign): boolean => row.isUpdateable,
     },
     {
       label: <EditIcon fontSize="small" />,
@@ -329,13 +394,15 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean =>
-        new Date(row.endDate) >= new Date() &&
-        !hasRegistrationStarted(row.registrationStartDate),
+      show: (row: Campaign): boolean => row.isUpdateable,
     },
   ];
 
   const newCampaign = newCampaignRef.current;
+  const isUrgentVoucherCreation =
+    newCampaign?.registrationStartDate != null &&
+    new Date(newCampaign.registrationStartDate).toDateString() ===
+      new Date().toDateString();
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
@@ -409,13 +476,27 @@ export default function CampaignPage(): JSX.Element {
         isLoading={isDetailLoading}
       />
 
+      <CampaignBranchModal
+        isOpen={openBranchModal}
+        onClose={() => setOpenBranchModal(false)}
+        campaign={selectedCampaign}
+      />
+
       {/* ══════════════════════════════════════════════════════
           POST-CREATE FLOW — Step 1: Prompt
           "Bạn muốn tạo voucher cho chiến dịch vừa tạo không?"
          ══════════════════════════════════════════════════════ */}
       <Dialog
         open={postCreateStep === 'prompt'}
-        onClose={handleSkipVoucher}
+        onClose={(event, reason) => {
+          if (
+            isUrgentVoucherCreation &&
+            (reason === 'backdropClick' || reason === 'escapeKeyDown')
+          ) {
+            return;
+          }
+          handleSkipVoucher();
+        }}
         maxWidth="xs"
         fullWidth
         PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
@@ -447,16 +528,27 @@ export default function CampaignPage(): JSX.Element {
           <p className="mt-1 text-xs text-gray-400">
             Bạn cũng có thể thực hiện sau từ danh sách chiến dịch.
           </p>
+          {newCampaign?.registrationStartDate && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
+              thêm voucher cho chiến dịch{' '}
+              <span className="font-semibold">{newCampaign.name}</span> khi
+              chiến dịch đã bắt đầu mở đăng ký (
+              {formatVNDatetime(newCampaign.registrationStartDate)}).
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-          <Button
-            onClick={handleSkipVoucher}
-            color="inherit"
-            variant="outlined"
-          >
-            Tạo voucher sau
-          </Button>
+          {!isUrgentVoucherCreation && (
+            <Button
+              onClick={handleSkipVoucher}
+              color="inherit"
+              variant="outlined"
+            >
+              Tạo voucher sau
+            </Button>
+          )}
           <Button
             onClick={handleStartVoucherCreation}
             variant="contained"
@@ -481,6 +573,7 @@ export default function CampaignPage(): JSX.Element {
           campaignStartDate={newCampaign.startDate}
           campaignEndDate={newCampaign.endDate}
           campaignName={newCampaign.name}
+          disableCancel={isUrgentVoucherCreation}
         />
       )}
 
@@ -520,6 +613,15 @@ export default function CampaignPage(): JSX.Element {
             voucher. Bạn muốn tiếp tục tạo thêm voucher cho chiến dịch này
             không?
           </p>
+          {newCampaign?.registrationStartDate && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
+              thêm voucher cho chiến dịch{' '}
+              <span className="font-semibold">{newCampaign.name}</span> khi
+              chiến dịch đã bắt đầu mở đăng ký (
+              {formatVNDatetime(newCampaign.registrationStartDate)}).
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>

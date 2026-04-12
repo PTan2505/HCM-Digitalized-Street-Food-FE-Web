@@ -7,7 +7,6 @@ export const VendorCampaignSchema = z
     targetSegment: z.string().nullable(),
     startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
     endDate: z.string().min(1, 'Ngày kết thúc không được để trống'),
-    isActive: z.boolean(),
     branchIds: z.array(z.number()).nullable(),
   })
   .superRefine((data, ctx) => {

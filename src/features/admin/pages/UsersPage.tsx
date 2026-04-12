@@ -114,7 +114,7 @@ const matchesRoleFilter = (
   const resolvedRole = resolveUserRole(user.role);
 
   if (roleFilter === 'system') {
-    return resolvedRole === 'admin' || resolvedRole === 'moderator';
+    return resolvedRole === 'moderator';
   }
 
   return resolvedRole === roleFilter;
@@ -167,14 +167,14 @@ export default function UsersPage(): JSX.Element {
     roleFilter === 'vendor'
       ? 'Quản lý đối tác'
       : roleFilter === 'system'
-        ? 'Quản lý hệ thống (Admin/Moderator)'
+        ? 'Quản lý hệ thống (Moderator)'
         : 'Quản lý khách hàng';
 
   const roleFilterLabel =
     roleFilter === 'vendor'
       ? 'đối tác'
       : roleFilter === 'system'
-        ? 'admin/moderator'
+        ? 'moderator'
         : 'khách hàng';
 
   const loadUsers = useCallback(async (): Promise<void> => {
@@ -198,40 +198,14 @@ export default function UsersPage(): JSX.Element {
       }
 
       if (roleFilter === 'system') {
-        const [adminResponse, moderatorResponse] = await Promise.all([
-          axiosApi.userAdminApi.getUsers({
-            role: 'admin',
-            pageNumber: page,
-            pageSize,
-          }),
-          axiosApi.userAdminApi.getUsers({
-            role: 'moderator',
-            pageNumber: page,
-            pageSize,
-          }),
-        ]);
-
-        const mergedUsers = [...adminResponse.items, ...moderatorResponse.items]
-          .filter((item, index, array) => {
-            return (
-              array.findIndex((candidate) => candidate.id === item.id) === index
-            );
-          })
-          .sort((a, b) => b.id - a.id);
-
-        setUsers(mergedUsers);
-        setPagination({
-          currentPage: page,
+        const response = await axiosApi.userAdminApi.getUsers({
+          role: 'moderator',
+          pageNumber: page,
           pageSize,
-          totalPages: Math.max(
-            adminResponse.totalPages,
-            moderatorResponse.totalPages
-          ),
-          totalCount: adminResponse.totalCount + moderatorResponse.totalCount,
-          hasPrevious:
-            adminResponse.hasPrevious || moderatorResponse.hasPrevious,
-          hasNext: adminResponse.hasNext || moderatorResponse.hasNext,
         });
+
+        setUsers(response.items);
+        setPagination(convertToPagination(response));
         return;
       }
 

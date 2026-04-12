@@ -376,10 +376,10 @@ export default function DishPage(): JSX.Element {
       {/* Pagination */}
       <div data-tour="dish-pagination">
         <Pagination
-          currentPage={pagination.currentPage}
+          currentPage={pageNumber}
           totalPages={pagination.totalPages}
           totalCount={pagination.totalCount}
-          pageSize={pagination.pageSize}
+          pageSize={pageSize}
           hasPrevious={pagination.hasPrevious}
           hasNext={pagination.hasNext}
           onPageChange={handlePageChange}

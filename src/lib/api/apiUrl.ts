@@ -194,6 +194,8 @@ export const apiUrl = {
       `/Campaign/${campaignId}/image`,
     GetBranchesOfACampaign: (campaignId: number): string =>
       `/Campaign/system/${campaignId}/branches`,
+    GetVendorBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches`,
     AddBranchesToACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches/add`,
     RemoveBranchesFromACampaign: (campaignId: number): string =>
@@ -220,5 +222,14 @@ export const apiUrl = {
     getRevenue: '/VendorDashboard/revenue',
     getVouchers: '/VendorDashboard/vouchers',
     getDishes: '/VendorDashboard/dishes',
+  },
+  adminDashboard: {
+    getUserSignUps: '/AdminDashboard/user-signups',
+    getMoney: '/AdminDashboard/money',
+    getCompensation: '/AdminDashboard/compensation',
+    getUserToVendorConversions: '/AdminDashboard/user-to-vendor-conversions',
+  },
+  branch: {
+    getBranches: '/Branch',
   },
 };

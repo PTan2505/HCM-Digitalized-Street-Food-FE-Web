@@ -32,6 +32,7 @@ export default function VendorCampaignBranchModal({
 }: VendorCampaignBranchModalProps): JSX.Element | null {
   const {
     onGetBranchesOfACampaign,
+    onGetVendorBranchesOfACampaign,
     onAddBranchesToACampaign,
     onRemoveBranchesFromACampaign,
   } = useVendorCampaign();
@@ -61,7 +62,9 @@ export default function VendorCampaignBranchModal({
     if (!campaign) return;
     setIsLoading(true);
     try {
-      const res = await onGetBranchesOfACampaign(campaign.campaignId);
+      const res = campaign.isSystemCampaign
+        ? await onGetBranchesOfACampaign(campaign.campaignId)
+        : await onGetVendorBranchesOfACampaign(campaign.campaignId);
       const fetchedBranchIds = res.items?.map((item) => item.branchId) ?? [];
       setInitialIds(fetchedBranchIds);
       setSelectedIds(fetchedBranchIds);
@@ -72,7 +75,7 @@ export default function VendorCampaignBranchModal({
     } finally {
       setIsLoading(false);
     }
-  }, [campaign, onGetBranchesOfACampaign]);
+  }, [campaign, onGetBranchesOfACampaign, onGetVendorBranchesOfACampaign]);
 
   useEffect(() => {
     if (isOpen && campaign) {
@@ -84,6 +87,7 @@ export default function VendorCampaignBranchModal({
   }, [isOpen, campaign, fetchBranches]);
 
   const handleToggle = (branchId: number): void => {
+    if (campaign?.isSystemCampaign) return;
     setSelectedIds((prev) => {
       if (prev.includes(branchId)) {
         if (prev.length === 1) {
@@ -133,6 +137,7 @@ export default function VendorCampaignBranchModal({
         <Checkbox
           checked={selectedIdSet.has(row.branchId)}
           onChange={() => handleToggle(row.branchId)}
+          disabled={campaign?.isSystemCampaign}
           size="small"
           sx={{
             color: '#d1d5db',
@@ -198,7 +203,7 @@ export default function VendorCampaignBranchModal({
       }}
     >
       <VendorModalHeader
-        title="Quản lý chi nhánh tham gia"
+        title="Quản lý chi nhánh của chiến dịch"
         subtitle={campaign?.name ?? ''}
         icon={<StorefrontIcon />}
         iconTone="campaign"
@@ -238,25 +243,27 @@ export default function VendorCampaignBranchModal({
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} color="inherit">
-          Hủy
+          {campaign?.isSystemCampaign ? 'Đóng' : 'Hủy'}
         </Button>
-        <Button
-          onClick={() => void handleSave()}
-          variant="contained"
-          disabled={!isDirty || isSaving || isLoading}
-          startIcon={
-            isSaving ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : undefined
-          }
-          className={
-            !isDirty || isSaving || isLoading
-              ? 'bg-gray-300 text-gray-500'
-              : 'bg-primary-600 hover:bg-primary-700 text-white'
-          }
-        >
-          {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-        </Button>
+        {!campaign?.isSystemCampaign && (
+          <Button
+            onClick={() => void handleSave()}
+            variant="contained"
+            disabled={!isDirty || isSaving || isLoading}
+            startIcon={
+              isSaving ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : undefined
+            }
+            className={
+              !isDirty || isSaving || isLoading
+                ? 'bg-gray-300 text-gray-500'
+                : 'bg-primary-600 hover:bg-primary-700 text-white'
+            }
+          >
+            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );
