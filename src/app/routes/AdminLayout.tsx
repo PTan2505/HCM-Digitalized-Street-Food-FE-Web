@@ -208,7 +208,6 @@ function AdminLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/admin/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
@@ -227,7 +226,6 @@ function AdminLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/admin/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
           onUserInfoClick={() => setIsProfileModalOpen(true)}

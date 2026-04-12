@@ -109,7 +109,6 @@ function ManagerLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
@@ -127,7 +126,6 @@ function ManagerLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
           onUserInfoClick={() => setIsProfileModalOpen(true)}

@@ -112,7 +112,6 @@ function ModeratorLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/moderator/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
@@ -131,7 +130,6 @@ function ModeratorLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/moderator/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
           onUserInfoClick={() => setIsProfileModalOpen(true)}

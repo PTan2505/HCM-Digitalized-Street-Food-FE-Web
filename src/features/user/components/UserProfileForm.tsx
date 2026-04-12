@@ -53,7 +53,7 @@ export default function UserProfileForm({
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`, {
+        navigate(`${ROUTES.USER.BASE}/${ROUTES.USER.PATHS.BRANCH}`, {
           state: { fromEditProfile: true },
         });
       }
