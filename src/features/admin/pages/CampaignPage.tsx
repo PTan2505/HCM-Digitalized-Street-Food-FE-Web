@@ -178,9 +178,9 @@ export default function CampaignPage(): JSX.Element {
   }, [fetchCampaigns]);
 
   const handleOpenModal = (campaign?: Campaign): void => {
-    if (campaign && hasRegistrationStarted(campaign.registrationStartDate)) {
-      return;
-    }
+    // if (campaign && hasRegistrationStarted(campaign.registrationStartDate)) {
+    //   return;
+    // }
 
     if (campaign) {
       setEditingCampaign(campaign);
@@ -202,11 +202,7 @@ export default function CampaignPage(): JSX.Element {
   ): Promise<void> => {
     try {
       if (editingCampaign) {
-        if (hasRegistrationStarted(editingCampaign.registrationStartDate)) {
-          return;
-        }
-
-        // ── Edit flow (unchanged) ──
+        // ── Edit flow ──
         await onUpdateCampaign(editingCampaign.campaignId, data);
 
         if (isImageRemoved && !imageFile) {
