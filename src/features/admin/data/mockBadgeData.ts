@@ -4,7 +4,6 @@
 export interface BadgeDefinition {
   badgeId: number;
   badgeName: string;
-  pointToGet: number;
   iconUrl: string;
   description: string;
 }
@@ -28,7 +27,6 @@ export const MOCK_BADGES: BadgeDefinition[] = [
   {
     badgeId: 1,
     badgeName: 'Cũ đêm',
-    pointToGet: 1,
     iconUrl:
       'https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Ficons.iconarchive.com%2Ficons%2Fpaomedia%2Fsmall-n-flat%2F1024%2Fsign-check-icon.png',
     description: 'Đi ăn vào lúc 12h đêm',
@@ -36,21 +34,18 @@ export const MOCK_BADGES: BadgeDefinition[] = [
   {
     badgeId: 2,
     badgeName: 'Thực khách thân thiết',
-    pointToGet: 10,
     iconUrl: 'https://i.pravatar.cc/150?img=10',
     description: 'Đã đặt hàng hơn 10 lần',
   },
   {
     badgeId: 3,
     badgeName: 'Người khám phá',
-    pointToGet: 5,
     iconUrl: 'https://i.pravatar.cc/150?img=11',
     description: 'Đã thử món ăn từ 5 quán khác nhau',
   },
   {
     badgeId: 4,
     badgeName: 'Đầu bếp nhí',
-    pointToGet: 15,
     iconUrl: 'https://i.pravatar.cc/150?img=12',
     description: 'Đã đánh giá hơn 10 món ăn',
   },
