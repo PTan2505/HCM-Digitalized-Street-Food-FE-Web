@@ -12,7 +12,6 @@ type BadgeFormSchemaType = z.infer<typeof BadgeFormSchema>;
 
 interface BadgeFormData {
   badgeName?: string;
-  pointToGet?: number;
   iconUrl?: string;
   description?: string;
   badgeId?: number;
@@ -46,7 +45,6 @@ export default function BadgeFormModal({
     mode: 'onChange',
     defaultValues: {
       badgeName: '',
-      pointToGet: '',
       description: '',
       imageFile: null,
     },
@@ -70,7 +68,6 @@ export default function BadgeFormModal({
     if (isOpen) {
       reset({
         badgeName: formData.badgeName ?? '',
-        pointToGet: formData.pointToGet?.toString() ?? '',
         description: formData.description ?? '',
         imageFile: null,
       });
@@ -116,24 +113,6 @@ export default function BadgeFormModal({
             {errors.badgeName && (
               <p className="mt-1 text-xs text-red-500">
                 {errors.badgeName.message}
-              </p>
-            )}
-          </div>
-
-          {/* Điểm yêu cầu */}
-          <div>
-            <label className="text-table-text-primary mb-1 block text-sm font-medium">
-              Điểm yêu cầu <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              {...register('pointToGet')}
-              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
-              placeholder="0"
-            />
-            {errors.pointToGet && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.pointToGet.message}
               </p>
             )}
           </div>

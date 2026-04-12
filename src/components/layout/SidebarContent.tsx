@@ -32,7 +32,6 @@ interface SidebarContentProps {
     role: string;
     avatarUrl?: string | null;
   };
-  settingsPath?: string;
   onLogout?: () => void;
   onLogoClick?: () => void;
   onNavigateItemClick?: () => void;

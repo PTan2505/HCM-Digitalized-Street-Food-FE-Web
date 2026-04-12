@@ -93,6 +93,18 @@ export const ROUTES = {
     },
   },
 
+  // User routes
+  USER: {
+    BASE: '/user',
+    PATHS: {
+      // PROFILE: 'profile',
+      BRANCH: 'branch',
+      GHOST_PIN: 'ghost-pin',
+      REGISTRATION_HISTORY: 'registration-history',
+      // PAYMENT_HISTORY: 'payment-history',
+    },
+  },
+
   // Payment routes (standalone, outside vendor layout)
   PAYMENT: {
     SUCCESS: '/Payment/success',
