@@ -278,10 +278,10 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     },
     {
       key: 'isActive',
-      label: 'Hoạt động',
+      label: 'Tình trạng',
       render: (value: unknown): JSX.Element => (
         <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          label={value === true ? 'Đang hoạt động' : 'Đã kết thúc'}
           type={value === true ? 'success' : 'error'}
         />
       ),
@@ -396,7 +396,7 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               >
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="active">Đang hoạt động</MenuItem>
-                <MenuItem value="inactive">Tạm ngưng</MenuItem>
+                <MenuItem value="inactive">Đã kết thúc</MenuItem>
               </Select>
             </FormControl>
           </div>
