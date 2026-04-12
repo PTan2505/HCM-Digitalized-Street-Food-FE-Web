@@ -118,10 +118,10 @@ export default function GhostPinPage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Danh sách quán gợi ý (Ghost Pin)
+            Danh sách quán do reviewers chia sẻ
           </h1>
           <p className="text-table-text-secondary text-sm">
-            Danh sách các quán gợi ý có thể nhận quản lý
+            Danh sách các quán do reviewers chia sẻ chưa có chủ sở hữu
           </p>
         </div>
       </div>

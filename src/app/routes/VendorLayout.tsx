@@ -92,20 +92,21 @@ const navigation = [
   },
   {
     name: 'Quản lý chiến dịch',
+    href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
     icon: CampaignIcon,
     isForVendor: true,
-    children: [
-      {
-        name: 'Cửa hàng',
-        href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
-        icon: BuildingStorefrontIcon,
-      },
-      {
-        name: 'Hệ thống',
-        href: `${vendorBase}/${vendorPaths.CAMPAIGN_SYSTEM}`,
-        icon: PublicIcon,
-      },
-    ],
+    // children: [
+    //   {
+    //     name: 'Cửa hàng',
+    //     href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
+    //     icon: BuildingStorefrontIcon,
+    //   },
+    //   {
+    //     name: 'Hệ thống',
+    //     href: `${vendorBase}/${vendorPaths.CAMPAIGN_SYSTEM}`,
+    //     icon: PublicIcon,
+    //   },
+    // ],
   },
   {
     name: 'Lịch sử',
