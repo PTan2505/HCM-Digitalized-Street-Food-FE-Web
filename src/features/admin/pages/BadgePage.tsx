@@ -1,27 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import {
-  Avatar,
-  Box,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Avatar, Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import BadgeFormModal from '@features/admin/components/BadgeFormModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { Badge } from '@features/admin/types/badge';
 import useBadge from '@features/admin/hooks/useBadge';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectBadges, selectBadgeStatus } from '@slices/badge';
+import { getBadgeManagementTourSteps } from '@features/admin/utils/badgeManagementTourSteps';
 
 export default function BadgePage(): JSX.Element {
   const badges = useAppSelector(selectBadges);
@@ -38,6 +38,8 @@ export default function BadgePage(): JSX.Element {
     iconUrl: '',
     description: '',
   });
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     void onGetAllBadges();
@@ -73,14 +75,14 @@ export default function BadgePage(): JSX.Element {
   const handleSave = async (data: {
     badgeName: string;
     pointToGet: string;
-    iconUrl: string;
+    imageFile?: File | null;
     description: string;
   }): Promise<void> => {
     try {
       const payload = {
         badgeName: data.badgeName,
         pointToGet: parseInt(data.pointToGet, 10),
-        iconUrl: data.iconUrl,
+        imageFile: data.imageFile,
         description: data.description,
       };
 
@@ -117,6 +119,28 @@ export default function BadgePage(): JSX.Element {
     setDeletingBadge(null);
   };
 
+  const startBadgeTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getBadgeManagementTourSteps({
+      hasRows: badges.length > 0,
+    });
+  }, [badges.length]);
+
   const columns = [
     // {
     //   key: 'badgeId',
@@ -131,7 +155,7 @@ export default function BadgePage(): JSX.Element {
         <Avatar
           src={String(value)}
           alt="Badge Icon"
-          className="h-10 w-10 bg-[var(--color-primary-100)]"
+          className="bg-primary-100 h-10 w-10"
         />
       ),
     },
@@ -152,7 +176,7 @@ export default function BadgePage(): JSX.Element {
         <Chip
           label={`${String(value)} điểm`}
           size="small"
-          className="bg-[var(--color-primary-100)] font-[var(--font-nunito)] font-semibold text-[var(--color-primary-800)]"
+          className="bg-primary-100 text-primary-800 font-semibold"
         />
       ),
     },
@@ -160,7 +184,7 @@ export default function BadgePage(): JSX.Element {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-secondary block max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">
+        <Box className="text-table-text-secondary block max-w-75 overflow-hidden text-ellipsis whitespace-nowrap">
           {String(value)}
         </Box>
       ),
@@ -169,6 +193,7 @@ export default function BadgePage(): JSX.Element {
 
   const actions = [
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Badge): void => handleOpenDialog(row),
       tooltip: 'Chỉnh sửa huy hiệu',
@@ -176,6 +201,7 @@ export default function BadgePage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Badge): void => handleDelete(row),
       tooltip: 'Xóa huy hiệu',
@@ -185,20 +211,63 @@ export default function BadgePage(): JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="badge-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý huy hiệu
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý huy hiệu
+            </h1>
+            <button
+              type="button"
+              onClick={startBadgeTour}
+              aria-label="Mở hướng dẫn quản lý huy hiệu"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
             Quản lý danh hiệu và phần thưởng cho người dùng
           </p>
         </div>
         <button
           onClick={() => handleOpenDialog()}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          data-tour="badge-create-button"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
         >
           <AddIcon fontSize="small" />
           Thêm huy hiệu
@@ -206,14 +275,17 @@ export default function BadgePage(): JSX.Element {
       </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={badges}
-        rowKey="badgeId"
-        actions={actions}
-        loading={status === 'pending'}
-        emptyMessage="Chưa có badge nào"
-      />
+      <div data-tour="badge-table-wrapper">
+        <Table
+          columns={columns}
+          data={badges}
+          rowKey="badgeId"
+          actions={actions}
+          loading={status === 'pending'}
+          emptyMessage="Chưa có badge nào"
+          tourId="admin-badge"
+        />
+      </div>
 
       {/* Modal Form */}
       <BadgeFormModal
@@ -226,38 +298,18 @@ export default function BadgePage(): JSX.Element {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Xác nhận xóa badge</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Bạn có chắc chắn muốn xóa badge &quot;
-            {deletingBadge?.badgeName}&quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDelete}
-            color="primary"
-            className="font-[var(--font-nunito)]"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa badge"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn xóa badge &quot;{deletingBadge?.badgeName}
+            &quot;? Hành động này không thể hoàn tác.
+          </>
+        }
+      />
     </div>
   );
 }

@@ -271,11 +271,9 @@ export default function AdminVendorCampaignPage(): JSX.Element {
       key: 'targetSegment',
       label: 'Phân khúc',
       render: (value: unknown): JSX.Element => (
-        <Chip
-          label={typeof value === 'string' && value ? value : 'Tất cả'}
-          size="small"
-          variant="outlined"
-        />
+        <Box className="text-table-text-primary">
+          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+        </Box>
       ),
     },
     {

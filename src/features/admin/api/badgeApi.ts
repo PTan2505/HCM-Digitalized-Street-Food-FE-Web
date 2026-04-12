@@ -19,13 +19,23 @@ export class BadgeApi {
   async createBadge(
     data: CreateOrUpdateBadgeRequest
   ): Promise<CreateOrUpdateBadgeResponse> {
-    let res = null;
-    res = await this.apiClient.post<
+    const formData = new FormData();
+    formData.append('badgeName', data.badgeName);
+    formData.append('pointToGet', data.pointToGet.toString());
+    formData.append('description', data.description);
+    if (data.imageFile) {
+      formData.append('imageFile', data.imageFile);
+    }
+
+    const res = await this.apiClient.post<
       CreateOrUpdateBadgeResponse,
-      CreateOrUpdateBadgeRequest
+      FormData
     >({
       url: apiUrl.badge.getAllOrPostBadge,
-      data,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   }
@@ -34,14 +44,23 @@ export class BadgeApi {
     badgeId: number,
     data: CreateOrUpdateBadgeRequest
   ): Promise<CreateOrUpdateBadgeResponse> {
-    let res = null;
-    res = await this.apiClient.put<
-      CreateOrUpdateBadgeResponse,
-      CreateOrUpdateBadgeRequest
-    >({
-      url: apiUrl.badge.updateOrDeleteBadge(badgeId),
-      data,
-    });
+    const formData = new FormData();
+    formData.append('badgeName', data.badgeName);
+    formData.append('pointToGet', data.pointToGet.toString());
+    formData.append('description', data.description);
+    if (data.imageFile) {
+      formData.append('imageFile', data.imageFile);
+    }
+
+    const res = await this.apiClient.put<CreateOrUpdateBadgeResponse, FormData>(
+      {
+        url: apiUrl.badge.updateOrDeleteBadge(badgeId),
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
     return res.data;
   }
 

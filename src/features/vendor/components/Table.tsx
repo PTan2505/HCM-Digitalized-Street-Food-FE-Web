@@ -27,6 +27,7 @@ interface Column<T> {
 }
 
 interface Action<T> {
+  id?: string;
   label: string | React.ReactNode;
   menuLabel?: React.ReactNode;
   onClick: (row: T) => void;
@@ -46,6 +47,7 @@ interface TableProps<T extends object> {
   maxHeight?: string | 'none';
   actions?: Action<T>[];
   onRowClick?: (row: T) => void;
+  tourId?: string;
 }
 
 const Table = <T extends object>({
@@ -58,6 +60,7 @@ const Table = <T extends object>({
   maxHeight = '600px',
   actions,
   onRowClick,
+  tourId,
 }: TableProps<T>): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
   const [menuState, setMenuState] = useState<{
@@ -70,6 +73,7 @@ const Table = <T extends object>({
       <TableContainer
         component={Paper}
         className="border-table-border rounded-lg border shadow-sm"
+        data-tour-table={tourId}
         style={{
           maxHeight: maxHeight === 'none' ? undefined : maxHeight,
           overflowY: maxHeight === 'none' ? undefined : 'auto',
@@ -134,6 +138,7 @@ const Table = <T extends object>({
                     <TableRow
                       key={String(rowKeyValue)}
                       hover
+                      data-tour-row-index={rowIndex}
                       onClick={() => onRowClick?.(row)}
                       className={`hover:bg-table-row-hover last:[&_td]:border-0 last:[&_th]:border-0 ${onRowClick ? 'cursor-pointer' : 'cursor-default'}`}
                       style={{ height: '60px' }}
@@ -184,6 +189,7 @@ const Table = <T extends object>({
                               <Tooltip title="Xem thêm" placement="top" arrow>
                                 <IconButton
                                   size="small"
+                                  data-tour-action-trigger={tourId}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setMenuState({
@@ -218,15 +224,47 @@ const Table = <T extends object>({
         <Menu
           anchorEl={menuState.anchorEl}
           open={Boolean(menuState.anchorEl)}
+          data-tour-menu={tourId}
           onClose={() => setMenuState({ anchorEl: null, row: null })}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          PaperProps={{
+            elevation: 0,
+            sx: {
+              overflow: 'visible',
+              filter: 'drop-shadow(0px 8px 24px rgba(0,0,0,0.12))',
+              mt: 1,
+              borderRadius: '16px',
+              minWidth: 240,
+              border: '1px solid',
+              borderColor: 'divider',
+              p: 1,
+              '&::before': {
+                content: '""',
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                right: 14,
+                width: 12,
+                height: 12,
+                bgcolor: 'background.paper',
+                transform: 'translateY(-50%) rotate(45deg)',
+                zIndex: 0,
+                borderLeft: '1px solid',
+                borderTop: '1px solid',
+                borderColor: 'divider',
+              },
+            },
+          }}
         >
           {actions
             .filter((a) => !a.show || (menuState.row && a.show(menuState.row)))
             .map((action, index) => (
               <MenuItem
                 key={index}
+                data-tour-action={
+                  tourId && action.id ? `${tourId}:${action.id}` : undefined
+                }
                 disabled={
                   menuState.row
                     ? (action.disabled?.(menuState.row) ?? false)
@@ -238,15 +276,54 @@ const Table = <T extends object>({
                   setMenuState({ anchorEl: null, row: null });
                 }}
                 sx={{
-                  gap: 1.5,
                   color: action.color ? `${action.color}.main` : 'text.primary',
-                  minWidth: 180,
+                  borderRadius: '10px',
+                  mb: 0.5,
+                  px: 2,
+                  py: 1.2,
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:last-child': {
+                    mb: 0,
+                  },
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    transform: 'translateX(4px)',
+                  },
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  {action.label}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    width: '100%',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 24,
+                      height: 24,
+                      '& > svg': {
+                        fontSize: '1.25rem',
+                      },
+                    }}
+                  >
+                    {action.label}
+                  </Box>
                   {action.menuLabel && (
-                    <Typography variant="body2">{action.menuLabel}</Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {action.menuLabel}
+                    </Typography>
                   )}
                 </Box>
               </MenuItem>

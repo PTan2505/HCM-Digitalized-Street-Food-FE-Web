@@ -14,6 +14,7 @@ import type {
 } from '@features/vendor/types/payment';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
+import { completeVendorOrder } from '@slices/order';
 import {
   createSlice,
   isFulfilled,
@@ -186,6 +187,14 @@ export const paymentSlice = createSlice({
         state.accountBalance = {
           balance: action.payload.currentVendorBalance,
         };
+      })
+      .addCase(completeVendorOrder.fulfilled, (state, action) => {
+        if (
+          state.accountBalance &&
+          typeof action.payload.finalAmount === 'number'
+        ) {
+          state.accountBalance.balance += action.payload.finalAmount;
+        }
       })
       .addMatcher(
         isPending(

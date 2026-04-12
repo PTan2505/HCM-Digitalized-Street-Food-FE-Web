@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Typography,
   Button,
 } from '@mui/material';
@@ -13,6 +12,8 @@ import {
   getOrderStatusMeta,
   OrderStatusBadge,
 } from '@features/vendor/components/OrderStatusBadge';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 const formatDateTime = (value: string | null | undefined): string => {
   if (!value) return '-';
@@ -104,24 +105,32 @@ export const OrderDetailDialog = ({
           'overflow-hidden rounded-2xl border border-gray-100 shadow-2xl',
       }}
     >
-      <DialogTitle className="border-b border-gray-100 bg-gray-50/70 px-6 py-4">
-        <Box className="flex items-start justify-between gap-4">
-          <Box>
-            <Typography className="text-table-text-primary text-xl font-bold">
-              Chi tiết đơn hàng
-            </Typography>
-            <Typography className="text-table-text-secondary mt-1 text-sm">
-              {detailOrder ? `#${detailOrder.orderId}` : '-'}
-            </Typography>
-          </Box>
-          {detailOrder ? (
-            <OrderStatusBadge
-              label={getOrderStatusMeta(detailOrder.status).label}
-              type={getOrderStatusMeta(detailOrder.status).type}
-            />
-          ) : null}
-        </Box>
-      </DialogTitle>
+      <VendorModalHeader
+        title="Chi tiết đơn hàng"
+        subtitle={
+          detailOrder?.branchName?.trim()
+            ? detailOrder.branchName
+            : detailOrder
+              ? `Chi nhánh #${detailOrder.branchId}`
+              : '—'
+        }
+        icon={<ReceiptLongIcon />}
+        iconTone="order"
+        onClose={onClose}
+        rightActions={
+          detailOrder ? (
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-500">
+                #{detailOrder.orderId}
+              </span>
+              <OrderStatusBadge
+                label={getOrderStatusMeta(detailOrder.status).label}
+                type={getOrderStatusMeta(detailOrder.status).type}
+              />
+            </div>
+          ) : undefined
+        }
+      />
       <DialogContent dividers>
         <Box className="space-y-5 px-1 py-1">
           <Box className="rounded-xl border border-gray-100 bg-slate-50/60 p-4 shadow-sm">

@@ -1,15 +1,12 @@
 import { useState, useEffect, type JSX } from 'react';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton,
   Button,
   Chip,
   CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +29,7 @@ import OwnerInfoSection from './OwnerInfoSection';
 import LicenseUploadSection from './LicenseUploadSection';
 import ImagesUploadSection from './ImagesUploadSection';
 import useVendor from '@features/vendor/hooks/useVendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 export type BranchFormMode =
   | { type: 'createVendor' }
@@ -111,7 +109,7 @@ function getTitle(mode: BranchFormMode): string {
     case 'addBranch':
       return 'Thêm chi nhánh';
     case 'editBranch':
-      return 'Chỉnh sửa chi nhánh';
+      return `Chỉnh sửa chi nhánh: ${mode.branch.name}`;
     default:
       return '';
   }
@@ -167,7 +165,7 @@ export default function BranchFormModal({
     setValue,
     reset,
     trigger,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
   } = useForm<BranchFormData>({
     resolver: zodResolver(getSchema(mode)),
     mode: 'onChange',
@@ -192,15 +190,18 @@ export default function BranchFormModal({
   const handleChange = (field: string, value: unknown): void => {
     setValue(field as keyof BranchFormData, value as never, {
       shouldValidate: true,
+      shouldDirty: true,
     });
   };
 
   const handleLocationChange = (lat: number, lng: number): void => {
     setValue('latitude' as keyof BranchFormData, lat as never, {
       shouldValidate: true,
+      shouldDirty: true,
     });
     setValue('longitude' as keyof BranchFormData, lng as never, {
       shouldValidate: true,
+      shouldDirty: true,
     });
   };
 
@@ -319,43 +320,13 @@ export default function BranchFormModal({
           sx: { borderRadius: 3, maxHeight: '90vh' },
         }}
       >
-        <DialogTitle
-          sx={{
-            borderBottom: '1px solid #e5e7eb',
-            px: 4,
-            py: 2.5,
-          }}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-                <StorefrontIcon />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                  {getTitle(mode)}
-                </h2>
-                <p className="mt-0.5 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                  <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                    {subtitle.badge}
-                  </span>
-                  {subtitle.name}
-                </p>
-              </div>
-            </div>
-            <IconButton
-              onClick={onClose}
-              size="small"
-              sx={{
-                bgcolor: 'white',
-                border: '1px solid #f3f4f6',
-                '&:hover': { bgcolor: '#f3f4f6' },
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </div>
-        </DialogTitle>
+        <VendorModalHeader
+          title={getTitle(mode)}
+          subtitle={subtitle.name}
+          icon={<StorefrontIcon />}
+          iconTone="branch"
+          onClose={onClose}
+        />
 
         <DialogContent sx={{ pt: 3, pb: 1, mt: 3 }}>
           <div className="space-y-2">
@@ -376,7 +347,7 @@ export default function BranchFormModal({
             {mode.type === 'createVendor' && (
               <div className="mb-12">
                 <h2 className="mb-6 text-lg font-semibold text-gray-800">
-                  2. Chế độ ăn phù hợp
+                  2. Chế độ ăn của cửa hàng
                 </h2>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Chọn chế độ ăn <span className="text-red-500">*</span>
@@ -554,7 +525,10 @@ export default function BranchFormModal({
             onClick={handleSubmit}
             variant="contained"
             disabled={
-              submitting || !isValid || (isCreate && storeImages.length === 0)
+              submitting ||
+              !isValid ||
+              (isCreate && storeImages.length === 0) ||
+              (mode.type === 'editBranch' && !isDirty)
             }
             sx={{
               bgcolor: '#06AA4C',

@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, Button, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Snackbar, Alert, Tooltip } from '@mui/material';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import SystemCampaignDetailsModal from '@features/vendor/components/SystemCampaignDetailsModal';
@@ -11,8 +20,12 @@ import {
   selectCampaignStatus,
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
+  selectVendorCampaigns,
 } from '@slices/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import { getJoinableSystemCampaignTourSteps } from '@features/vendor/utils/joinableSystemCampaignTourSteps';
+import { axiosApi } from '@lib/api/apiInstance';
 
 interface JoinableSystemCampaignModalProps {
   isOpen: boolean;
@@ -39,27 +52,40 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const StatusBadge = ({
-  label,
-  type,
-}: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
-}): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
+const colorMap: Record<string, string> = {
+  success: 'bg-green-100 text-green-700 border-green-200',
+  error: 'bg-red-100 text-red-700 border-red-200',
+  warning: 'bg-amber-100 text-amber-700 border-amber-200',
+  default: 'bg-slate-100 text-slate-700 border-slate-200',
+  info: 'bg-blue-100 text-blue-700 border-blue-200',
+};
 
-  return (
-    <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
-    >
-      {label}
-    </span>
-  );
+const getCampaignStatus = (
+  row: VendorCampaign
+): { label: string; type: string } => {
+  const now = Date.now();
+  const regStart = row.registrationStartDate
+    ? new Date(row.registrationStartDate).getTime()
+    : null;
+  const regEnd = row.registrationEndDate
+    ? new Date(row.registrationEndDate).getTime()
+    : null;
+  const start = new Date(row.startDate).getTime();
+  const end = new Date(row.endDate).getTime();
+
+  if (row.isActive && !row.isRegisterable)
+    return { label: 'Đang hoạt động', type: 'success' };
+  if (row.isRegisterable && !row.isActive)
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  if (!row.isActive && !row.isRegisterable) {
+    if (now > end) return { label: 'Đã kết thúc', type: 'error' };
+    if (regEnd !== null && now > regEnd && now < start)
+      return { label: 'Chưa bắt đầu', type: 'warning' };
+    if (regStart !== null && now < regStart)
+      return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+    return { label: 'Chưa bắt đầu', type: 'warning' };
+  }
+  return { label: 'Không xác định', type: 'default' };
 };
 
 export default function JoinableSystemCampaignModal({
@@ -72,6 +98,7 @@ export default function JoinableSystemCampaignModal({
   joinedCampaignIds = [],
 }: JoinableSystemCampaignModalProps): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
+  const vendorCampaigns = useAppSelector(selectVendorCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
   const { onGetJoinableSystemCampaigns, onJoinBranchToSystemCampaign } =
@@ -85,12 +112,33 @@ export default function JoinableSystemCampaignModal({
   const [detailsCampaignId, setDetailsCampaignId] = useState<number | null>(
     null
   );
+  const [vendorJoinedCampaignIds, setVendorJoinedCampaignIds] = useState<
+    Set<number>
+  >(new Set());
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
     setPage(1);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsTourRunning(false);
+    } else {
+      void axiosApi.vendorCampaignApi
+        .getVendorCampaigns(1, 1000)
+        .then((res) => {
+          const ids = res.items
+            .filter((vc) => vc.isSystemCampaign)
+            .map((vc) => vc.campaignId);
+          setVendorJoinedCampaignIds(new Set(ids));
+        })
+        .catch(console.error);
+    }
   }, [isOpen]);
 
   const fetchJoinableCampaigns = useCallback(async (): Promise<void> => {
@@ -110,6 +158,42 @@ export default function JoinableSystemCampaignModal({
   const joinedCampaignIdSet = useMemo(
     () => new Set(joinedCampaignIds),
     [joinedCampaignIds]
+  );
+
+  const startSystemCampaignTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getJoinableSystemCampaignTourSteps({
+      hasRows: campaigns.length > 0,
+      mode,
+    });
+  }, [campaigns.length, mode]);
+
+  const guideAction = (
+    <Tooltip title="Hướng dẫn" arrow>
+      <button
+        type="button"
+        onClick={startSystemCampaignTour}
+        aria-label="Mở hướng dẫn chiến dịch hệ thống"
+        className="text-primary-700 hover:text-primary-800 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg transition-colors"
+      >
+        <HelpOutlineIcon fontSize="small" />
+      </button>
+    </Tooltip>
   );
 
   const handleJoinCampaign = async (campaignId: number): Promise<void> => {
@@ -154,7 +238,7 @@ export default function JoinableSystemCampaignModal({
       key: 'name',
       label: 'Tên chiến dịch hệ thống',
       render: (value: unknown): React.ReactNode => (
-        <Box className="font-semibold text-[var(--color-table-text-primary)]">
+        <Box className="text-table-text-primary font-semibold">
           {typeof value === 'string' ? value : String(value)}
         </Box>
       ),
@@ -163,7 +247,7 @@ export default function JoinableSystemCampaignModal({
       key: 'startDate',
       label: 'Thời gian diễn ra',
       render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+        <Box className="text-table-text-secondary text-sm">
           <div>Từ: {formatVNDatetime(row.startDate)}</div>
           <div>Đến: {formatVNDatetime(row.endDate)}</div>
         </Box>
@@ -181,15 +265,19 @@ export default function JoinableSystemCampaignModal({
       ),
     },
     {
-      key: 'isActive',
+      key: 'status',
       label: 'Hoạt động',
-      style: { width: '140px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
-          type={value === true ? 'success' : 'error'}
-        />
-      ),
+      style: { width: '160px' },
+      render: (_: unknown, row: VendorCampaign): React.ReactNode => {
+        const { label, type } = getCampaignStatus(row);
+        return (
+          <span
+            className={`inline-flex min-w-[130px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colorMap[type]}`}
+          >
+            {label}
+          </span>
+        );
+      },
     },
     {
       key: mode === 'join' ? 'joinAction' : 'detailsAction',
@@ -197,16 +285,27 @@ export default function JoinableSystemCampaignModal({
       style: { width: '160px' },
       render: (_: unknown, row: VendorCampaign): React.ReactNode => {
         const isJoining = joiningCampaignIds.has(row.campaignId);
-        const isAlreadyJoined = joinedCampaignIdSet.has(row.campaignId);
+        const isAlreadyJoined =
+          joinedCampaignIdSet.has(row.campaignId) ||
+          vendorJoinedCampaignIds.has(row.campaignId);
 
         if (mode === 'detail') {
+          if (isAlreadyJoined) {
+            return (
+              <span className="text-primary-600 text-sm font-semibold">
+                Đã tham gia
+              </span>
+            );
+          }
+
           return (
             <button
               onClick={() => {
                 setDetailsCampaignId(row.campaignId);
                 setIsDetailsModalOpen(true);
               }}
-              className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+              data-tour="joinable-system-campaign-action"
+              className="bg-primary-600 hover:bg-primary-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-colors"
             >
               Chi tiết
             </button>
@@ -219,10 +318,11 @@ export default function JoinableSystemCampaignModal({
               void handleJoinCampaign(row.campaignId);
             }}
             disabled={isJoining || branchId === null || isAlreadyJoined}
+            data-tour="joinable-system-campaign-action"
             className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
               isJoining || branchId === null || isAlreadyJoined
                 ? 'cursor-not-allowed bg-gray-200 text-gray-500'
-                : 'bg-[var(--color-primary-600)] text-white hover:bg-[var(--color-primary-700)]'
+                : 'bg-primary-600 hover:bg-primary-700 text-white'
             }`}
           >
             {isAlreadyJoined
@@ -238,8 +338,36 @@ export default function JoinableSystemCampaignModal({
 
   return (
     <>
+      <Joyride
+        key={tourInstanceKey}
+        run={isOpen && isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1800,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       <div
-        className={`fixed inset-0 z-[1400] flex items-center justify-center p-4 transition-opacity ${
+        className={`fixed inset-0 z-1400 flex items-center justify-center p-4 transition-opacity ${
           isOpen
             ? 'bg-black/60 opacity-100'
             : 'pointer-events-none bg-transparent opacity-0'
@@ -250,51 +378,49 @@ export default function JoinableSystemCampaignModal({
           className="mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Modal Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                {mode === 'join'
+          <div data-tour="joinable-system-campaign-header">
+            <VendorModalHeader
+              title={
+                mode === 'join'
                   ? 'Tham gia chiến dịch hệ thống'
-                  : 'Chiến dịch hệ thống khả dụng'}
-              </h2>
-            </div>
-            {/* <IconButton
-              aria-label="close"
-              onClick={onClose}
-              sx={{
-                color: 'text.secondary',
-                '&:hover': { backgroundColor: 'action.hover' },
-              }}
-            >
-              <CloseIcon />
-            </IconButton> */}
+                  : 'Chiến dịch hệ thống khả dụng'
+              }
+              icon={<CampaignIcon />}
+              iconTone="campaign"
+              onClose={onClose}
+              rightActions={guideAction}
+            />
           </div>
 
           {/* Modal Content */}
           <div className="flex-1 overflow-y-auto p-8">
-            <Table
-              columns={columns}
-              data={campaigns}
-              rowKey="campaignId"
-              loading={status === 'pending'}
-              emptyMessage="Không có chiến dịch hệ thống khả dụng"
-              maxHeight="none"
-            />
+            <div data-tour="joinable-system-campaign-table-wrapper">
+              <Table
+                columns={columns}
+                data={campaigns}
+                rowKey="campaignId"
+                loading={status === 'pending'}
+                emptyMessage="Không có chiến dịch hệ thống khả dụng"
+                maxHeight="none"
+                tourId="vendor-joinable-system-campaign"
+              />
+            </div>
 
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              totalCount={totalCount ?? 0}
-              pageSize={pageSize}
-              hasPrevious={page > 1}
-              hasNext={page < totalPages}
-              onPageChange={setPage}
-              onPageSizeChange={(newPageSize) => {
-                setPageSize(newPageSize);
-                setPage(1);
-              }}
-            />
+            <div data-tour="joinable-system-campaign-pagination">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalCount={totalCount ?? 0}
+                pageSize={pageSize}
+                hasPrevious={page > 1}
+                hasNext={page < totalPages}
+                onPageChange={setPage}
+                onPageSizeChange={(newPageSize) => {
+                  setPageSize(newPageSize);
+                  setPage(1);
+                }}
+              />
+            </div>
           </div>
 
           {/* Modal Footer */}

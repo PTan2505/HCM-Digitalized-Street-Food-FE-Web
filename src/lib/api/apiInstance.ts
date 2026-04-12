@@ -18,8 +18,14 @@ import { OrderApi } from '@features/vendor/api/orderApi';
 import { NotificationApi } from '@features/notification/api/notificationApi';
 import { FeedbackTagApi } from '@features/admin/api/feedbackTagApi';
 import { CampaignApi } from '@features/admin/api/campaignApi';
+import { QuestApi } from '@features/admin/api/questApi';
+import { SettingApi } from '@features/admin/api/settingApi';
 import { VendorCampaignApi } from '@features/vendor/api/campaignApi';
 import { VoucherApi } from '@features/admin/api/voucherApi';
+import { UserAdminApi } from '@features/admin/api/userAdminApi';
+import { DashboardApi } from '@features/vendor/api/dashboardApi';
+import { AdminDashboardApi } from '@features/admin/api/dashboardApi';
+import { BranchAdminApi } from '@features/admin/api/branchApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -45,6 +51,12 @@ export const axiosApi = {
   notificationApi: new NotificationApi(axiosClient),
   feedbackTagApi: new FeedbackTagApi(axiosClient),
   campaignApi: new CampaignApi(axiosClient),
+  questApi: new QuestApi(axiosClient),
+  settingApi: new SettingApi(axiosClient),
   vendorCampaignApi: new VendorCampaignApi(axiosClient),
   voucherApi: new VoucherApi(axiosClient),
+  userAdminApi: new UserAdminApi(axiosClient),
+  dashboardApi: new DashboardApi(axiosClient),
+  adminDashboardApi: new AdminDashboardApi(axiosClient),
+  branchAdminApi: new BranchAdminApi(axiosClient),
 };

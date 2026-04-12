@@ -18,7 +18,7 @@ const useVoucher = (): {
   onGetVouchers: () => Promise<Voucher[]>;
   onGetVouchersByCampaignId: (campaignId: number) => Promise<Voucher[]>;
   onGetVoucherById: (id: number) => Promise<Voucher>;
-  onCreateVoucher: (data: VoucherCreate) => Promise<Voucher>;
+  onCreateVoucher: (data: VoucherCreate[]) => Promise<Voucher[]>;
   onUpdateVoucher: (id: number, data: VoucherUpdate) => Promise<Voucher>;
   onDeleteVoucher: (id: number) => Promise<number>;
 } => {
@@ -43,7 +43,7 @@ const useVoucher = (): {
   );
 
   const onCreateVoucher = useCallback(
-    async (data: VoucherCreate): Promise<Voucher> => {
+    async (data: VoucherCreate[]): Promise<Voucher[]> => {
       return await dispatch(createVoucher(data)).unwrap();
     },
     [dispatch]

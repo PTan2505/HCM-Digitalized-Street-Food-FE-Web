@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { Box } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -7,6 +7,14 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
@@ -16,6 +24,7 @@ import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
+import { getRegistrationHistoryTourSteps } from '@features/vendor/utils/registrationHistoryTourSteps';
 
 const StatusBadge = ({
   label,
@@ -32,7 +41,7 @@ const StatusBadge = ({
   };
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -49,6 +58,8 @@ function RegistrationHistoryPage(): JSX.Element {
     type: 'createVendor',
   });
   const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     void onGetMyVendor();
@@ -64,6 +75,28 @@ function RegistrationHistoryPage(): JSX.Element {
   const handleFormSuccess = (): void => {
     // Slice already handles branch update/create
   };
+
+  const startRegistrationHistoryTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getRegistrationHistoryTourSteps({
+      hasRows: branches.length > 0,
+    });
+  }, [branches.length]);
 
   const columns = [
     // {
@@ -84,7 +117,7 @@ function RegistrationHistoryPage(): JSX.Element {
       key: 'addressDetail',
       label: 'Địa chỉ',
       render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-secondary block max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">
+        <Box className="text-table-text-secondary block max-w-75 overflow-hidden text-ellipsis whitespace-nowrap">
           {typeof value === 'string' ? value : '-'}
         </Box>
       ),
@@ -139,6 +172,7 @@ function RegistrationHistoryPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'view',
       label: <VisibilityIcon fontSize="small" />,
       menuLabel: 'Xem chi tiết',
       onClick: (branch: Branch): void => {
@@ -147,6 +181,7 @@ function RegistrationHistoryPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       menuLabel: 'Chỉnh sửa chi nhánh',
       onClick: (branch: Branch): void => {
@@ -157,6 +192,7 @@ function RegistrationHistoryPage(): JSX.Element {
         branch.licenseStatus === 'Pending' || branch.licenseStatus === null,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa chi nhánh',
       onClick: (): void => {},
@@ -164,6 +200,7 @@ function RegistrationHistoryPage(): JSX.Element {
       show: (): boolean => false,
     },
     {
+      id: 'dish',
       label: <RestaurantMenuIcon fontSize="small" />,
       menuLabel: 'Quản lý menu',
       onClick: (): void => {},
@@ -171,6 +208,7 @@ function RegistrationHistoryPage(): JSX.Element {
       show: (): boolean => false,
     },
     {
+      id: 'images',
       label: <ImageIcon fontSize="small" />,
       menuLabel: 'Cập nhật ảnh quán',
       onClick: (branch: Branch): void => {
@@ -181,6 +219,7 @@ function RegistrationHistoryPage(): JSX.Element {
         branch.licenseStatus === 'Pending' || branch.licenseStatus === null,
     },
     {
+      id: 'schedule',
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý thời gian hoạt động',
       onClick: (): void => {},
@@ -188,6 +227,7 @@ function RegistrationHistoryPage(): JSX.Element {
       show: (): boolean => false,
     },
     {
+      id: 'dayoff',
       label: <ScheduleIcon fontSize="small" />,
       menuLabel: 'Quản lý ngày nghỉ',
       onClick: (): void => {},
@@ -197,27 +237,72 @@ function RegistrationHistoryPage(): JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="registration-history-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Lịch sử đăng ký
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Lịch sử đăng ký
+            </h1>
+            <button
+              type="button"
+              onClick={startRegistrationHistoryTour}
+              aria-label="Mở hướng dẫn lịch sử đăng ký"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
             Danh sách tất cả chi nhánh đã đăng ký
           </p>
         </div>
       </div>
 
-      <Table
-        columns={columns}
-        data={branches}
-        rowKey="branchId"
-        loading={status === 'pending'}
-        emptyMessage="Chưa có lịch sử đăng ký nào"
-        actions={actions}
-        maxHeight="calc(100vh - 240px)"
-      />
+      <div data-tour="registration-history-table-wrapper">
+        <Table
+          columns={columns}
+          data={branches}
+          rowKey="branchId"
+          loading={status === 'pending'}
+          emptyMessage="Chưa có lịch sử đăng ký nào"
+          actions={actions}
+          maxHeight="calc(100vh - 240px)"
+          tourId="vendor-registration-history"
+        />
+      </div>
 
       <BranchDetailsModal
         isOpen={selectedBranch !== null}
