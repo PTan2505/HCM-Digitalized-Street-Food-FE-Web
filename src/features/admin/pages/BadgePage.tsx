@@ -34,7 +34,6 @@ export default function BadgePage(): JSX.Element {
   const [editingBadge, setEditingBadge] = useState<Badge | null>(null);
   const [formData, setFormData] = useState<Partial<Badge>>({
     badgeName: '',
-    pointToGet: 0,
     iconUrl: '',
     description: '',
   });
@@ -53,7 +52,6 @@ export default function BadgePage(): JSX.Element {
       setEditingBadge(null);
       setFormData({
         badgeName: '',
-        pointToGet: 0,
         iconUrl: '',
         description: '',
       });
@@ -66,7 +64,6 @@ export default function BadgePage(): JSX.Element {
     setEditingBadge(null);
     setFormData({
       badgeName: '',
-      pointToGet: 0,
       iconUrl: '',
       description: '',
     });
@@ -74,14 +71,12 @@ export default function BadgePage(): JSX.Element {
 
   const handleSave = async (data: {
     badgeName: string;
-    pointToGet: string;
     imageFile?: File | null;
     description: string;
   }): Promise<void> => {
     try {
       const payload = {
         badgeName: data.badgeName,
-        pointToGet: parseInt(data.pointToGet, 10),
         imageFile: data.imageFile,
         description: data.description,
       };
@@ -168,18 +163,18 @@ export default function BadgePage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'pointToGet',
-      label: 'Điểm yêu cầu',
-      style: { width: '140px' },
-      render: (value: unknown): React.ReactNode => (
-        <Chip
-          label={`${String(value)} điểm`}
-          size="small"
-          className="bg-primary-100 text-primary-800 font-semibold"
-        />
-      ),
-    },
+    // {
+    //   key: 'pointToGet',
+    //   label: 'Điểm yêu cầu',
+    //   style: { width: '140px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <Chip
+    //       label={`${String(value)} điểm`}
+    //       size="small"
+    //       className="bg-primary-100 text-primary-800 font-semibold"
+    //     />
+    //   ),
+    // },
     {
       key: 'description',
       label: 'Mô tả',

@@ -21,7 +21,6 @@ export class BadgeApi {
   ): Promise<CreateOrUpdateBadgeResponse> {
     const formData = new FormData();
     formData.append('badgeName', data.badgeName);
-    formData.append('pointToGet', data.pointToGet.toString());
     formData.append('description', data.description);
     if (data.imageFile) {
       formData.append('imageFile', data.imageFile);
@@ -46,7 +45,6 @@ export class BadgeApi {
   ): Promise<CreateOrUpdateBadgeResponse> {
     const formData = new FormData();
     formData.append('badgeName', data.badgeName);
-    formData.append('pointToGet', data.pointToGet.toString());
     formData.append('description', data.description);
     if (data.imageFile) {
       formData.append('imageFile', data.imageFile);
