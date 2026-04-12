@@ -6,6 +6,7 @@ import type {
   JoinSystemCampaignResponse,
   JoinSystemCampaignRequest,
   CampaignBranchesResponse,
+  GetBranchesOfCampaignResponse,
   VendorCampaignListResponse,
 } from '@features/vendor/types/campaign';
 import type ApiClient from '@lib/api/apiClient';
@@ -78,6 +79,13 @@ export class VendorCampaignApi {
     return res.data;
   }
 
+  async getCampaignDetail(campaignId: number): Promise<VendorCampaign> {
+    const res = await this.apiClient.get<VendorCampaign>({
+      url: apiUrl.campaign.GetCampaignDetail(campaignId),
+    });
+    return res.data;
+  }
+
   async getJoinableSystemCampaigns(
     pageNumber: number,
     pageSize: number
@@ -113,10 +121,25 @@ export class VendorCampaignApi {
   }
 
   async getBranchesOfACampaign(
-    campaignId: number
-  ): Promise<CampaignBranchesResponse> {
-    const res = await this.apiClient.get<CampaignBranchesResponse>({
+    campaignId: number,
+    pageNumber: number = 1,
+    pageSize: number = 100
+  ): Promise<GetBranchesOfCampaignResponse> {
+    const res = await this.apiClient.get<GetBranchesOfCampaignResponse>({
       url: apiUrl.campaign.GetBranchesOfACampaign(campaignId),
+      params: { pageNumber, pageSize },
+    });
+    return res.data;
+  }
+
+  async getVendorBranchesOfACampaign(
+    campaignId: number,
+    pageNumber: number = 1,
+    pageSize: number = 100
+  ): Promise<GetBranchesOfCampaignResponse> {
+    const res = await this.apiClient.get<GetBranchesOfCampaignResponse>({
+      url: apiUrl.campaign.GetVendorBranchesOfACampaign(campaignId),
+      params: { pageNumber, pageSize },
     });
     return res.data;
   }

@@ -1,17 +1,11 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
-import {
-  Box,
-  Typography,
-  IconButton,
-  Button,
-  CircularProgress,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import LicenseUploadSection from './LicenseUploadSection';
 import useVendor from '../hooks/useVendor';
 import type { GhostPin } from '../types/vendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface ClaimBranchModalProps {
   open: boolean;
@@ -61,49 +55,28 @@ export default function ClaimBranchModal({
 
   return (
     <Box
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 transition-opacity"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 transition-opacity"
       onClick={submitting ? undefined : handleClose}
     >
       <Box
         className="mx-4 flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5">
-          <Box className="flex items-center gap-3">
-            <Box className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <StorefrontIcon />
-            </Box>
-            <Box>
-              <Typography
-                variant="h2"
-                className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl"
-              >
-                Nhận quán: {branch?.name}
-              </Typography>
-              <Typography className="mt-0.5 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                Vui lòng cung cấp hình ảnh giấy phép kinh doanh để xác thực chủ
-                sở hữu
-              </Typography>
-            </Box>
-          </Box>
-
-          <IconButton
-            size="small"
-            onClick={handleClose}
-            disabled={submitting}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #e5e7eb',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <VendorModalHeader
+          title="Nhận quán"
+          subtitle={branch?.name ?? ''}
+          icon={<StorefrontIcon />}
+          iconTone="branch"
+          onClose={handleClose}
+          disableClose={submitting}
+        />
 
         {/* Modal Content */}
         <Box className="flex-1 overflow-y-auto px-8 py-6">
+          <Typography className="text-table-text-secondary mb-4 text-sm font-medium">
+            Vui lòng cung cấp hình ảnh giấy phép kinh doanh để xác thực chủ sở
+            hữu.
+          </Typography>
           <LicenseUploadSection
             licenseImages={licenseImages}
             onFileChange={handleFileChange}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import { Visibility as VisibilityIcon } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import SystemCampaignDetailsModal from '@features/vendor/components/SystemCampaignDetailsModal';
@@ -11,6 +12,7 @@ import {
   selectCampaignStatus,
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
+  selectVendorCampaigns,
 } from '@slices/campaign';
 import { selectMyVendor } from '@slices/vendor';
 
@@ -28,35 +30,50 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const StatusBadge = ({
-  label,
-  type,
-}: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
-}): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
+const colorMap: Record<string, string> = {
+  success: 'bg-green-100 text-green-700 border-green-200',
+  error: 'bg-red-100 text-red-700 border-red-200',
+  warning: 'bg-amber-100 text-amber-700 border-amber-200',
+  default: 'bg-slate-100 text-slate-700 border-slate-200',
+  info: 'bg-blue-100 text-blue-700 border-blue-200',
+};
 
-  return (
-    <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
-    >
-      {label}
-    </span>
-  );
+const getCampaignStatus = (
+  row: VendorCampaign
+): { label: string; type: string } => {
+  const now = Date.now();
+  const regStart = row.registrationStartDate
+    ? new Date(row.registrationStartDate).getTime()
+    : null;
+  const regEnd = row.registrationEndDate
+    ? new Date(row.registrationEndDate).getTime()
+    : null;
+  const start = new Date(row.startDate).getTime();
+  const end = new Date(row.endDate).getTime();
+
+  if (row.isActive && !row.isRegisterable)
+    return { label: 'Đang hoạt động', type: 'success' };
+  if (row.isRegisterable && !row.isActive)
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  if (!row.isActive && !row.isRegisterable) {
+    if (now > end) return { label: 'Đã kết thúc', type: 'error' };
+    if (regEnd !== null && now > regEnd && now < start)
+      return { label: 'Chưa bắt đầu', type: 'warning' };
+    if (regStart !== null && now < regStart)
+      return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+    return { label: 'Chưa bắt đầu', type: 'warning' };
+  }
+  return { label: 'Không xác định', type: 'default' };
 };
 
 export default function VendorSystemCampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
+  const vendorCampaigns = useAppSelector(selectVendorCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
   const myVendor = useAppSelector(selectMyVendor);
-  const { onGetJoinableSystemCampaigns } = useVendorCampaign();
+  const { onGetJoinableSystemCampaigns, onGetVendorCampaigns } =
+    useVendorCampaign();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -67,11 +84,14 @@ export default function VendorSystemCampaignPage(): JSX.Element {
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
-      await onGetJoinableSystemCampaigns(page, pageSize);
+      await Promise.all([
+        onGetJoinableSystemCampaigns(page, pageSize),
+        onGetVendorCampaigns(1, 1000),
+      ]);
     } catch (error) {
       console.error('Failed to fetch system campaigns', error);
     }
-  }, [onGetJoinableSystemCampaigns, page, pageSize]);
+  }, [onGetJoinableSystemCampaigns, onGetVendorCampaigns, page, pageSize]);
 
   useEffect(() => {
     void fetchCampaigns();
@@ -90,7 +110,7 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       key: 'name',
       label: 'Tên chiến dịch hệ thống',
       render: (value: unknown): React.ReactNode => (
-        <Box className="font-semibold text-[var(--color-table-text-primary)]">
+        <Box className="text-table-text-primary font-semibold">
           {typeof value === 'string' ? value : String(value)}
         </Box>
       ),
@@ -99,7 +119,7 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       key: 'startDate',
       label: 'Thời gian diễn ra',
       render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <Box className="text-sm text-[var(--color-table-text-secondary)]">
+        <Box className="text-table-text-secondary text-sm">
           <div>Từ: {formatVNDatetime(row.startDate)}</div>
           <div>Đến: {formatVNDatetime(row.endDate)}</div>
         </Box>
@@ -110,49 +130,67 @@ export default function VendorSystemCampaignPage(): JSX.Element {
       label: 'Phân khúc',
       render: (value: unknown): React.ReactNode => (
         <Box className="text-table-text-primary">
-          {typeof value === 'string' && value.trim().length > 0
-            ? value
-            : 'Tất cả'}
+          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
         </Box>
       ),
     },
     {
-      key: 'isActive',
+      key: 'status',
       label: 'Hoạt động',
-      style: { width: '140px' },
-      render: (value: unknown): React.ReactNode => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
-          type={value === true ? 'success' : 'error'}
-        />
-      ),
+      style: { width: '160px' },
+      render: (_: unknown, row: VendorCampaign): React.ReactNode => {
+        const { label, type } = getCampaignStatus(row);
+        return (
+          <span
+            className={`inline-flex min-w-[130px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colorMap[type]}`}
+          >
+            {label}
+          </span>
+        );
+      },
     },
     {
       key: 'detailsAction',
       label: 'Hành động',
       style: { width: '160px' },
-      render: (_: unknown, row: VendorCampaign): React.ReactNode => (
-        <button
-          onClick={() => {
-            setDetailsCampaignId(row.campaignId);
-            setIsDetailsModalOpen(true);
-          }}
-          className="rounded-lg bg-[var(--color-primary-600)] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
-        >
-          Chi tiết
-        </button>
-      ),
+      render: (_: unknown, row: VendorCampaign): React.ReactNode => {
+        const isAlreadyJoined = vendorCampaigns.some(
+          (vc) => vc.isSystemCampaign && vc.campaignId === row.campaignId
+        );
+
+        if (isAlreadyJoined) {
+          return (
+            <span className="text-primary-600 text-sm font-semibold">
+              Đã tham gia
+            </span>
+          );
+        }
+
+        return (
+          <Button
+            size="small"
+            color="info"
+            variant="outlined"
+            onClick={() => {
+              setDetailsCampaignId(row.campaignId);
+              setIsDetailsModalOpen(true);
+            }}
+          >
+            <VisibilityIcon fontSize="small" />
+          </Button>
+        );
+      },
     },
   ];
 
   return (
-    <div className="flex h-full flex-col font-[var(--font-nunito)]">
+    <div className="flex h-full flex-col font-(--font-nunito)">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
+          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
             Chiến dịch hệ thống
           </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <p className="text-table-text-secondary text-sm">
             Theo dõi và tham gia các chiến dịch do hệ thống tạo
           </p>
         </div>

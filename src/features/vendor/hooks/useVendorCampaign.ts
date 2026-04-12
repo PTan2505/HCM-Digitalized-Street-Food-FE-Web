@@ -16,6 +16,7 @@ import {
   addBranchesToACampaign,
   removeBranchesFromACampaign,
 } from '@slices/campaign';
+import { axiosApi } from '@lib/api/apiInstance';
 import type {
   VendorCampaign,
   CampaignDetailsResponse,
@@ -24,6 +25,7 @@ import type {
   VendorCampaignListResponse,
   JoinSystemCampaignResponse,
   CampaignBranchesResponse,
+  GetBranchesOfCampaignResponse,
 } from '@features/vendor/types/campaign';
 
 const useVendorCampaign = (): {
@@ -34,6 +36,7 @@ const useVendorCampaign = (): {
   onCreateVendorCampaign: (
     data: VendorCampaignCreate
   ) => Promise<VendorCampaign>;
+  onGetCampaignDetail: (campaignId: number) => Promise<VendorCampaign>;
   onUpdateVendorCampaign: (
     id: number,
     data: VendorCampaignUpdate
@@ -62,8 +65,15 @@ const useVendorCampaign = (): {
     campaignId: number
   ) => Promise<CampaignDetailsResponse>;
   onGetBranchesOfACampaign: (
-    campaignId: number
-  ) => Promise<CampaignBranchesResponse>;
+    campaignId: number,
+    pageNumber?: number,
+    pageSize?: number
+  ) => Promise<GetBranchesOfCampaignResponse>;
+  onGetVendorBranchesOfACampaign: (
+    campaignId: number,
+    pageNumber?: number,
+    pageSize?: number
+  ) => Promise<GetBranchesOfCampaignResponse>;
   onAddBranchesToACampaign: (
     campaignId: number,
     branchIds: number[]
@@ -92,6 +102,13 @@ const useVendorCampaign = (): {
       return await dispatch(createVendorCampaign(data)).unwrap();
     },
     [dispatch]
+  );
+
+  const onGetCampaignDetail = useCallback(
+    async (campaignId: number): Promise<VendorCampaign> => {
+      return await axiosApi.vendorCampaignApi.getCampaignDetail(campaignId);
+    },
+    []
   );
 
   const onUpdateVendorCampaign = useCallback(
@@ -179,10 +196,31 @@ const useVendorCampaign = (): {
   );
 
   const onGetBranchesOfACampaign = useCallback(
-    async (campaignId: number): Promise<CampaignBranchesResponse> => {
-      return await dispatch(getBranchesOfACampaign(campaignId)).unwrap();
+    async (
+      campaignId: number,
+      pageNumber: number = 1,
+      pageSize: number = 100
+    ): Promise<GetBranchesOfCampaignResponse> => {
+      return await dispatch(
+        getBranchesOfACampaign({ campaignId, pageNumber, pageSize })
+      ).unwrap();
     },
     [dispatch]
+  );
+
+  const onGetVendorBranchesOfACampaign = useCallback(
+    async (
+      campaignId: number,
+      pageNumber: number = 1,
+      pageSize: number = 100
+    ): Promise<GetBranchesOfCampaignResponse> => {
+      return await axiosApi.vendorCampaignApi.getVendorBranchesOfACampaign(
+        campaignId,
+        pageNumber,
+        pageSize
+      );
+    },
+    []
   );
 
   const onAddBranchesToACampaign = useCallback(
@@ -212,6 +250,7 @@ const useVendorCampaign = (): {
   return {
     onGetVendorCampaigns,
     onCreateVendorCampaign,
+    onGetCampaignDetail,
     onUpdateVendorCampaign,
     onGetCampaignImage,
     onPostCampaignImage,
@@ -222,6 +261,7 @@ const useVendorCampaign = (): {
     onJoinBranchToSystemCampaign,
     onGetSystemCampaignDetails,
     onGetBranchesOfACampaign,
+    onGetVendorBranchesOfACampaign,
     onAddBranchesToACampaign,
     onRemoveBranchesFromACampaign,
   };

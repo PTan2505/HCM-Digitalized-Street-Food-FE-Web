@@ -1,13 +1,15 @@
 import SidebarContent from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
+import { ROUTES } from '@constants/routes';
 import { MODERATOR_USER_INFO } from '@constants/moderatorTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
   Menu as Bars3Icon,
-  BarChart as ChartBarIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  Verified as ShoppingBagIcon,
+  LocationOn as LocationOnIcon,
+  Storefront as StorefrontIcon,
+  FactCheck as FactCheckIcon,
   Close as XMarkIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -16,19 +18,51 @@ import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation = [
-  { name: 'Dashboard', href: '/moderator/revenue', icon: ChartBarIcon },
+  // {
+  //   name: 'Dashboard',
+  //   href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.REVENUE}`,
+  //   icon: ChartBarIcon,
+  // },
   {
-    name: 'Xác minh người bán',
-    href: '/moderator/verification',
-    icon: ShoppingBagIcon,
+    name: 'Quán Ăn Chờ Duyệt',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`,
+    icon: StorefrontIcon,
+  },
+  {
+    name: 'Quán reviewer chia sẻ',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`,
+    icon: LocationOnIcon,
+  },
+  {
+    name: 'Yêu cầu sở hữu quán',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST}`,
+    icon: FactCheckIcon,
+  },
+  {
+    name: 'Xem thông tin chi nhánh',
+    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.BRANCH}`,
+    icon: StorefrontIcon,
   },
 ];
+
+const titleByPath: Record<string, string> = {
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`]:
+    'Xác minh - Quán reviewer chia sẻ',
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`]:
+    'Xác minh - Quán ăn chờ duyệt',
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST}`]:
+    'Xác minh - Yêu cầu sở hữu quán',
+  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.BRANCH}`]:
+    'Xem thông tin chi nhánh',
+};
 
 function ModeratorLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -49,6 +83,8 @@ function ModeratorLayout(): JSX.Element {
     role: MODERATOR_USER_INFO.role,
     avatarUrl: user?.avatarUrl ?? null,
   };
+  const pageTitle =
+    titleByPath[location.pathname] ?? 'Xác minh - Quán ăn chờ duyệt';
 
   return (
     <Box className="min-h-screen bg-white text-gray-900">
@@ -76,10 +112,10 @@ function ModeratorLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/moderator/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -94,9 +130,9 @@ function ModeratorLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/moderator/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -135,8 +171,7 @@ function ModeratorLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {navigation.find((item) => item.href === location.pathname)
-                    ?.name ?? 'Dashboard'}
+                  {pageTitle}
                 </Typography>
               </Box>
             </Box>
@@ -154,6 +189,10 @@ function ModeratorLayout(): JSX.Element {
           </Box>
         </Box>
       </Box>
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </Box>
   );
 }

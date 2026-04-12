@@ -34,8 +34,8 @@ export class VoucherApi {
     return res.data;
   }
 
-  async createVoucher(data: VoucherCreate): Promise<Voucher> {
-    const res = await this.apiClient.post<Voucher, VoucherCreate>({
+  async createVoucher(data: VoucherCreate[]): Promise<Voucher[]> {
+    const res = await this.apiClient.post<Voucher[], VoucherCreate[]>({
       url: apiUrl.voucher.GetOrPostVouchers,
       data,
     });

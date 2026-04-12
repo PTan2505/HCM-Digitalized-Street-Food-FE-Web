@@ -10,9 +10,17 @@ import {
   Select,
   type SelectChangeEvent,
 } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import { OrderCompletionPanel } from '@features/vendor/components/OrderCompletionPanel';
 import { OrderDetailDialog } from '@features/vendor/components/OrderDetailDialog';
 import {
@@ -23,7 +31,6 @@ import {
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import useOrder from '@features/vendor/hooks/useOrder';
-import usePayment from '@features/vendor/hooks/usePayment';
 import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorOrder } from '@features/vendor/types/order';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -34,6 +41,7 @@ import {
   selectVendorOrdersPagination,
 } from '@slices/order';
 import { selectMyVendor } from '@slices/vendor';
+import { getOrderManagementTourSteps } from '@features/vendor/utils/orderManagementTourSteps';
 
 const getBranchDisplayName = (branch: {
   branchName?: string | null;
@@ -52,7 +60,6 @@ export default function OrderPage(): JSX.Element {
     onDecideVendorOrder,
     onCompleteVendorOrder,
   } = useOrder();
-  const { onGetVendorBalance } = usePayment();
 
   const myVendor = useAppSelector(selectMyVendor);
   const orders = useAppSelector(selectVendorOrders);
@@ -62,11 +69,13 @@ export default function OrderPage(): JSX.Element {
   const [selectedBranchId, setSelectedBranchId] =
     useState<SelectedBranch>('all');
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [detailOrder, setDetailOrder] = useState<VendorOrder | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);
   const [completeMessage, setCompleteMessage] = useState('');
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const branches: Branch[] = useMemo(
     () =>
@@ -119,14 +128,14 @@ export default function OrderPage(): JSX.Element {
   ): Promise<void> => {
     await onDecideVendorOrder({ orderId, approve });
 
-    if (selectedBranchId === 'all') {
-      await onGetVendorOrders({ pageNumber, pageSize });
-    } else {
-      await onGetVendorBranchOrders({
-        branchId: selectedBranchId,
-        params: { pageNumber, pageSize },
-      });
-    }
+    // if (selectedBranchId === 'all') {
+    //   await onGetVendorOrders({ pageNumber, pageSize });
+    // } else {
+    //   await onGetVendorBranchOrders({
+    //     branchId: selectedBranchId,
+    //     params: { pageNumber, pageSize },
+    //   });
+    // }
   };
 
   const handleVerificationCodeChange = (
@@ -182,9 +191,6 @@ export default function OrderPage(): JSX.Element {
         updatedAt: new Date().toISOString(),
       };
 
-      // Refresh account balance in the payment slice right after completion.
-      void onGetVendorBalance();
-
       setDetailOrder(completedOrder);
       setVerificationCode('');
       setCompleteMessage('Hoàn tất đơn hàng thành công.');
@@ -200,6 +206,28 @@ export default function OrderPage(): JSX.Element {
   const handleCloseDetail = (): void => {
     setDetailOrder(null);
   };
+
+  const startOrderTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getOrderManagementTourSteps({
+      hasRows: orders.length > 0,
+    });
+  }, [orders.length]);
 
   const columns = useMemo(
     () => [
@@ -287,6 +315,7 @@ export default function OrderPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'view',
       label: (
         <VisibilityOutlinedIcon fontSize="small" className="text-blue-700" />
       ),
@@ -298,6 +327,7 @@ export default function OrderPage(): JSX.Element {
       },
     },
     {
+      id: 'approve',
       label: (
         <CheckCircleOutlineIcon fontSize="small" className="text-primary-700" />
       ),
@@ -308,6 +338,7 @@ export default function OrderPage(): JSX.Element {
       show: (row: VendorOrder): boolean => canDecideOrder(row.status),
     },
     {
+      id: 'reject',
       label: <CancelOutlinedIcon fontSize="small" className="text-red-600" />,
       menuLabel: <span className="font-bold text-red-600">Từ chối</span>,
       onClick: (row: VendorOrder): void => {
@@ -319,98 +350,152 @@ export default function OrderPage(): JSX.Element {
 
   return (
     <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Quản lý đơn hàng
-          </h1>
+        <div data-tour="order-page-header">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý đơn hàng
+            </h1>
+            <button
+              type="button"
+              onClick={startOrderTour}
+              aria-label="Mở hướng dẫn quản lý đơn hàng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Theo dõi và xử lý đơn hàng theo từng chi nhánh
           </p>
         </div>
 
-        <FormControl size="small" className="min-w-65">
-          <InputLabel
-            id="vendor-order-branch-label"
-            sx={{
-              color: 'var(--color-primary-700)',
-              '&.Mui-focused': {
-                color: 'var(--color-primary-700)',
-              },
-            }}
+        <div className="flex items-center gap-2">
+          <FormControl
+            size="small"
+            className="min-w-65"
+            data-tour="order-branch-filter"
           >
-            Chi nhánh
-          </InputLabel>
-          <Select
-            labelId="vendor-order-branch-label"
-            value={selectedBranchId !== null ? String(selectedBranchId) : 'all'}
-            label="Chi nhánh"
-            onChange={handleBranchChange}
-            disabled={branches.length === 0}
-            sx={{
-              color: 'var(--color-primary-700)',
-              fontWeight: 700,
-              '& .MuiSelect-icon': {
+            <InputLabel
+              id="vendor-order-branch-label"
+              sx={{
                 color: 'var(--color-primary-700)',
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--color-primary-600)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--color-primary-600)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--color-primary-600)',
-                borderWidth: '1px',
-              },
-              '&.Mui-focused': {
+                '&.Mui-focused': {
+                  color: 'var(--color-primary-700)',
+                },
+              }}
+            >
+              Chi nhánh
+            </InputLabel>
+            <Select
+              labelId="vendor-order-branch-label"
+              value={
+                selectedBranchId !== null ? String(selectedBranchId) : 'all'
+              }
+              label="Chi nhánh"
+              onChange={handleBranchChange}
+              disabled={branches.length === 0}
+              sx={{
                 color: 'var(--color-primary-700)',
-                boxShadow: 'none',
-                outline: 'none',
-              },
-            }}
-          >
-            <MenuItem value="all">Tất cả chi nhánh</MenuItem>
-            {branches.map((branch) => (
-              <MenuItem key={branch.branchId} value={branch.branchId}>
-                {getBranchDisplayName(branch)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+                fontWeight: 700,
+                '& .MuiSelect-icon': {
+                  color: 'var(--color-primary-700)',
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--color-primary-600)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--color-primary-600)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--color-primary-600)',
+                  borderWidth: '1px',
+                },
+                '&.Mui-focused': {
+                  color: 'var(--color-primary-700)',
+                  boxShadow: 'none',
+                  outline: 'none',
+                },
+              }}
+            >
+              <MenuItem value="all">Tất cả chi nhánh</MenuItem>
+              {branches.map((branch) => (
+                <MenuItem key={branch.branchId} value={branch.branchId}>
+                  {getBranchDisplayName(branch)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
       </div>
 
-      <OrderCompletionPanel
-        verificationCode={verificationCode}
-        isCompletingByCode={isCompletingByCode}
-        completeMessage={completeMessage}
-        onVerificationCodeChange={handleVerificationCodeChange}
-        onCompleteOrderByCode={handleCompleteOrderByCode}
-      />
+      <div data-tour="order-completion-panel">
+        <OrderCompletionPanel
+          verificationCode={verificationCode}
+          isCompletingByCode={isCompletingByCode}
+          completeMessage={completeMessage}
+          onVerificationCodeChange={handleVerificationCodeChange}
+          onCompleteOrderByCode={handleCompleteOrderByCode}
+        />
+      </div>
 
-      <Table
-        columns={columns}
-        data={orders}
-        rowKey="orderId"
-        actions={actions}
-        loading={status === 'pending'}
-        emptyMessage={
-          branches.length === 0
-            ? 'Chưa có chi nhánh để xem đơn hàng'
-            : 'Chưa có đơn hàng nào'
-        }
-      />
+      <div data-tour="order-table-wrapper">
+        <Table
+          columns={columns}
+          data={orders}
+          rowKey="orderId"
+          actions={actions}
+          loading={status === 'pending'}
+          emptyMessage={
+            branches.length === 0
+              ? 'Chưa có chi nhánh để xem đơn hàng'
+              : 'Chưa có đơn hàng nào'
+          }
+          tourId="vendor-order"
+        />
+      </div>
 
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="order-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
 
       <OrderDetailDialog
         detailOrder={detailOrder}

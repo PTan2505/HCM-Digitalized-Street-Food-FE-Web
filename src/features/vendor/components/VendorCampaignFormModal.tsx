@@ -4,23 +4,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  IconButton,
   CircularProgress,
   Tooltip,
   Chip,
+  IconButton,
 } from '@mui/material';
 import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
   Delete as DeleteIcon,
+  Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
 import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import useVoucher from '@features/vendor/hooks/useVoucher';
 
 interface VendorCampaignFormModalProps {
   isOpen: boolean;
@@ -95,6 +97,7 @@ export default function VendorCampaignFormModal({
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
+  const { onGetVouchersByCampaignId } = useVoucher();
 
   const subscribedBranches = useMemo(
     () =>
@@ -110,7 +113,7 @@ export default function VendorCampaignFormModal({
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<VendorCampaignFormData>({
     resolver: zodResolver(VendorCampaignSchema),
     defaultValues: {
@@ -119,7 +122,6 @@ export default function VendorCampaignFormModal({
       targetSegment: '',
       startDate: '',
       endDate: '',
-      isActive: true,
       branchIds: null,
     },
   });
@@ -130,6 +132,8 @@ export default function VendorCampaignFormModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [hasExistingVouchers, setHasExistingVouchers] = useState(false);
+  const [isCheckingVouchers, setIsCheckingVouchers] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -141,7 +145,6 @@ export default function VendorCampaignFormModal({
           targetSegment: campaign.targetSegment ?? '',
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
-          isActive: campaign.isActive,
           branchIds: campaign.branchIds ?? null,
         });
       } else {
@@ -151,7 +154,6 @@ export default function VendorCampaignFormModal({
           targetSegment: '',
           startDate: '',
           endDate: '',
-          isActive: true,
           branchIds: null,
         });
       }
@@ -165,12 +167,48 @@ export default function VendorCampaignFormModal({
   }, [isOpen, campaign, reset]);
 
   useEffect(() => {
-    return () => {
+    return (): void => {
       if (imagePreviewUrl) {
         URL.revokeObjectURL(imagePreviewUrl);
       }
     };
   }, [imagePreviewUrl]);
+
+  useEffect(() => {
+    if (!isOpen || !campaign) {
+      setHasExistingVouchers(false);
+      setIsCheckingVouchers(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkVoucherExists = async (): Promise<void> => {
+      setIsCheckingVouchers(true);
+
+      try {
+        const vouchers = await onGetVouchersByCampaignId(campaign.campaignId);
+        if (!isCancelled) {
+          setHasExistingVouchers(vouchers.length > 0);
+        }
+      } catch {
+        if (!isCancelled) {
+          // Fallback safe mode: allow editing when voucher check fails.
+          setHasExistingVouchers(false);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsCheckingVouchers(false);
+        }
+      }
+    };
+
+    void checkVoucherExists();
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isOpen, campaign, onGetVouchersByCampaignId]);
 
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
@@ -189,7 +227,6 @@ export default function VendorCampaignFormModal({
       ...data,
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
-      isActive: data.isActive,
     };
     await onSubmit(payload, imageFile, isImageRemoved);
   };
@@ -223,6 +260,27 @@ export default function VendorCampaignFormModal({
   const existingImageUrl = campaign?.imageUrl ?? null;
   const displayImageUrl =
     imagePreviewUrl ?? (isImageRemoved ? null : existingImageUrl);
+  const hasImageChanged = imageFile !== null || isImageRemoved;
+
+  const inputClass = (hasError: boolean): string =>
+    `w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+      hasError
+        ? 'border-red-500 focus:ring-red-200'
+        : 'border-gray-300 focus:ring-amber-200'
+    }`;
+
+  const sectionLabel = (text: string): React.JSX.Element => (
+    <p
+      className="mb-3 text-xs font-bold uppercase"
+      style={{ color: '#8bcf3f' }}
+    >
+      {text}
+    </p>
+  );
+
+  const isCampaignActiveLocked = isEditMode && campaign?.isActive === true;
+  const isCampaignScheduleLocked =
+    isEditMode && (isCheckingVouchers || hasExistingVouchers);
 
   return (
     <Dialog
@@ -240,21 +298,13 @@ export default function VendorCampaignFormModal({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
-        {campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={(theme) => ({
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          {/* <CloseIcon /> */}
-        </IconButton>
-      </DialogTitle>
+      <VendorModalHeader
+        title={campaign ? 'Cập nhật chiến dịch' : 'Thêm chiến dịch mới'}
+        subtitle={campaign?.name ?? ''}
+        icon={<CampaignIcon />}
+        iconTone="campaign"
+        onClose={onClose}
+      />
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent
           dividers
@@ -263,301 +313,301 @@ export default function VendorCampaignFormModal({
             maxHeight: 'calc(90vh - 150px)',
           }}
         >
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Tên chiến dịch <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...register('name')}
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.name
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                  placeholder="Nhập tên chiến dịch"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Phân khúc mục tiêu
-                </label>
-                <input
-                  {...register('targetSegment')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                  placeholder="Học sinh, Sinh viên..."
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Trạng thái hoạt động
-                </label>
-                <label className="inline-flex h-10.5 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    {...register('isActive')}
-                    className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-300"
-                  />
-                  Kích hoạt chiến dịch
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Mô tả
-              </label>
-              <textarea
-                {...register('description')}
-                rows={3}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                placeholder="Nhập mô tả chiến dịch"
-              />
-            </div>
-
-            {/* Campaign Image */}
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Ảnh chiến dịch
-              </label>
-              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                {displayImageUrl ? (
-                  <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-gray-300 bg-white shadow-sm transition-colors">
-                    <img
-                      src={displayImageUrl}
-                      alt="Campaign"
-                      className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
-                    />
-
-                    {/* Actions Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
-                      <Tooltip title="Đổi ảnh khác" arrow>
-                        <IconButton
-                          onClick={() => fileInputRef.current?.click()}
-                          sx={{
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                            color: 'var(--color-primary-600)',
-                            '&:hover': {
-                              bgcolor: 'white',
-                              transform: 'scale(1.1)',
-                            },
-                            transition: 'all 0.2s',
-                            width: 44,
-                            height: 44,
-                          }}
-                        >
-                          <AddPhotoAlternateIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Xoá ảnh hiện tại" arrow>
-                        <IconButton
-                          onClick={handleClearSelectedImage}
-                          sx={{
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                            color: '#ef4444',
-                            '&:hover': {
-                              bgcolor: '#fee2e2',
-                              color: '#b91c1c',
-                              transform: 'scale(1.1)',
-                            },
-                            transition: 'all 0.2s',
-                            width: 44,
-                            height: 44,
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="group-hover:text-primary-600 flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors">
-                      <AddPhotoAlternateIcon fontSize="medium" />
-                    </div>
-                    <div className="mt-3 text-center">
-                      <p className="text-sm font-semibold text-gray-700">
-                        Nhấn để tải ảnh lên
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Kích thước khuyên dùng: 1200x675 (16:9)
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-center text-xs text-gray-500">
-                  Định dạng hỗ trợ: JPG, PNG, WEBP.
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </div>
-            </div>
-
-            {!isEditMode && !hideApplyScope && (
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">
-                    Chi nhánh áp dụng chiến dịch{' '}
-                    <span className="text-xs font-normal text-red-500 italic">
-                      (Phải chọn ít nhất 1 chi nhánh)
-                    </span>
-                  </p>
-                  {subscribedBranches.length > 0 &&
-                    selectedBranchIds !== null &&
-                    selectedBranchIds.length !== subscribedBranches.length && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setValue('branchIds', null, {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          });
-                        }}
-                        className="text-primary-600 hover:text-primary-700 text-xs font-semibold transition-colors hover:underline"
-                      >
-                        Chọn tất cả
-                      </button>
-                    )}
-                </div>
-                {subscribedBranches.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    Không có chi nhánh khả dụng.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {subscribedBranches.map((branch) => {
-                      const isSelected =
-                        selectedBranchIds === null ||
-                        selectedBranchIds.includes(branch.branchId);
-                      return (
-                        <Chip
-                          key={branch.branchId}
-                          label={branch.name}
-                          color={isSelected ? 'primary' : 'default'}
-                          variant={isSelected ? 'filled' : 'outlined'}
-                          onClick={() => {
-                            let newSelected: number[];
-                            if (selectedBranchIds === null) {
-                              newSelected = subscribedBranches
-                                .map((b) => b.branchId)
-                                .filter((id) => id !== branch.branchId);
-                            } else {
-                              if (selectedBranchIds.includes(branch.branchId)) {
-                                newSelected = selectedBranchIds.filter(
-                                  (id) => id !== branch.branchId
-                                );
-                              } else {
-                                newSelected = [
-                                  ...selectedBranchIds,
-                                  branch.branchId,
-                                ];
-                              }
-                            }
-
-                            // Phải bắt buộc chọn ít nhất 1 nhánh
-                            if (newSelected.length === 0) {
-                              return;
-                            }
-
-                            if (
-                              newSelected.length === subscribedBranches.length
-                            ) {
-                              setValue('branchIds', null, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              });
-                            } else {
-                              setValue('branchIds', newSelected, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              });
-                            }
-                          }}
-                          className="cursor-pointer font-medium transition-all hover:opacity-80"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-                {errors.branchIds?.message && (
-                  <p className="mt-2 text-xs text-red-500">
-                    {errors.branchIds.message}
-                  </p>
-                )}
-              </div>
+          <div className="flex flex-col gap-6">
+            {isCampaignActiveLocked && (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                Chiến dịch đang hoạt động nên không thể chỉnh sửa.
+              </p>
             )}
 
-            {/* Dates Grid */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <fieldset
+              className="m-0 min-w-0 border-0 p-0"
+              disabled={isCampaignActiveLocked}
+            >
+              {/* ── SECTION 1: Thông tin cơ bản ── */}
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày bắt đầu chiến dịch{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('startDate')}
-                  min={isEditMode ? undefined : getTodayMinVN()}
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.startDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.startDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.startDate.message}
+                {sectionLabel('Thông tin cơ bản')}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Tên chiến dịch <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register('name')}
+                      className={inputClass(!!errors.name)}
+                      placeholder="Nhập tên chiến dịch"
+                    />
+                    {errors.name && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.name.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Phân khúc mục tiêu
+                    </label>
+                    <input
+                      {...register('targetSegment')}
+                      className={inputClass(false)}
+                      placeholder="VD: Học sinh, Sinh viên"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* ── SECTION 2: Nội dung & Hình ảnh ── */}
+              <div>
+                {sectionLabel('Nội dung & Hình ảnh')}
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Mô tả
+                    </label>
+                    <textarea
+                      {...register('description')}
+                      rows={3}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                      placeholder="Nhập mô tả chiến dịch"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Ảnh banner chiến dịch
+                    </label>
+                    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      {displayImageUrl ? (
+                        <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition-colors">
+                          <img
+                            src={displayImageUrl}
+                            alt="Campaign"
+                            className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
+                          />
+
+                          <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
+                            <Tooltip title="Đổi ảnh khác" arrow>
+                              <IconButton
+                                onClick={() => fileInputRef.current?.click()}
+                                sx={{
+                                  bgcolor: 'rgba(255,255,255,0.95)',
+                                  color: 'var(--color-primary-600)',
+                                  '&:hover': {
+                                    bgcolor: 'white',
+                                    transform: 'scale(1.1)',
+                                  },
+                                  transition: 'all 0.2s',
+                                  width: 44,
+                                  height: 44,
+                                }}
+                              >
+                                <AddPhotoAlternateIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Xoá ảnh hiện tại" arrow>
+                              <IconButton
+                                onClick={handleClearSelectedImage}
+                                sx={{
+                                  bgcolor: 'rgba(255,255,255,0.95)',
+                                  color: '#ef4444',
+                                  '&:hover': {
+                                    bgcolor: '#fee2e2',
+                                    color: '#b91c1c',
+                                    transform: 'scale(1.1)',
+                                  },
+                                  transition: 'all 0.2s',
+                                  width: 44,
+                                  height: 44,
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <div className="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors hover:group-hover:text-amber-600">
+                            <AddPhotoAlternateIcon fontSize="medium" />
+                          </div>
+                          <div className="mt-3 text-center">
+                            <p className="text-sm font-semibold text-gray-700">
+                              Nhấn để tải ảnh lên
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Kích thước khuyên dùng: 1200x675 (16:9)
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-center text-xs text-gray-500">
+                        Định dạng hỗ trợ: JPG, PNG, WEBP.
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* ── SECTION 3: Chi nhánh áp dụng ── */}
+              {!isEditMode &&
+                !hideApplyScope &&
+                subscribedBranches.length > 0 && (
+                  <>
+                    <div>
+                      {sectionLabel('Chi nhánh áp dụng')}
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-normal text-red-500 italic">
+                          (Phải chọn ít nhất 1 chi nhánh)
+                        </p>
+                        {selectedBranchIds !== null &&
+                          selectedBranchIds.length !==
+                            subscribedBranches.length && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setValue('branchIds', null, {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                });
+                              }}
+                              className="hover:text-primary-700 text-xs font-semibold text-amber-600 transition-colors hover:underline"
+                            >
+                              Chọn tất cả
+                            </button>
+                          )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {subscribedBranches.map((branch) => {
+                          const isSelected =
+                            selectedBranchIds === null ||
+                            selectedBranchIds.includes(branch.branchId);
+                          return (
+                            <Chip
+                              key={branch.branchId}
+                              label={branch.name}
+                              color={isSelected ? 'primary' : 'default'}
+                              variant={isSelected ? 'filled' : 'outlined'}
+                              onClick={() => {
+                                let newSelected: number[];
+                                if (selectedBranchIds === null) {
+                                  newSelected = subscribedBranches
+                                    .map((b) => b.branchId)
+                                    .filter((id) => id !== branch.branchId);
+                                } else {
+                                  if (
+                                    selectedBranchIds.includes(branch.branchId)
+                                  ) {
+                                    newSelected = selectedBranchIds.filter(
+                                      (id) => id !== branch.branchId
+                                    );
+                                  } else {
+                                    newSelected = [
+                                      ...selectedBranchIds,
+                                      branch.branchId,
+                                    ];
+                                  }
+                                }
+                                if (newSelected.length === 0) return;
+
+                                if (
+                                  newSelected.length ===
+                                  subscribedBranches.length
+                                ) {
+                                  setValue('branchIds', null, {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  });
+                                } else {
+                                  setValue('branchIds', newSelected, {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  });
+                                }
+                              }}
+                              className="cursor-pointer font-medium transition-all hover:opacity-80"
+                            />
+                          );
+                        })}
+                      </div>
+                      {errors.branchIds?.message && (
+                        <p className="mt-2 text-xs text-red-500">
+                          {errors.branchIds.message}
+                        </p>
+                      )}
+                    </div>
+                    <hr className="border-gray-100" />
+                  </>
+                )}
+
+              {/* ── SECTION 4: Thời gian chiến dịch ── */}
+              <div>
+                {sectionLabel('Thời gian chiến dịch')}
+                {isEditMode && hasExistingVouchers && (
+                  <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                    Campaign đã có voucher nên không thể chỉnh sửa thời gian tổ
+                    chức.
                   </p>
                 )}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Ngày bắt đầu chiến dịch{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      {...register('startDate')}
+                      min={getTodayMinVN()}
+                      disabled={isCampaignScheduleLocked}
+                      className={`${inputClass(!!errors.startDate)} ${isCampaignScheduleLocked ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
+                    />
+                    {errors.startDate && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.startDate.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Ngày kết thúc chiến dịch{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      {...register('endDate')}
+                      disabled={!startDate || isCampaignScheduleLocked}
+                      min={startDate || getTodayMinVN()}
+                      className={`${inputClass(!!errors.endDate)} ${!startDate || isCampaignScheduleLocked ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
+                    />
+                    {errors.endDate && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.endDate.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Ngày kết thúc chiến dịch{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  {...register('endDate')}
-                  disabled={!isEditMode && !startDate}
-                  min={isEditMode ? undefined : (startDate ?? undefined)}
-                  step="60"
-                  className={`w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
-                    errors.endDate
-                      ? 'border-red-500 focus:ring-red-200'
-                      : !isEditMode && !startDate
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100'
-                        : 'border-gray-300 focus:ring-amber-200'
-                  }`}
-                />
-                {errors.endDate && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.endDate.message}
-                  </p>
-                )}
-              </div>
-              <div className="hidden xl:block" />
-            </div>
+            </fieldset>
           </div>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
@@ -565,7 +615,11 @@ export default function VendorCampaignFormModal({
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === 'pending'}
+            disabled={
+              isCampaignActiveLocked ||
+              status === 'pending' ||
+              (isEditMode && !isDirty && !hasImageChanged)
+            }
             startIcon={
               status === 'pending' ? <CircularProgress size={20} /> : null
             }

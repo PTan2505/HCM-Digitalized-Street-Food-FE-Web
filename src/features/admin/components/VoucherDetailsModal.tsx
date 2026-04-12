@@ -1,21 +1,12 @@
 import { useEffect } from 'react';
 import type { JSX } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  IconButton,
-  Box,
-  Typography,
-  Chip,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Dialog, DialogContent, Chip } from '@mui/material';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import type { Voucher } from '@custom-types/voucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectCampaigns } from '@slices/campaign';
 import useCampaign from '@features/admin/hooks/useCampaign';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface VoucherDetailsModalProps {
   isOpen: boolean;
@@ -42,6 +33,17 @@ const formatCurrency = (value: number): string =>
     value
   );
 
+const formatDiscountText = (voucher: Voucher): string => {
+  if (voucher.type === 'PERCENT') {
+    const maxDiscountText = voucher.maxDiscountValue
+      ? ` (tối đa ${formatCurrency(voucher.maxDiscountValue)})`
+      : '';
+    return `${voucher.discountValue}%${maxDiscountText}`;
+  }
+
+  return formatCurrency(voucher.discountValue);
+};
+
 export default function VoucherDetailsModal({
   isOpen,
   onClose,
@@ -58,99 +60,143 @@ export default function VoucherDetailsModal({
 
   if (!isOpen || !voucher) return null;
 
-  const campaignName =
-    campaigns.find((c) => c.campaignId === voucher.campaignId)?.name ??
-    (voucher.campaignId ? `ID: ${voucher.campaignId}` : '-');
+  const campaignName = voucher.campaignId
+    ? (campaigns.find((campaign) => campaign.campaignId === voucher.campaignId)
+        ?.name ?? 'Không')
+    : null;
+
+  const remainQuantity =
+    voucher.remain ?? Math.max(voucher.quantity - voucher.usedQuantity, 0);
+  const usagePercent =
+    voucher.quantity > 0
+      ? Math.min((voucher.usedQuantity / voucher.quantity) * 100, 100)
+      : 0;
+
+  const TagBadge = ({
+    label,
+    type,
+  }: {
+    label: string;
+    type: 'success' | 'error' | 'info' | 'default';
+  }): JSX.Element => {
+    const colors = {
+      success: 'bg-green-100 text-green-700 border-green-200',
+      error: 'bg-red-100 text-red-700 border-red-200',
+      info: 'bg-blue-100 text-blue-700 border-blue-200',
+      default: 'bg-slate-100 text-slate-700 border-slate-200',
+    };
+
+    return (
+      <span
+        className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      >
+        {label}
+      </span>
+    );
+  };
 
   const DetailItem = ({
     label,
     value,
   }: {
     label: string;
-    value: React.ReactNode;
+    value: string | number;
   }): JSX.Element => (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="body2" color="text.secondary" fontWeight="bold">
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
+      <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
         {label}
-      </Typography>
-      <Box sx={{ mt: 0.5 }}>{value}</Box>
-    </Box>
+      </p>
+      <p className="text-table-text-primary mt-1 text-sm font-semibold">
+        {value}
+      </p>
+    </div>
   );
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-        Chi tiết voucher: {voucher.name}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={(theme) => ({
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: theme.palette.grey[500],
-          })}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <DetailItem label="ID Voucher" value={voucher.voucherId} />
-          </div>
-          <div>
-            <DetailItem
-              label="Mã Voucher"
-              value={
-                <Chip
-                  label={voucher.voucherCode}
-                  size="small"
-                  color="default"
-                  variant="outlined"
-                  sx={{ fontWeight: 'bold' }}
-                />
-              }
-            />
-          </div>
-          <div>
-            <DetailItem
-              label="Loại"
-              value={
-                <Chip
-                  label={voucher.type === 'PERCENT' ? 'Phần trăm' : 'Giá tiền'}
-                  size="small"
-                  color={voucher.type === 'PERCENT' ? 'info' : 'primary'}
-                />
-              }
-            />
-          </div>
-          <div>
-            <DetailItem
-              label="Trạng thái"
-              value={
-                <Chip
-                  label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
-                  size="small"
-                  color={voucher.isActive ? 'success' : 'error'}
-                />
-              }
-            />
+    <Dialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
+      <AppModalHeader
+        title="Chi tiết voucher"
+        subtitle={voucher.name}
+        icon={<LocalOfferIcon />}
+        iconTone="voucher"
+        onClose={onClose}
+      />
+      <DialogContent dividers sx={{ backgroundColor: '#f8fafc' }}>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <Chip
+                label={voucher.voucherCode}
+                size="small"
+                color="default"
+                variant="outlined"
+                sx={{ fontWeight: 'bold' }}
+              />
+              <TagBadge
+                label={voucher.type === 'PERCENT' ? 'Phần trăm' : 'Giá tiền'}
+                type={voucher.type === 'PERCENT' ? 'info' : 'default'}
+              />
+              <TagBadge
+                label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+                type={voucher.isActive ? 'success' : 'error'}
+              />
+              <Chip
+                label={
+                  campaignName ? `Chiến dịch: ${campaignName}` : 'MarketPlace'
+                }
+                size="small"
+                color={campaignName ? 'info' : 'secondary'}
+                variant={campaignName ? 'outlined' : 'filled'}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Giá trị giảm
+                </p>
+                <p className="text-primary-700 mt-1 text-sm font-bold">
+                  {formatDiscountText(voucher)}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Đơn tối thiểu
+                </p>
+                <p className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {formatCurrency(voucher.minAmountRequired)}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Điểm đổi
+                </p>
+                <p className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {voucher.redeemPoint}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Còn lại / Tổng
+                </p>
+                <p className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {remainQuantity} / {voucher.quantity}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <p className="text-table-text-secondary text-xs">
+                Đã dùng {voucher.usedQuantity} ({Math.round(usagePercent)}%)
+              </p>
+            </div>
           </div>
 
-          <div>
-            <DetailItem
-              label="Giá trị giảm"
-              value={
-                <Typography variant="body1" fontWeight="bold" color="primary">
-                  {voucher.type === 'PERCENT'
-                    ? `${voucher.discountValue}%`
-                    : formatCurrency(voucher.discountValue)}
-                </Typography>
-              }
-            />
-          </div>
-          <div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <DetailItem label="Tên voucher" value={voucher.name} />
             <DetailItem
               label="Giảm tối đa"
               value={
@@ -159,80 +205,36 @@ export default function VoucherDetailsModal({
                   : '-'
               }
             />
-          </div>
-
-          <div>
-            <DetailItem
-              label="Đơn hàng tối thiểu"
-              value={formatCurrency(voucher.minAmountRequired)}
-            />
-          </div>
-          <div>
-            <DetailItem
-              label="Điểm đổi (Redeem Point)"
-              value={voucher.redeemPoint}
-            />
-          </div>
-
-          <div>
-            <DetailItem label="Số lượng phát hành" value={voucher.quantity} />
-          </div>
-          <div>
-            <DetailItem label="Chiến dịch" value={campaignName} />
-          </div>
-
-          <div>
             <DetailItem
               label="Ngày bắt đầu"
               value={formatVNDatetime(voucher.startDate)}
             />
-          </div>
-          <div>
             <DetailItem
               label="Ngày kết thúc"
               value={formatVNDatetime(voucher.endDate)}
             />
-          </div>
-          <div>
             <DetailItem
               label="Ngày hết hạn truy cập"
               value={formatVNDatetime(voucher.expiredDate)}
             />
-          </div>
-          <div>
             <DetailItem
               label="Ngày tạo (Hệ thống)"
               value={formatVNDatetime(voucher.createdAt ?? null)}
             />
+            <DetailItem label="Số lượng phát hành" value={voucher.quantity} />
+            <DetailItem label="Đã sử dụng" value={voucher.usedQuantity} />
           </div>
 
-          <div className="sm:col-span-2">
-            <DetailItem
-              label="Mô tả"
-              value={
-                <Typography
-                  variant="body2"
-                  sx={{
-                    whiteSpace: 'pre-wrap',
-                    bgcolor: 'grey.50',
-                    p: 1.5,
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'grey.200',
-                  }}
-                >
-                  {voucher.description ?? 'Không có mô tả'}
-                </Typography>
-              }
-            />
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Mô tả
+            </p>
+            <p className="text-table-text-secondary mt-2 text-sm leading-6 whitespace-pre-wrap">
+              {voucher.description ?? 'Không có mô tả'}
+            </p>
           </div>
         </div>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="contained" color="primary">
-          Đóng
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Paper,
   Table,
   TableBody,
@@ -19,8 +18,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import type { Branch, UserSearchItem } from '@features/vendor/types/vendor';
 import useVendor from '@features/vendor/hooks/useVendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import { useAppSelector } from '@hooks/reduxHooks';
+import { selectMyVendor } from '@slices/vendor';
 
 interface BranchManagerModalProps {
   isOpen: boolean;
@@ -36,6 +39,7 @@ export default function BranchManagerModal({
   onAssigned,
 }: BranchManagerModalProps): JSX.Element {
   const { onSearchUsers, onUpdateBranchManager } = useVendor();
+  const myVendor = useAppSelector(selectMyVendor);
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<UserSearchItem[]>([]);
   const [searching, setSearching] = useState(false);
@@ -43,6 +47,15 @@ export default function BranchManagerModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const trimmedQuery = useMemo(() => query.trim(), [query]);
+  const managedBranchNameByUserId = useMemo(() => {
+    const map = new Map<number, string>();
+
+    (myVendor?.branches ?? []).forEach((vendorBranch) => {
+      map.set(vendorBranch.managerId, vendorBranch.name);
+    });
+
+    return map;
+  }, [myVendor?.branches]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -112,14 +125,14 @@ export default function BranchManagerModal({
       maxWidth="md"
       aria-labelledby="update-manager-dialog-title"
     >
-      <DialogTitle id="update-manager-dialog-title">
-        Cập nhật người quản lý
-      </DialogTitle>
+      <VendorModalHeader
+        title="Cập nhật người quản lý"
+        subtitle={branch?.name ?? '-'}
+        icon={<ManageAccountsIcon />}
+        iconTone="branch"
+        onClose={onClose}
+      />
       <DialogContent className="flex flex-col gap-4">
-        <Typography variant="body2" color="text.secondary">
-          Chi nhánh: {branch?.name ?? '-'}
-        </Typography>
-
         <TextField
           fullWidth
           size="small"
@@ -178,20 +191,72 @@ export default function BranchManagerModal({
               ) : (
                 users.map((user) => {
                   const isAssigning = assigningUserId === user.id;
+                  const assignedBranchName = managedBranchNameByUserId.get(
+                    user.id
+                  );
+                  const isAlreadyManager =
+                    typeof assignedBranchName === 'string';
+                  let selectButtonLabel = 'Chọn';
+
+                  if (isAssigning) {
+                    selectButtonLabel = 'Đang cập nhật...';
+                  } else if (isAlreadyManager) {
+                    selectButtonLabel = 'Đang quản lý';
+                  }
+
                   return (
                     <TableRow key={user.id} hover>
                       <TableCell>{user.userName ?? '-'}</TableCell>
                       <TableCell>{user.email ?? '-'}</TableCell>
                       <TableCell>{user.phoneNumber ?? '-'}</TableCell>
                       <TableCell align="right">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          disabled={assigningUserId !== null}
-                          onClick={() => void handleSelectManager(user)}
-                        >
-                          {isAssigning ? 'Đang cập nhật...' : 'Chọn'}
-                        </Button>
+                        <Box className="flex flex-col items-end gap-1">
+                          <Button
+                            variant={isAlreadyManager ? 'text' : 'outlined'}
+                            size="small"
+                            disabled={
+                              assigningUserId !== null || isAlreadyManager
+                            }
+                            onClick={() => void handleSelectManager(user)}
+                            sx={{
+                              minWidth: 140,
+                              fontWeight: 700,
+                              ...(isAlreadyManager
+                                ? {
+                                    borderRadius: '9999px',
+                                    border: '1px solid #f59e0b',
+                                    color: '#b45309',
+                                    backgroundColor: '#fffbeb',
+                                    '&.Mui-disabled': {
+                                      border: '1px solid #f59e0b',
+                                      color: '#b45309',
+                                      backgroundColor: '#fffbeb',
+                                    },
+                                  }
+                                : {
+                                    borderColor: 'var(--color-primary-500)',
+                                    color: 'var(--color-primary-700)',
+                                    '&:hover': {
+                                      borderColor: 'var(--color-primary-700)',
+                                      backgroundColor:
+                                        'var(--color-primary-50)',
+                                    },
+                                    '&.Mui-disabled': {
+                                      borderColor: '#cbd5e1',
+                                      color: '#64748b',
+                                    },
+                                  }),
+                            }}
+                          >
+                            {selectButtonLabel}
+                          </Button>
+
+                          {isAlreadyManager && assignedBranchName ? (
+                            <Typography className="text-xs font-medium text-amber-700">
+                              Chi nhánh: {assignedBranchName}
+                            </Typography>
+                          ) : null}
+                        </Box>
                       </TableCell>
                     </TableRow>
                   );
