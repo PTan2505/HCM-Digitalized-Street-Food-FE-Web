@@ -19,12 +19,12 @@ export interface ManagerOrder {
   branchName: string;
   status: number;
   table: string | null;
+  note: string | null;
   paymentMethod: string | null;
   totalAmount: number;
   discountAmount: number | null;
   finalAmount: number;
   isTakeAway: boolean;
-  note?: string | null;
   lockedAt: string | null;
   createdAt: string;
   updatedAt: string;
