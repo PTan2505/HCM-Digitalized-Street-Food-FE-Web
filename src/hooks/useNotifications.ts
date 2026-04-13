@@ -115,9 +115,14 @@ export const useNotifications = (
       setIsConnected(true);
       setConnectionError(null);
 
-      // Handle incoming real-time notifications (NewFeedback, NewOrder)
+      // Handle incoming real-time notifications (NewFeedback, NewOrder, BranchVerificationStatus)
       const handler = (data: NotificationDto): void => {
-        if (data.type !== 'NewFeedback' && data.type !== 'NewOrder') return;
+        if (
+          data.type !== 'NewFeedback' &&
+          data.type !== 'NewOrder' &&
+          data.type !== 'BranchVerificationStatus'
+        )
+          return;
 
         console.log('📬 New notification:', data);
         playNotificationSound(data.type, data.message);
