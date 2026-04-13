@@ -199,9 +199,9 @@ export const OrderDetailDialog = ({
         rightActions={
           detailOrder ? (
             <div className="flex items-center gap-2">
-              <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-500">
+              {/* <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-500">
                 #{detailOrder.orderId}
-              </span>
+              </span> */}
               <OrderStatusBadge
                 label={getOrderStatusMeta(detailOrder.status).label}
                 type={getOrderStatusMeta(detailOrder.status).type}
@@ -356,9 +356,9 @@ export const OrderDetailDialog = ({
                       <Typography className="text-table-text-primary truncate text-sm font-semibold">
                         {item.dishName}
                       </Typography>
-                      <Typography className="text-table-text-secondary text-xs">
+                      {/* <Typography className="text-table-text-secondary text-xs">
                         Mã món: #{item.dishId}
-                      </Typography>
+                      </Typography> */}
                     </Box>
                     <Typography className="text-right text-sm font-semibold text-gray-700">
                       x{item.quantity}
