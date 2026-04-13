@@ -6,7 +6,10 @@ import {
   Typography,
   Button,
 } from '@mui/material';
-import type { JSX } from 'react';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import { useEffect, useRef, useState, type JSX } from 'react';
 import type { VendorOrder } from '@features/vendor/types/order';
 import {
   getOrderStatusMeta,
@@ -90,10 +93,86 @@ const getDisplayOrderItemAmount = (
 export const OrderDetailDialog = ({
   detailOrder,
   onClose,
+  onUpdateOrderTable,
+  tableAutoEditKey,
 }: {
   detailOrder: VendorOrder | null;
   onClose: () => void;
+  onUpdateOrderTable: (orderId: number, table: string) => Promise<void>;
+  tableAutoEditKey?: number;
 }): JSX.Element => {
+  const [isEditingTable, setIsEditingTable] = useState(false);
+  const [tableDraft, setTableDraft] = useState('');
+  const [isSavingTable, setIsSavingTable] = useState(false);
+  const lastAutoEditKeyRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!detailOrder) {
+      setIsEditingTable(false);
+      setTableDraft('');
+      setIsSavingTable(false);
+      return;
+    }
+
+    setIsEditingTable(false);
+    setTableDraft(detailOrder.table?.trim() ?? '');
+  }, [detailOrder]);
+
+  useEffect(() => {
+    if (
+      !detailOrder ||
+      detailOrder.isTakeAway ||
+      tableAutoEditKey === undefined
+    ) {
+      return;
+    }
+
+    if (lastAutoEditKeyRef.current === tableAutoEditKey) {
+      return;
+    }
+
+    lastAutoEditKeyRef.current = tableAutoEditKey;
+
+    if (detailOrder.table?.trim()) {
+      return;
+    }
+
+    setIsEditingTable(true);
+    setTableDraft(detailOrder.table?.trim() ?? '');
+  }, [detailOrder, tableAutoEditKey]);
+
+  const canEditTable = Boolean(detailOrder) && !detailOrder.isTakeAway;
+
+  const handleStartEditTable = (): void => {
+    if (!canEditTable || !detailOrder) return;
+    setTableDraft(detailOrder.table?.trim() ?? '');
+    setIsEditingTable(true);
+  };
+
+  const handleCancelEditTable = (): void => {
+    setTableDraft(detailOrder?.table?.trim() ?? '');
+    setIsEditingTable(false);
+  };
+
+  const handleSaveTable = async (): Promise<void> => {
+    if (!detailOrder || isSavingTable) {
+      return;
+    }
+
+    const sanitizedTable = tableDraft.trim();
+    if (sanitizedTable.length === 0) {
+      return;
+    }
+
+    setIsSavingTable(true);
+    try {
+      await onUpdateOrderTable(detailOrder.orderId, sanitizedTable);
+      setIsEditingTable(false);
+    } finally {
+      setIsSavingTable(false);
+    }
+  };
+
   return (
     <Dialog
       open={detailOrder !== null}
@@ -162,9 +241,63 @@ export const OrderDetailDialog = ({
                 <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                   Bàn
                 </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {detailOrder?.table?.trim() ? detailOrder.table.trim() : '-'}
-                </Typography>
+                {isEditingTable ? (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <input
+                      value={tableDraft}
+                      onChange={(event) => setTableDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          void handleSaveTable();
+                        }
+
+                        if (event.key === 'Escape') {
+                          event.preventDefault();
+                          handleCancelEditTable();
+                        }
+                      }}
+                      className="focus:border-primary-500 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm outline-none"
+                      autoFocus
+                      disabled={isSavingTable}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleSaveTable();
+                      }}
+                      disabled={isSavingTable || tableDraft.trim().length === 0}
+                      className="inline-flex h-7 w-7 items-center justify-center text-green-700 transition-colors hover:text-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <CheckIcon sx={{ fontSize: 18, color: '#166534' }} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditTable}
+                      disabled={isSavingTable}
+                      className="inline-flex h-7 w-7 items-center justify-center text-red-700 transition-colors hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <CloseIcon sx={{ fontSize: 18, color: '#b91c1c' }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <Typography className="text-table-text-primary text-sm font-semibold">
+                      {detailOrder?.table?.trim()
+                        ? detailOrder.table.trim()
+                        : '-'}
+                    </Typography>
+                    {canEditTable ? (
+                      <button
+                        type="button"
+                        onClick={handleStartEditTable}
+                        className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-700"
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </button>
+                    ) : null}
+                  </div>
+                )}
               </Box>
               <Box className="rounded-lg border border-gray-200/60 bg-white p-3">
                 <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
@@ -187,7 +320,7 @@ export const OrderDetailDialog = ({
                 <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                   Ghi chú
                 </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
+                <Typography className="text-table-text-primary mt-1 text-sm font-semibold whitespace-pre-wrap">
                   {detailOrder?.note?.trim() ? detailOrder.note.trim() : '-'}
                 </Typography>
               </Box>
