@@ -189,6 +189,14 @@ export const OrderDetailDialog = ({
                     `User #${detailOrder?.userId ?? '-'}`}
                 </Typography>
               </Box>
+              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
+                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                  Ghi chú
+                </Typography>
+                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
+                  {detailOrder?.note?.trim() ? detailOrder.note.trim() : '-'}
+                </Typography>
+              </Box>
             </Box>
           </Box>
 
