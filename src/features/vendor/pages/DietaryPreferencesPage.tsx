@@ -2,7 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { Box, Checkbox, CircularProgress, Chip } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import SaveIcon from '@mui/icons-material/Save';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import useVendor from '@features/vendor/hooks/useVendor';
 import useDietary from '@features/admin/hooks/useDietary';
@@ -16,6 +23,7 @@ import {
   selectUserDietaryPreferenceStatus,
   selectUserDietaryPreferences,
 } from '@slices/userPreferenceDietary';
+import { getDietaryPreferencesTourSteps } from '@features/vendor/utils/dietaryPreferencesTourSteps';
 
 export default function DietaryPreferencesPage(): JSX.Element {
   const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
@@ -37,6 +45,8 @@ export default function DietaryPreferencesPage(): JSX.Element {
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const initialIdSet = useMemo(
@@ -99,6 +109,28 @@ export default function DietaryPreferencesPage(): JSX.Element {
     }
   };
 
+  const startDietaryTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getDietaryPreferencesTourSteps({
+      hasRows: dietaryPreferences.length > 0,
+    });
+  }, [dietaryPreferences.length]);
+
   const columns = [
     {
       key: 'select',
@@ -141,7 +173,7 @@ export default function DietaryPreferencesPage(): JSX.Element {
       key: 'description',
       label: 'Mô tả',
       render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-secondary block max-w-[560px]">
+        <Box className="text-table-text-secondary block max-w-140">
           {typeof value === 'string' && value.trim() !== '' ? value : '-'}
         </Box>
       ),
@@ -175,32 +207,73 @@ export default function DietaryPreferencesPage(): JSX.Element {
   const loading = vendorStatus === 'pending' || dietaryStatus === 'pending';
 
   return (
-    <div className="font-[var(--font-nunito)]">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="dietary-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Chế độ ăn của cửa hàng
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Chế độ ăn của cửa hàng
+            </h1>
+            <button
+              type="button"
+              onClick={startDietaryTour}
+              aria-label="Mở hướng dẫn chế độ ăn"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
             Chọn các chế độ ăn phù hợp mà cửa hàng của bạn đang phục vụ
           </p>
         </div>
 
-        <button
-          onClick={() => void handleSave()}
-          disabled={loading || isSaving || !isDirty}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
-        >
-          {isSaving ? (
-            <CircularProgress size={16} color="inherit" />
-          ) : (
-            <SaveIcon fontSize="small" />
-          )}
-          {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => void handleSave()}
+            disabled={loading || isSaving || !isDirty}
+            data-tour="dietary-save-button"
+            className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
+          >
+            {isSaving ? <CircularProgress size={16} color="inherit" /> : null}
+            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+          </button>
+        </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap gap-2" data-tour="dietary-summary">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
           <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
           Tổng lựa chọn khả dụng: {dietaryPreferences.length}
@@ -211,14 +284,17 @@ export default function DietaryPreferencesPage(): JSX.Element {
         </span>
       </div>
 
-      <Table
-        columns={columns}
-        data={dietaryPreferences}
-        rowKey="dietaryPreferenceId"
-        loading={loading}
-        emptyMessage="Chưa có chế độ ăn nào"
-        maxHeight="calc(100vh - 240px)"
-      />
+      <div data-tour="dietary-table-wrapper">
+        <Table
+          columns={columns}
+          data={dietaryPreferences}
+          rowKey="dietaryPreferenceId"
+          loading={loading}
+          emptyMessage="Chưa có chế độ ăn nào"
+          maxHeight="calc(100vh - 240px)"
+          tourId="vendor-dietary"
+        />
+      </div>
     </div>
   );
 }

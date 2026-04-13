@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import type { JSX } from 'react';
 import type { Campaign } from '@features/admin/types/campaign';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import IconButton from '@mui/material/IconButton';
 import { CircularProgress, Dialog, Tooltip } from '@mui/material';
+import ImageIcon from '@mui/icons-material/Image';
+import CloseIcon from '@mui/icons-material/Close';
 import useCampaign from '@features/admin/hooks/useCampaign';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectCampaignStatus, selectCampaigns } from '@slices/campaign';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface CampaignImageModalProps {
   isOpen: boolean;
@@ -88,40 +90,20 @@ export default function CampaignImageModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-[var(--font-nunito)]"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-(--font-nunito)"
         onClick={onClose}
       >
         <div
           className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Ảnh chiến dịch
-              </h2>
-              <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                  #{campaign.campaignId}
-                </span>
-                {campaign.name}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <IconButton
-                size="small"
-                onClick={onClose}
-                sx={{
-                  bgcolor: 'white',
-                  border: '1px solid #f3f4f6',
-                  '&:hover': { bgcolor: '#f3f4f6' },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </div>
-          </div>
+          <AppModalHeader
+            title="Ảnh chiến dịch"
+            subtitle={`#${campaign.campaignId} - ${campaign.name}`}
+            icon={<ImageIcon />}
+            iconTone="campaign"
+            onClose={onClose}
+          />
 
           {/* Body */}
           <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-gray-50/30 p-8">
@@ -150,7 +132,7 @@ export default function CampaignImageModal({
                   </p>
                 </div>
                 <button
-                  className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--color-primary-600)] px-8 py-3 font-bold text-white transition-all hover:bg-[var(--color-primary-700)] hover:shadow-xl active:scale-95"
+                  className="bg-primary-600 hover:bg-primary-700 mt-4 flex items-center gap-2 rounded-xl px-8 py-3 font-bold text-white transition-all hover:shadow-xl active:scale-95"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={status === 'pending'}
                 >
@@ -159,7 +141,7 @@ export default function CampaignImageModal({
                 </button>
               </div>
             ) : (
-              <div className="group relative flex min-h-[300px] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-white p-2 shadow-sm transition hover:border-[var(--color-primary-400)] hover:shadow-md">
+              <div className="group hover:border-primary-400 relative flex min-h-75 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-white p-2 shadow-sm transition hover:shadow-md">
                 <img
                   src={currentImageUrl}
                   alt="Campaign"
@@ -307,11 +289,11 @@ export default function CampaignImageModal({
       {/* Confirm delete dialog */}
       {confirmDelete && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setConfirmDelete(false)}
         >
           <div
-            className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 font-[var(--font-nunito)] shadow-2xl"
+            className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 font-(--font-nunito) shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center gap-3">

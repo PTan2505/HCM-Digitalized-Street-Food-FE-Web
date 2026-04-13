@@ -57,7 +57,11 @@ export const apiUrl = {
     },
   },
   user: {
+    getUsers: '/User',
     getUserById: (id: number): string => `/User/${id}`,
+    banUser: (id: number): string => `/User/${id}/ban`,
+    unbanUser: (id: number): string => `/User/${id}/unban`,
+    promoteModerator: (id: number): string => `/User/${id}/promote-moderator`,
     search: '/User/search',
     userSetup: {
       userinfo: '/UserSetup/userinfo-setup',
@@ -173,6 +177,8 @@ export const apiUrl = {
   campaign: {
     GetOrPostSystemCampaign: '/Campaign/system',
     GetOrPostVendorCampaign: '/Campaign/vendor',
+    GetCampaignDetail: (campaignId: number): string =>
+      `/Campaign/${campaignId}`,
     GetOrPostBranchCampaign: (branchId: number): string =>
       `/Campaign/branch/${branchId}`,
     GetJoinableSystemCampaigns: '/Campaign/system/joinable',
@@ -187,6 +193,8 @@ export const apiUrl = {
     DeleteAImageOfACampaign: (campaignId: number): string =>
       `/Campaign/${campaignId}/image`,
     GetBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/system/${campaignId}/branches`,
+    GetVendorBranchesOfACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches`,
     AddBranchesToACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches/add`,
@@ -209,5 +217,19 @@ export const apiUrl = {
       `/vouchers/${voucherId}`,
     GetVouchersOfACampaign: (campaignId: number): string =>
       `/vouchers/campaign/${campaignId}`,
+  },
+  vendorDashboard: {
+    getRevenue: '/VendorDashboard/revenue',
+    getVouchers: '/VendorDashboard/vouchers',
+    getDishes: '/VendorDashboard/dishes',
+  },
+  adminDashboard: {
+    getUserSignUps: '/AdminDashboard/user-signups',
+    getMoney: '/AdminDashboard/money',
+    getCompensation: '/AdminDashboard/compensation',
+    getUserToVendorConversions: '/AdminDashboard/user-to-vendor-conversions',
+  },
+  branch: {
+    getBranches: '/Branch',
   },
 };

@@ -1,9 +1,11 @@
 import type { JSX } from 'react';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { DietaryFormSchema } from '@features/admin/utils/dietaryFormSchema';
 import { useEffect } from 'react';
 import type { z } from 'zod';
+import AppModalHeader from '@components/AppModalHeader';
 
 type DietaryFormSchemaType = z.infer<typeof DietaryFormSchema>;
 
@@ -33,7 +35,7 @@ export default function DietaryFormModal({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
   } = useForm<DietaryFormSchemaType>({
     resolver: zodResolver(DietaryFormSchema),
     mode: 'onChange',
@@ -67,24 +69,25 @@ export default function DietaryFormModal({
         className="mx-4 w-full max-w-lg rounded-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-            {isEditMode ? 'Chỉnh sửa chế độ ăn' : 'Thêm chế độ ăn mới'}
-          </h2>
-        </div>
+        <AppModalHeader
+          title={isEditMode ? 'Chỉnh sửa chế độ ăn' : 'Thêm chế độ ăn mới'}
+          subtitle={isEditMode ? (formData.name ?? '') : undefined}
+          icon={<RestaurantMenuIcon />}
+          iconTone="admin"
+          onClose={onClose}
+        />
 
         {/* Modal Content */}
         <div className="space-y-4 px-6 py-4">
           {/* Tên chế độ ăn */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Tên chế độ ăn <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               {...register('name')}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               placeholder="Ví dụ: Ăn chay, Không gluten..."
             />
             {errors.name && (
@@ -94,13 +97,13 @@ export default function DietaryFormModal({
 
           {/* Mô tả */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Mô tả <span className="text-red-500">*</span>
             </label>
             <textarea
               {...register('description')}
               rows={4}
-              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               placeholder="Mô tả chi tiết về chế độ ăn..."
             />
             {errors.description ? (
@@ -108,7 +111,7 @@ export default function DietaryFormModal({
                 {errors.description.message}
               </p>
             ) : (
-              <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
+              <p className="text-table-text-secondary mt-1 text-xs">
                 Mô tả các đặc điểm, hạn chế và lưu ý của chế độ ăn
               </p>
             )}
@@ -120,15 +123,15 @@ export default function DietaryFormModal({
           <button
             onClick={onClose}
             type="button"
-            className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
+            className="text-table-text-secondary rounded-lg px-4 py-2 transition-colors hover:bg-gray-100"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit(handleFormSubmit)}
             type="button"
-            disabled={!isValid}
-            className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+            disabled={isEditMode ? !isValid || !isDirty : !isValid}
+            className="bg-primary-600 hover:bg-primary-700 rounded-lg px-4 py-2 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isEditMode ? 'Cập nhật' : 'Thêm mới'}
           </button>

@@ -1,16 +1,17 @@
 import type { JSX } from 'react';
 import { Avatar } from '@mui/material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { BadgeFormSchema } from '@features/admin/utils/badgeFormSchema';
 import { useEffect, useState } from 'react';
 import type { z } from 'zod';
+import AppModalHeader from '@components/AppModalHeader';
 
 type BadgeFormSchemaType = z.infer<typeof BadgeFormSchema>;
 
 interface BadgeFormData {
   badgeName?: string;
-  pointToGet?: number;
   iconUrl?: string;
   description?: string;
   badgeId?: number;
@@ -38,13 +39,12 @@ export default function BadgeFormModal({
     reset,
     watch,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
   } = useForm<BadgeFormSchemaType>({
     resolver: zodResolver(BadgeFormSchema),
     mode: 'onChange',
     defaultValues: {
       badgeName: '',
-      pointToGet: '',
       description: '',
       imageFile: null,
     },
@@ -68,7 +68,6 @@ export default function BadgeFormModal({
     if (isOpen) {
       reset({
         badgeName: formData.badgeName ?? '',
-        pointToGet: formData.pointToGet?.toString() ?? '',
         description: formData.description ?? '',
         imageFile: null,
       });
@@ -90,24 +89,25 @@ export default function BadgeFormModal({
         className="mx-4 w-full max-w-lg rounded-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-            {isEditMode ? 'Chỉnh sửa Badge' : 'Thêm Badge mới'}
-          </h2>
-        </div>
+        <AppModalHeader
+          title={isEditMode ? 'Chỉnh sửa Badge' : 'Thêm Badge mới'}
+          subtitle={isEditMode ? (formData.badgeName ?? '') : undefined}
+          icon={<EmojiEventsIcon />}
+          iconTone="admin"
+          onClose={onClose}
+        />
 
         {/* Modal Content */}
         <div className="space-y-4 px-6 py-4">
           {/* Tên Badge */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Tên Badge <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               {...register('badgeName')}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               placeholder="Tên Badge"
             />
             {errors.badgeName && (
@@ -117,27 +117,9 @@ export default function BadgeFormModal({
             )}
           </div>
 
-          {/* Điểm yêu cầu */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
-              Điểm yêu cầu <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              {...register('pointToGet')}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
-              placeholder="0"
-            />
-            {errors.pointToGet && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.pointToGet.message}
-              </p>
-            )}
-          </div>
-
           {/* File Icon */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Icon huy hiệu
             </label>
             <input
@@ -150,22 +132,22 @@ export default function BadgeFormModal({
                   shouldDirty: true,
                 });
               }}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[var(--color-primary-50)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[var(--color-primary-700)] hover:file:bg-[var(--color-primary-100)] focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold focus:border-transparent focus:ring-2 focus:outline-none"
             />
-            <p className="mt-1 text-xs text-[var(--color-table-text-secondary)]">
+            <p className="text-table-text-secondary mt-1 text-xs">
               Tải lên hình ảnh icon cho huy hiệu
             </p>
           </div>
 
           {/* Mô tả */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Mô tả <span className="text-red-500">*</span>
             </label>
             <textarea
               {...register('description')}
               rows={3}
-              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               placeholder="Mô tả"
             />
             {errors.description && (
@@ -178,7 +160,7 @@ export default function BadgeFormModal({
           {/* Preview */}
           {previewUrl && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--color-table-text-secondary)]">
+              <span className="text-table-text-secondary text-sm">
                 Xem trước icon huy hiệu:
               </span>
               <Avatar src={previewUrl} alt="Preview" className="h-12 w-12" />
@@ -191,15 +173,15 @@ export default function BadgeFormModal({
           <button
             onClick={onClose}
             type="button"
-            className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
+            className="text-table-text-secondary rounded-lg px-4 py-2 transition-colors hover:bg-gray-100"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit(handleFormSubmit)}
             type="button"
-            disabled={!isValid}
-            className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+            disabled={isEditMode ? !isValid || !isDirty : !isValid}
+            className="bg-primary-600 hover:bg-primary-700 rounded-lg px-4 py-2 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isEditMode ? 'Cập nhật' : 'Thêm mới'}
           </button>

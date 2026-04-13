@@ -5,7 +5,6 @@ import type { JSX } from 'react';
 import type { Branch } from '@features/vendor/types/vendor';
 import { AddDayOffSchema } from '@features/vendor/utils/dayOffSchema';
 import type { AddDayOffFormData } from '@features/vendor/utils/dayOffSchema';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
@@ -17,6 +16,7 @@ import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectDayOffs, selectVendorStatus } from '@slices/vendor';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface DayOffModalProps {
   isOpen: boolean;
@@ -191,28 +191,17 @@ export default function DayOffModal({
           className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Ngày nghỉ
-              </h2>
-              <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                  #{branch.branchId}
-                </span>
-                {branch.name}
-                {dayOffs.length > 0 && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                    {dayOffs.length} đợt nghỉ
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {!showAddForm && (
+          <VendorModalHeader
+            title="Ngày nghỉ"
+            subtitle={`${branch.name}${dayOffs.length > 0 ? ` - ${dayOffs.length.toString()} đợt nghỉ` : ''}`}
+            icon={<EventBusyIcon />}
+            iconTone="branch"
+            onClose={onClose}
+            rightActions={
+              !showAddForm ? (
                 <Tooltip title="Thêm ngày nghỉ">
                   <button
+                    type="button"
                     className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
                     onClick={openAddForm}
                   >
@@ -220,20 +209,9 @@ export default function DayOffModal({
                     Thêm ngày nghỉ
                   </button>
                 </Tooltip>
-              )}
-              <IconButton
-                size="small"
-                onClick={onClose}
-                sx={{
-                  bgcolor: 'white',
-                  border: '1px solid #f3f4f6',
-                  '&:hover': { bgcolor: '#f3f4f6' },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </div>
-          </div>
+              ) : null
+            }
+          />
 
           {/* Body */}
           <div className="flex flex-1 flex-col overflow-y-auto px-8 py-6">

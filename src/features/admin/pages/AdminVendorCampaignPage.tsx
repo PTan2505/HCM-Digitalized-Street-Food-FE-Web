@@ -271,19 +271,17 @@ export default function AdminVendorCampaignPage(): JSX.Element {
       key: 'targetSegment',
       label: 'Phân khúc',
       render: (value: unknown): JSX.Element => (
-        <Chip
-          label={typeof value === 'string' && value ? value : 'Tất cả'}
-          size="small"
-          variant="outlined"
-        />
+        <Box className="text-table-text-primary">
+          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+        </Box>
       ),
     },
     {
       key: 'isActive',
-      label: 'Hoạt động',
+      label: 'Tình trạng',
       render: (value: unknown): JSX.Element => (
         <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
+          label={value === true ? 'Đang hoạt động' : 'Đã kết thúc'}
           type={value === true ? 'success' : 'error'}
         />
       ),
@@ -398,7 +396,7 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               >
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="active">Đang hoạt động</MenuItem>
-                <MenuItem value="inactive">Tạm ngưng</MenuItem>
+                <MenuItem value="inactive">Đã kết thúc</MenuItem>
               </Select>
             </FormControl>
           </div>

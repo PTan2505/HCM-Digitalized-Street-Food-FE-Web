@@ -1,9 +1,11 @@
 import type { JSX } from 'react';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { FeedbackTagFormSchema } from '@features/admin/utils/feedbackTagFormSchema';
 import { useEffect } from 'react';
 import type { z } from 'zod';
+import AppModalHeader from '@components/AppModalHeader';
 
 type FeedbackTagFormSchemaType = z.infer<typeof FeedbackTagFormSchema>;
 
@@ -33,7 +35,7 @@ export default function FeedbackTagModal({
     register,
     handleSubmit,
     reset,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
   } = useForm<FeedbackTagFormSchemaType>({
     resolver: zodResolver(FeedbackTagFormSchema),
     mode: 'onChange',
@@ -67,24 +69,27 @@ export default function FeedbackTagModal({
         className="mx-4 w-full max-w-lg rounded-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-            {isEditMode ? 'Chỉnh sửa Feedback Tag' : 'Thêm Feedback Tag mới'}
-          </h2>
-        </div>
+        <AppModalHeader
+          title={
+            isEditMode ? 'Chỉnh sửa Feedback Tag' : 'Thêm Feedback Tag mới'
+          }
+          subtitle={isEditMode ? (formData.tagName ?? '') : undefined}
+          icon={<ChatBubbleOutlineIcon />}
+          iconTone="admin"
+          onClose={onClose}
+        />
 
         {/* Modal Content */}
         <div className="space-y-4 px-6 py-4">
           {/* Tên Tag */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Tên Feedback Tag <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               {...register('tagName')}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               placeholder="Tên Feedback Tag"
             />
             {errors.tagName && (
@@ -96,13 +101,13 @@ export default function FeedbackTagModal({
 
           {/* Mô tả */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-table-text-primary)]">
+            <label className="text-table-text-primary mb-1 block text-sm font-medium">
               Mô tả <span className="text-red-500">*</span>
             </label>
             <textarea
               {...register('description')}
               rows={3}
-              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="focus:ring-primary-500 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:outline-none"
               placeholder="Mô tả"
             />
             {errors.description && (
@@ -118,15 +123,15 @@ export default function FeedbackTagModal({
           <button
             onClick={onClose}
             type="button"
-            className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
+            className="text-table-text-secondary rounded-lg px-4 py-2 transition-colors hover:bg-gray-100"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit(handleFormSubmit)}
             type="button"
-            disabled={!isValid}
-            className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+            disabled={isEditMode ? !isValid || !isDirty : !isValid}
+            className="bg-primary-600 hover:bg-primary-700 rounded-lg px-4 py-2 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isEditMode ? 'Cập nhật' : 'Thêm mới'}
           </button>

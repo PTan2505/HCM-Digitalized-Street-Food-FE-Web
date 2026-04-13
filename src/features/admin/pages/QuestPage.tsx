@@ -89,7 +89,7 @@ export default function QuestPage(): JSX.Element {
   } = useQuest();
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [openModal, setOpenModal] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -137,12 +137,11 @@ export default function QuestPage(): JSX.Element {
 
       if (imageFile && savedQuest.questId) {
         const formData = new FormData();
-        formData.append('image', imageFile);
+        formData.append('imageFile', imageFile);
         await onPostQuestImage(savedQuest.questId, formData);
       }
 
       handleCloseModal();
-      await fetchQuests();
     } catch (error) {
       console.error('Failed to save quest', error);
     }
@@ -173,7 +172,6 @@ export default function QuestPage(): JSX.Element {
       await onDeleteQuest(deletingQuest.questId);
       setOpenDeleteDialog(false);
       setDeletingQuest(null);
-      await fetchQuests();
     } catch (error) {
       console.error('Failed to delete quest', error);
     }

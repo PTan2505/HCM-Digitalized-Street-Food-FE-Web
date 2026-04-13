@@ -1,20 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
+import { Dialog, DialogContent, Box, Button, Chip } from '@mui/material';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  Box,
-  Button,
-  Chip,
-} from '@mui/material';
-import {
-  Close as CloseIcon,
   Add as AddIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
@@ -25,6 +17,7 @@ import { selectVouchers, selectVoucherStatus } from '@slices/voucher';
 import VoucherFormModal from '@features/vendor/components/VoucherFormModal';
 import VoucherDetailsModal from '@features/vendor/components/VoucherDetailsModal';
 import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface VendorCampaignVoucherModalProps {
   isOpen: boolean;
@@ -119,12 +112,16 @@ export default function VendorCampaignVoucherModal({
     setEditingVoucher(null);
   };
 
-  const handleFormSubmit = async (data: VoucherCreate): Promise<void> => {
+  const handleFormSubmit = async (
+    data: VoucherCreate | VoucherCreate[]
+  ): Promise<void> => {
     try {
       if (editingVoucher) {
-        await onUpdateVoucher(editingVoucher.voucherId, data);
+        const single = Array.isArray(data) ? data[0] : data;
+        await onUpdateVoucher(editingVoucher.voucherId, single);
       } else {
-        await onCreateVoucher(data);
+        const items = Array.isArray(data) ? data : [data];
+        await onCreateVoucher(items);
       }
       handleCloseForm();
       void fetchVouchers();
@@ -298,21 +295,13 @@ export default function VendorCampaignVoucherModal({
           },
         }}
       >
-        <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', pr: 6 }}>
-          Voucher của chiến dịch: {campaign.name}
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={(theme) => ({
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: theme.palette.grey[500],
-            })}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
+        <VendorModalHeader
+          title="Voucher chiến dịch"
+          subtitle={campaign.name}
+          icon={<LocalOfferIcon />}
+          iconTone="voucher"
+          onClose={onClose}
+        />
         <DialogContent
           dividers
           sx={{
@@ -350,6 +339,8 @@ export default function VendorCampaignVoucherModal({
         voucher={editingVoucher}
         status={status}
         fixedCampaignId={campaign.campaignId}
+        campaignStartDate={campaign.startDate}
+        campaignEndDate={campaign.endDate}
       />
 
       <DeleteConfirmationDialog

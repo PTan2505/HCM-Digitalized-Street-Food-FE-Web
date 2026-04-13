@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Box, Chip } from '@mui/material';
 import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
@@ -6,7 +6,15 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import DishFormModal from '@features/vendor/components/DishFormModal';
@@ -22,6 +30,7 @@ import {
   selectDishStatus,
 } from '@slices/dish';
 import { selectMyVendor } from '@slices/vendor';
+import { getDishManagementTourSteps } from '@features/vendor/utils/dishManagementTourSteps';
 
 const StatusBadge = ({
   label,
@@ -38,7 +47,7 @@ const StatusBadge = ({
   };
   return (
     <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
     >
       {label}
     </span>
@@ -63,8 +72,10 @@ export default function DishPage(): JSX.Element {
     useState<CreateOrUpdateDishResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [filters, setFilters] = useState<DishFilterValues>({});
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const vendorId = myVendor?.vendorId;
 
@@ -148,6 +159,28 @@ export default function DishPage(): JSX.Element {
     setPageNumber(1);
   };
 
+  const startDishTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getDishManagementTourSteps({
+      hasRows: dishes.length > 0,
+    });
+  }, [dishes.length]);
+
   // ─── Table config ──────────────────────────────────────
 
   const columns = [
@@ -165,7 +198,7 @@ export default function DishPage(): JSX.Element {
           src={String(value)}
           alt="Dish"
           variant="rounded"
-          className="h-10 w-10 bg-[var(--color-primary-100)]"
+          className="bg-primary-100 h-10 w-10"
         />
       ),
     },
@@ -186,7 +219,7 @@ export default function DishPage(): JSX.Element {
         <Chip
           label={`${Number(value).toLocaleString('vi-VN')}đ`}
           size="small"
-          className="bg-[var(--color-primary-100)] font-[var(--font-nunito)] font-semibold text-[var(--color-primary-800)]"
+          className="bg-primary-100 text-primary-800 font-semibold"
         />
       ),
     },
@@ -242,6 +275,7 @@ export default function DishPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       menuLabel: 'Chỉnh sửa',
       onClick: (row: CreateOrUpdateDishResponse): void =>
@@ -249,6 +283,7 @@ export default function DishPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       menuLabel: 'Xóa món',
       onClick: (row: CreateOrUpdateDishResponse): void => handleDelete(row),
@@ -257,20 +292,63 @@ export default function DishPage(): JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
+    <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="dish-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý món ăn
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý món ăn
+            </h1>
+            <button
+              type="button"
+              onClick={startDishTour}
+              aria-label="Mở hướng dẫn quản lý món ăn"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
             Danh sách các món ăn của cửa hàng
           </p>
         </div>
         <button
           onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
+          data-tour="dish-create-button"
+          className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
         >
           <AddIcon fontSize="small" />
           Thêm món ăn
@@ -278,29 +356,36 @@ export default function DishPage(): JSX.Element {
       </div>
 
       {/* Filter Section */}
-      <DishFilterSection onFilterChange={handleFilterChange} />
+      <div data-tour="dish-filter-section">
+        <DishFilterSection onFilterChange={handleFilterChange} />
+      </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={dishes}
-        rowKey="dishId"
-        actions={actions}
-        loading={status === 'pending'}
-        emptyMessage="Chưa có món ăn nào"
-      />
+      <div data-tour="dish-table-wrapper">
+        <Table
+          columns={columns}
+          data={dishes}
+          rowKey="dishId"
+          actions={actions}
+          loading={status === 'pending'}
+          emptyMessage="Chưa có món ăn nào"
+          tourId="vendor-dish"
+        />
+      </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="dish-pagination">
+        <Pagination
+          currentPage={pageNumber}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
 
       {/* Form Modal */}
       <DishFormModal

@@ -23,6 +23,7 @@ import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation = [
   {
@@ -60,6 +61,7 @@ const navigation = [
 function ManagerLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const [orderModalId, setOrderModalId] = useState<number | null>(null);
   const location = useLocation();
@@ -107,10 +109,10 @@ function ManagerLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -124,9 +126,9 @@ function ManagerLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath={`${ROUTES.MANAGER.BASE}/settings`}
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -193,6 +195,10 @@ function ManagerLayout(): JSX.Element {
         isOpen={orderModalId !== null}
         onClose={() => setOrderModalId(null)}
         orderId={orderModalId}
+      />
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </Box>
   );
