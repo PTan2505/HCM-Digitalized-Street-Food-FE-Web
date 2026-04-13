@@ -25,7 +25,6 @@ export interface VendorOrder {
   discountAmount: number | null;
   finalAmount: number;
   isTakeAway: boolean;
-  note?: string | null;
   lockedAt: string | null;
   createdAt: string;
   updatedAt: string;

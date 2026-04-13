@@ -144,7 +144,7 @@ export const OrderDetailDialog = ({
     setTableDraft(detailOrder.table?.trim() ?? '');
   }, [detailOrder, tableAutoEditKey]);
 
-  const canEditTable = Boolean(detailOrder) && !detailOrder.isTakeAway;
+  const canEditTable = detailOrder !== null && !detailOrder.isTakeAway;
 
   const handleStartEditTable = (): void => {
     if (!canEditTable || !detailOrder) return;
