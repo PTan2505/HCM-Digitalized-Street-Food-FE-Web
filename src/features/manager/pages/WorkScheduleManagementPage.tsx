@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Branch } from '@features/vendor/types/vendor';
@@ -13,12 +13,21 @@ import {
 import WorkScheduleDeleteConfirmDialog from '@features/manager/components/WorkScheduleDeleteConfirmDialog';
 import WorkScheduleRow from '@features/manager/components/WorkScheduleRow';
 import useBranchManagement from '@features/manager/hooks/useBranchManagement';
+import { getManagerWorkScheduleManagementTourSteps } from '@features/manager/utils/workScheduleManagementTourSteps';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectVendorStatus, selectWorkSchedules } from '@slices/vendor';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 
 const WEEKDAY_MAP: Record<number, WeekdayName> = {
   1: 'Monday',
@@ -58,6 +67,8 @@ export default function WorkScheduleManagementPage(): JSX.Element {
   const [sortedSchedules, setSortedSchedules] = useState<GetWorkScheduleItem[]>(
     []
   );
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const {
     setValue: setEditValue,
@@ -156,12 +167,73 @@ export default function WorkScheduleManagementPage(): JSX.Element {
 
   const formatTime = (time: string): string => time.slice(0, 5);
 
+  const startWorkScheduleTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getManagerWorkScheduleManagementTourSteps({
+      hasRows: sortedSchedules.length > 0,
+    });
+  }, [sortedSchedules.length]);
+
   return (
     <div className="font-(--font-nunito)">
-      <div className="mb-6">
-        <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-          Quản lý thời gian hoạt động
-        </h1>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div className="mb-6" data-tour="manager-work-schedule-header">
+        <div className="mb-1 flex items-start gap-2">
+          <h1 className="text-table-text-primary text-3xl font-bold">
+            Quản lý thời gian hoạt động
+          </h1>
+          <button
+            type="button"
+            onClick={startWorkScheduleTour}
+            aria-label="Mở hướng dẫn quản lý thời gian hoạt động"
+            title="Hướng dẫn"
+            className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+          >
+            <HelpOutlineIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
         <p className="text-table-text-secondary text-sm">
           Xem và cập nhật giờ mở cửa, đóng cửa theo từng ngày trong tuần
         </p>
@@ -179,7 +251,10 @@ export default function WorkScheduleManagementPage(): JSX.Element {
         </Box>
       ) : (
         <Box className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div
+            className="mb-5 flex flex-wrap items-center justify-between gap-3"
+            data-tour="manager-work-schedule-summary"
+          >
             <div>
               <h2 className="text-table-text-primary text-lg font-bold">
                 Chi nhánh {branch.name}
@@ -195,14 +270,17 @@ export default function WorkScheduleManagementPage(): JSX.Element {
               <CircularProgress />
             </div>
           ) : sortedSchedules.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-20 text-gray-400">
+            <div
+              className="flex flex-col items-center justify-center gap-4 py-20 text-gray-400"
+              data-tour="manager-work-schedule-list"
+            >
               <EventBusyIcon sx={{ fontSize: 64, opacity: 0.3 }} />
               <p className="text-base font-medium">
                 Chưa có thời gian hoạt động cho chi nhánh này
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2" data-tour="manager-work-schedule-list">
               {sortedSchedules.map((item) => {
                 const isEditing = editingId === item.workScheduleId;
                 const dayName =

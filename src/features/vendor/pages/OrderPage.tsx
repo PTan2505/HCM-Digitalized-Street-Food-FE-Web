@@ -59,6 +59,7 @@ export default function OrderPage(): JSX.Element {
     onGetVendorBranchOrders,
     onDecideVendorOrder,
     onCompleteVendorOrder,
+    onUpdateOrder,
   } = useOrder();
 
   const myVendor = useAppSelector(selectMyVendor);
@@ -76,6 +77,7 @@ export default function OrderPage(): JSX.Element {
   const [completeMessage, setCompleteMessage] = useState('');
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
+  const [tableAutoEditKey, setTableAutoEditKey] = useState(0);
 
   const branches: Branch[] = useMemo(
     () =>
@@ -192,11 +194,28 @@ export default function OrderPage(): JSX.Element {
       };
 
       setDetailOrder(completedOrder);
+      if (!completedOrder.isTakeAway && !completedOrder.table?.trim()) {
+        setTableAutoEditKey((prev) => prev + 1);
+      }
       setVerificationCode('');
       setCompleteMessage('Hoàn tất đơn hàng thành công.');
     } finally {
       setIsCompletingByCode(false);
     }
+  };
+
+  const handleUpdateOrderTable = async (
+    orderId: number,
+    table: string
+  ): Promise<void> => {
+    const updatedOrder = await onUpdateOrder({
+      orderId,
+      data: { table },
+    });
+
+    setDetailOrder((prev) =>
+      prev && prev.orderId === updatedOrder.orderId ? updatedOrder : prev
+    );
   };
 
   const handleOpenDetail = (order: VendorOrder): void => {
@@ -500,6 +519,8 @@ export default function OrderPage(): JSX.Element {
       <OrderDetailDialog
         detailOrder={detailOrder}
         onClose={handleCloseDetail}
+        onUpdateOrderTable={handleUpdateOrderTable}
+        tableAutoEditKey={tableAutoEditKey}
       />
     </div>
   );

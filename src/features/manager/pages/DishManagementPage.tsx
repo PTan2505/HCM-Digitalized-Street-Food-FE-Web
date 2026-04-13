@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Alert, Box, CircularProgress } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import DishFilterSection from '@features/vendor/components/DishFilterSection';
 import type { DishFilterValues } from '@features/vendor/components/DishFilterSection';
 import Pagination from '@features/vendor/components/Pagination';
@@ -15,6 +23,7 @@ import {
   selectVendorDishes,
   selectVendorDishesPagination,
 } from '@slices/dish';
+import { getManagerDishManagementTourSteps } from '@features/manager/utils/dishManagementTourSteps';
 
 export default function DishManagementPage(): JSX.Element {
   const { onGetManagerMyBranch } = useBranchManagement();
@@ -39,6 +48,8 @@ export default function DishManagementPage(): JSX.Element {
   const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
   const [isApplying, setIsApplying] = useState(false);
   const [actionLoading, setActionLoading] = useState<Set<number>>(new Set());
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const branchId = branch?.branchId;
   const vendorId = branch?.vendorId;
@@ -220,16 +231,79 @@ export default function DishManagementPage(): JSX.Element {
 
   const assignedCount = useMemo(() => branchDishMap.size, [branchDishMap]);
 
+  const startDishTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getManagerDishManagementTourSteps({
+      hasRows: vendorDishes.length > 0,
+    });
+  }, [vendorDishes.length]);
+
   return (
     <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       <div className="mb-6">
-        <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-          Quản lý thực đơn
-        </h1>
-        <p className="text-table-text-secondary text-sm">
-          Quản lý danh sách món ăn của {branch?.name ?? 'chi nhánh'} và cập nhật
-          tình trạng còn món / hết món
-        </p>
+        <div data-tour="manager-dish-header">
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý thực đơn
+            </h1>
+            <button
+              type="button"
+              onClick={startDishTour}
+              aria-label="Mở hướng dẫn quản lý thực đơn"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
+            Quản lý danh sách món ăn của {branch?.name ?? 'chi nhánh'} và cập
+            nhật tình trạng còn món / hết món
+          </p>
+        </div>
       </div>
 
       {isLoadingBranch ? (
@@ -244,7 +318,10 @@ export default function DishManagementPage(): JSX.Element {
         </Box>
       ) : (
         <Box className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div
+            className="mb-5 flex flex-wrap items-center justify-between gap-3"
+            data-tour="manager-dish-summary"
+          >
             <div>
               <h2 className="text-table-text-primary text-lg font-bold">
                 Chi nhánh {branch.name}
@@ -257,9 +334,14 @@ export default function DishManagementPage(): JSX.Element {
             />
           </div>
 
-          <DishFilterSection onFilterChange={handleFilterChange} />
+          <div data-tour="manager-dish-filter">
+            <DishFilterSection onFilterChange={handleFilterChange} />
+          </div>
 
-          <div className="mt-4 flex w-full justify-center">
+          <div
+            className="mt-4 flex w-full justify-center"
+            data-tour="manager-dish-save-button"
+          >
             <button
               onClick={() => {
                 void handleApply();
@@ -272,7 +354,7 @@ export default function DishManagementPage(): JSX.Element {
             </button>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4" data-tour="manager-dish-table-wrapper">
             <ManagerDishTable
               dishes={vendorDishes}
               selectedDishIdSet={selectedDishIdSet}
@@ -280,6 +362,7 @@ export default function DishManagementPage(): JSX.Element {
               actionLoading={actionLoading}
               isApplying={isApplying}
               loading={isListLoading}
+              tourId="manager-dish"
               onToggleSelection={handleCheckboxToggle}
               onToggleAvailability={(dishId, currentSoldOut) => {
                 void handleToggleAvailability(dishId, currentSoldOut);
@@ -287,7 +370,10 @@ export default function DishManagementPage(): JSX.Element {
             />
           </div>
 
-          <div className="mt-4 border-t border-gray-100 bg-gray-50/60 px-2 py-3">
+          <div
+            className="mt-4 border-t border-gray-100 bg-gray-50/60 px-2 py-3"
+            data-tour="manager-dish-pagination"
+          >
             {vendorPagination.totalCount > 0 && (
               <Pagination
                 currentPage={vendorPagination.currentPage}

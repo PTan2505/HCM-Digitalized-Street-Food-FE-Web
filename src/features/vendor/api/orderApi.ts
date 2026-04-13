@@ -4,6 +4,8 @@ import type {
   GetOrderPickupCodeResponse,
   GetVendorBranchOrdersResponse,
   OrderDetailsResponse,
+  UpdateOrderPayload,
+  UpdateOrderResponse,
 } from '@features/vendor/types/order';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -78,6 +80,20 @@ export class OrderApi {
   async getOrderDetails(orderId: number): Promise<OrderDetailsResponse> {
     const res = await this.apiClient.get<OrderDetailsResponse>({
       url: apiUrl.order.getOrderDetails(orderId),
+    });
+    return res.data;
+  }
+
+  async updateOrder(
+    orderId: number,
+    payload: UpdateOrderPayload
+  ): Promise<UpdateOrderResponse> {
+    const res = await this.apiClient.put<
+      UpdateOrderResponse,
+      UpdateOrderPayload
+    >({
+      url: apiUrl.order.updateOrder(orderId),
+      data: payload,
     });
     return res.data;
   }

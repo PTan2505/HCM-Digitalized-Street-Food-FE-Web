@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import DayOffDeleteConfirmDialog from '@features/manager/components/DayOffDeleteConfirmDialog';
 import DayOffFormFields from '@features/manager/components/DayOffFormFields';
 import useBranchManagement from '@features/manager/hooks/useBranchManagement';
+import { getManagerDayOffManagementTourSteps } from '@features/manager/utils/dayOffManagementTourSteps';
 import useVendor from '@features/vendor/hooks/useVendor';
 import {
   AddDayOffSchema,
@@ -13,6 +14,7 @@ import AddIcon from '@mui/icons-material/Add';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import {
   Alert,
@@ -24,6 +26,13 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useForm } from 'react-hook-form';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 
 const formatDate = (dateStr: string): string => {
   const [y, m, d] = dateStr.split('T')[0].split('-');
@@ -65,6 +74,8 @@ export default function DayOffManagementPage(): JSX.Element {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const {
     setValue,
@@ -227,7 +238,10 @@ export default function DayOffManagementPage(): JSX.Element {
 
   const renderAddForm = (): JSX.Element => {
     return (
-      <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+      <div
+        className="mb-6 rounded-xl border border-amber-200 bg-amber-50/50 p-5"
+        data-tour="manager-dayoff-form"
+      >
         <h3 className="mb-4 text-sm font-bold text-amber-800">
           Thêm thời gian nghỉ mới
         </h3>
@@ -335,12 +349,74 @@ export default function DayOffManagementPage(): JSX.Element {
     );
   };
 
+  const startDayOffTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getManagerDayOffManagementTourSteps({
+      hasRows: sortedDayOffs.length > 0,
+      isAddFormVisible: showAddForm,
+    });
+  }, [showAddForm, sortedDayOffs.length]);
+
   return (
     <div className="font-(--font-nunito)">
-      <div className="mb-6">
-        <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-          Quản lý thời gian nghỉ
-        </h1>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div className="mb-6" data-tour="manager-dayoff-header">
+        <div className="mb-1 flex items-start gap-2">
+          <h1 className="text-table-text-primary text-3xl font-bold">
+            Quản lý thời gian nghỉ
+          </h1>
+          <button
+            type="button"
+            onClick={startDayOffTour}
+            aria-label="Mở hướng dẫn quản lý thời gian nghỉ"
+            title="Hướng dẫn"
+            className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+          >
+            <HelpOutlineIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
         <p className="text-table-text-secondary text-sm">
           Quản lý các đợt nghỉ của chi nhánh: xem, thêm và xóa
         </p>
@@ -358,7 +434,10 @@ export default function DayOffManagementPage(): JSX.Element {
         </Box>
       ) : (
         <Box className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div
+            className="mb-5 flex flex-wrap items-center justify-between gap-3"
+            data-tour="manager-dayoff-summary"
+          >
             <div>
               <h2 className="text-table-text-primary text-lg font-bold">
                 Chi nhánh {branchName}
@@ -374,6 +453,7 @@ export default function DayOffManagementPage(): JSX.Element {
                 className="flex cursor-pointer items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 disabled:opacity-60"
                 onClick={openAddForm}
                 disabled={status === 'pending'}
+                data-tour="manager-dayoff-create-button"
               >
                 <AddIcon fontSize="small" />
                 Thêm thời gian nghỉ
@@ -388,7 +468,10 @@ export default function DayOffManagementPage(): JSX.Element {
               <CircularProgress />
             </div>
           ) : sortedDayOffs.length === 0 && !showAddForm ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-20 text-gray-400">
+            <div
+              className="flex flex-col items-center justify-center gap-4 py-20 text-gray-400"
+              data-tour="manager-dayoff-list"
+            >
               <EventBusyIcon sx={{ fontSize: 64, opacity: 0.3 }} />
               <p className="text-base font-medium">Chưa có thời gian nghỉ</p>
               {/* <button
@@ -401,7 +484,7 @@ export default function DayOffManagementPage(): JSX.Element {
               </button> */}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2" data-tour="manager-dayoff-list">
               {sortedDayOffs.map((item) => {
                 const isSingleDay =
                   item.startDate.split('T')[0] === item.endDate.split('T')[0];

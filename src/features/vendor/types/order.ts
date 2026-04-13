@@ -19,12 +19,12 @@ export interface VendorOrder {
   branchName: string;
   status: number;
   table: string | null;
+  note: string | null;
   paymentMethod: string | null;
   totalAmount: number;
   discountAmount: number | null;
   finalAmount: number;
   isTakeAway: boolean;
-  note?: string | null;
   lockedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -58,5 +58,11 @@ export interface CompleteVendorOrderResponse {
   status: number;
   finalAmount: number;
 }
+
+export interface UpdateOrderPayload {
+  table?: string | null;
+}
+
+export type UpdateOrderResponse = VendorOrder;
 
 export type OrderDetailsResponse = VendorOrder;
