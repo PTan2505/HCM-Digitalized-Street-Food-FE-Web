@@ -36,7 +36,7 @@ export default function OrderManagementPage(): JSX.Element {
   const status = useAppSelector(selectOrderStatus);
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [detailOrder, setDetailOrder] = useState<ManagerOrder | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);

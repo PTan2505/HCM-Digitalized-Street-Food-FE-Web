@@ -175,6 +175,14 @@ export default function OrderDetailsModal({
                     </span>
                   </div>
                 </div>
+                {order.note?.trim() ? (
+                  <div className="mt-3 rounded-lg border border-gray-200/60 bg-white px-3 py-2.5">
+                    <p className="mb-0.5 text-xs font-bold tracking-wide text-gray-500 uppercase">
+                      Ghi chú
+                    </p>
+                    <p className="text-sm text-gray-700">{order.note.trim()}</p>
+                  </div>
+                ) : null}
               </div>
 
               {/* ── Danh sách món ────────────────────────────────── */}
