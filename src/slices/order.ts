@@ -6,6 +6,8 @@ import type {
   GetOrderPickupCodeResponse,
   GetVendorBranchOrdersResponse,
   OrderDetailsResponse,
+  UpdateOrderPayload,
+  UpdateOrderResponse,
 } from '@features/vendor/types/order';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -176,6 +178,24 @@ export const getOrderDetails = createAppAsyncThunk(
   }
 );
 
+export const updateOrder = createAppAsyncThunk(
+  'order/updateOrder',
+  async (
+    payload: { orderId: number; data: UpdateOrderPayload },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: UpdateOrderResponse = await axiosApi.orderApi.updateOrder(
+        payload.orderId,
+        payload.data
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const allThunks = [
   getVendorOrders,
   getVendorBranchOrders,
@@ -184,6 +204,7 @@ const allThunks = [
   getOrderPickupCode,
   completeVendorOrder,
   getOrderDetails,
+  updateOrder,
 ] as const;
 
 export const orderSlice = createSlice({
@@ -267,6 +288,20 @@ export const orderSlice = createSlice({
       })
       .addCase(getOrderDetails.fulfilled, (state, action) => {
         state.selectedOrder = action.payload;
+      })
+      .addCase(updateOrder.fulfilled, (state, action) => {
+        const updatedOrder = action.payload;
+        const targetOrder = state.orders.find(
+          (order) => order.orderId === updatedOrder.orderId
+        );
+
+        if (targetOrder) {
+          Object.assign(targetOrder, updatedOrder);
+        }
+
+        if (state.selectedOrder?.orderId === updatedOrder.orderId) {
+          state.selectedOrder = updatedOrder;
+        }
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';

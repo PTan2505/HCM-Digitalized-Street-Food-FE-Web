@@ -136,7 +136,7 @@ export default function FeedbackDetailsModal({
       >
         <VendorModalHeader
           title="Chi tiết đánh giá"
-          subtitle={feedback ? `#${feedback.id.toString()}` : '—'}
+          // subtitle={feedback ? `#${feedback.id.toString()}` : '—'}
           icon={<RateReviewIcon />}
           onClose={onClose}
         />
