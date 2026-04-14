@@ -207,6 +207,9 @@ export const apiUrl = {
     updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
     postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
   },
+  tier: {
+    getAllTiers: '/Tier',
+  },
   setting: {
     getSettings: '/Setting',
     updateSetting: (name: string): string => `/Setting/${name}`,

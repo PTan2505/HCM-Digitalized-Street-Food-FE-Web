@@ -179,7 +179,6 @@ export const questSlice = createSlice({
       .addMatcher(
         isPending(
           getAllQuests,
-          getQuestById,
           createQuest,
           updateQuest,
           deleteQuest,
@@ -192,7 +191,6 @@ export const questSlice = createSlice({
       .addMatcher(
         isFulfilled(
           getAllQuests,
-          getQuestById,
           createQuest,
           updateQuest,
           deleteQuest,
@@ -206,7 +204,6 @@ export const questSlice = createSlice({
       .addMatcher(
         isRejected(
           getAllQuests,
-          getQuestById,
           createQuest,
           updateQuest,
           deleteQuest,

@@ -22,11 +22,20 @@ import {
 import {
   Search as SearchIcon,
   FilterAltOff as FilterAltOffIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import useVendor from '@features/admin/hooks/useVendor';
 import type { AdminVendor } from '@features/admin/types/vendor';
+import { getAdminVendorCampaignTourSteps } from '@features/admin/utils/adminVendorCampaignTourSteps';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import {
   getVendorCampaigns,
@@ -107,6 +116,8 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     'all' | 'today' | '7days' | '30days'
   >('all');
   const deferredCampaignKeyword = useDeferredValue(campaignKeyword);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const createdFilterOptions: Array<{
     value: 'all' | 'today' | '7days' | '30days';
@@ -301,20 +312,88 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     setPage(1);
   };
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getAdminVendorCampaignTourSteps({
+      hasSelectedVendor: Boolean(selectedVendor?.vendorId),
+      hasRows: filteredCampaigns.length > 0,
+    });
+  }, [filteredCampaigns.length, selectedVendor?.vendorId]);
+
   return (
     <div className="flex h-full flex-col font-(--font-nunito)">
-      <div className="mb-6 flex items-center justify-between">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-vendor-campaign-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Chiến dịch từ cửa hàng
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Chiến dịch từ cửa hàng
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn chiến dịch từ cửa hàng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Danh sách chiến dịch được tạo từ cửa hàng
           </p>
         </div>
       </div>
 
-      <Box className="mb-4 rounded-2xl border border-slate-200 bg-linear-to-r from-slate-50 to-white p-4 shadow-sm">
+      <Box
+        className="mb-4 rounded-2xl border border-slate-200 bg-linear-to-r from-slate-50 to-white p-4 shadow-sm"
+        data-tour="admin-vendor-campaign-filters"
+      >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-table-text-primary text-sm font-bold tracking-wide uppercase">
             Bộ lọc chiến dịch
@@ -441,7 +520,10 @@ export default function AdminVendorCampaignPage(): JSX.Element {
         </div>
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0 }}
+        data-tour="admin-vendor-campaign-table"
+      >
         <Table
           columns={columns}
           data={filteredCampaigns}
