@@ -1,7 +1,6 @@
 import { Dialog, DialogContent } from '@mui/material';
 import {
   EmojiEvents as EmojiEventsIcon,
-  Campaign as CampaignIcon,
   Assignment as AssignmentIcon,
 } from '@mui/icons-material';
 import useBadge from '@features/admin/hooks/useBadge';
@@ -11,8 +10,8 @@ import type { Badge } from '@features/admin/types/badge';
 import type { Campaign } from '@features/admin/types/campaign';
 import {
   type Quest,
-  QuestRewardType,
   QUEST_REWARD_TYPE_LABELS,
+  QuestTaskType,
   QUEST_TASK_TYPE_LABELS,
 } from '@features/admin/types/quest';
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
@@ -125,17 +124,21 @@ const RewardTypeBadge = ({ label }: { label: string }): JSX.Element => (
 
 const QuestTypeBadge = ({
   isStandalone,
+  isUpgrade,
 }: {
   isStandalone?: boolean;
+  isUpgrade?: boolean;
 }): JSX.Element => (
   <span
     className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
-      isStandalone
-        ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-        : 'border-cyan-200 bg-cyan-50 text-cyan-700'
+      isUpgrade
+        ? 'border-purple-200 bg-purple-50 text-purple-700'
+        : isStandalone
+          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+          : 'border-cyan-200 bg-cyan-50 text-cyan-700'
     }`}
   >
-    {isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
+    {isUpgrade ? 'Nâng cấp' : isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
   </span>
 );
 
@@ -184,27 +187,31 @@ export default function QuestDetailsModal({
     );
   }, [campaignOptions, quest?.campaignId, quest?.isStandalone]);
 
-  const rewardValueLabelByTask = useMemo((): Record<number, string> => {
-    if (!quest?.tasks?.length) return {};
-    return quest.tasks.reduce<Record<number, string>>((acc, task) => {
-      if (task.rewardType === QuestRewardType.POINTS) {
-        acc[task.questTaskId] = String(task.rewardValue);
-        return acc;
+  const isUpgradeQuest = useMemo(
+    () => quest?.tasks?.[0]?.type === QuestTaskType.TIER_UP,
+    [quest?.tasks]
+  );
+
+  const getRewardDisplay = useCallback(
+    (rewardType: number, rewardValue: number): string => {
+      if (rewardType === 2) {
+        return String(rewardValue);
       }
-      if (task.rewardType === QuestRewardType.BADGE) {
+
+      if (rewardType === 1) {
         const name = badgeOptions.find(
-          (b) => b.badgeId === task.rewardValue
+          (b) => b.badgeId === rewardValue
         )?.badgeName;
-        acc[task.questTaskId] = name ?? `#${task.rewardValue}`;
-        return acc;
+        return name ?? `#${rewardValue}`;
       }
+
       const name = voucherOptions.find(
-        (v) => v.voucherId === task.rewardValue
+        (v) => v.voucherId === rewardValue
       )?.name;
-      acc[task.questTaskId] = name ?? `#${task.rewardValue}`;
-      return acc;
-    }, {});
-  }, [badgeOptions, quest?.tasks, voucherOptions]);
+      return name ?? `#${rewardValue}`;
+    },
+    [badgeOptions, voucherOptions]
+  );
 
   return (
     <Dialog
@@ -315,8 +322,8 @@ export default function QuestDetailsModal({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                     <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
                       Trạng thái
                     </p>
@@ -328,16 +335,35 @@ export default function QuestDetailsModal({
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                     <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
                       Kiểu nhiệm vụ
                     </p>
                     <div className="mt-2 min-h-7">
-                      <QuestTypeBadge isStandalone={quest?.isStandalone} />
+                      <QuestTypeBadge
+                        isStandalone={quest?.isStandalone}
+                        isUpgrade={isUpgradeQuest}
+                      />
                     </div>
                   </div>
 
-                  {!quest?.isStandalone && (
+                  {/* <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                    <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                      Yêu cầu tham gia
+                    </p>
+                    <div className="mt-2 min-h-7">
+                      <StatusBadge
+                        label={
+                          quest?.requiresEnrollment
+                            ? 'Bắt buộc tham gia'
+                            : 'Không bắt buộc'
+                        }
+                        type={quest?.requiresEnrollment ? 'success' : 'default'}
+                      />
+                    </div>
+                  </div> */}
+
+                  {/* {!quest?.isStandalone && !isUpgradeQuest && (
                     <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-3 sm:col-span-2 xl:col-span-1">
                       <div className="flex items-start gap-2.5">
                         <span className="mt-0.5 shrink-0 rounded-lg bg-blue-100 p-1.5 text-blue-600">
@@ -353,7 +379,7 @@ export default function QuestDetailsModal({
                         </div>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
 
@@ -394,66 +420,122 @@ export default function QuestDetailsModal({
                 {quest.tasks.map((task, index) => (
                   <div
                     key={task.questTaskId}
-                    className="rounded-xl border border-gray-100 bg-linear-to-r from-white to-slate-50 p-4 transition-shadow hover:shadow-sm"
+                    className="rounded-2xl border border-slate-200 bg-linear-to-br from-white to-slate-50 p-4 transition-all hover:border-slate-300 hover:shadow-md"
                   >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
                       <div className="flex items-center gap-2">
-                        <span
+                        {/* <span
                           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                           style={{ background: '#8bcf3f' }}
                         >
                           {index + 1}
-                        </span>
+                        </span> */}
                         <p className="text-sm font-bold text-gray-800">
                           Nhiệm vụ {index + 1}
                         </p>
                       </div>
-
-                      <TaskTypeBadge
-                        label={QUEST_TASK_TYPE_LABELS[task.type]}
-                      />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
-                        <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
-                          Mục tiêu
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-gray-800">
-                          {task.targetValue}
-                        </p>
-                      </div>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                          <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                            Loại nhiệm vụ
+                          </p>
+                          <div className="mt-1">
+                            <TaskTypeBadge
+                              label={QUEST_TASK_TYPE_LABELS[task.type]}
+                            />
+                          </div>
+                        </div>
 
-                      <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
-                        <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
-                          Loại thưởng
-                        </p>
-                        <div className="mt-1">
-                          <RewardTypeBadge
-                            label={QUEST_REWARD_TYPE_LABELS[task.rewardType]}
-                          />
+                        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                          <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                            Giá trị cần đạt
+                          </p>
+                          <p className="mt-0.5 text-sm font-semibold text-gray-800">
+                            {task.targetValue}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                          <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                            Số phần thưởng
+                          </p>
+                          <p className="mt-0.5 text-sm font-semibold text-gray-800">
+                            {task.rewards?.length ?? 0}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                      <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
                         <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
-                          Giá trị thưởng
+                          Mô tả nhiệm vụ con
                         </p>
-                        <p className="mt-0.5 text-sm font-semibold text-gray-800">
-                          {rewardValueLabelByTask[task.questTaskId] ??
-                            task.rewardValue}
+                        <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                          {task.description?.trim() ? (
+                            task.description
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              Không có mô tả nhiệm vụ con
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
 
-                    {task.description && (
-                      <div className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
-                        <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
-                          Mô tả nhiệm vụ con
+                    {!!task.rewards?.length && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-[11px] font-bold tracking-wide text-slate-500 uppercase">
+                          Danh sách phần thưởng
                         </p>
-                        <p className="mt-1 text-xs leading-relaxed text-gray-600">
-                          {task.description}
-                        </p>
+                        {task.rewards.map((reward, rewardIndex) => (
+                          <div
+                            key={`${task.questTaskId}-${rewardIndex}`}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
+                          >
+                            <p className="mb-2 text-xs font-semibold text-slate-500">
+                              Thưởng {rewardIndex + 1}
+                            </p>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                              <div>
+                                <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                                  Loại thưởng
+                                </p>
+                                <div className="mt-1">
+                                  <RewardTypeBadge
+                                    label={
+                                      QUEST_REWARD_TYPE_LABELS[
+                                        reward.rewardType
+                                      ]
+                                    }
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                                  Giá trị thưởng
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-gray-800">
+                                  {getRewardDisplay(
+                                    reward.rewardType,
+                                    reward.rewardValue
+                                  )}
+                                </p>
+                              </div>
+
+                              <div>
+                                <p className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                                  Số lượng
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-gray-800">
+                                  {reward.quantity ?? '-'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
