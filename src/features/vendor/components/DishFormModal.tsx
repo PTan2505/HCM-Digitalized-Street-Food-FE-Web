@@ -7,11 +7,9 @@ import {
   Select,
   Box,
   Typography,
-  IconButton,
   Button,
   CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
@@ -35,7 +33,18 @@ import useTaste from '@features/admin/hooks/useTaste';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectCategories } from '@slices/category';
 import { selectTastes } from '@slices/taste';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 // import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
+
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
+};
 
 interface DishFormModalProps {
   isOpen: boolean;
@@ -81,7 +90,7 @@ export default function DishFormModal({
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DishFormData>({
     resolver: zodResolver(DishSchema),
     mode: 'onChange',
@@ -192,47 +201,25 @@ export default function DishFormModal({
 
   return (
     <Box
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 transition-opacity"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 transition-opacity"
       onClick={submitting ? undefined : onClose}
     >
       <Box
         className="mx-4 flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5">
-          <Box className="flex items-center gap-3">
-            <Box className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <RestaurantMenuIcon />
-            </Box>
-            <Box>
-              <Typography
-                variant="h2"
-                className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl"
-              >
-                {isEditMode ? 'Chỉnh sửa món ăn' : 'Thêm món ăn mới'}
-              </Typography>
-              <Typography className="mt-0.5 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                {isEditMode
-                  ? 'Cập nhật lại thông tin, giá cả và hình ảnh cho món ăn của bạn'
-                  : 'Hãy thêm một món ăn hấp dẫn vào chiếc menu của cửa hàng'}
-              </Typography>
-            </Box>
-          </Box>
-
-          <IconButton
-            size="small"
-            onClick={onClose}
-            disabled={submitting}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #e5e7eb',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <VendorModalHeader
+          title={isEditMode ? 'Chỉnh sửa món ăn' : 'Thêm món ăn mới'}
+          subtitle={
+            isEditMode
+              ? (editingDish?.name ?? 'Món ăn')
+              : 'Hãy thêm một món ăn hấp dẫn vào chiếc menu của cửa hàng'
+          }
+          icon={<RestaurantMenuIcon />}
+          iconTone="dish"
+          onClose={onClose}
+          disableClose={submitting}
+        />
 
         {/* Modal Content */}
         <Box className="flex-1 overflow-y-auto px-8 py-6">
@@ -256,10 +243,10 @@ export default function DishFormModal({
                       <input
                         {...field}
                         type="text"
-                        className={`w-full rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
+                        className={`focus:ring-primary-500 w-full rounded-xl border px-4 py-2.5 transition-all outline-none ${
                           errors.name
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
-                            : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
+                            : 'focus:border-primary-500 border-gray-200 hover:border-gray-300'
                         }`}
                         placeholder="Ví dụ: Phở Bò Tái Nạm"
                       />
@@ -284,17 +271,25 @@ export default function DishFormModal({
                   render={({ field }) => (
                     <>
                       <input
-                        {...field}
-                        type="number"
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        value={field.value === 0 ? '' : field.value}
-                        className={`w-full rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        type="text"
+                        inputMode="numeric"
+                        onChange={(e) =>
+                          field.onChange(parseNumberInput(e.target.value))
+                        }
+                        value={
+                          field.value === 0
+                            ? ''
+                            : formatNumberWithDots(field.value)
+                        }
+                        className={`focus:ring-primary-500 w-full rounded-xl border px-4 py-2.5 transition-all outline-none ${
                           errors.price
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
-                            : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
+                            : 'focus:border-primary-500 border-gray-200 hover:border-gray-300'
                         }`}
-                        placeholder="Ví dụ: 50000"
-                        min="0"
+                        placeholder="Ví dụ: 50.000"
                       />
                       {errors.price && (
                         <p className="mt-1 text-xs text-red-500">
@@ -319,10 +314,10 @@ export default function DishFormModal({
                       <textarea
                         {...field}
                         rows={4}
-                        className={`w-full resize-none rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
+                        className={`focus:ring-primary-500 w-full resize-none rounded-xl border px-4 py-2.5 transition-all outline-none ${
                           errors.description
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
-                            : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
+                            : 'focus:border-primary-500 border-gray-200 hover:border-gray-300'
                         }`}
                         placeholder="Mô tả sự hấp dẫn, nguyên liệu của món..."
                       />
@@ -566,7 +561,7 @@ export default function DishFormModal({
 
                 {/* Khung tải ảnh */}
                 <label
-                  className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed bg-gray-50/60 p-6 transition-all hover:border-[var(--color-primary-400)] hover:bg-gray-50 ${
+                  className={`hover:border-primary-400 relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed bg-gray-50/60 p-6 transition-all hover:bg-gray-50 ${
                     imageError ? 'border-red-400' : 'border-gray-300'
                   }`}
                 >
@@ -630,7 +625,7 @@ export default function DishFormModal({
 
           <Button
             onClick={() => void handleSubmit(onSubmit)()}
-            disabled={submitting}
+            disabled={submitting || (isEditMode && !isDirty && !imageFile)}
             variant="contained"
             color="primary"
             startIcon={

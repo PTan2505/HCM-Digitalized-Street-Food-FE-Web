@@ -10,7 +10,9 @@ import {
   Button,
 } from '@mui/material';
 import { Remove as RemoveIcon } from '@mui/icons-material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import type { UserWithBadges, Badge } from '@features/admin/types/badge';
+import AppModalHeader from '@components/AppModalHeader';
 
 interface AvailableBadge {
   badgeId: number;
@@ -83,23 +85,24 @@ export default function UserBadgeFormModal({
         className="mx-4 w-full max-w-2xl rounded-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý huy hiệu của {user.userName}
-          </h2>
-        </div>
+        <AppModalHeader
+          title="Quản lý huy hiệu"
+          subtitle={user.userName}
+          icon={<EmojiEventsIcon />}
+          iconTone="admin"
+          onClose={handleClose}
+        />
 
         {/* Modal Content */}
         <div className="px-6 py-4">
           {/* Current Badges */}
           <div className="mb-6">
-            <h3 className="mb-3 text-sm font-semibold text-[var(--color-table-text-primary)]">
+            <h3 className="text-table-text-primary mb-3 text-sm font-semibold">
               Huy hiệu hiện tại ({user.badges.length})
             </h3>
             <div className="space-y-2">
               {user.badges.length === 0 ? (
-                <p className="text-sm text-[var(--color-table-text-secondary)] italic">
+                <p className="text-table-text-secondary text-sm italic">
                   Người dùng chưa có huy hiệu nào
                 </p>
               ) : (
@@ -115,11 +118,11 @@ export default function UserBadgeFormModal({
                         className="h-10 w-10"
                       />
                       <div>
-                        <div className="font-medium text-[var(--color-table-text-primary)]">
+                        <div className="text-table-text-primary font-medium">
                           {badge.badgeName}
                         </div>
                         {badge.earnedAt && (
-                          <div className="text-xs text-[var(--color-table-text-secondary)]">
+                          <div className="text-table-text-secondary text-xs">
                             Nhận ngày: {badge.earnedAt}
                           </div>
                         )}
@@ -140,7 +143,7 @@ export default function UserBadgeFormModal({
 
           {/* Select Badge to Assign */}
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-[var(--color-table-text-primary)]">
+            <h3 className="text-table-text-primary mb-3 text-sm font-semibold">
               Thêm huy hiệu mới
             </h3>
             <div className="space-y-2">
@@ -149,8 +152,8 @@ export default function UserBadgeFormModal({
                   key={badge.badgeId}
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all ${
                     selectedBadgeId === badge.badgeId
-                      ? 'border-[var(--color-primary-600)] bg-[var(--color-primary-100)]'
-                      : 'border-gray-200 bg-white hover:border-[var(--color-primary-400)]'
+                      ? 'border-primary-600 bg-primary-100'
+                      : 'hover:border-primary-400 border-gray-200 bg-white'
                   }`}
                 >
                   <input
@@ -159,20 +162,20 @@ export default function UserBadgeFormModal({
                     value={badge.badgeId}
                     checked={selectedBadgeId === badge.badgeId}
                     onChange={() => setSelectedBadgeId(badge.badgeId)}
-                    className="h-4 w-4 text-[var(--color-primary-600)]"
+                    className="text-primary-600 h-4 w-4"
                   />
                   <Avatar
                     src={badge.iconUrl}
                     alt={badge.badgeName}
                     className="h-10 w-10"
                   />
-                  <span className="font-medium text-[var(--color-table-text-primary)]">
+                  <span className="text-table-text-primary font-medium">
                     {badge.badgeName}
                   </span>
                 </label>
               ))}
               {filteredBadges.length === 0 && (
-                <p className="text-sm text-[var(--color-table-text-secondary)] italic">
+                <p className="text-table-text-secondary text-sm italic">
                   Người dùng đã có tất cả badges có sẵn
                 </p>
               )}
@@ -184,14 +187,14 @@ export default function UserBadgeFormModal({
         <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
           <button
             onClick={handleClose}
-            className="rounded-lg px-4 py-2 text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100"
+            className="text-table-text-secondary rounded-lg px-4 py-2 transition-colors hover:bg-gray-100"
           >
             Đóng
           </button>
           <button
             onClick={handleAssign}
             disabled={!selectedBadgeId}
-            className="rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)] disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="bg-primary-600 hover:bg-primary-700 rounded-lg px-4 py-2 font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             Thêm huy hiệu
           </button>
@@ -219,15 +222,15 @@ export default function UserBadgeFormModal({
           <Button
             onClick={handleCancelRemove}
             color="primary"
-            className="font-[var(--font-nunito)]"
+            className="font-(--font-nunito)"
           >
             Hủy
           </Button>
           <Button
             onClick={handleConfirmRemove}
             color="error"
-            variant="contained"
-            className="font-[var(--font-nunito)]"
+            variant="outlined"
+            className="font-(--font-nunito)"
             autoFocus
           >
             Thu hồi

@@ -15,7 +15,17 @@ import type { z } from 'zod';
 
 type UpdateProfileFormData = z.infer<typeof UpdateProfileSchema>;
 
-export default function UserProfileForm(): JSX.Element {
+export interface UserProfileFormProps {
+  onSuccess?: () => void;
+  hideLogout?: boolean;
+  isModal?: boolean;
+}
+
+export default function UserProfileForm({
+  onSuccess,
+  hideLogout = false,
+  isModal = false,
+}: UserProfileFormProps = {}): JSX.Element {
   const user = useAppSelector(selectUser);
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -39,8 +49,14 @@ export default function UserProfileForm(): JSX.Element {
 
   const onSubmit = async (data: UpdateProfileFormData): Promise<void> => {
     try {
-      await updateUserProfile(data as Partial<User>);
-      navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`);
+      await updateUserProfile(data as Partial<User>, isModal);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(`${ROUTES.USER.BASE}/${ROUTES.USER.PATHS.BRANCH}`, {
+          state: { fromEditProfile: true },
+        });
+      }
     } catch (error) {
       const err = error as APIErrorResponse;
       if (err.fieldErrors) {
@@ -204,16 +220,18 @@ export default function UserProfileForm(): JSX.Element {
         </button>
 
         {/* Logout button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={onLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-white px-6 py-4 text-base font-semibold text-red-500 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-50 hover:shadow-xl active:translate-y-0"
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5" />
-            Đăng xuất
-          </button>
-        </div>
+        {!hideLogout && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-white px-6 py-4 text-base font-semibold text-red-500 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-50 hover:shadow-xl active:translate-y-0"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+              Đăng xuất
+            </button>
+          </div>
+        )}
       </div>
     </form>
   );

@@ -1,6 +1,5 @@
 export interface Badge {
   badgeName: string;
-  pointToGet: number;
   iconUrl: string;
   description: string;
   badgeId: number;
@@ -30,8 +29,7 @@ export interface GetUsersWithBadges {
 
 export interface CreateOrUpdateBadgeRequest {
   badgeName: string;
-  pointToGet: number;
-  iconUrl: string;
+  imageFile?: File | null;
   description: string;
 }
 

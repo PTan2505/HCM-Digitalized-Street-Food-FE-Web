@@ -1,11 +1,24 @@
 import { AppProvider } from '@app/provider';
 import { router } from '@app/router';
+import { validateEnv } from '@config/env';
 import type { JSX } from 'react';
+// import { useEffect } from 'react';
 import { RouterProvider } from 'react-router';
 import { ToastContainer } from 'react-toastify';
 import { BadgeCheck, CircleAlert, Info, TriangleAlert } from 'lucide-react';
+// import { websocketService } from '@config/websocketService';
+
+// Validate environment variables on app startup
+validateEnv();
 
 function App(): JSX.Element {
+  // useEffect(() => {
+  //   websocketService.connect();
+
+  //   return (): void => {
+  //     websocketService.close();
+  //   };
+  // }, []);
   return (
     <AppProvider>
       <RouterProvider router={router} />

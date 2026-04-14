@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import {
   Box,
@@ -13,11 +13,21 @@ import {
 import {
   Delete as DeleteIcon,
   Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Visibility as VisibilityIcon,
+  HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import VendorDetailModal from '@features/admin/components/VendorDetailModal';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { AdminVendor } from '@features/admin/types/vendor';
 import useVendor from '@features/admin/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -27,6 +37,7 @@ import {
   selectAdminVendorStatus,
   selectAdminVendorDetail,
 } from '@slices/vendor';
+import { getVendorsManagementTourSteps } from '@features/admin/utils/vendorsManagementTourSteps';
 
 export default function VendorsPage(): JSX.Element {
   const vendors = useAppSelector(selectAdminVendors);
@@ -49,7 +60,9 @@ export default function VendorsPage(): JSX.Element {
     null
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     void onGetAllVendors({ pageNumber: currentPage, pageSize });
@@ -135,17 +148,39 @@ export default function VendorsPage(): JSX.Element {
     setCurrentPage(1);
   };
 
+  const startVendorsTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getVendorsManagementTourSteps({
+      hasRows: vendors.length > 0,
+    });
+  }, [vendors.length]);
+
   const columns = [
-    {
-      key: 'vendorId',
-      label: 'ID',
-      style: { width: '60px', maxWidth: '60px' },
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-medium">
-          {String(value)}
-        </Box>
-      ),
-    },
+    // {
+    //   key: 'vendorId',
+    //   label: 'ID',
+    //   style: { width: '60px', maxWidth: '60px' },
+    //   render: (value: unknown): React.ReactNode => (
+    //     <Box className="text-table-text-primary font-medium">
+    //       {String(value)}
+    //     </Box>
+    //   ),
+    // },
     {
       key: 'name',
       label: 'Tên cửa hàng',
@@ -198,28 +233,42 @@ export default function VendorsPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'view',
       label: <VisibilityIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => {
         void handleViewDetail(row);
       },
+      tooltip: 'Xem chi tiết cửa hàng',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
     {
+      id: 'suspend',
       label: <BlockIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => {
-        if (row.isActive) {
-          handleSuspend(row);
-        } else {
-          handleReactivate(row);
-        }
+        handleSuspend(row);
       },
+      tooltip: 'Tạm ngưng cửa hàng',
       color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: AdminVendor): boolean => row.isActive,
     },
     {
+      id: 'reactivate',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
+      onClick: (row: AdminVendor): void => {
+        handleReactivate(row);
+      },
+      tooltip: 'Kích hoạt lại cửa hàng',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: AdminVendor): boolean => !row.isActive,
+    },
+    {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: AdminVendor): void => handleDelete(row),
+      tooltip: 'Xóa cửa hàng',
       color: 'error' as const,
       variant: 'outlined' as const,
     },
@@ -227,12 +276,54 @@ export default function VendorsPage(): JSX.Element {
 
   return (
     <div>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="vendors-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Quản lý cửa hàng
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý cửa hàng
+            </h1>
+            <button
+              type="button"
+              onClick={startVendorsTour}
+              aria-label="Mở hướng dẫn quản lý cửa hàng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Quản lý danh sách các cửa hàng đăng ký trong hệ thống
           </p>
@@ -240,63 +331,45 @@ export default function VendorsPage(): JSX.Element {
       </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={vendors}
-        rowKey="vendorId"
-        actions={actions}
-        loading={status === 'pending'}
-        emptyMessage="Chưa có cửa hàng nào"
-        maxHeight="none"
-      />
+      <div data-tour="vendors-table-wrapper">
+        <Table
+          columns={columns}
+          data={vendors}
+          rowKey="vendorId"
+          actions={actions}
+          loading={status === 'pending'}
+          emptyMessage="Chưa có cửa hàng nào"
+          maxHeight="none"
+          tourId="admin-vendors"
+        />
+      </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="vendors-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmationDialog
         open={openDeleteDialog}
         onClose={handleCancelDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Xác nhận xóa cửa hàng
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa cửa hàng"
+        confirmationMessage={
+          <>
             Bạn có chắc chắn muốn xóa cửa hàng &quot;{selectedVendor?.name}
             &quot;? Hành động này không thể hoàn tác.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCancelDialog}
-            color="primary"
-            className="font-semibold"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => void handleConfirmDelete()}
-            color="error"
-            variant="contained"
-            className="font-semibold"
-            autoFocus
-          >
-            Xóa
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </>
+        }
+      />
 
       {/* Suspend Confirmation Dialog */}
       <Dialog
