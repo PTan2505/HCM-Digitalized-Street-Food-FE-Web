@@ -38,6 +38,22 @@ const formatVNDatetime = (isoStr?: string): string => {
   });
 };
 
+const formatNumberWithDotGrouping = (value: number): string => {
+  const safeNumber = Number.isFinite(value) ? Math.trunc(value) : 0;
+  return safeNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const getFormattedTaskTargetValue = (
+  taskType: QuestTaskType,
+  targetValue: number
+): string | number => {
+  if (taskType === QuestTaskType.ORDER_AMOUNT) {
+    return formatNumberWithDotGrouping(targetValue);
+  }
+
+  return targetValue;
+};
+
 /** Tiny muted label + value card */
 const InfoCard = ({
   label,
@@ -454,7 +470,10 @@ export default function QuestDetailsModal({
                             Giá trị cần đạt
                           </p>
                           <p className="mt-0.5 text-sm font-semibold text-gray-800">
-                            {task.targetValue}
+                            {getFormattedTaskTargetValue(
+                              task.type,
+                              task.targetValue
+                            )}
                           </p>
                         </div>
 

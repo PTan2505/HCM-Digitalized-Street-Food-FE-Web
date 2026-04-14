@@ -229,7 +229,7 @@ export default function UserBadgeFormModal({
           <Button
             onClick={handleConfirmRemove}
             color="error"
-            variant="contained"
+            variant="outlined"
             className="font-(--font-nunito)"
             autoFocus
           >
