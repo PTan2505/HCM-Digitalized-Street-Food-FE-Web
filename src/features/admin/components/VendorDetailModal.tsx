@@ -201,220 +201,229 @@ export default function VendorDetailModal({
             <Typography variant="h6" className="mb-3 font-semibold">
               Chi nhánh ({branches.length})
             </Typography>
-            {branches.map((branch, index) => (
-              <Card
-                key={branch.branchId}
-                className="mb-3 border border-slate-200 shadow-sm"
-              >
-                <CardContent>
-                  <Box className="mb-3 flex items-start justify-between">
-                    <Typography variant="h6" className="font-semibold">
-                      Chi nhánh #{index + 1}: {branch.name}
-                    </Typography>
-                    <Box className="flex items-center gap-2">
-                      {branch.tierName && (
-                        <Chip
-                          label={`Tier ${branch.tierName}`}
-                          size="small"
-                          className="border border-blue-200 bg-blue-50 font-semibold text-blue-700"
-                        />
-                      )}
-                      {getBranchVerificationStatus(branch.isVerified)}
-                    </Box>
-                  </Box>
+            {branches.map((branch, index) => {
+              const licenseUrls = branch.licenseUrls ?? [];
 
-                  <Divider className="my-3" />
-
-                  <Box className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Contact Info */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Thông tin liên hệ
-                      </Typography>
-                      <Box className="mb-2 flex items-center gap-2">
-                        <PhoneIcon fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {branch.phoneNumber}
-                        </Typography>
-                      </Box>
-                      <Box className="flex items-center gap-2">
-                        <EmailIcon fontSize="small" color="action" />
-                        <Typography variant="body2">{branch.email}</Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Address */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Địa chỉ
-                      </Typography>
-                      <Box className="flex items-start gap-2">
-                        <LocationOnIcon fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {branch.addressDetail}, {branch.ward}, {branch.city}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Rating */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Đánh giá
+              return (
+                <Card
+                  key={branch.branchId}
+                  className="mb-3 border border-slate-200 shadow-sm"
+                >
+                  <CardContent>
+                    <Box className="mb-3 flex items-start justify-between">
+                      <Typography variant="h6" className="font-semibold">
+                        Chi nhánh #{index + 1}: {branch.name}
                       </Typography>
                       <Box className="flex items-center gap-2">
-                        <Rating
-                          value={branch.avgRating}
-                          precision={0.1}
-                          readOnly
-                          size="small"
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          ({Number(branch.avgRating ?? 0).toFixed(1)})
+                        {branch.tierName && (
+                          <Chip
+                            label={`Tier ${branch.tierName}`}
+                            size="small"
+                            className="border border-blue-200 bg-blue-50 font-semibold text-blue-700"
+                          />
+                        )}
+                        {getBranchVerificationStatus(branch.isVerified)}
+                      </Box>
+                    </Box>
+
+                    <Divider className="my-3" />
+
+                    <Box className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {/* Contact Info */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Thông tin liên hệ
                         </Typography>
-                      </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {branch.totalReviewCount ?? 0} đánh giá
-                      </Typography>
-                    </Box>
-
-                    {/* Branch Timeline */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Thời gian
-                      </Typography>
-                      <Typography variant="body2">
-                        Tạo: {formatDateTime(branch.createdAt)}
-                      </Typography>
-                      <Typography variant="body2">
-                        Cập nhật: {formatDateTime(branch.updatedAt)}
-                      </Typography>
-                    </Box>
-
-                    {/* Status */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Trạng thái hoạt động
-                      </Typography>
-                      <Box className="flex gap-2">
-                        <Chip
-                          label={branch.isActive ? 'Hoạt động' : 'Tạm ngưng'}
-                          size="small"
-                          className={
-                            branch.isActive
-                              ? 'border border-emerald-200 bg-emerald-50 font-semibold text-emerald-700'
-                              : 'border border-slate-200 bg-slate-100 font-semibold text-slate-700'
-                          }
-                        />
-                        <Chip
-                          label={
-                            branch.isSubscribed ? 'Đã đăng ký' : 'Chưa đăng ký'
-                          }
-                          size="small"
-                          className={
-                            branch.isSubscribed
-                              ? 'border border-sky-200 bg-sky-50 font-semibold text-sky-700'
-                              : 'border border-slate-200 bg-slate-100 font-semibold text-slate-700'
-                          }
-                        />
-                        {branch.daysRemaining !== null &&
-                          branch.daysRemaining !== undefined && (
-                            <Chip
-                              label={`Còn ${branch.daysRemaining} ngày`}
-                              size="small"
-                              className="border border-amber-200 bg-amber-50 font-semibold text-amber-700"
-                            />
-                          )}
-                      </Box>
-                    </Box>
-
-                    {/* Subscription */}
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Gói đăng ký
-                      </Typography>
-                      <Typography variant="body2">
-                        Tier: {branch.tierName ?? '-'}
-                      </Typography>
-                      <Typography variant="body2">
-                        Hết hạn: {formatDateTime(branch.subscriptionExpiresAt)}
-                      </Typography>
-                      <Typography variant="body2">
-                        Người duyệt: {branch.verifiedByUserName ?? '-'}
-                      </Typography>
-                    </Box>
-
-                    {/* Map */}
-                    <Box className="md:col-span-2">
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Vị trí trên bản đồ
-                      </Typography>
-                      <BranchLocationPreviewMap
-                        lat={branch.lat}
-                        lng={branch.long}
-                      />
-                    </Box>
-
-                    {/* License */}
-                    <Box className="md:col-span-2">
-                      <Typography
-                        variant="subtitle2"
-                        className="mb-2 font-semibold"
-                      >
-                        Giấy phép kinh doanh
-                      </Typography>
-                      <Box className="mb-2 flex gap-2">
-                        {getLicenseStatusChip(branch.licenseStatus)}
-                      </Box>
-                      {branch.licenseUrls.length > 0 ? (
-                        <Box className="mt-2 flex flex-wrap gap-2">
-                          {branch.licenseUrls.map((url, idx) => (
-                            <Box
-                              key={idx}
-                              className="overflow-hidden rounded-lg border border-slate-200 bg-white"
-                            >
-                              <img
-                                src={url}
-                                alt={`Giấy phép ${idx + 1}`}
-                                className="h-32 w-auto cursor-pointer object-cover transition-transform hover:scale-105"
-                                onClick={() => window.open(url, '_blank')}
-                              />
-                            </Box>
-                          ))}
+                        <Box className="mb-2 flex items-center gap-2">
+                          <PhoneIcon fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {branch.phoneNumber}
+                          </Typography>
                         </Box>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          Chưa có hình giấy phép.
+                        <Box className="flex items-center gap-2">
+                          <EmailIcon fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {branch.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Address */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Địa chỉ
                         </Typography>
-                      )}
-                      <Typography variant="body2" className="mt-2">
-                        Lý do từ chối: {branch.licenseRejectReason ?? '-'}
-                      </Typography>
+                        <Box className="flex items-start gap-2">
+                          <LocationOnIcon fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {branch.addressDetail}, {branch.ward}, {branch.city}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Rating */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Đánh giá
+                        </Typography>
+                        <Box className="flex items-center gap-2">
+                          <Rating
+                            value={branch.avgRating}
+                            precision={0.1}
+                            readOnly
+                            size="small"
+                          />
+                          <Typography variant="body2" color="text.secondary">
+                            ({Number(branch.avgRating ?? 0).toFixed(1)})
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {branch.totalReviewCount ?? 0} đánh giá
+                        </Typography>
+                      </Box>
+
+                      {/* Branch Timeline */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Thời gian
+                        </Typography>
+                        <Typography variant="body2">
+                          Tạo: {formatDateTime(branch.createdAt)}
+                        </Typography>
+                        <Typography variant="body2">
+                          Cập nhật: {formatDateTime(branch.updatedAt)}
+                        </Typography>
+                      </Box>
+
+                      {/* Status */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Trạng thái hoạt động
+                        </Typography>
+                        <Box className="flex gap-2">
+                          <Chip
+                            label={branch.isActive ? 'Hoạt động' : 'Tạm ngưng'}
+                            size="small"
+                            className={
+                              branch.isActive
+                                ? 'border border-emerald-200 bg-emerald-50 font-semibold text-emerald-700'
+                                : 'border border-slate-200 bg-slate-100 font-semibold text-slate-700'
+                            }
+                          />
+                          <Chip
+                            label={
+                              branch.isSubscribed
+                                ? 'Đã đăng ký'
+                                : 'Chưa đăng ký'
+                            }
+                            size="small"
+                            className={
+                              branch.isSubscribed
+                                ? 'border border-sky-200 bg-sky-50 font-semibold text-sky-700'
+                                : 'border border-slate-200 bg-slate-100 font-semibold text-slate-700'
+                            }
+                          />
+                          {branch.daysRemaining !== null &&
+                            branch.daysRemaining !== undefined && (
+                              <Chip
+                                label={`Còn ${branch.daysRemaining} ngày`}
+                                size="small"
+                                className="border border-amber-200 bg-amber-50 font-semibold text-amber-700"
+                              />
+                            )}
+                        </Box>
+                      </Box>
+
+                      {/* Subscription */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Gói đăng ký
+                        </Typography>
+                        <Typography variant="body2">
+                          Tier: {branch.tierName ?? '-'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Hết hạn:{' '}
+                          {formatDateTime(branch.subscriptionExpiresAt)}
+                        </Typography>
+                        <Typography variant="body2">
+                          Người duyệt: {branch.verifiedByUserName ?? '-'}
+                        </Typography>
+                      </Box>
+
+                      {/* Map */}
+                      <Box className="md:col-span-2">
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Vị trí trên bản đồ
+                        </Typography>
+                        <BranchLocationPreviewMap
+                          lat={branch.lat}
+                          lng={branch.long}
+                        />
+                      </Box>
+
+                      {/* License */}
+                      <Box className="md:col-span-2">
+                        <Typography
+                          variant="subtitle2"
+                          className="mb-2 font-semibold"
+                        >
+                          Giấy phép kinh doanh
+                        </Typography>
+                        <Box className="mb-2 flex gap-2">
+                          {getLicenseStatusChip(branch.licenseStatus)}
+                        </Box>
+                        {licenseUrls.length > 0 ? (
+                          <Box className="mt-2 flex flex-wrap gap-2">
+                            {licenseUrls.map((url, idx) => (
+                              <Box
+                                key={idx}
+                                className="overflow-hidden rounded-lg border border-slate-200 bg-white"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`Giấy phép ${idx + 1}`}
+                                  className="h-32 w-auto cursor-pointer object-cover transition-transform hover:scale-105"
+                                  onClick={() => window.open(url, '_blank')}
+                                />
+                              </Box>
+                            ))}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Chưa có hình giấy phép.
+                          </Typography>
+                        )}
+                        <Typography variant="body2" className="mt-2">
+                          Lý do từ chối: {branch.licenseRejectReason ?? '-'}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </Box>
         )}
       </DialogContent>

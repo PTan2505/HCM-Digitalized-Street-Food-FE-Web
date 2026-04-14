@@ -760,7 +760,6 @@ export default function QuestFormModal({
         description: data.description,
         imageUrl: data.imageUrl,
         isActive: true,
-        requiresEnrollment: !isUpgrade,
         isStandalone: !isCampaign,
         campaignId: isCampaign ? data.campaignId : null,
         tasks: data.tasks.map((task) => ({
@@ -1106,8 +1105,9 @@ export default function QuestFormModal({
                 {fields.map((field, index) => {
                   const currentTaskType =
                     watch(`tasks.${index}.type`) ?? QuestTaskType.REVIEW;
-                  const currentTargetValue =
-                    watch(`tasks.${index}.targetValue`) ?? 0;
+                  const currentTargetValue = Number(
+                    watch(`tasks.${index}.targetValue`) ?? 0
+                  );
 
                   return (
                     <div

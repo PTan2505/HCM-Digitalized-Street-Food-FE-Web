@@ -63,7 +63,7 @@ export interface QuestCreate {
   description: string | null;
   imageUrl: string | null;
   isActive: boolean;
-  requiresEnrollment: boolean;
+  requiresEnrollment?: boolean;
   isStandalone: boolean;
   campaignId: number | null;
   tasks: QuestTaskPayload[];
