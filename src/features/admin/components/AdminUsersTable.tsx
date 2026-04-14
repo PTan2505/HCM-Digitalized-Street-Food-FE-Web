@@ -112,47 +112,47 @@ export default function AdminUsersTable({
       emptyMessage="Không có người dùng"
       rowKey="id"
       tourId={tourId}
-      actions={[
-        {
-          id: 'toggle-ban',
-          label: (row: AdminUserItem): string =>
-            isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
-          onClick: (row): void => {
-            if (processingUserId !== null) {
-              return;
-            }
-
-            onToggleBan(row);
-          },
-          variant: 'outlined',
-          color: 'warning',
-          tooltip:
-            processingUserId !== null
-              ? 'Đang cập nhật trạng thái...'
-              : 'Khóa hoặc mở khóa tài khoản',
-        },
-        ...(roleFilter === 'user'
+      actions={
+        roleFilter === 'user'
           ? [
+              {
+                id: 'toggle-ban',
+                label: (row: AdminUserItem): string =>
+                  isUserBanned(row) ? 'Bỏ chặn' : 'Chặn',
+                onClick: (row): void => {
+                  if (processingUserId !== null) {
+                    return;
+                  }
+
+                  onToggleBan(row);
+                },
+                variant: 'outlined',
+                color: 'warning',
+                tooltip:
+                  processingUserId !== null
+                    ? 'Đang cập nhật trạng thái...'
+                    : 'Khóa hoặc mở khóa tài khoản',
+              },
               {
                 id: 'promote-moderator',
                 label: 'Thêm Moderator',
-                onClick: (row: AdminUserItem): void => {
+                onClick: (row): void => {
                   if (processingUserId !== null) {
                     return;
                   }
 
                   onPromoteModerator(row);
                 },
-                variant: 'outlined' as const,
-                color: 'info' as const,
+                variant: 'outlined',
+                color: 'info',
                 tooltip:
                   processingUserId !== null
                     ? 'Đang cập nhật vai trò...'
                     : 'Nâng quyền thành moderator',
               },
             ]
-          : []),
-      ]}
+          : undefined
+      }
     />
   );
 }
