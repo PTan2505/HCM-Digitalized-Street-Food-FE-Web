@@ -14,19 +14,6 @@ import { useAppSelector } from '@hooks/reduxHooks';
 import useCategory from '@features/home/hooks/useCategory';
 import { selectCategories, selectCategoryStatus } from '@slices/category';
 
-const CATEGORY_IMAGES: string[] = [
-  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
-  'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80',
-  'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80',
-  'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&q=80',
-  'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&q=80',
-  'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80',
-];
-function resolveCategoryImage(categoryId: number, index: number): string {
-  const imageIndex = (categoryId + index) % CATEGORY_IMAGES.length;
-  return CATEGORY_IMAGES[imageIndex];
-}
-
 export default function PopularCategoriesSection(): JSX.Element {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -138,7 +125,7 @@ export default function PopularCategoriesSection(): JSX.Element {
                 pb: 2,
               }}
             >
-              {pagedCategories.map((category, index) => (
+              {pagedCategories.map((category) => (
                 <Box
                   key={category.categoryId}
                   className="group flex cursor-pointer flex-col items-center"
@@ -152,19 +139,28 @@ export default function PopularCategoriesSection(): JSX.Element {
                       height: { xs: 62, sm: 112, md: 128, lg: 136 },
                     }}
                   >
-                    <img
-                      src={resolveCategoryImage(
-                        category.categoryId,
-                        currentPage * itemsPerPage + index
-                      )}
-                      alt={category.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                    />
+                    {category.imageUrl ? (
+                      <img
+                        src={category.imageUrl}
+                        alt={category.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
+                    ) : (
+                      <Box className="flex h-full w-full items-center justify-center bg-gray-100">
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          sx={{ color: '#6b7280' }}
+                        >
+                          {category.name.charAt(0).toUpperCase()}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                   <Typography
                     variant="h6"
