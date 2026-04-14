@@ -102,6 +102,11 @@ const getDefaultRewardValue = (rewardType: QuestRewardType): number => {
   return 0;
 };
 
+const formatNumberWithDotGrouping = (value: number): string => {
+  const safeNumber = Number.isFinite(value) ? Math.trunc(value) : 0;
+  return safeNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
 const createDefaultReward =
   (): QuestFormInput['tasks'][number]['rewards'][number] => ({
     rewardType: QuestRewardType.POINTS,
@@ -605,7 +610,8 @@ export default function QuestFormModal({
         (campaignResponse.items ?? []).filter(
           (campaign) =>
             campaign.createdByVendorId === null &&
-            campaign.createdByBranchId === null
+            campaign.createdByBranchId === null &&
+            campaign.isUpdateable
         )
       );
       setBadgeOptions(badges);
@@ -1100,6 +1106,8 @@ export default function QuestFormModal({
                 {fields.map((field, index) => {
                   const currentTaskType =
                     watch(`tasks.${index}.type`) ?? QuestTaskType.REVIEW;
+                  const currentTargetValue =
+                    watch(`tasks.${index}.targetValue`) ?? 0;
 
                   return (
                     <div
@@ -1183,15 +1191,60 @@ export default function QuestFormModal({
                               ))}
                             </select>
                           ) : (
-                            <input
-                              type="number"
-                              {...register(`tasks.${index}.targetValue`, {
-                                valueAsNumber: true,
-                              })}
-                              className={inputClass(
-                                !!errors.tasks?.[index]?.targetValue
+                            <>
+                              {currentTaskType ===
+                              QuestTaskType.ORDER_AMOUNT ? (
+                                <>
+                                  <input
+                                    type="hidden"
+                                    {...register(`tasks.${index}.targetValue`, {
+                                      valueAsNumber: true,
+                                    })}
+                                  />
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={
+                                      Number.isFinite(currentTargetValue)
+                                        ? formatNumberWithDotGrouping(
+                                            currentTargetValue
+                                          )
+                                        : ''
+                                    }
+                                    onChange={(event) => {
+                                      const digitsOnly =
+                                        event.target.value.replace(/\D/g, '');
+                                      const parsedValue =
+                                        digitsOnly.length > 0
+                                          ? Number(digitsOnly)
+                                          : Number.NaN;
+                                      setValue(
+                                        `tasks.${index}.targetValue`,
+                                        parsedValue,
+                                        {
+                                          shouldDirty: true,
+                                          shouldValidate: true,
+                                        }
+                                      );
+                                    }}
+                                    className={inputClass(
+                                      !!errors.tasks?.[index]?.targetValue
+                                    )}
+                                    placeholder="Ví dụ: 1.000.000"
+                                  />
+                                </>
+                              ) : (
+                                <input
+                                  type="number"
+                                  {...register(`tasks.${index}.targetValue`, {
+                                    valueAsNumber: true,
+                                  })}
+                                  className={inputClass(
+                                    !!errors.tasks?.[index]?.targetValue
+                                  )}
+                                />
                               )}
-                            />
+                            </>
                           )}
                           {errors.tasks?.[index]?.targetValue && (
                             <p className="mt-1 text-xs text-red-500">

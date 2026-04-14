@@ -133,16 +133,16 @@ export default function UserBadgeManagement(): JSX.Element {
               badges.map((badge) => (
                 <div
                   key={badge.badgeId}
-                  className="flex items-center gap-1 rounded-full bg-[var(--color-primary-100)] px-2 py-1"
+                  // className="flex items-center gap-1 rounded-full bg-[var(--color-primary-100)] px-2 py-1"
                 >
                   <Avatar
                     src={badge.iconUrl}
                     alt={badge.badgeName}
                     className="h-4 w-4"
                   />
-                  <span className="text-xs font-medium text-[var(--color-primary-800)]">
+                  {/* <span className="text-xs font-medium text-[var(--color-primary-800)]">
                     {badge.badgeName}
-                  </span>
+                  </span> */}
                 </div>
               ))
             )}
