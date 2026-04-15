@@ -39,6 +39,7 @@ export interface VendorBranch {
   licenseUrl?: string | null;
   licenseUrls: string[] | null;
   licenseStatus: string | null;
+  verifiedByUserName?: string | null;
   licenseRejectReason: string | null;
 }
 

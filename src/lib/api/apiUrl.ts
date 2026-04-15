@@ -170,6 +170,7 @@ export const apiUrl = {
       `/order/vendor/orders/${orderId}/complete`,
     getVendorOrders: 'order/vendor/orders',
     getOrderDetails: (orderId: number): string => `/order/${orderId}`,
+    updateOrder: (orderId: number): string => `/Order/${orderId}`,
   },
   manager: {
     getMyBranch: '/Branch/manager/my-branch',
@@ -205,6 +206,9 @@ export const apiUrl = {
     getOrPostQuest: '/Quest',
     updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
     postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+  },
+  tier: {
+    getAllTiers: '/Tier',
   },
   setting: {
     getSettings: '/Setting',

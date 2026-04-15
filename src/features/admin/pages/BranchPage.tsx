@@ -1,12 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
-import { Visibility as VisibilityIcon } from '@mui/icons-material';
+import {
+  Visibility as VisibilityIcon,
+  HelpOutline as HelpOutlineIcon,
+} from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import BranchDetailModal from '@features/admin/components/BranchDetailModal';
 import type { BranchAdmin } from '@features/admin/types/branch';
 import useBranch from '@features/admin/hooks/useBranch';
+import { getAdminBranchManagementTourSteps } from '@features/admin/utils/adminBranchManagementTourSteps';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectAdminBranches,
@@ -24,6 +35,8 @@ export default function BranchPage(): JSX.Element {
   const [selectedBranch, setSelectedBranch] = useState<BranchAdmin | null>(
     null
   );
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -58,6 +71,28 @@ export default function BranchPage(): JSX.Element {
     setPageSize(newPageSize);
     setCurrentPage(1);
   };
+
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getAdminBranchManagementTourSteps({
+      hasRows: branches.length > 0,
+    });
+  }, [branches.length]);
 
   const columns = [
     {
@@ -149,12 +184,54 @@ export default function BranchPage(): JSX.Element {
 
   return (
     <div>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-branch-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Quản lý chi nhánh
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý chi nhánh
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn quản lý chi nhánh"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Quản lý danh sách các chi nhánh trong hệ thống
           </p>
@@ -162,7 +239,7 @@ export default function BranchPage(): JSX.Element {
       </div>
 
       {/* Table */}
-      <div>
+      <div data-tour="admin-branch-table-wrapper">
         <Table
           columns={columns}
           data={branches}
@@ -171,11 +248,12 @@ export default function BranchPage(): JSX.Element {
           loading={status === 'pending'}
           emptyMessage="Chưa có chi nhánh nào"
           maxHeight="none"
+          tourId="admin-branch"
         />
       </div>
 
       {/* Pagination */}
-      <div className="mt-4">
+      <div className="mt-4" data-tour="admin-branch-pagination">
         <Pagination
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}

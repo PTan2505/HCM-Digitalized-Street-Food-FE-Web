@@ -50,7 +50,7 @@ const StatusBadge = ({ isActive }: { isActive: boolean }): JSX.Element => {
     <span
       className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${tone}`}
     >
-      {isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+      {isActive ? 'Đang hoạt động' : 'Tạm ngưng hoặc đã kết thúc'}
     </span>
   );
 };
@@ -123,7 +123,9 @@ const VoucherCard = ({ voucher }: { voucher: Voucher }): JSX.Element => {
 
           {/* Status */}
           <Chip
-            label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+            label={
+              voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng hoặc đã kết thúc'
+            }
             size="small"
             color={voucher.isActive ? 'success' : 'error'}
             variant="outlined"
