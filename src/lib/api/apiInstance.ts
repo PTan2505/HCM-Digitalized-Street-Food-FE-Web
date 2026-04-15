@@ -10,6 +10,7 @@ import { BranchApi } from '@features/moderator/api/branchApi';
 import { TasteApi } from '@features/admin/api/tasteApi';
 import { PaymentApi } from '@features/vendor/api/paymentApi';
 import { HomeBranchApi } from '@features/home/api/homeBranchApi';
+import { HomeCampaignApi } from '@features/home/api/homeCampaignApi';
 import { DishApi } from '@features/vendor/api/dishApi';
 import { FeedbackApi } from '@features/vendor/api/feedbackApi';
 import { OrderManagementApi } from '@features/manager/api/orderManagementApi';
@@ -44,6 +45,7 @@ export const axiosApi = {
   tasteApi: new TasteApi(axiosClient),
   paymentApi: new PaymentApi(axiosClient),
   homeBranchApi: new HomeBranchApi(axiosClient),
+  homeCampaignApi: new HomeCampaignApi(axiosClient),
   dishApi: new DishApi(axiosClient),
   feedbackApi: new FeedbackApi(axiosClient),
   orderApi: new OrderApi(axiosClient),

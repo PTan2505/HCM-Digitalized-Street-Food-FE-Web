@@ -25,7 +25,11 @@ const RootLayout = (): JSX.Element => {
 
   useEffect(() => {
     if (isDone && !user) {
-      navigate(ROUTES.LOGIN);
+      if (location.pathname === ROUTES.ROOT) {
+        navigate(ROUTES.HOME, { replace: true });
+      } else {
+        navigate(ROUTES.LOGIN);
+      }
       return;
     }
 
