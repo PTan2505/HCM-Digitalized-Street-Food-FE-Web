@@ -3,7 +3,12 @@ import type { JSX } from 'react';
 import { Box, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 
-const HERO_SLIDES = [
+export interface HeroSlide {
+  src: string;
+  alt: string;
+}
+
+const FALLBACK_HERO_SLIDES: HeroSlide[] = [
   {
     src: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1400&q=80',
     alt: 'Cinnamon Apple Loaded Tart',
@@ -18,15 +23,26 @@ const HERO_SLIDES = [
   },
 ];
 
-export default function HeroCarousel(): JSX.Element {
+interface HeroCarouselProps {
+  slides: HeroSlide[];
+}
+
+export default function HeroCarousel({
+  slides,
+}: HeroCarouselProps): JSX.Element {
   const [current, setCurrent] = useState(0);
-  const total = HERO_SLIDES.length;
+  const activeSlides = slides.length > 0 ? slides : FALLBACK_HERO_SLIDES;
+  const total = activeSlides.length;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total]);
   const prev = useCallback(
     () => setCurrent((c) => (c - 1 + total) % total),
     [total]
   );
+
+  useEffect(() => {
+    setCurrent(0);
+  }, [total]);
 
   useEffect(() => {
     const id = setInterval(next, 5000);
@@ -55,7 +71,7 @@ export default function HeroCarousel(): JSX.Element {
           willChange: 'transform',
         }}
       >
-        {HERO_SLIDES.map((slide, i) => (
+        {activeSlides.map((slide, i) => (
           <Box key={i} sx={{ minWidth: '100%', height: '100%', flexShrink: 0 }}>
             <img
               src={slide.src}
@@ -130,7 +146,7 @@ export default function HeroCarousel(): JSX.Element {
           alignItems: 'center',
         }}
       >
-        {HERO_SLIDES.map((_, i) => (
+        {activeSlides.map((_, i) => (
           <Box
             key={i}
             component="button"

@@ -30,6 +30,10 @@ export interface Branch {
   updatedAt: string | null;
   isVerified: boolean;
   avgRating: number;
+  totalReviewCount?: number;
+  totalRatingSum?: number;
+  tierId?: number;
+  tierName?: string;
   isActive: boolean;
   isSubscribed: boolean;
   daysRemaining: number | null;
@@ -209,4 +213,25 @@ export interface ClaimBranchRequest {
 export interface ClaimBranchResponse {
   paymentLink?: string | null;
   licenseUrls: string[];
+}
+
+export interface UserSearchItem {
+  id: number;
+  userName: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface SearchUsersResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: UserSearchItem[];
+}
+
+export interface AssignBranchManagerRequest {
+  managerId: number;
 }

@@ -3,34 +3,18 @@ import {
   transferSchema,
   type RequestTransferFormValues,
 } from '@utils/transferSchema';
-import CloseIcon from '@mui/icons-material/Close';
-import MoneyIcon from '@mui/icons-material/Money';
 import {
   Box,
   Typography,
-  Select,
-  MenuItem,
   Button,
   CircularProgress,
-  IconButton,
+  Autocomplete,
+  TextField,
 } from '@mui/material';
+import { BANK_OPTIONS } from '@constants/bank';
 import type { JSX } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-
-const bankOptions = [
-  'Vietcombank: 9704 36',
-  'BIDV: 9704 18',
-  'Techcombank: 9704 07',
-  'Dong A: 9704 06',
-  'Maritime Bank: 9704 26',
-  'Timo by BVBank: 9704 54',
-  'MBBank: 9704 22',
-  'TPBank: 9704 23',
-  'BVBank: 9704 32',
-  'Eximbank: 9704 31',
-  'VIB: 9704 41',
-] as const;
 
 interface RequestTransferModalProps {
   isOpen: boolean;
@@ -48,9 +32,14 @@ const formatVnd = (value?: number | null): string => {
   return `${value.toLocaleString('vi-VN')} VND`;
 };
 
-const extractBin = (value: string): string => {
-  const raw = value.split(':')[1] ?? '';
-  return raw.replace(/\s/g, '').trim();
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined || value === 0) return '';
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
 };
 
 export default function RequestTransferModal({
@@ -68,17 +57,25 @@ export default function RequestTransferModal({
   } = useForm<RequestTransferFormValues>({
     resolver: zodResolver(transferSchema),
     defaultValues: {
-      description: '',
+      description: 'Rút tiền từ Lowca',
       toAccountNumber: '',
       toBin: '',
       amount: 1000,
     },
   });
 
+  const bankList = useMemo(
+    () =>
+      Object.entries(BANK_OPTIONS)
+        .map(([bankCode, bank]) => ({ bankCode, ...bank }))
+        .filter((b) => b.isDisburse),
+    []
+  );
+
   useEffect(() => {
     if (!isOpen) {
       reset({
-        description: '',
+        description: 'Rút tiền từ Lowca',
         toAccountNumber: '',
         toBin: '',
         amount: 1000,
@@ -105,11 +102,8 @@ export default function RequestTransferModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5">
+        <Box className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-gray-50/80 px-8 py-5">
           <Box className="flex items-center gap-3">
-            <Box className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-              <MoneyIcon />
-            </Box>
             <Box>
               <Typography
                 variant="h2"
@@ -125,53 +119,28 @@ export default function RequestTransferModal({
               </Typography>
             </Box>
           </Box>
-
-          <IconButton
-            size="small"
-            onClick={onClose}
-            disabled={isSubmitting}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #e5e7eb',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
         </Box>
 
         {/* Modal Content */}
         <Box className="flex-1 overflow-y-auto px-8 py-6">
           <Box className="flex flex-col gap-6">
-            <Box>
-              <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                Nội dung <span className="text-red-500">*</span>
-              </label>
+            {/* Hidden description field */}
+            <Box className="hidden">
               <Controller
                 control={control}
                 name="description"
                 render={({ field }) => (
-                  <>
-                    <textarea
-                      {...field}
-                      rows={3}
-                      className={`w-full resize-none rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
-                        errors.description
-                          ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
-                          : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
-                      }`}
-                      placeholder="Ví dụ: Rút doanh thu ngày hôm nay"
-                    />
-                    {errors.description && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.description.message}
-                      </p>
-                    )}
-                  </>
+                  <textarea
+                    {...field}
+                    rows={3}
+                    className="w-full resize-none rounded-xl border px-4 py-2.5 outline-none"
+                    placeholder="Ví dụ: Rút doanh thu ngày hôm nay"
+                  />
                 )}
               />
             </Box>
 
+            {/* Account number */}
             <Box>
               <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                 Số tài khoản nhận <span className="text-red-500">*</span>
@@ -184,7 +153,7 @@ export default function RequestTransferModal({
                     <input
                       {...field}
                       type="text"
-                      className={`w-full rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
+                      className={`w-full rounded-xl border px-4 py-3 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
                         errors.toAccountNumber
                           ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                           : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
@@ -201,6 +170,7 @@ export default function RequestTransferModal({
               />
             </Box>
 
+            {/* Bank picker using MUI Autocomplete */}
             <Box>
               <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                 Ngân hàng <span className="text-red-500">*</span>
@@ -208,49 +178,160 @@ export default function RequestTransferModal({
               <Controller
                 control={control}
                 name="toBin"
-                render={({ field }) => (
-                  <>
-                    <Select
-                      {...field}
-                      displayEmpty
-                      fullWidth
-                      className="rounded-xl bg-white"
-                      error={!!errors.toBin}
-                      sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: errors.toBin ? '#ef4444' : '#e5e7eb',
-                          borderRadius: '0.75rem',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: errors.toBin ? '#ef4444' : '#d1d5db',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: errors.toBin
-                            ? '#ef4444'
-                            : 'var(--color-primary-500)',
-                          borderWidth: '1px',
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled>
-                        <span className="text-gray-400">Chọn ngân hàng</span>
-                      </MenuItem>
-                      {bankOptions.map((bank) => (
-                        <MenuItem key={bank} value={extractBin(bank)}>
-                          {bank.split(':')[0]}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {errors.toBin && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.toBin.message}
-                      </p>
-                    )}
-                  </>
-                )}
+                render={({ field }) => {
+                  const selectedOption =
+                    bankList.find((b) => b.bin === field.value) ?? null;
+
+                  return (
+                    <Box>
+                      <Autocomplete
+                        {...field}
+                        options={bankList}
+                        value={selectedOption}
+                        onChange={(_, newValue) =>
+                          field.onChange(newValue?.bin ?? '')
+                        }
+                        getOptionLabel={(option) => option.shortName}
+                        filterOptions={(options, state) => {
+                          const inputValue = state.inputValue.toLowerCase();
+                          return options.filter(
+                            (option) =>
+                              option.shortName
+                                .toLowerCase()
+                                .includes(inputValue) ||
+                              option.name.toLowerCase().includes(inputValue) ||
+                              option.bankCode.toLowerCase().includes(inputValue)
+                          );
+                        }}
+                        isOptionEqualToValue={(option, value) =>
+                          option.bin === value.bin
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            placeholder="Tìm kiếm ngân hàng..."
+                            error={!!errors.toBin}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '0.75rem',
+                                backgroundColor: 'white',
+                                paddingRight: '9px !important',
+                                '& fieldset': {
+                                  borderColor: errors.toBin
+                                    ? '#ef4444'
+                                    : '#e5e7eb',
+                                  transition: 'all 0.2s',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: errors.toBin
+                                    ? '#ef4444'
+                                    : '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: errors.toBin
+                                    ? '#ef4444'
+                                    : 'var(--color-primary-500)',
+                                  borderWidth: '1px',
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                  padding: '4px 8px !important',
+                                  lineHeight: '1.5',
+                                },
+                              },
+                            }}
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: selectedOption ? (
+                                <img
+                                  src={selectedOption.bankLogoUrl}
+                                  alt={selectedOption.shortName}
+                                  className="ml-1 h-6 w-6 rounded-sm object-contain"
+                                  onError={(e) => {
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <svg
+                                  className="ml-1 h-5 w-5 shrink-0 text-gray-400"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11m16-11v11M8 10v11m8-11v11"
+                                  />
+                                </svg>
+                              ),
+                            }}
+                          />
+                        )}
+                        renderOption={(props, option, { selected }) => (
+                          <li
+                            {...props}
+                            key={option.bin}
+                            className={`${props.className} flex items-center gap-3 px-4 py-3 hover:bg-gray-50`}
+                          >
+                            <img
+                              src={option.bankLogoUrl}
+                              alt={option.shortName}
+                              className="h-8 w-8 shrink-0 rounded object-contain"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  'none';
+                              }}
+                            />
+                            <Box className="min-w-0 flex-1">
+                              <Typography
+                                className={`truncate text-sm ${selected ? 'font-semibold text-[var(--color-primary-600)]' : 'font-medium text-gray-800'}`}
+                              >
+                                {option.shortName}{' '}
+                                <span
+                                  className={
+                                    selected
+                                      ? 'font-normal text-[var(--color-primary-500)]/80'
+                                      : 'font-normal text-gray-500'
+                                  }
+                                >
+                                  ({option.bankCode})
+                                </span>
+                              </Typography>
+                            </Box>
+                            {selected && (
+                              <svg
+                                className="h-4 w-4 shrink-0 text-[var(--color-primary-500)]"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </li>
+                        )}
+                        noOptionsText="Không tìm thấy ngân hàng"
+                      />
+                      {errors.toBin && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {errors.toBin.message}
+                        </p>
+                      )}
+                    </Box>
+                  );
+                }}
               />
             </Box>
 
+            {/* Amount */}
             <Box>
               <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                 Số tiền rút (VNĐ) <span className="text-red-500">*</span>
@@ -262,16 +343,18 @@ export default function RequestTransferModal({
                   <>
                     <input
                       {...field}
-                      type="number"
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      value={field.value === 0 ? '' : field.value}
-                      className={`w-full rounded-xl border px-4 py-2.5 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
+                      type="text"
+                      inputMode="numeric"
+                      onChange={(e) =>
+                        field.onChange(parseNumberInput(e.target.value))
+                      }
+                      value={formatNumberWithDots(field.value)}
+                      className={`w-full rounded-xl border px-4 py-3 transition-all outline-none focus:ring-[var(--color-primary-500)] ${
                         errors.amount
                           ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                           : 'border-gray-200 hover:border-gray-300 focus:border-[var(--color-primary-500)]'
                       }`}
-                      placeholder="Tối thiểu: 1000"
-                      min="1000"
+                      placeholder="Tối thiểu: 1.000"
                     />
                     {errors.amount && (
                       <p className="mt-1 text-xs text-red-500">
@@ -286,7 +369,7 @@ export default function RequestTransferModal({
         </Box>
 
         {/* Modal Actions */}
-        <Box className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/80 px-8 py-5">
+        <Box className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/80 px-8 py-5">
           <Button
             onClick={onClose}
             disabled={isSubmitting}

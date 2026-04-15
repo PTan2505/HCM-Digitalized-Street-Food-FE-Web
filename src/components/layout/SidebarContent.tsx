@@ -19,6 +19,8 @@ export interface NavigationItem {
     style?: React.CSSProperties;
   }>;
   children?: NavigationItem[];
+  badgeText?: string;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 interface SidebarContentProps {
@@ -30,9 +32,10 @@ interface SidebarContentProps {
     role: string;
     avatarUrl?: string | null;
   };
-  settingsPath?: string;
   onLogout?: () => void;
   onLogoClick?: () => void;
+  onNavigateItemClick?: () => void;
+  onUserInfoClick?: () => void;
 }
 
 const SidebarContent = ({
@@ -41,6 +44,8 @@ const SidebarContent = ({
   userInfo = { name: 'User', email: 'user@example.com', role: 'Panel' },
   onLogout = (): void => {},
   onLogoClick,
+  onNavigateItemClick,
+  onUserInfoClick,
 }: SidebarContentProps): JSX.Element => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
@@ -64,24 +69,22 @@ const SidebarContent = ({
   };
 
   return (
-    <Box className="bg-gradient-moderator flex flex-1 flex-col font-[var(--font-nunito)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-      <Box className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto pt-5 pb-4">
-        {/* Logo/Brand */}
-        <Box
-          onClick={onLogoClick}
-          className={`mb-8 flex flex-col items-center gap-1 px-4 transition-all duration-300 ease-in-out ${
-            onLogoClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
-          }`}
-        >
+    <Box className="bg-gradient-moderator flex h-full min-h-0 flex-1 flex-col overflow-hidden font-(--font-nunito) shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+      {/* Logo/Brand */}
+      <Box
+        onClick={onLogoClick}
+        className={`shrink-0 px-4 pt-5 transition-all duration-300 ease-in-out ${
+          onLogoClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+        }`}
+      >
+        <Box className="mb-6 flex flex-col items-center gap-1">
           <Box className="flex h-8 items-center justify-center">
             <Box
               component="img"
               src={collapsed ? unionLogo : logoImage}
               alt="Logo"
               className={`object-contain transition-all duration-300 ease-in-out ${
-                collapsed
-                  ? 'h-[18px] w-[18px] max-w-[18px]'
-                  : 'h-8 w-auto max-w-[100px]'
+                collapsed ? 'h-4.5 w-4.5 max-w-4.5' : 'h-8 w-auto max-w-25'
               }`}
             />
           </Box>
@@ -95,9 +98,22 @@ const SidebarContent = ({
             </Typography>
           </Box>
         </Box>
+      </Box>
 
-        {/* Navigation */}
-        <Box component="nav" className="mt-4 flex-1 px-2">
+      {/* Navigation (scrollable middle area) */}
+      <Box
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2"
+        sx={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        }}
+      >
+        <Box component="nav" className="pb-4">
           {navigation.map((item) => {
             const isActive = isPathActive(item.href);
             const isDropdown = Boolean(
@@ -158,6 +174,7 @@ const SidebarContent = ({
                           <Link
                             key={child.name}
                             to={child.href ?? '#'}
+                            onClick={() => onNavigateItemClick?.()}
                             className="block no-underline"
                           >
                             <Box
@@ -167,7 +184,13 @@ const SidebarContent = ({
                                   : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
                               }`}
                             >
-                              <Typography className="overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
+                              <Box className="flex h-4 w-4 shrink-0 items-center justify-center">
+                                <child.icon
+                                  className="h-4 w-4"
+                                  style={{ color: 'inherit' }}
+                                />
+                              </Box>
+                              <Typography className="ml-2 overflow-hidden text-[0.85rem] font-medium whitespace-nowrap text-inherit">
                                 {child.name}
                               </Typography>
                             </Box>
@@ -187,7 +210,14 @@ const SidebarContent = ({
                 placement="right"
                 disableHoverListener={!collapsed}
               >
-                <Link to={item.href ?? '#'} className="no-underline">
+                <Link
+                  to={item.href ?? '#'}
+                  onClick={(event) => {
+                    item.onClick?.(event);
+                    onNavigateItemClick?.();
+                  }}
+                  className="no-underline"
+                >
                   <Box
                     className={`mb-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
                       isActive
@@ -208,76 +238,82 @@ const SidebarContent = ({
                     >
                       {item.name}
                     </Typography>
+                    {!collapsed && item.badgeText && (
+                      <Box className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                        {item.badgeText}
+                      </Box>
+                    )}
                   </Box>
                 </Link>
               </Tooltip>
             );
           })}
         </Box>
+      </Box>
 
-        {/* Bottom actions */}
-        <Box className="mt-auto px-2">
+      {/* Bottom actions */}
+      <Box className="shrink-0 px-2 pb-4">
+        <Tooltip
+          title={collapsed ? 'Đăng xuất' : ''}
+          placement="right"
+          disableHoverListener={!collapsed}
+        >
+          <Box
+            component="button"
+            onClick={onLogout}
+            className="text-moderator-logout hover:bg-moderator-logout-hover mb-2 flex w-full cursor-pointer items-center overflow-hidden rounded-lg border-none bg-transparent px-3 py-3 text-sm font-medium transition-[background-color,color] duration-200 ease-in-out hover:text-white"
+          >
+            <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
+              <ArrowRightOnRectangleIcon
+                className="h-5 w-5"
+                style={{ color: 'inherit' }}
+              />
+            </Box>
+            <Typography
+              className={`ml-3 overflow-hidden text-sm font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+                collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+              }`}
+            >
+              Đăng xuất
+            </Typography>
+          </Box>
+        </Tooltip>
+
+        {/* User info */}
+        <Box className="border-moderator-border border-t pt-4">
           <Tooltip
-            title={collapsed ? 'Đăng xuất' : ''}
+            title={collapsed ? `${userInfo.name}\n${userInfo.email}` : ''}
             placement="right"
             disableHoverListener={!collapsed}
           >
             <Box
-              component="button"
-              onClick={onLogout}
-              className="text-moderator-logout hover:bg-moderator-logout-hover mb-2 flex w-full cursor-pointer items-center overflow-hidden rounded-lg border-none bg-transparent px-3 py-3 text-sm font-medium transition-[background-color,color] duration-200 ease-in-out hover:text-white"
+              className="flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-2 transition-colors hover:bg-white/10"
+              onClick={onUserInfoClick}
             >
-              <Box className="flex h-5 w-5 shrink-0 items-center justify-center">
-                <ArrowRightOnRectangleIcon
-                  className="h-5 w-5"
-                  style={{ color: 'inherit' }}
-                />
-              </Box>
-              <Typography
-                className={`ml-3 overflow-hidden text-sm font-medium whitespace-nowrap text-inherit transition-[opacity,width] duration-300 ease-in-out ${
+              <Avatar
+                src={userInfo?.avatarUrl ?? undefined}
+                className="shrink-0 bg-(--color-moderator-active-bg) text-(--color-moderator-active-text) transition-[width,height] duration-300 ease-in-out"
+                style={{
+                  width: collapsed ? 32 : 36,
+                  height: collapsed ? 32 : 36,
+                }}
+              >
+                {!userInfo?.avatarUrl && <UserCircleIcon className="h-5 w-5" />}
+              </Avatar>
+              <Box
+                className={`ml-3 overflow-hidden transition-[opacity,width] duration-300 ease-in-out ${
                   collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
                 }`}
               >
-                Đăng xuất
-              </Typography>
+                <Typography className="text-moderator-text-primary overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
+                  {userInfo.name}
+                </Typography>
+                <Typography className="text-moderator-text-secondary overflow-hidden text-xs text-ellipsis whitespace-nowrap">
+                  {userInfo.email}
+                </Typography>
+              </Box>
             </Box>
           </Tooltip>
-
-          {/* User info */}
-          <Box className="border-moderator-border border-t pt-4">
-            <Tooltip
-              title={collapsed ? `${userInfo.name}\n${userInfo.email}` : ''}
-              placement="right"
-              disableHoverListener={!collapsed}
-            >
-              <Box className="flex items-center overflow-hidden px-3 py-2">
-                <Avatar
-                  src={userInfo?.avatarUrl ?? undefined}
-                  className="shrink-0 bg-[var(--color-moderator-active-bg)] text-[var(--color-moderator-active-text)] transition-[width,height] duration-300 ease-in-out"
-                  style={{
-                    width: collapsed ? 32 : 36,
-                    height: collapsed ? 32 : 36,
-                  }}
-                >
-                  {!userInfo?.avatarUrl && (
-                    <UserCircleIcon className="h-5 w-5" />
-                  )}
-                </Avatar>
-                <Box
-                  className={`ml-3 overflow-hidden transition-[opacity,width] duration-300 ease-in-out ${
-                    collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-                  }`}
-                >
-                  <Typography className="text-moderator-text-primary overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
-                    {userInfo.name}
-                  </Typography>
-                  <Typography className="text-moderator-text-secondary overflow-hidden text-xs text-ellipsis whitespace-nowrap">
-                    {userInfo.email}
-                  </Typography>
-                </Box>
-              </Box>
-            </Tooltip>
-          </Box>
         </Box>
       </Box>
     </Box>

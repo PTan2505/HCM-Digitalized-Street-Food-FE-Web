@@ -9,16 +9,10 @@ import SendIcon from '@mui/icons-material/Send';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from '@mui/material';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface FeedbackDetailsModalProps {
   isOpen: boolean;
@@ -133,35 +127,19 @@ export default function FeedbackDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 transition-opacity"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 transition-opacity"
       onClick={onClose}
     >
       <div
         className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-4">
-          <div className="min-w-0">
-            <p className="text-primary-700 mb-1 text-xs font-semibold tracking-wide uppercase">
-              Chi tiết đánh giá
-            </p>
-            <h2 className="text-table-text-primary text-lg leading-tight font-bold">
-              {feedback ? `#${feedback.id.toString()}` : '—'}
-            </h2>
-          </div>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #f3f4f6',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
+        <VendorModalHeader
+          title="Chi tiết đánh giá"
+          // subtitle={feedback ? `#${feedback.id.toString()}` : '—'}
+          icon={<RateReviewIcon />}
+          onClose={onClose}
+        />
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -244,10 +222,10 @@ export default function FeedbackDetailsModal({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {feedback.tags.map((tag) => (
                       <span
-                        key={tag}
+                        key={tag.id}
                         className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-xs text-blue-700"
                       >
-                        #{tag}
+                        #{tag.name}
                       </span>
                     ))}
                   </div>
@@ -384,40 +362,21 @@ export default function FeedbackDetailsModal({
         </div>
 
         {/* Delete confirm dialog */}
-        <Dialog
+        <DeleteConfirmationDialog
           open={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
-          aria-labelledby="feedback-detail-delete-title"
-          aria-describedby="feedback-detail-delete-description"
-        >
-          <DialogTitle id="feedback-detail-delete-title">
-            Xác nhận xóa phản hồi
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="feedback-detail-delete-description">
-              Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowDeleteConfirm(false)} color="primary">
-              Hủy
-            </Button>
-            <Button
-              onClick={() => void handleDeleteReply()}
-              color="error"
-              variant="contained"
-              autoFocus
-            >
-              Xóa
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={handleDeleteReply}
+          title="Xác nhận xóa phản hồi"
+          confirmationMessage={
+            <>Bạn có chắc chắn muốn xóa phản hồi cho đánh giá này không?</>
+          }
+        />
       </div>
 
       {/* Lightbox for images */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 p-4"
           onClick={() => setSelectedImage(null)}
         >
           <img

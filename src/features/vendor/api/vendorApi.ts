@@ -7,13 +7,15 @@ import type {
   SubmitImagesResponse,
   GetImagesResponse,
   CreateOrUpdateBranchResponse,
+  Branch,
   UpdateVendorNameRequest,
   UpdateVendorNameResponse,
   UpdateDietaryPreferencesOfMyVendorRequest,
   UpdateOrGetDietaryPreferencesOfMyVendorResponse,
   GetAllGhostPinsResponse,
-  ClaimBranchRequest,
   ClaimBranchResponse,
+  AssignBranchManagerRequest,
+  SearchUsersResponse,
 } from '@features/vendor/types/vendor';
 import type {
   WorkSchedule,
@@ -27,6 +29,32 @@ import type {
 } from '@features/vendor/types/workSchedule';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
+
+// type BranchListResponse = {
+//   currentPage: number;
+//   pageSize: number;
+//   totalPages: number;
+//   totalCount: number;
+//   hasPrevious: boolean;
+//   hasNext: boolean;
+//   items: Branch[];
+// };
+
+// const isBranchListResponse = (data: unknown): data is BranchListResponse => {
+//   if (!data || typeof data !== 'object') return false;
+//   if (
+//     !('items' in data) ||
+//     !Array.isArray((data as { items: unknown }).items)
+//   ) {
+//     return false;
+//   }
+//   return (
+//     'currentPage' in data &&
+//     'pageSize' in data &&
+//     'totalPages' in data &&
+//     'totalCount' in data
+//   );
+// };
 
 export class VendorApi {
   private apiClient: ApiClient;
@@ -97,11 +125,26 @@ export class VendorApi {
     return res.data;
   }
 
-  // async getBranches(vendorId: number): Promise<void> {
-  //   await this.apiClient.get({
-  //     url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
-  //   });
-  // }
+  async getBranches(vendorId: number): Promise<Branch[]> {
+    const res = await this.apiClient.get<unknown>({
+      url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
+    });
+
+    if (Array.isArray(res.data)) {
+      return res.data as Branch[];
+    }
+
+    if (
+      res.data &&
+      typeof res.data === 'object' &&
+      'items' in res.data &&
+      Array.isArray((res.data as { items: unknown }).items)
+    ) {
+      return (res.data as { items: Branch[] }).items;
+    }
+
+    return [];
+  }
 
   async updateBranch(
     branchId: number,
@@ -175,7 +218,7 @@ export class VendorApi {
 
   async deleteDayOff(dayOffId: number): Promise<void> {
     await this.apiClient.delete({
-      url: apiUrl.vendor.deleteDayOffOfABranch(dayOffId),
+      url: apiUrl.vendor.deleteOrUpdateDayOffOfABranch(dayOffId),
     });
   }
 
@@ -279,6 +322,29 @@ export class VendorApi {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    });
+    return res.data;
+  }
+
+  async updateBranchManager(
+    branchId: number,
+    data: AssignBranchManagerRequest
+  ): Promise<boolean> {
+    const res = await this.apiClient.put<boolean, AssignBranchManagerRequest>({
+      url: apiUrl.vendor.updateBranchManager(branchId),
+      data,
+    });
+    return res.data;
+  }
+
+  async searchUsers(params: {
+    query: string;
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<SearchUsersResponse> {
+    const res = await this.apiClient.get<SearchUsersResponse>({
+      url: apiUrl.user.search,
+      params,
     });
     return res.data;
   }

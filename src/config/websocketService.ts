@@ -1,4 +1,5 @@
 // import { tokenManagement } from '@utils/tokenManagement';
+// import { ENV } from '@config/env';
 
 // type WebSocketCallback = (payload: unknown) => void;
 
@@ -18,7 +19,7 @@
 //     }
 
 //     const accessToken = tokenManagement.getAccessToken();
-//     const url = `${import.meta.env.VITE_WS_URL}?access_token=${accessToken}`;
+//     const url = `${ENV.ws.url}?access_token=${accessToken}`;
 
 //     this.ws = new WebSocket(url);
 

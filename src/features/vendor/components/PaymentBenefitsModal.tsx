@@ -1,13 +1,13 @@
 import React from 'react';
 import type { JSX } from 'react';
 import { Button, CircularProgress, Box, Typography } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import PaymentIcon from '@mui/icons-material/Payment';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface PaymentBenefitsModalProps {
   isOpen: boolean;
@@ -26,39 +26,20 @@ export default function PaymentBenefitsModal({
 
   return (
     <Box
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 transition-opacity"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 transition-opacity"
       onClick={isPaying ? undefined : onClose}
     >
       <Box
         className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <Box className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-3">
-          <Box>
-            <Typography
-              variant="h2"
-              className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl"
-            >
-              Mở khóa quyền lợi đặc quyền
-            </Typography>
-            <Typography className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-              Trở thành đối tác chính thức ngay hôm nay
-            </Typography>
-          </Box>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            disabled={isPaying}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #f3f4f6',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <VendorModalHeader
+          title="Mở khóa quyền lợi đặc quyền"
+          subtitle="Trở thành đối tác chính thức ngay hôm nay"
+          icon={<WorkspacePremiumIcon />}
+          onClose={onClose}
+          disableClose={isPaying}
+        />
 
         {/* Modal Content */}
         <Box className="flex-1 overflow-y-auto px-8 py-6">
@@ -74,7 +55,7 @@ export default function PaymentBenefitsModal({
                 boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
               }}
             >
-              <Typography className="text-[15px] leading-relaxed font-medium text-[var(--color-table-text-secondary)]">
+              <Typography className="text-table-text-secondary text-[15px] leading-relaxed font-medium">
                 Kích hoạt gói đăng ký cho chi nhánh của bạn để tận hưởng những
                 công cụ mạnh mẽ, giúp nâng cao trải nghiệm khách hàng và tăng
                 trưởng doanh thu không giới hạn.
@@ -95,17 +76,17 @@ export default function PaymentBenefitsModal({
               </Typography>
               <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-                  <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                  <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                     <CampaignIcon fontSize="small" />
                   </Box>
                   <Box>
                     <Typography
                       variant="h4"
-                      className="mb-1 text-base font-bold text-[var(--color-table-text-primary)]"
+                      className="text-table-text-primary mb-1 text-base font-bold"
                     >
                       Tạo Chiến Dịch Khuyến Mãi
                     </Typography>
-                    <Typography className="text-sm leading-relaxed text-[var(--color-table-text-secondary)]">
+                    <Typography className="text-table-text-secondary text-sm leading-relaxed">
                       Tự do tạo các chương trình giảm giá, khuyến mãi để kích
                       cầu và thu hút thêm hàng ngàn thực khách mới mỗi ngày.
                       Tăng tính cạnh tranh của cửa hàng.
@@ -114,17 +95,17 @@ export default function PaymentBenefitsModal({
                 </Box>
 
                 <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-                  <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                  <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
                     <LoyaltyIcon fontSize="small" />
                   </Box>
                   <Box>
                     <Typography
                       variant="h4"
-                      className="mb-1 text-base font-bold text-[var(--color-table-text-primary)]"
+                      className="text-table-text-primary mb-1 text-base font-bold"
                     >
                       Tham Gia Chiến Dịch Hệ Thống
                     </Typography>
-                    <Typography className="text-sm leading-relaxed text-[var(--color-table-text-secondary)]">
+                    <Typography className="text-table-text-secondary text-sm leading-relaxed">
                       Được quyền tham gia vào các chiến dịch chung do hệ thống
                       tổ chức để đưa thương hiệu của bạn tiếp cận nhiều khách
                       hàng hơn.
@@ -146,21 +127,39 @@ export default function PaymentBenefitsModal({
                 ></Box>
                 Quản lý bán hàng
               </Typography>
-              <Box className="grid grid-cols-1 gap-4 sm:grid-cols-1">
+              <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-                  <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                  <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
                     <RestaurantMenuIcon fontSize="small" />
                   </Box>
                   <Box>
                     <Typography
                       variant="h4"
-                      className="mb-1 text-base font-bold text-[var(--color-table-text-primary)]"
+                      className="text-table-text-primary mb-1 text-base font-bold"
                     >
                       Đơn Hàng Trực Tuyến
                     </Typography>
-                    <Typography className="text-sm leading-relaxed text-[var(--color-table-text-secondary)]">
+                    <Typography className="text-table-text-secondary text-sm leading-relaxed">
                       Cho phép khách hàng xem menu, đặt món và thanh toán trực
                       tiếp qua ứng dụng Lowca.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                  <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                    <MenuBookIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h4"
+                      className="text-table-text-primary mb-1 text-base font-bold"
+                    >
+                      Hiển Thị Thực Đơn
+                    </Typography>
+                    <Typography className="text-table-text-secondary text-sm leading-relaxed">
+                      Mở khoá quyền thêm các món ăn vào hồ sơ chi nhánh. Giúp
+                      thực khách dễ dàng tìm kiếm và xem trước món ngon của bạn.
                     </Typography>
                   </Box>
                 </Box>
@@ -232,7 +231,7 @@ export default function PaymentBenefitsModal({
             onClick={onClose}
             disabled={isPaying}
             type="button"
-            className="rounded-lg px-4 py-2 font-medium text-[var(--color-table-text-secondary)] transition-colors hover:bg-gray-100 disabled:opacity-50"
+            className="text-table-text-secondary rounded-lg px-4 py-2 font-medium transition-colors hover:bg-gray-100 disabled:opacity-50"
             sx={{
               textTransform: 'none',
               bgcolor: 'transparent',

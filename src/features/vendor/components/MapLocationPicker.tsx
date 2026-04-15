@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import maplibregl from '@openmapvn/openmapvn-gl';
 import '@openmapvn/openmapvn-gl/dist/maplibre-gl.css';
 import type { JSX } from 'react';
+import { ENV } from '@config/env';
 
 const defaultCenter = {
   lat: 10.762622,
@@ -37,7 +38,7 @@ export default function MapLocationPicker({
   const [inputLat, setInputLat] = useState<string>('');
   const [inputLng, setInputLng] = useState<string>('');
 
-  const apiKey = import.meta.env.VITE_OPENMAP_API_KEY;
+  const apiKey = ENV.maps.openMapApiKey;
 
   const WARD_PREFIXES = ['phường', 'xã', 'thị trấn'];
   const CITY_PREFIXES = ['thành phố', 'tỉnh'];

@@ -3,6 +3,9 @@ import type {
   DecideVendorOrderResponse,
   GetOrderPickupCodeResponse,
   GetVendorBranchOrdersResponse,
+  OrderDetailsResponse,
+  UpdateOrderPayload,
+  UpdateOrderResponse,
 } from '@features/vendor/types/order';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -10,11 +13,18 @@ import {
   decideVendorOrder,
   getOrderPickupCode,
   getVendorBranchOrders,
+  getVendorOrders,
+  getOrderDetails,
+  updateOrder,
   resetOrderState,
 } from '@slices/order';
 import { useCallback } from 'react';
 
 export default function useOrder(): {
+  onGetVendorOrders: (params: {
+    pageNumber: number;
+    pageSize: number;
+  }) => Promise<GetVendorBranchOrdersResponse>;
   onGetVendorBranchOrders: (payload: {
     branchId: number;
     params: {
@@ -33,9 +43,24 @@ export default function useOrder(): {
     orderId: number;
     verificationCode: string;
   }) => Promise<CompleteVendorOrderResponse>;
+  onGetOrderDetails: (orderId: number) => Promise<OrderDetailsResponse>;
+  onUpdateOrder: (payload: {
+    orderId: number;
+    data: UpdateOrderPayload;
+  }) => Promise<UpdateOrderResponse>;
   onResetOrderState: () => void;
 } {
   const dispatch = useAppDispatch();
+
+  const onGetVendorOrders = useCallback(
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+    }): Promise<GetVendorBranchOrdersResponse> => {
+      return await dispatch(getVendorOrders(params)).unwrap();
+    },
+    [dispatch]
+  );
 
   const onGetVendorBranchOrders = useCallback(
     async (payload: {
@@ -81,11 +106,31 @@ export default function useOrder(): {
     dispatch(resetOrderState());
   }, [dispatch]);
 
+  const onGetOrderDetails = useCallback(
+    async (orderId: number): Promise<OrderDetailsResponse> => {
+      return await dispatch(getOrderDetails(orderId)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onUpdateOrder = useCallback(
+    async (payload: {
+      orderId: number;
+      data: UpdateOrderPayload;
+    }): Promise<UpdateOrderResponse> => {
+      return await dispatch(updateOrder(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
+    onGetVendorOrders,
     onGetVendorBranchOrders,
     onDecideVendorOrder,
     onGetOrderPickupCode,
     onCompleteVendorOrder,
+    onGetOrderDetails,
+    onUpdateOrder,
     onResetOrderState,
   };
 }

@@ -1,102 +1,343 @@
 import RequestTransferModal from '@components/RequestTransferModal';
-import SidebarContent from '@components/layout/SidebarContent';
+import SidebarContent, {
+  type NavigationItem,
+} from '@components/layout/SidebarContent';
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
+import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
+import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
+import OnboardingMissingBranchDishModal from '@features/vendor/components/OnboardingMissingBranchDishModal';
+import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
+import OnboardingMissingDishModal from '@features/vendor/components/OnboardingMissingDishModal';
+import useDish from '@features/vendor/hooks/useDish';
 import usePayment from '@features/vendor/hooks/usePayment';
+import useVendor from '@features/vendor/hooks/useVendor';
 import type { VendorRequestTransferRequest } from '@features/vendor/types/payment';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 import {
-  Bars3Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  HomeIcon,
-  BuildingStorefrontIcon,
-  ClipboardDocumentListIcon,
-  DocumentTextIcon,
-  XMarkIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  QueueListIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/outline';
-import MoneyIcon from '@mui/icons-material/Money';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+  Menu as Bars3Icon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Home as HomeIcon,
+  Storefront as BuildingStorefrontIcon,
+  Receipt as ClipboardDocumentListIcon,
+  Description as DocumentTextIcon,
+  Close as XMarkIcon,
+  RestaurantMenu as ShoppingBagIcon,
+  ShoppingCart as QueueListIcon,
+  LocationOn as MapPinIcon,
+  Campaign as CampaignIcon,
+  Group as UserGroupIcon,
+} from '@mui/icons-material';
+import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography, Button } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import { selectVendorAccountBalance } from '@slices/payment';
+import {
+  selectMyVendorDietaryPreferences,
+  selectMyVendor,
+  selectBranchScheduleMap,
+} from '@slices/vendor';
+import {
+  selectVendorDishesPagination,
+  selectBranchDishCountMap,
+} from '@slices/dish';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+
+const vendorBase = ROUTES.VENDOR.BASE;
+const vendorPaths = ROUTES.VENDOR.PATHS;
 
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/vendor/dashboard',
+    href: `${vendorBase}/${vendorPaths.DASHBOARD}`,
     icon: HomeIcon,
-    isForVendor: true,
   },
   {
     name: 'Chi nhánh',
-    href: '/vendor/branch',
+    href: `${vendorBase}/${vendorPaths.BRANCH}`,
     icon: BuildingStorefrontIcon,
-    isForVendor: false,
-  },
-  {
-    name: 'Lịch sử đăng ký',
-    href: '/vendor/registration-history',
-    icon: DocumentTextIcon,
-    isForVendor: false,
-  },
-  {
-    name: 'Lịch sử thanh toán',
-    href: '/vendor/payment-history',
-    icon: ClipboardDocumentListIcon,
-    isForVendor: true,
   },
   {
     name: 'Quản lý món ăn',
-    href: '/vendor/dish',
+    href: `${vendorBase}/${vendorPaths.DISH}`,
     icon: ShoppingBagIcon,
-    isForVendor: true,
   },
   {
     name: 'Quản lý đơn hàng',
-    href: '/vendor/orders',
+    href: `${vendorBase}/${vendorPaths.ORDER}`,
     icon: QueueListIcon,
-    isForVendor: true,
   },
   {
     name: 'Chế độ ăn',
-    href: '/vendor/dietary-preferences',
-    icon: SparklesIcon,
-    isForVendor: true,
+    href: `${vendorBase}/${vendorPaths.DIETARY}`,
+    icon: UserGroupIcon,
   },
   {
-    name: 'Nhận quán',
-    href: '/vendor/ghost-pin',
+    name: 'Xác nhận sở hữu quán',
+    href: `${vendorBase}/${vendorPaths.GHOST_PIN}`,
     icon: MapPinIcon,
-    isForVendor: false,
+  },
+  {
+    name: 'Quản lý chiến dịch',
+    href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
+    icon: CampaignIcon,
+  },
+  {
+    name: 'Lịch sử',
+    icon: DocumentTextIcon,
+    children: [
+      {
+        name: 'Lịch sử đăng ký',
+        href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
+        icon: DocumentTextIcon,
+      },
+      {
+        name: 'Lịch sử thanh toán',
+        href: `${vendorBase}/${vendorPaths.PAYMENT_HISTORY}`,
+        icon: ClipboardDocumentListIcon,
+      },
+    ],
   },
 ];
 
 function VendorLayout(): JSX.Element {
+  type PendingOnboardingModal =
+    | 'branch'
+    | 'dish'
+    | 'dietary'
+    | 'branchDish'
+    | null;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [orderModalId, setOrderModalId] = useState<number | null>(null);
+  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
+  const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
+  const [isDishModalOpen, setIsDishModalOpen] = useState(false);
+  const [isBranchDishModalOpen, setIsBranchDishModalOpen] = useState(false);
+  // isInitialCheckDone: tránh hiển thị badge trước khi fetch lần đầu xong
+  const [isInitialCheckDone, setIsInitialCheckDone] = useState(false);
+  const [pendingOnboardingModal, setPendingOnboardingModal] =
+    useState<PendingOnboardingModal>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
   const { onGetVendorBalance, onVendorRequestTransfer } = usePayment();
+  const { onGetDishesOfAVendor, onGetDishesByBranch } = useDish();
+  const {
+    onGetMyVendor,
+    onGetDietaryPreferencesOfMyVendor,
+    onGetWorkSchedules,
+  } = useVendor();
+  const hasShownDietaryModalRef = useRef(false);
+  const hasShownBranchDishModalRef = useRef(false);
   const user = useAppSelector(selectUser);
   const accountBalance = useAppSelector(selectVendorAccountBalance);
-  const isVendor = user?.role === ROLES.VENDOR;
-  const filteredNavigation = navigation.filter(
-    (item) => !item.isForVendor || isVendor
+  // Đọc reactive từ Redux store - tự cập nhật khi trang con thay đổi dữ liệu
+  const myVendorDietaryPreferences = useAppSelector(
+    selectMyVendorDietaryPreferences
   );
+  const vendorDishesPagination = useAppSelector(selectVendorDishesPagination);
+  const myVendor = useAppSelector(selectMyVendor);
+  const branchScheduleMap = useAppSelector(selectBranchScheduleMap);
+  const branchDishCountMap = useAppSelector(selectBranchDishCountMap);
+  const isVendor = user?.role === ROLES.VENDOR;
+
+  // Badge được tính reactive từ Redux state (không cần re-fetch khi navigate)
+  const isDishMissing =
+    isInitialCheckDone && vendorDishesPagination.totalCount === 0;
+  const isDietaryMissing =
+    isInitialCheckDone && myVendorDietaryPreferences.length === 0;
+
+  // Branch schedule badge: reactive từ branchScheduleMap trong Redux store
+  const acceptedBranches = useMemo(
+    () =>
+      (myVendor?.branches ?? []).filter(
+        (branch) => branch.licenseStatus === 'Accept'
+      ),
+    [myVendor]
+  );
+
+  const subscribedBranches = useMemo(
+    () => (myVendor?.branches ?? []).filter((branch) => branch.isSubscribed),
+    [myVendor]
+  );
+
+  const missingScheduleBranches = useMemo(
+    () =>
+      isInitialCheckDone
+        ? acceptedBranches.filter(
+            (branch) => branchScheduleMap[branch.branchId] === false
+          )
+        : [],
+    [isInitialCheckDone, acceptedBranches, branchScheduleMap]
+  );
+
+  // Chi nhánh đã subscribed mà chưa có món ăn nào được gán
+  const missingBranchDishBranches = useMemo(
+    () =>
+      isInitialCheckDone
+        ? subscribedBranches.filter(
+            (branch) =>
+              branchDishCountMap[branch.branchId] !== undefined &&
+              branchDishCountMap[branch.branchId] === 0
+          )
+        : [],
+    [isInitialCheckDone, subscribedBranches, branchDishCountMap]
+  );
+
+  const isBranchDishMissing = missingBranchDishBranches.length > 0;
+
+  const isBranchScheduleMissing = missingScheduleBranches.length > 0;
+
+  const vendorBranchPath = `${vendorBase}/${vendorPaths.BRANCH}`;
+  const vendorDishPath = `${vendorBase}/${vendorPaths.DISH}`;
+  const vendorDietaryPath = `${vendorBase}/${vendorPaths.DIETARY}`;
+
+  const filteredNavigation = navigation.map((item) => {
+    if (item.href === vendorBranchPath) {
+      const hasBadge = isBranchScheduleMissing || isBranchDishMissing;
+      return {
+        ...item,
+        badgeText: hasBadge ? 'Cập nhật' : undefined,
+        onClick: (): void => {
+          if (isBranchScheduleMissing) {
+            setPendingOnboardingModal('branch');
+          } else if (isBranchDishMissing) {
+            setPendingOnboardingModal('branchDish');
+          }
+        },
+      };
+    }
+
+    if (item.href !== vendorDietaryPath) {
+      if (item.href !== vendorDishPath) {
+        return item;
+      }
+
+      return {
+        ...item,
+        badgeText: isDishMissing ? 'Mới' : undefined,
+        onClick: (): void => {
+          if (!isDishMissing) {
+            return;
+          }
+
+          setPendingOnboardingModal('dish');
+        },
+      };
+    }
+
+    return {
+      ...item,
+      badgeText: isDietaryMissing ? 'Mới' : undefined,
+      onClick: (): void => {
+        if (!isDietaryMissing) {
+          return;
+        }
+
+        setPendingOnboardingModal('dietary');
+      },
+    };
+  });
+
+  const pageTitle = useMemo(() => {
+    const directMatch = filteredNavigation.find(
+      (item) => item.href === location.pathname
+    );
+
+    if (directMatch) {
+      return directMatch.name;
+    }
+
+    for (const item of filteredNavigation as NavigationItem[]) {
+      const childMatch = item.children?.find(
+        (child) => child.href === location.pathname
+      );
+      if (childMatch) {
+        return childMatch.name;
+      }
+    }
+
+    return 'Dashboard';
+  }, [filteredNavigation, location.pathname]);
+
+  useEffect(() => {
+    if (
+      pendingOnboardingModal === 'branch' &&
+      location.pathname === vendorBranchPath
+    ) {
+      setIsBranchModalOpen(true);
+      setPendingOnboardingModal(null);
+      return;
+    }
+
+    if (
+      pendingOnboardingModal === 'dish' &&
+      location.pathname === vendorDishPath
+    ) {
+      setIsDishModalOpen(true);
+      setPendingOnboardingModal(null);
+      return;
+    }
+
+    if (
+      pendingOnboardingModal === 'dietary' &&
+      location.pathname === vendorDietaryPath
+    ) {
+      setIsDietaryModalOpen(true);
+      setPendingOnboardingModal(null);
+      return;
+    }
+
+    if (
+      pendingOnboardingModal === 'branchDish' &&
+      location.pathname === vendorBranchPath
+    ) {
+      setIsBranchDishModalOpen(true);
+      setPendingOnboardingModal(null);
+    }
+  }, [
+    location.pathname,
+    pendingOnboardingModal,
+    vendorBranchPath,
+    vendorDishPath,
+    vendorDietaryPath,
+  ]);
+
+  // Hiển thị dietary modal 1 lần nếu thiếu chế độ ăn (reactive theo Redux state)
+  useEffect(() => {
+    if (
+      isInitialCheckDone &&
+      isDietaryMissing &&
+      !hasShownDietaryModalRef.current
+    ) {
+      setIsDietaryModalOpen(true);
+      hasShownDietaryModalRef.current = true;
+    }
+  }, [isInitialCheckDone, isDietaryMissing]);
+
+  // Hiển thị branchDish modal 1 lần nếu có chi nhánh subscribed chưa có món ăn
+  useEffect(() => {
+    if (
+      isInitialCheckDone &&
+      isBranchDishMissing &&
+      !hasShownBranchDishModalRef.current
+    ) {
+      setIsBranchDishModalOpen(true);
+      hasShownBranchDishModalRef.current = true;
+    }
+  }, [isInitialCheckDone, isBranchDishMissing]);
 
   useEffect(() => {
     if (!isVendor) {
@@ -105,6 +346,96 @@ function VendorLayout(): JSX.Element {
 
     void onGetVendorBalance();
   }, [isVendor, onGetVendorBalance]);
+
+  // Fetch toàn bộ dữ liệu onboarding 1 lần duy nhất khi mount (không phụ thuộc pathname)
+  // Badge sau đó được tính reactive từ Redux state → cập nhật ngay khi trang con thay đổi dữ liệu
+  useEffect(() => {
+    if (!isVendor) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const runInitialChecks = async (): Promise<void> => {
+      try {
+        // Dùng myVendor từ store nếu đã có, tránh gọi API thừa
+        const vendor = myVendor ?? (await onGetMyVendor());
+
+        if (!vendor?.vendorId || isCancelled) {
+          return;
+        }
+
+        const acceptedBranches = (vendor.branches ?? []).filter(
+          (branch) => branch.licenseStatus === 'Accept'
+        );
+
+        const subscribedBranchList = (vendor.branches ?? []).filter(
+          (branch) => branch.isSubscribed
+        );
+
+        // Chạy song song: fetch dish, dietary, work schedules, và branch dishes
+        await Promise.all([
+          // Fetch dishes để cập nhật vendorDishesPagination vào store
+          onGetDishesOfAVendor({
+            vendorId: vendor.vendorId,
+            params: { pageNumber: 1, pageSize: 5 },
+          }),
+          // Fetch dietary preferences để cập nhật myVendorDietaryPreferences vào store
+          onGetDietaryPreferencesOfMyVendor({ vendorId: vendor.vendorId }),
+          // Kiểm tra work schedules cho từng branch được chấp thuận
+          // (kết quả lưu vào branchScheduleMap trong Redux - VendorLayout tự reactive)
+          (async (): Promise<void> => {
+            await Promise.all(
+              acceptedBranches.map(async (branch) => {
+                try {
+                  await onGetWorkSchedules(branch.branchId);
+                } catch (error) {
+                  console.error(
+                    `Error checking work schedules for branch ${branch.branchId}:`,
+                    error
+                  );
+                }
+              })
+            );
+          })(),
+          // Kiểm tra số lượng món ăn cho từng branch đã subscribed
+          // (kết quả lưu vào branchDishCountMap trong Redux - VendorLayout tự reactive)
+          (async (): Promise<void> => {
+            await Promise.all(
+              subscribedBranchList.map(async (branch) => {
+                try {
+                  await onGetDishesByBranch({
+                    branchId: branch.branchId,
+                    params: { pageNumber: 1, pageSize: 5 },
+                  });
+                } catch (error) {
+                  console.error(
+                    `Error checking dishes for branch ${branch.branchId}:`,
+                    error
+                  );
+                }
+              })
+            );
+          })(),
+        ]);
+
+        if (!isCancelled) {
+          setIsInitialCheckDone(true);
+        }
+      } catch (error) {
+        console.error('Error during onboarding checks:', error);
+        if (!isCancelled) {
+          setIsInitialCheckDone(true);
+        }
+      }
+    };
+
+    void runInitialChecks();
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isVendor]); // chỉ chạy 1 lần khi mount - intentionally omit các callback dependencies
 
   const handleLogoClick = (): void => {
     navigate('/vendor');
@@ -158,23 +489,24 @@ function VendorLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
             collapsed={false}
             navigation={filteredNavigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/vendor/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -189,9 +521,9 @@ function VendorLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={filteredNavigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/vendor/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -202,7 +534,7 @@ function VendorLayout(): JSX.Element {
         }`}
       >
         {/* Top navigation */}
-        <Box className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+        <Box className="sticky top-0 z-30 border-b border-gray-200 bg-white shadow-sm">
           <Box className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <Box className="flex items-center gap-4">
               <IconButton
@@ -230,9 +562,7 @@ function VendorLayout(): JSX.Element {
                   component="h2"
                   className="text-xl font-semibold"
                 >
-                  {filteredNavigation.find(
-                    (item) => item.href === location.pathname
-                  )?.name ?? 'Dashboard'}
+                  {pageTitle}
                 </Typography>
               </Box>
             </Box>
@@ -241,7 +571,7 @@ function VendorLayout(): JSX.Element {
               {isVendor && (
                 <Box className="flex items-center gap-3">
                   <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
-                    <AccountBalanceIcon fontSize="small" />
+                    {/* <AccountBalanceIcon fontSize="small" /> */}
                     Số dư: {formatCurrencyVnd(accountBalance?.balance)}
                   </Box>
                   <Button
@@ -249,7 +579,7 @@ function VendorLayout(): JSX.Element {
                     color="primary"
                     onClick={() => setIsTransferModalOpen(true)}
                     disabled={accountBalance?.balance === 0}
-                    startIcon={<MoneyIcon />}
+                    // startIcon={<MoneyIcon />}
                     className="bg-primary-600 hover:bg-primary-700 h-10 rounded-lg px-4 text-sm font-bold whitespace-nowrap text-white shadow-sm"
                     disableElevation
                   >
@@ -257,9 +587,14 @@ function VendorLayout(): JSX.Element {
                   </Button>
                 </Box>
               )}
-              <NotificationBell
-                onFeedbackNotificationClick={setFeedbackModalId}
-              />
+              {isVendor ? (
+                <NotificationBell
+                  onFeedbackNotificationClick={setFeedbackModalId}
+                  onOrderNotificationClick={setOrderModalId}
+                />
+              ) : (
+                <NotificationBell />
+              )}
             </Box>
           </Box>
         </Box>
@@ -283,6 +618,33 @@ function VendorLayout(): JSX.Element {
         isOpen={feedbackModalId !== null}
         onClose={() => setFeedbackModalId(null)}
         feedbackId={feedbackModalId}
+      />
+      <OrderDetailsModal
+        isOpen={orderModalId !== null}
+        onClose={() => setOrderModalId(null)}
+        orderId={orderModalId}
+      />
+      <OnboardingMissingBranchModal
+        open={isBranchModalOpen}
+        missingBranches={missingScheduleBranches}
+        onClose={() => setIsBranchModalOpen(false)}
+      />
+      <OnboardingMissingDietaryModal
+        open={isDietaryModalOpen}
+        onClose={() => setIsDietaryModalOpen(false)}
+      />
+      <OnboardingMissingDishModal
+        open={isDishModalOpen}
+        onClose={() => setIsDishModalOpen(false)}
+      />
+      <OnboardingMissingBranchDishModal
+        open={isBranchDishModalOpen}
+        missingBranches={missingBranchDishBranches}
+        onClose={() => setIsBranchDishModalOpen(false)}
+      />
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </Box>
   );

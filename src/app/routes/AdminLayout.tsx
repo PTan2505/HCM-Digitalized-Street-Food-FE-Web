@@ -4,43 +4,98 @@ import type { NavigationItem } from '@components/layout/SidebarContent';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
 import {
-  Bars3Icon,
-  BuildingStorefrontIcon,
-  ChartBarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  RectangleStackIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  StarIcon,
-  UserCircleIcon,
-  UserGroupIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
-import { useAppSelector } from '@hooks/reduxHooks';
+  BarChart as ChartBarIcon,
+  Storefront as BuildingStorefrontIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Category as RectangleStackIcon,
+  EmojiEvents as StarIcon,
+  LocalDining as SparklesIcon,
+  Group as UserGroupIcon,
+  Person as UserCircleIcon,
+  People as PeopleIcon,
+  Menu as Bars3Icon,
+  Close as XMarkIcon,
+  Loyalty as ShoppingBagIcon,
+  ChatBubbleOutline as ChatBubbleOutlineIcon,
+  Campaign as CampaignIcon,
+  Assignment as AssignmentIcon,
+  LocalOffer as LocalOfferIcon,
+  Settings as SettingsIcon,
+  Verified as VerifiedIcon,
+} from '@mui/icons-material';
+import FoodBankIcon from '@mui/icons-material/FoodBank';
 import { Box, IconButton, Typography } from '@mui/material';
+import { useAppSelector } from '@hooks/reduxHooks';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/revenue', icon: ChartBarIcon },
-  // {
-  //   name: 'Quản lý giao dịch',
-  //   href: '/admin/transactions',
-  //   icon: HomeIcon,
-  // },
-  // { name: 'Quản lý người dùng', href: '/admin/users', icon: UsersIcon },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: ChartBarIcon },
+  {
+    name: 'Xác minh người bán',
+    href: '/admin/verification',
+    icon: VerifiedIcon,
+  },
   {
     name: 'Quản lý cửa hàng',
     href: '/admin/vendors',
     icon: BuildingStorefrontIcon,
   },
   {
-    name: 'Quản lý danh mục',
+    name: 'Xem thông tin chi nhánh',
+    href: '/admin/branch',
+    icon: BuildingStorefrontIcon,
+  },
+  {
+    name: 'Quản lý danh mục món ăn',
     href: '/admin/category',
     icon: RectangleStackIcon,
+  },
+  {
+    name: 'Quản lý khẩu vị món ăn',
+    href: '/admin/taste',
+    icon: SparklesIcon,
+  },
+  {
+    name: 'Quản lý người dùng',
+    icon: PeopleIcon,
+    children: [
+      {
+        name: 'Khách hàng',
+        href: '/admin/users/customer',
+        icon: UserCircleIcon,
+      },
+      {
+        name: 'Đối tác',
+        href: '/admin/users/vendor',
+        icon: BuildingStorefrontIcon,
+      },
+      {
+        name: 'Hệ thống',
+        href: '/admin/users/system',
+        icon: UserGroupIcon,
+      },
+    ],
+  },
+  {
+    name: 'Chế độ ăn',
+    icon: FoodBankIcon,
+    children: [
+      {
+        name: 'Quản lý chế độ ăn',
+        href: '/admin/user-dietary',
+        icon: FoodBankIcon,
+      },
+      {
+        name: 'Chế độ ăn của người dùng',
+        href: '/admin/users-with-dietary',
+        icon: UserCircleIcon,
+      },
+    ],
   },
   {
     name: 'Huy hiệu',
@@ -59,31 +114,47 @@ const navigation: NavigationItem[] = [
     ],
   },
   {
-    name: 'Quản lý khẩu vị',
-    href: '/admin/taste',
-    icon: SparklesIcon,
+    name: 'Quản lý tag phản hồi',
+    href: '/admin/feedback-tag',
+    icon: ChatBubbleOutlineIcon,
   },
   {
-    name: 'Chế độ ăn',
-    icon: UserGroupIcon,
+    name: 'Quản lý chiến dịch',
+    icon: CampaignIcon,
     children: [
       {
-        name: 'Quản lý chế độ ăn',
-        href: '/admin/user-dietary',
-        icon: UserGroupIcon,
+        name: 'Từ hệ thống',
+        href: '/admin/campaign',
+        icon: CampaignIcon,
       },
       {
-        name: 'Chế độ ăn của người dùng',
-        href: '/admin/users-with-dietary',
-        icon: UserCircleIcon,
+        name: 'Từ cửa hàng',
+        href: '/admin/campaign/vendor',
+        icon: BuildingStorefrontIcon,
       },
     ],
+  },
+  {
+    name: 'Quản lý nhiệm vụ',
+    href: '/admin/quest',
+    icon: AssignmentIcon,
+  },
+  {
+    name: 'Quản lý voucher',
+    href: '/admin/voucher',
+    icon: LocalOfferIcon,
+  },
+  {
+    name: 'Cấu hình hệ thống',
+    href: '/admin/setting',
+    icon: SettingsIcon,
   },
 ];
 
 function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
@@ -123,23 +194,24 @@ function AdminLayout(): JSX.Element {
           className="bg-opacity-75 fixed inset-0 bg-gray-600"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
+        <div className="relative flex h-full w-[85vw] max-w-xs flex-col bg-white shadow-xl">
+          <div className="absolute top-3 right-3 z-10">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               onClick={() => setSidebarOpen(false)}
             >
-              <XMarkIcon className="h-6 w-6 text-white" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
           <SidebarContent
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/admin/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
+            onNavigateItemClick={() => setSidebarOpen(false)}
+            onUserInfoClick={() => setIsProfileModalOpen(true)}
           />
         </div>
       </div>
@@ -154,9 +226,9 @@ function AdminLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/admin/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
+          onUserInfoClick={() => setIsProfileModalOpen(true)}
         />
       </div>
 
@@ -208,11 +280,15 @@ function AdminLayout(): JSX.Element {
 
         {/* Page content */}
         <Box component="main" className="py-6">
-          <Box className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <Box className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />
           </Box>
         </Box>
       </Box>
+      <UpdateUserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </Box>
   );
 }
