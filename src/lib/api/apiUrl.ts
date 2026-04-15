@@ -5,7 +5,7 @@ export const apiUrl = {
     phoneVerify: '/Auth/phone-verify',
     login: '/Auth/login',
     googleLogin: '/Auth/google-login',
-    profile: '/Auth/profile',
+    profile: '/User/profile',
     register: '/Auth/register',
     verifyRegistration: '/Auth/verify-registration',
     resendRegistrationOTP: '/Auth/resend-registration-otp',
