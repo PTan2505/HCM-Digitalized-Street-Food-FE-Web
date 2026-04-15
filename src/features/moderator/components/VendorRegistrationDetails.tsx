@@ -104,7 +104,8 @@ export default function VendorRegistrationDetails({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-bold text-[var(--color-table-text-primary)]">
-            Chi tiết yêu cầu đăng ký
+            Chi tiết yêu cầu đăng ký chi nhánh hoặc quán ăn do reviewer chia sẻ
+            hoặc yêu cầu sỡ hữu quán
           </h2>
           <IconButton size="small" onClick={onClose}>
             <CloseIcon fontSize="small" />
