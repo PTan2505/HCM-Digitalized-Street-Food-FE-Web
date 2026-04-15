@@ -42,7 +42,7 @@ const navigation = [
     icon: FactCheckIcon,
   },
   {
-    name: 'Xem thông tin chi nhánh',
+    name: 'Lịch sử chi nhánh',
     href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.BRANCH}`,
     icon: StorefrontIcon,
   },

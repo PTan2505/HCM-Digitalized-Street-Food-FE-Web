@@ -1025,7 +1025,7 @@ export default function VoucherFormModal({
                     <input
                       type="datetime-local"
                       {...singleForm.register('startDate')}
-                      min={nowMin}
+                      min={voucher ? undefined : nowMin}
                       step="60"
                       className={inputClass(
                         !!singleForm.formState.errors.startDate
@@ -1044,7 +1044,9 @@ export default function VoucherFormModal({
                     <input
                       type="datetime-local"
                       {...singleForm.register('endDate')}
-                      min={singleWatchedStartDate || nowMin}
+                      min={
+                        voucher ? undefined : singleWatchedStartDate || nowMin
+                      }
                       step="60"
                       className={inputClass(
                         !!singleForm.formState.errors.endDate
