@@ -58,7 +58,7 @@ export default function DayOffDeleteConfirmDialog({
         </Button>
         <Button
           onClick={onConfirm}
-          variant="contained"
+          variant="outlined"
           color="error"
           disabled={isLoading}
           sx={{ borderColor: '#d1d5db', color: 'red' }}

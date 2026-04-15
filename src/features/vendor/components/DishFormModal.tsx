@@ -180,8 +180,9 @@ export default function DishFormModal({
         TasteIds: data.tasteIds,
         // DietaryPreferenceIds: data.dietaryIds,
         DietaryPreferenceIds: [],
-        IsActive: data.isActive,
-        imageFile: imageFile as File,
+        IsActive:
+          isEditMode && editingDish ? editingDish.isActive : data.isActive,
+        ...(imageFile ? { imageFile } : {}),
       };
 
       if (isEditMode && editingDish) {
@@ -331,50 +332,51 @@ export default function DishFormModal({
                 />
               </Box>
 
-              {/* Trạng thái */}
-              <Box>
-                <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                  Trạng thái kinh doanh
-                </label>
-                <Controller
-                  name="isActive"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value ? 1 : 0}
-                      onChange={(e) =>
-                        field.onChange(Number(e.target.value) === 1)
-                      }
-                      fullWidth
-                      className="rounded-xl bg-white"
-                      sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#e5e7eb',
-                          borderRadius: '0.75rem',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#d1d5db',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'var(--color-primary-500)',
-                          borderWidth: '1px',
-                        },
-                      }}
-                    >
-                      <MenuItem value={1}>
-                        <span className="font-medium text-green-700">
-                          Đang bán
-                        </span>
-                      </MenuItem>
-                      <MenuItem value={0}>
-                        <span className="font-medium text-red-700">
-                          Ngừng bán
-                        </span>
-                      </MenuItem>
-                    </Select>
-                  )}
-                />
-              </Box>
+              {!isEditMode && (
+                <Box>
+                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                    Trạng thái kinh doanh
+                  </label>
+                  <Controller
+                    name="isActive"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ? 1 : 0}
+                        onChange={(e) =>
+                          field.onChange(Number(e.target.value) === 1)
+                        }
+                        fullWidth
+                        className="rounded-xl bg-white"
+                        sx={{
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#e5e7eb',
+                            borderRadius: '0.75rem',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#d1d5db',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'var(--color-primary-500)',
+                            borderWidth: '1px',
+                          },
+                        }}
+                      >
+                        <MenuItem value={1}>
+                          <span className="font-medium text-green-700">
+                            Đang bán
+                          </span>
+                        </MenuItem>
+                        <MenuItem value={0}>
+                          <span className="font-medium text-red-700">
+                            Ngừng bán
+                          </span>
+                        </MenuItem>
+                      </Select>
+                    )}
+                  />
+                </Box>
+              )}
             </Box>
 
             {/* Cột 2: Danh mục & Ảnh */}
