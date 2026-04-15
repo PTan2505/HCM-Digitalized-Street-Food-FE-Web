@@ -53,10 +53,10 @@ export default function BranchDishDetailsModal({
     [branchDishes]
   );
 
-  const activeVendorDishes = useMemo(
-    () => vendorDishes.filter((dish) => dish.isActive),
-    [vendorDishes]
-  );
+  // const activeVendorDishes = useMemo(
+  //   () => vendorDishes.filter((dish) => dish.isActive),
+  //   [vendorDishes]
+  // );
 
   // ─── Local UI state ──────────────────────────────────────────
   const [vendorPageSize, setVendorPageSize] = useState(5);
@@ -389,7 +389,7 @@ export default function BranchDishDetailsModal({
           <div className="mb-5 flex flex-wrap gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-              Tổng: {activeVendorDishes.length} món trên trang
+              Tổng: {vendorDishes.length} món trên trang
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
               <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -418,7 +418,7 @@ export default function BranchDishDetailsModal({
           <div className="mt-4">
             <Table
               columns={columns}
-              data={activeVendorDishes}
+              data={vendorDishes}
               rowKey="dishId"
               loading={status === 'pending'}
               emptyMessage={
