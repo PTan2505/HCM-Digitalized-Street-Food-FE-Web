@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import type { Category } from '@features/admin/types/category';
 import useCategory from '@features/admin/hooks/useCategory';
 import { useAppSelector } from '@hooks/reduxHooks';
@@ -85,19 +84,19 @@ export default function DishFilterSection({
 
   return (
     <Box
-      className="mb-6 flex flex-col gap-4 rounded-xl border border-gray-100 p-5 shadow-sm"
+      className="mb-4 flex flex-col gap-4 rounded-xl border border-gray-100 p-5 shadow-sm"
       sx={{
         background: 'linear-gradient(to right, #ffffff, #f8fafc)',
       }}
     >
-      <Box className="flex items-center gap-2">
+      {/* <Box className="flex items-center gap-2">
         <Box className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600">
           <FilterListIcon fontSize="small" />
         </Box>
         <Typography className="text-base font-bold text-gray-800">
           Lọc và Tìm kiếm
         </Typography>
-      </Box>
+      </Box> */}
 
       <Box className="flex flex-wrap items-center gap-4">
         {/* Keyword search */}
@@ -116,10 +115,13 @@ export default function DishFilterSection({
               bgcolor: 'white',
               borderRadius: '0.5rem',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#e5e7eb',
+                borderColor: 'var(--color-primary-600)',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#d1d5db',
+                borderColor: 'var(--color-primary-700)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--color-primary-600)',
               },
             }}
             startAdornment={
@@ -160,10 +162,13 @@ export default function DishFilterSection({
               bgcolor: 'white',
               borderRadius: '0.5rem',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#e5e7eb',
+                borderColor: 'var(--color-primary-600)',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#d1d5db',
+                borderColor: 'var(--color-primary-700)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--color-primary-600)',
               },
             }}
           >
@@ -182,7 +187,7 @@ export default function DishFilterSection({
         <Box className="mt-5 flex self-end">
           <button
             onClick={() => emitFilter(keyword, categoryId)}
-            className="flex items-center justify-center rounded-lg bg-[var(--color-primary-600)] px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-[var(--color-primary-700)] hover:shadow-md"
+            className="bg-primary-600 hover:bg-primary-700 flex items-center justify-center rounded-lg px-5 py-[0.625rem] text-sm font-semibold text-white transition-all hover:shadow-md"
           >
             Áp dụng
           </button>

@@ -1,11 +1,22 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
-import { Person as PersonIcon } from '@mui/icons-material';
+import {
+  Person as PersonIcon,
+  HelpOutline as HelpOutlineIcon,
+} from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import type { UsersWithDietaryPreferences } from '@features/admin/types/userDietaryPreference';
 import useDietary from '@features/admin/hooks/useDietary';
+import { getUsersWithDietaryTourSteps } from '@features/admin/utils/usersWithDietaryTourSteps';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectUsersWithDietaryPreferences,
@@ -21,6 +32,8 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     void onGetUsersWithDietaryPreferences({ pageNumber, pageSize });
@@ -36,11 +49,11 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
   }, []);
 
   const columns = [
-    {
-      key: 'userId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'userId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'userName',
       label: 'Tên người dùng',
@@ -87,14 +100,78 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
     },
   ];
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getUsersWithDietaryTourSteps({
+      hasRows: usersWithDietary.length > 0,
+    });
+  }, [usersWithDietary.length]);
+
   return (
     <div className="font-[var(--font-nunito)]">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-user-dietary-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Người dùng theo chế độ ăn
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-3xl font-bold text-[var(--color-table-text-primary)]">
+              Người dùng theo chế độ ăn
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn người dùng theo chế độ ăn"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Danh sách người dùng và chế độ ăn uống đặc biệt của họ
           </p>
@@ -102,25 +179,29 @@ export default function UsersWithDietaryPreferencesPage(): JSX.Element {
       </div>
 
       {/* Table */}
-      <Table<UsersWithDietaryPreferences>
-        columns={columns}
-        data={usersWithDietary}
-        rowKey="userId"
-        loading={status === 'pending'}
-        emptyMessage="Chưa có người dùng nào có chế độ ăn"
-      />
+      <div data-tour="admin-user-dietary-table-wrapper">
+        <Table<UsersWithDietaryPreferences>
+          columns={columns}
+          data={usersWithDietary}
+          rowKey="userId"
+          loading={status === 'pending'}
+          emptyMessage="Chưa có người dùng nào có chế độ ăn"
+        />
+      </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="admin-user-dietary-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
     </div>
   );
 }

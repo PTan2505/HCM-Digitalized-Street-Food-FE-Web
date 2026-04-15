@@ -5,12 +5,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import IconButton from '@mui/material/IconButton';
 import { CircularProgress, Dialog, Tooltip } from '@mui/material';
 import useVendor from '@features/vendor/hooks/useVendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectImages, selectVendorStatus } from '@slices/vendor';
 import Pagination from '@features/vendor/components/Pagination';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface ImagesDetailsModalProps {
   isOpen: boolean;
@@ -99,63 +101,42 @@ export default function ImagesDetailsModal({
           className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-                Ảnh chi nhánh
-              </h2>
-              <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-                <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                  #{branch.branchId}
-                </span>
-                {branch.name}
-                {totalCount > 0 && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                    {totalCount} ảnh
+          <VendorModalHeader
+            title="Ảnh chi nhánh"
+            subtitle={`${branch.name}${totalCount > 0 ? ` - ${totalCount.toString()} ảnh` : ''}`}
+            icon={<PhotoLibraryIcon />}
+            iconTone="branch"
+            onClose={onClose}
+            rightActions={
+              <>
+                <Tooltip title="Thêm ảnh">
+                  <span>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={status === 'pending'}
+                    >
+                      {status === 'pending' ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <AddPhotoAlternateIcon fontSize="small" />
+                      )}
+                      {status === 'pending' ? 'Đang tải...' : 'Thêm ảnh'}
+                    </button>
                   </span>
-                )}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Upload button */}
-              <Tooltip title="Thêm ảnh">
-                <span>
-                  <button
-                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={status === 'pending'}
-                  >
-                    {status === 'pending' ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <AddPhotoAlternateIcon fontSize="small" />
-                    )}
-                    {status === 'pending' ? 'Đang tải...' : 'Thêm ảnh'}
-                  </button>
-                </span>
-              </Tooltip>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => void handleFileChange(e)}
-              />
-              <IconButton
-                size="small"
-                onClick={onClose}
-                sx={{
-                  bgcolor: 'white',
-                  border: '1px solid #f3f4f6',
-                  '&:hover': { bgcolor: '#f3f4f6' },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </div>
-          </div>
+                </Tooltip>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => void handleFileChange(e)}
+                />
+              </>
+            }
+          />
 
           {/* Body */}
           <div className="flex flex-1 flex-col overflow-y-auto px-8 py-6">
@@ -287,7 +268,7 @@ export default function ImagesDetailsModal({
       {/* Confirm delete dialog */}
       {confirmDeleteId !== null && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setConfirmDeleteId(null)}
         >
           <div

@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Chip } from '@mui/material';
+import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import UserBadgeFormModal from '@features/admin/components/UserBadgeFormModal';
 import type { UserWithBadges, Badge } from '@features/admin/types/badge';
 import useBadge from '@features/admin/hooks/useBadge';
+import { getUserBadgeManagementTourSteps } from '@features/admin/utils/userBadgeManagementTourSteps';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectUsersWithBadges,
@@ -30,6 +39,8 @@ export default function UserBadgeManagement(): JSX.Element {
   const [selectedUser, setSelectedUser] = useState<UserWithBadges | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     void onGetUsersWithBadges({ pageNumber, pageSize });
@@ -85,11 +96,11 @@ export default function UserBadgeManagement(): JSX.Element {
   };
 
   const columns = [
-    {
-      key: 'userId',
-      label: 'ID',
-      style: { width: '80px' },
-    },
+    // {
+    //   key: 'userId',
+    //   label: 'ID',
+    //   style: { width: '80px' },
+    // },
     {
       key: 'userName',
       label: 'Tên người dùng',
@@ -122,16 +133,16 @@ export default function UserBadgeManagement(): JSX.Element {
               badges.map((badge) => (
                 <div
                   key={badge.badgeId}
-                  className="flex items-center gap-1 rounded-full bg-[var(--color-primary-100)] px-2 py-1"
+                  // className="flex items-center gap-1 rounded-full bg-[var(--color-primary-100)] px-2 py-1"
                 >
                   <Avatar
                     src={badge.iconUrl}
                     alt={badge.badgeName}
                     className="h-4 w-4"
                   />
-                  <span className="text-xs font-medium text-[var(--color-primary-800)]">
+                  {/* <span className="text-xs font-medium text-[var(--color-primary-800)]">
                     {badge.badgeName}
-                  </span>
+                  </span> */}
                 </div>
               ))
             )}
@@ -155,6 +166,7 @@ export default function UserBadgeManagement(): JSX.Element {
 
   const actions = [
     {
+      id: 'manage-badge',
       label: (
         <div className="flex items-center gap-1">
           {/* <AddIcon fontSize="small" /> */}
@@ -163,19 +175,84 @@ export default function UserBadgeManagement(): JSX.Element {
       ),
       onClick: (row: Record<string, unknown>): void =>
         handleOpenDialog(row as unknown as UserWithBadges),
+      tooltip: 'Thêm hoặc thu hồi huy hiệu',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
   ];
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getUserBadgeManagementTourSteps({
+      hasRows: usersWithBadges.length > 0,
+    });
+  }, [usersWithBadges.length]);
+
   return (
     <div className="font-[var(--font-nunito)]">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-user-badge-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý huy hiệu của người dùng
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-3xl font-bold text-[var(--color-table-text-primary)]">
+              Quản lý huy hiệu của người dùng
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn quản lý huy hiệu người dùng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Gán và quản lý badges cho từng người dùng
           </p>
@@ -183,26 +260,31 @@ export default function UserBadgeManagement(): JSX.Element {
       </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={usersWithBadges as unknown as Record<string, unknown>[]}
-        rowKey="userId"
-        actions={actions}
-        loading={status === 'pending'}
-        emptyMessage="Chưa có người dùng nào"
-      />
+      <div data-tour="admin-user-badge-table-wrapper">
+        <Table
+          columns={columns}
+          data={usersWithBadges as unknown as Record<string, unknown>[]}
+          rowKey="userId"
+          actions={actions}
+          loading={status === 'pending'}
+          emptyMessage="Chưa có người dùng nào"
+          tourId="admin-user-badge"
+        />
+      </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="admin-user-badge-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
 
       {/* Modal Form */}
       <UserBadgeFormModal

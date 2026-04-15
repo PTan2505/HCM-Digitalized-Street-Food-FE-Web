@@ -2,15 +2,24 @@ export interface VendorOrderItem {
   dishId: number;
   dishName: string;
   quantity: number;
+  unitPrice?: number | null;
+  totalAmount?: number | null;
+  finalAmount?: number | null;
+  lineAmount?: number | null;
+  amount?: number | null;
+  subtotal?: number | null;
+  price?: number | null;
 }
 
 export interface VendorOrder {
   orderId: number;
   userId: number;
+  userName?: string | null;
   branchId: number;
   branchName: string;
   status: number;
   table: string | null;
+  note: string | null;
   paymentMethod: string | null;
   totalAmount: number;
   discountAmount: number | null;
@@ -49,3 +58,11 @@ export interface CompleteVendorOrderResponse {
   status: number;
   finalAmount: number;
 }
+
+export interface UpdateOrderPayload {
+  table?: string | null;
+}
+
+export type UpdateOrderResponse = VendorOrder;
+
+export type OrderDetailsResponse = VendorOrder;

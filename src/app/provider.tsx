@@ -1,11 +1,13 @@
 import { store } from '@app/store';
 import { theme } from '@config/muiTheme';
+import { ENV } from '@config/env';
 import { ThemeProvider } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import * as React from 'react';
 import { Provider } from 'react-redux';
+import { NotificationProvider } from '@contexts/NotificationContext';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const googleClientId = ENV.oauth.googleClientId;
 
 export function AppProvider({
   children,
@@ -15,7 +17,9 @@ export function AppProvider({
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <Provider store={store}>
-        <ThemeProvider theme={theme}>{children}</ThemeProvider>
+        <ThemeProvider theme={theme}>
+          <NotificationProvider>{children}</NotificationProvider>
+        </ThemeProvider>
       </Provider>
     </GoogleOAuthProvider>
   );

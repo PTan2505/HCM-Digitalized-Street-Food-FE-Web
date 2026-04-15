@@ -11,12 +11,13 @@ export interface AdminVendor {
 export interface VendorBranch {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number | null;
+  managerId?: number | null;
   name: string;
   phoneNumber: string;
   email: string;
   addressDetail: string;
-  branchName: string;
+  branchName?: string | null;
   ward: string;
   city: string;
   lat: number;
@@ -25,11 +26,20 @@ export interface VendorBranch {
   updatedAt: string | null;
   isVerified: boolean;
   avgRating: number;
+  totalReviewCount?: number;
+  totalRatingSum?: number;
+  batchReviewCount?: number;
+  batchRatingSum?: number;
   isActive: boolean;
   isSubscribed: boolean;
-  licenseUrl: string | null;
+  subscriptionExpiresAt?: string | null;
+  daysRemaining?: number | null;
+  tierId?: number | null;
+  tierName?: string | null;
+  licenseUrl?: string | null;
   licenseUrls: string[] | null;
   licenseStatus: string | null;
+  verifiedByUserName?: string | null;
   licenseRejectReason: string | null;
 }
 
@@ -51,6 +61,10 @@ export interface VendorDetail {
   vendorOwner: VendorOwner;
   vendorOwnerName: string;
   branches: VendorBranch[];
+  dietaryPreferences?: Array<{
+    dietaryId?: number;
+    name?: string;
+  }>;
 }
 
 export interface GetAllVendorsResponse {

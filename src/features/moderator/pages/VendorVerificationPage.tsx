@@ -5,7 +5,10 @@ import Table from '@features/moderator/components/Table';
 import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
 import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
 import useBranch from '@features/moderator/hooks/useBranch';
-import type { BranchRegisterRequest } from '@features/moderator/types/branch';
+import type {
+  BranchRegisterRequest,
+  PendingRegistrationType,
+} from '@features/moderator/types/branch';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
@@ -21,11 +24,25 @@ import {
   selectPendingRegistrationsPagination,
 } from '@slices/branch';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const VERIFICATION_TYPE_BY_PATH: Record<string, PendingRegistrationType> = {
+  'ghost-pin': 0,
+  vendor: 1,
+  'ownership-request': 2,
+};
+
+const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
+  0: 'Xác minh - Quán reviewer chia sẻ',
+  1: 'Xác minh - Quán ăn chờ duyệt',
+  2: 'Xác minh - Yêu cầu sở hữu quán',
+};
 
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
   const status = useAppSelector(selectBranchStatus);
+  const location = useLocation();
   const {
     onGetPendingRegistrations,
     onVerifyBranchRegistration,
@@ -33,7 +50,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
   } = useBranch();
 
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
+  const [pendingType, setPendingType] = useState<PendingRegistrationType>(1);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
@@ -58,8 +76,15 @@ export default function VendorVerificationPage(): React.JSX.Element {
   >({});
 
   useEffect(() => {
-    void onGetPendingRegistrations({ pageNumber, pageSize });
-  }, [onGetPendingRegistrations, pageNumber, pageSize]);
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const typeSegment = pathSegments[pathSegments.length - 1];
+    const routeType = VERIFICATION_TYPE_BY_PATH[typeSegment];
+    setPendingType(routeType ?? 1);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    void onGetPendingRegistrations({ pageNumber, pageSize, type: pendingType });
+  }, [onGetPendingRegistrations, pageNumber, pageSize, pendingType]);
 
   useEffect(() => {
     const uniqueVendorIds = [
@@ -180,7 +205,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const columns = [
     {
-      key: 'branchRegisterRequestId',
+      key: 'branchRequestId',
       label: 'STT',
       render: (
         _: unknown,
@@ -222,69 +247,12 @@ export default function VendorVerificationPage(): React.JSX.Element {
       key: 'branch.phoneNumber',
       label: 'Số điện thoại',
     },
-    // {
-    //   key: 'status',
-    //   label: 'Trạng thái',
-    //   render: (value: unknown): React.JSX.Element =>
-    //     getStatusBadge(value as number),
-    // },
-    // {
-    //   key: 'licenseUrl',
-    //   label: 'Giấy phép',
-    //   render: (value: unknown): React.JSX.Element => {
-    //     const apiBase = import.meta.env.VITE_API_URL as string;
-    //     const origin = apiBase.replace(/\/api$/, '');
-
-    //     const toFullUrl = (url: string): string =>
-    //       url.startsWith('http://') || url.startsWith('https://')
-    //         ? url
-    //         : `${origin}${url}`;
-
-    //     const urls: string[] = (() => {
-    //       if (Array.isArray(value)) return value as string[];
-    //       if (typeof value === 'string') {
-    //         try {
-    //           const parsed: unknown = JSON.parse(value);
-    //           if (Array.isArray(parsed)) return parsed as string[];
-    //         } catch {
-    //           // plain string url
-    //         }
-    //         return [value];
-    //       }
-    //       return [];
-    //     })();
-
-    //     if (urls.length === 0) return <span className="text-gray-400">-</span>;
-
-    //     return (
-    //       <div className="flex flex-col gap-1">
-    //         {urls.map((url, i) => (
-    //           <a
-    //             key={i}
-    //             href={toFullUrl(url)}
-    //             target="_blank"
-    //             rel="noopener noreferrer"
-    //             className="text-blue-600 hover:text-blue-800 hover:underline"
-    //           >
-    //             Xem file {urls.length > 1 ? i + 1 : ''}
-    //           </a>
-    //         ))}
-    //       </div>
-    //     );
-    //   },
-    // },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-    // {
-    //   key: 'updatedAt',
-    //   label: 'Ngày cập nhật',
-    //   render: (value: unknown): string =>
-    //     new Date(value as string).toLocaleString('vi-VN'),
-    // },
   ];
 
   const actions = [
@@ -365,25 +333,17 @@ export default function VendorVerificationPage(): React.JSX.Element {
   ];
 
   return (
-    <div className="font-[var(--font-nunito)]">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Xác minh người bán
-          </h1>
-          <p className="text-sm text-[var(--color-table-text-secondary)]">
-            Quản lý và xử lý các yêu cầu đăng ký chi nhánh
-          </p>
-        </div>
-      </div>
+    <div className="font-(--font-nunito)">
+      <h1 className="text-table-text-primary mb-6 text-2xl font-bold">
+        {TITLE_BY_PENDING_TYPE[pendingType]}
+      </h1>
 
       {/* Table */}
       <Table
         columns={columns}
         data={pendingRegistrations as unknown as Record<string, unknown>[]}
         loading={status === 'pending'}
-        rowKey="branchRegisterRequestId"
+        rowKey="branchRequestId"
         actions={actions}
         emptyMessage="Chưa có yêu cầu xác minh nào"
         loadingMessage="Đang tải danh sách..."

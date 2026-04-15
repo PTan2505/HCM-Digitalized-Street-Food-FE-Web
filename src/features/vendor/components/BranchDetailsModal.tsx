@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import type { JSX } from 'react';
 import type { Branch } from '@features/vendor/types/vendor';
-import CloseIcon from '@mui/icons-material/Close';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import PaymentIcon from '@mui/icons-material/Payment';
-import IconButton from '@mui/material/IconButton';
 import { Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import usePayment from '@features/vendor/hooks/usePayment';
 import PaymentBenefitsModal from '@features/vendor/components/PaymentBenefitsModal';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface BranchDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   branch: Branch | null;
+  managerName?: string | null;
   hasAnySubscribedBranch?: boolean;
   showPayment?: boolean;
 }
@@ -63,6 +64,7 @@ export default function BranchDetailsModal({
   isOpen,
   onClose,
   branch,
+  managerName,
   hasAnySubscribedBranch = false,
   showPayment = false,
 }: BranchDetailsModalProps): JSX.Element | null {
@@ -115,6 +117,18 @@ export default function BranchDetailsModal({
     return 'default';
   };
 
+  const managerDisplayName = (() => {
+    if (managerName && managerName.trim().length > 0) {
+      return managerName;
+    }
+
+    if (typeof branch.managerId === 'number' && branch.managerId > 0) {
+      return `ID ${branch.managerId}`;
+    }
+
+    return '-';
+  })();
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity"
@@ -124,31 +138,13 @@ export default function BranchDetailsModal({
         className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-8 py-5">
-          <div>
-            <h2 className="text-xl font-bold text-[var(--color-table-text-primary)] md:text-2xl">
-              Chi tiết chi nhánh
-            </h2>
-            <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[var(--color-table-text-secondary)]">
-              <span className="rounded-md bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                #{branch.branchId}
-              </span>
-              {branch.name}
-            </p>
-          </div>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{
-              bgcolor: 'white',
-              border: '1px solid #f3f4f6',
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </div>
+        <VendorModalHeader
+          title="Chi tiết chi nhánh"
+          subtitle={branch.name}
+          icon={<StorefrontIcon />}
+          iconTone="branch"
+          onClose={onClose}
+        />
 
         {/* Modal Content */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -165,12 +161,16 @@ export default function BranchDetailsModal({
                   value={branch.email}
                   className="sm:col-span-2 lg:col-span-1"
                 />
+                <InfoField
+                  label="Quản lý chi nhánh"
+                  value={managerDisplayName}
+                />
                 <InfoField label="Số điện thoại" value={branch.phoneNumber} />
                 <InfoField
                   label="Đánh giá"
                   value={
                     branch.avgRating
-                      ? `${branch.avgRating} ⭐`
+                      ? `${branch.avgRating.toFixed(1)} ⭐`
                       : 'Chưa có đánh giá'
                   }
                 />
