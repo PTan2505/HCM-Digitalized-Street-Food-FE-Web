@@ -176,6 +176,7 @@ export const apiUrl = {
     getMyBranch: '/Branch/manager/my-branch',
   },
   campaign: {
+    GetPublicCampaigns: '/Campaign/public',
     GetOrPostSystemCampaign: '/Campaign/system',
     GetOrPostVendorCampaign: '/Campaign/vendor',
     GetCampaignDetail: (campaignId: number): string =>
