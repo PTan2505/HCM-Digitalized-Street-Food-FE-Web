@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import { Avatar, Box, Chip } from '@mui/material';
-import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
+  PauseCircleOutline as PauseCircleOutlineIcon,
+  Replay as ReplayIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
 import {
@@ -23,14 +23,17 @@ import type { DishFilterValues } from '@features/vendor/components/DishFilterSec
 import type { CreateOrUpdateDishResponse } from '@features/vendor/types/dish';
 import useDish from '@features/vendor/hooks/useDish';
 import useVendor from '@features/vendor/hooks/useVendor';
+import useTaste from '@features/admin/hooks/useTaste';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectVendorDishes,
   selectVendorDishesPagination,
   selectDishStatus,
 } from '@slices/dish';
+import { selectTastes } from '@slices/taste';
 import { selectMyVendor } from '@slices/vendor';
 import { getDishManagementTourSteps } from '@features/vendor/utils/dishManagementTourSteps';
+import type { Taste } from '@features/admin/types/taste';
 
 const StatusBadge = ({
   label,
@@ -59,16 +62,14 @@ export default function DishPage(): JSX.Element {
   const dishes = useAppSelector(selectVendorDishes);
   const pagination = useAppSelector(selectVendorDishesPagination);
   const status = useAppSelector(selectDishStatus);
+  const tastes = useAppSelector(selectTastes);
 
   const { onGetMyVendor } = useVendor();
-  const { onCreateDish, onUpdateDish, onDeleteDish, onGetDishesOfAVendor } =
-    useDish();
+  const { onGetAllTastes } = useTaste();
+  const { onCreateDish, onUpdateDish, onGetDishesOfAVendor } = useDish();
 
   const [openFormModal, setOpenFormModal] = useState(false);
   const [editingDish, setEditingDish] =
-    useState<CreateOrUpdateDishResponse | null>(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deletingDish, setDeletingDish] =
     useState<CreateOrUpdateDishResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
@@ -82,7 +83,8 @@ export default function DishPage(): JSX.Element {
   // Fetch vendor info on mount
   useEffect(() => {
     void onGetMyVendor();
-  }, [onGetMyVendor]);
+    void onGetAllTastes();
+  }, [onGetMyVendor, onGetAllTastes]);
 
   // Fetch dishes whenever vendorId / page / filters change
   useEffect(() => {
@@ -128,26 +130,37 @@ export default function DishPage(): JSX.Element {
     setPageNumber(1); // Reset về trang 1 khi đổi filter
   };
 
-  const handleDelete = (dish: CreateOrUpdateDishResponse): void => {
-    setDeletingDish(dish);
-    setOpenDeleteDialog(true);
-  };
+  const handleToggleSellingStatus = async (
+    dish: CreateOrUpdateDishResponse
+  ): Promise<void> => {
+    const tasteIds = dish.tasteNames
+      .map((tasteName) => {
+        const taste = tastes.find((t: Taste) => t.name === tasteName);
+        return taste?.tasteId;
+      })
+      .filter((tasteId): tasteId is number => tasteId !== undefined);
 
-  const handleConfirmDelete = async (): Promise<void> => {
-    if (deletingDish) {
-      try {
-        await onDeleteDish(deletingDish.dishId);
-        setOpenDeleteDialog(false);
-        setDeletingDish(null);
-      } catch (error) {
-        console.error('Failed to delete dish:', error);
-      }
+    if (tasteIds.length === 0) {
+      console.error('Cannot toggle dish status because tasteIds are missing');
+      return;
     }
-  };
 
-  const handleCancelDelete = (): void => {
-    setOpenDeleteDialog(false);
-    setDeletingDish(null);
+    try {
+      await onUpdateDish({
+        dishId: dish.dishId,
+        data: {
+          Name: dish.name,
+          Price: dish.price,
+          Description: dish.description ?? '',
+          CategoryId: dish.categoryId,
+          TasteIds: tasteIds,
+          DietaryPreferenceIds: [],
+          IsActive: !dish.isActive,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to toggle dish selling status:', error);
+    }
   };
 
   const handlePageChange = (page: number): void => {
@@ -283,11 +296,24 @@ export default function DishPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      menuLabel: 'Xóa món',
-      onClick: (row: CreateOrUpdateDishResponse): void => handleDelete(row),
-      color: 'error' as const,
+      id: 'deactivate',
+      label: <PauseCircleOutlineIcon fontSize="small" />,
+      menuLabel: 'Ngừng bán',
+      onClick: (row: CreateOrUpdateDishResponse): void => {
+        void handleToggleSellingStatus(row);
+      },
+      color: 'warning' as const,
+      show: (row: CreateOrUpdateDishResponse): boolean => row.isActive,
+    },
+    {
+      id: 'reactivate',
+      label: <ReplayIcon fontSize="small" />,
+      menuLabel: 'Bán lại',
+      onClick: (row: CreateOrUpdateDishResponse): void => {
+        void handleToggleSellingStatus(row);
+      },
+      color: 'success' as const,
+      show: (row: CreateOrUpdateDishResponse): boolean => !row.isActive,
     },
   ];
 
@@ -397,19 +423,6 @@ export default function DishPage(): JSX.Element {
         onCreateDish={onCreateDish}
         onUpdateDish={onUpdateDish}
         onSuccess={handleFormSuccess}
-      />
-
-      <DeleteConfirmationDialog
-        open={openDeleteDialog}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa món ăn"
-        confirmationMessage={
-          <>
-            Bạn có chắc chắn muốn xóa món &quot;{deletingDish?.name}&quot;? Hành
-            động này không thể hoàn tác.
-          </>
-        }
       />
     </div>
   );

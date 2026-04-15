@@ -19,15 +19,15 @@ export const playNotificationSound = (
   type?: string,
   message?: string
 ): void => {
-  try {
-    if (type === 'NewOrder') {
-      orderHowl.play();
-    } else {
-      feedbackHowl.play();
-    }
-  } catch (error) {
-    console.warn('Could not play notification sound:', error);
-  }
+  // try {
+  //   if (type === 'NewOrder') {
+  //     orderHowl.play();
+  //   } else {
+  //     feedbackHowl.play();
+  //   }
+  // } catch (error) {
+  //   console.warn('Could not play notification sound:', error);
+  // }
 
   // Đọc nội dung thông báo bằng Gemini TTS
   if (message) {

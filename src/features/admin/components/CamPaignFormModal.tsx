@@ -445,7 +445,13 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('registrationStartDate')}
-                    min={campaign ? undefined : getTodayMinVN()}
+                    min={
+                      campaign?.registrationStartDate &&
+                      toLocalDatetimeValue(campaign.registrationStartDate) <
+                        getTodayMinVN()
+                        ? toLocalDatetimeValue(campaign.registrationStartDate)
+                        : getTodayMinVN()
+                    }
                     className={inputClass(!!errors.registrationStartDate)}
                   />
                   {errors.registrationStartDate && (
@@ -462,11 +468,7 @@ export default function CamPaignFormModal({
                     type="datetime-local"
                     {...register('registrationEndDate')}
                     disabled={!campaign && !registrationStartDate}
-                    min={
-                      campaign
-                        ? undefined
-                        : registrationStartDate || getTodayMinVN()
-                    }
+                    min={registrationStartDate || getTodayMinVN()}
                     className={inputClass(!!errors.registrationEndDate)}
                   />
                   {errors.registrationEndDate && (
@@ -492,11 +494,7 @@ export default function CamPaignFormModal({
                     type="datetime-local"
                     {...register('startDate')}
                     disabled={!campaign && !registrationEndDate}
-                    min={
-                      campaign
-                        ? undefined
-                        : registrationEndDate || getTodayMinVN()
-                    }
+                    min={registrationEndDate || getTodayMinVN()}
                     className={inputClass(!!errors.startDate)}
                   />
                   {errors.startDate && (
@@ -514,7 +512,7 @@ export default function CamPaignFormModal({
                     type="datetime-local"
                     {...register('endDate')}
                     disabled={!campaign && !startDate}
-                    min={campaign ? undefined : startDate || getTodayMinVN()}
+                    min={startDate || getTodayMinVN()}
                     className={inputClass(!!errors.endDate)}
                   />
                   {errors.endDate && (

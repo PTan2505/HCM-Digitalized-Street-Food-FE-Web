@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import BranchAddressMapSection from '@features/manager/components/BranchAddressMapSection';
 import BranchImagesSection from '@features/manager/components/BranchImagesSection';
 import type { AddressDraft } from '@features/manager/components/BranchAddressMapSection';
@@ -9,10 +10,18 @@ import type { Branch } from '@features/vendor/types/vendor';
 import type { VendorRegistrationRequest } from '@features/vendor/types/vendor';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectUser } from '@slices/auth';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import useBranchManagement from '@features/manager/hooks/useBranchManagement';
 import useVendor from '@features/vendor/hooks/useVendor';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
+import { getManagerBranchManagementTourSteps } from '@features/manager/utils/branchManagementTourSteps';
 
 export default function BranchManagementPage(): JSX.Element {
   const user = useAppSelector(selectUser);
@@ -32,6 +41,8 @@ export default function BranchManagementPage(): JSX.Element {
     lat: null,
     long: null,
   });
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const managerIdRef = useRef<number | null>(null);
 
@@ -309,12 +320,73 @@ export default function BranchManagementPage(): JSX.Element {
       ]
     : [];
 
+  const startBranchTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getManagerBranchManagementTourSteps({
+      hasBranch: currentBranch !== null,
+    });
+  }, [currentBranch]);
+
   return (
     <div className="font-(--font-nunito)">
-      <div className="mb-6">
-        <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-          Quản lý chi nhánh
-        </h1>
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div className="mb-6" data-tour="manager-branch-header">
+        <div className="mb-1 flex items-start gap-2">
+          <h1 className="text-table-text-primary text-3xl font-bold">
+            Quản lý chi nhánh
+          </h1>
+          <button
+            type="button"
+            onClick={startBranchTour}
+            aria-label="Mở hướng dẫn quản lý chi nhánh"
+            title="Hướng dẫn"
+            className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+          >
+            <HelpOutlineIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
         <p className="text-table-text-secondary text-sm">
           Xem và cập nhật thông tin của {branch?.name ?? 'chi nhánh'} cũng như
           theo dõi tình trạng xác thực, đăng ký và đánh giá của chi nhánh
@@ -327,61 +399,72 @@ export default function BranchManagementPage(): JSX.Element {
         </Box>
       ) : currentBranch ? (
         <Box className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          {editableInfoRows.map((row) => (
-            <BranchDetailRow
-              key={row.label}
-              label={row.label}
-              value={row.value}
-              field={row.field}
-              editingField={editingField}
-              editValue={editValue}
-              onStartEdit={handleStartEdit}
-              onChangeEditValue={setEditValue}
-              onSaveEdit={() => {
-                void handleSaveEdit();
+          <div data-tour="manager-branch-summary">
+            {editableInfoRows.map((row) => (
+              <BranchDetailRow
+                key={row.label}
+                label={row.label}
+                value={row.value}
+                field={row.field}
+                editingField={editingField}
+                editValue={editValue}
+                onStartEdit={handleStartEdit}
+                onChangeEditValue={setEditValue}
+                onSaveEdit={() => {
+                  void handleSaveEdit();
+                }}
+                onCancelEdit={handleCancelEdit}
+                isSaving={savingField}
+                disableEditButton={
+                  isEditingAddress ||
+                  (editingField !== null && editingField !== row.field)
+                }
+              />
+            ))}
+          </div>
+
+          <div data-tour="manager-branch-address">
+            <BranchAddressMapSection
+              currentBranch={currentBranch}
+              isEditingAddress={isEditingAddress}
+              savingField={savingField}
+              addressDraft={addressDraft}
+              onAddressDraftChange={setAddressDraft}
+              onStartAddressEdit={handleStartAddressEdit}
+              onCancelAddressEdit={handleCancelAddressEdit}
+              onSaveAddressEdit={() => {
+                void handleSaveAddressEdit();
               }}
-              onCancelEdit={handleCancelEdit}
-              isSaving={savingField}
-              disableEditButton={
-                isEditingAddress ||
-                (editingField !== null && editingField !== row.field)
-              }
+              disableEditButton={editingField !== null}
             />
-          ))}
+          </div>
 
-          <BranchAddressMapSection
-            currentBranch={currentBranch}
-            isEditingAddress={isEditingAddress}
-            savingField={savingField}
-            addressDraft={addressDraft}
-            onAddressDraftChange={setAddressDraft}
-            onStartAddressEdit={handleStartAddressEdit}
-            onCancelAddressEdit={handleCancelAddressEdit}
-            onSaveAddressEdit={() => {
-              void handleSaveAddressEdit();
-            }}
-            disableEditButton={editingField !== null}
-          />
+          <div data-tour="manager-branch-images">
+            <BranchImagesSection branch={currentBranch} />
+          </div>
 
-          <BranchImagesSection branch={currentBranch} />
-
-          {statusInfoRows.map((row) => (
-            <BranchDetailRow
-              key={row.label}
-              label={row.label}
-              value={row.value}
-              editingField={null}
-              editValue=""
-              onStartEdit={() => {}}
-              onChangeEditValue={() => {}}
-              onSaveEdit={() => {}}
-              onCancelEdit={() => {}}
-              isSaving={false}
-            />
-          ))}
+          <div data-tour="manager-branch-status">
+            {statusInfoRows.map((row) => (
+              <BranchDetailRow
+                key={row.label}
+                label={row.label}
+                value={row.value}
+                editingField={null}
+                editValue=""
+                onStartEdit={() => {}}
+                onChangeEditValue={() => {}}
+                onSaveEdit={() => {}}
+                onCancelEdit={() => {}}
+                isSaving={false}
+              />
+            ))}
+          </div>
         </Box>
       ) : (
-        <Box className="rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-600">
+        <Box
+          className="rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-600"
+          data-tour="manager-branch-empty"
+        >
           Không có chi nhánh nào được phân công cho bạn.
         </Box>
       )}

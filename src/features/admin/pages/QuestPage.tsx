@@ -1,11 +1,19 @@
 import type { JSX } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  HelpOutline as HelpOutlineIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import {
   Box,
   Button,
@@ -20,7 +28,8 @@ import QuestFormModal from '@features/admin/components/QuestFormModal';
 import Pagination from '@features/admin/components/Pagination';
 import Table from '@features/admin/components/Table';
 import useQuest from '@features/admin/hooks/useQuest';
-import { type Quest } from '@features/admin/types/quest';
+import { getQuestManagementTourSteps } from '@features/admin/utils/questManagementTourSteps';
+import { QuestTaskType, type Quest } from '@features/admin/types/quest';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectQuestHasNext,
@@ -96,6 +105,8 @@ export default function QuestPage(): JSX.Element {
   const [viewingQuest, setViewingQuest] = useState<Quest | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingQuest, setDeletingQuest] = useState<Quest | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const fetchQuests = useCallback(async (): Promise<void> => {
     try {
@@ -177,6 +188,28 @@ export default function QuestPage(): JSX.Element {
     }
   };
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getQuestManagementTourSteps({
+      hasRows: quests.length > 0,
+    });
+  }, [quests.length]);
+
   const columns = [
     {
       key: 'title',
@@ -219,16 +252,26 @@ export default function QuestPage(): JSX.Element {
         />
       ),
     },
-    {
-      key: 'isStandalone',
-      label: 'Kiểu',
-      render: (value: unknown): JSX.Element => (
-        <StatusBadge
-          label={value === true ? 'Độc lập' : 'Theo chiến dịch'}
-          type={value === true ? 'warning' : 'default'}
-        />
-      ),
-    },
+    // {
+    //   key: 'isStandalone',
+    //   label: 'Kiểu',
+    //   render: (_: unknown, row: Quest): JSX.Element => {
+    //     const isUpgradeQuest = row.tasks.some(
+    //       (task) => task.type === QuestTaskType.TIER_UP
+    //     );
+
+    //     if (isUpgradeQuest) {
+    //       return <StatusBadge label="Nâng cấp" type="warning" />;
+    //     }
+
+    //     return (
+    //       <StatusBadge
+    //         label={row.isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
+    //         type={row.isStandalone ? 'warning' : 'default'}
+    //       />
+    //     );
+    //   },
+    // },
     // {
     //   key: 'campaignId',
     //   label: 'Áp dụng',
@@ -254,6 +297,7 @@ export default function QuestPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'detail',
       label: <VisibilityIcon fontSize="small" />,
       onClick: (row: Quest): void => {
         void handleViewDetails(row);
@@ -263,6 +307,7 @@ export default function QuestPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Quest): void => handleOpenModal(row),
       tooltip: 'Chỉnh sửa nhiệm vụ',
@@ -270,6 +315,7 @@ export default function QuestPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'delete',
       label: <DeleteIcon fontSize="small" />,
       onClick: (row: Quest): void => handleDelete(row),
       tooltip: 'Xóa nhiệm vụ',
@@ -280,11 +326,53 @@ export default function QuestPage(): JSX.Element {
 
   return (
     <div className="flex h-full flex-col font-(--font-nunito)">
-      <div className="mb-6 flex items-center justify-between">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-quest-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Quản lý nhiệm vụ
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Quản lý nhiệm vụ
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn quản lý nhiệm vụ"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Tạo và quản lý nhiệm vụ cùng phần thưởng theo từng nhiệm vụ
           </p>
@@ -292,6 +380,7 @@ export default function QuestPage(): JSX.Element {
 
         <button
           onClick={() => handleOpenModal()}
+          data-tour="admin-quest-create-button"
           className="bg-primary-600 hover:bg-primary-700 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white transition-colors"
         >
           <AddIcon fontSize="small" />
@@ -299,7 +388,7 @@ export default function QuestPage(): JSX.Element {
         </button>
       </div>
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box sx={{ flex: 1, minHeight: 0 }} data-tour="admin-quest-table-wrapper">
         <Table
           columns={columns}
           data={quests}
@@ -307,6 +396,7 @@ export default function QuestPage(): JSX.Element {
           actions={actions}
           loading={status === 'pending'}
           emptyMessage="Chưa có quest nào"
+          tourId="admin-quest"
         />
       </Box>
 

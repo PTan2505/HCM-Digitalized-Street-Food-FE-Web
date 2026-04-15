@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { JSX } from 'react';
 import {
   Box,
@@ -10,11 +10,19 @@ import {
 import {
   Add as AddIcon,
   Edit as EditIcon,
+  HelpOutline as HelpOutlineIcon,
   ConfirmationNumber as VoucherIcon,
   CheckCircle as CheckCircleIcon,
   Visibility as VisibilityIcon,
   Storefront as StorefrontIcon,
 } from '@mui/icons-material';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
@@ -33,6 +41,7 @@ import {
 } from '@slices/campaign';
 import { selectVoucherStatus } from '@slices/voucher';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import { getCampaignOverviewTourSteps } from '@features/admin/utils/campaignOverviewTourSteps';
 import type { VoucherCreate } from '@custom-types/voucher';
 
 const formatVNDatetime = (isoStr: string | null): string => {
@@ -164,6 +173,8 @@ export default function CampaignPage(): JSX.Element {
   const [postCreateStep, setPostCreateStep] = useState<PostCreateStep>('idle');
   const newCampaignRef = useRef<Campaign | null>(null);
   const voucherCreatedCountRef = useRef(0);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -289,6 +300,28 @@ export default function CampaignPage(): JSX.Element {
     setPostCreateStep('idle');
   };
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getCampaignOverviewTourSteps({
+      hasRows: campaigns.length > 0,
+    });
+  }, [campaigns.length]);
+
   const columns = [
     {
       key: 'name',
@@ -353,6 +386,7 @@ export default function CampaignPage(): JSX.Element {
 
   const actions = [
     {
+      id: 'detail',
       label: <VisibilityIcon fontSize="small" />,
       onClick: (row: Campaign): void => {
         void handleOpenDetailModal(row);
@@ -363,6 +397,7 @@ export default function CampaignPage(): JSX.Element {
       show: (): boolean => true,
     },
     {
+      id: 'branches',
       label: <StorefrontIcon fontSize="small" />,
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
@@ -374,6 +409,7 @@ export default function CampaignPage(): JSX.Element {
       show: (): boolean => true,
     },
     {
+      id: 'voucher',
       label: <VoucherIcon fontSize="small" />,
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
@@ -385,6 +421,7 @@ export default function CampaignPage(): JSX.Element {
       show: (row: Campaign): boolean => row.isUpdateable,
     },
     {
+      id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Campaign): void => handleOpenModal(row),
       tooltip: 'Chỉnh sửa chiến dịch',
@@ -402,18 +439,61 @@ export default function CampaignPage(): JSX.Element {
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-campaign-page-header"
+      >
         <div>
-          <h1 className="mb-1 text-3xl font-bold text-[var(--color-table-text-primary)]">
-            Quản lý chiến dịch
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-3xl font-bold text-[var(--color-table-text-primary)]">
+              Quản lý chiến dịch
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn quản lý chiến dịch"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-sm text-[var(--color-table-text-secondary)]">
             Quản lý các chương trình khuyến mãi và chiến dịch hệ thống
           </p>
         </div>
         <button
           onClick={() => handleOpenModal()}
+          data-tour="admin-campaign-create-button"
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary-600)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-primary-700)]"
         >
           <AddIcon fontSize="small" />
@@ -422,7 +502,10 @@ export default function CampaignPage(): JSX.Element {
       </div>
 
       {/* Table Content */}
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0 }}
+        data-tour="admin-campaign-table-wrapper"
+      >
         <Table
           columns={columns}
           data={campaigns}
@@ -431,6 +514,7 @@ export default function CampaignPage(): JSX.Element {
           loading={status === 'pending'}
           emptyMessage="Chưa có chiến dịch nào"
           noActionsMessage="Đã kết thúc"
+          tourId="admin-campaign"
         />
       </Box>
 

@@ -19,6 +19,7 @@ export interface ManagerOrder {
   branchName: string;
   status: number;
   table: string | null;
+  note: string | null;
   paymentMethod: string | null;
   totalAmount: number;
   discountAmount: number | null;

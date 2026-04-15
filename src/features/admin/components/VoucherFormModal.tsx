@@ -1025,7 +1025,12 @@ export default function VoucherFormModal({
                     <input
                       type="datetime-local"
                       {...singleForm.register('startDate')}
-                      min={nowMin}
+                      min={
+                        voucher?.startDate &&
+                        toLocalDatetimeValue(voucher.startDate) < nowMin
+                          ? toLocalDatetimeValue(voucher.startDate)
+                          : nowMin
+                      }
                       step="60"
                       className={inputClass(
                         !!singleForm.formState.errors.startDate
