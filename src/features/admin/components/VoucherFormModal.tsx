@@ -577,7 +577,7 @@ export default function VoucherFormModal({
         maxDiscountValue: voucher.maxDiscountValue,
         minAmountRequired: voucher.minAmountRequired,
         quantity: voucher.quantity,
-        redeemPoint: voucher.redeemPoint,
+        redeemPoint: isCampaignUpdateMode ? 0 : voucher.redeemPoint,
         startDate: toLocalDatetimeValue(voucher.startDate),
         endDate: toLocalDatetimeValue(voucher.endDate),
         expiredDate: null,
@@ -629,7 +629,7 @@ export default function VoucherFormModal({
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? null,
       expiredDate: null,
-      redeemPoint: data.redeemPoint ?? 0,
+      redeemPoint: 0,
       campaignId: fixedCampaignId ?? voucher?.campaignId ?? null,
       description: data.description ?? null,
       maxDiscountValue:
@@ -1137,40 +1137,41 @@ export default function VoucherFormModal({
             <div>
               {sectionLabel('Thông tin thêm')}
               <div className="flex flex-col gap-4">
-                {/* Điểm đổi (chỉ MarketPlace) */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Điểm đổi{' '}
-                      <span className="text-xs font-normal text-gray-500">
-                        (Redeem Point)
-                      </span>
-                    </label>
-                    <Controller
-                      control={singleForm.control}
-                      name="redeemPoint"
-                      render={({ field }) => (
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="0"
-                          className={inputClass(
-                            !!singleForm.formState.errors.redeemPoint
-                          )}
-                          value={formatNumberWithDots(field.value)}
-                          onChange={(e) =>
-                            field.onChange(parseNumberInput(e.target.value))
-                          }
-                        />
+                {!isCampaignUpdateMode && (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold text-gray-700">
+                        Điểm đổi{' '}
+                        <span className="text-xs font-normal text-gray-500">
+                          (Redeem Point)
+                        </span>
+                      </label>
+                      <Controller
+                        control={singleForm.control}
+                        name="redeemPoint"
+                        render={({ field }) => (
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            className={inputClass(
+                              !!singleForm.formState.errors.redeemPoint
+                            )}
+                            value={formatNumberWithDots(field.value)}
+                            onChange={(e) =>
+                              field.onChange(parseNumberInput(e.target.value))
+                            }
+                          />
+                        )}
+                      />
+                      {singleForm.formState.errors.redeemPoint && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {singleForm.formState.errors.redeemPoint.message}
+                        </p>
                       )}
-                    />
-                    {singleForm.formState.errors.redeemPoint && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {singleForm.formState.errors.redeemPoint.message}
-                      </p>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Mô tả */}
                 <div>
