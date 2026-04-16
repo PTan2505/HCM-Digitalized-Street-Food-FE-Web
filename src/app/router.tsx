@@ -65,26 +65,6 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: ROUTES.PAYMENT.SUCCESS,
-    element: <PaymentSuccess />,
-  },
-  {
-    path: ROUTES.PAYMENT.CANCEL,
-    element: <PaymentCancel />,
-  },
-  {
-    path: ROUTES.USER_INFO_SETUP,
-    element: <EditUserProfilePage />,
-  },
-  {
-    path: ROUTES.PAYMENT_SUCCESS,
-    element: <PaymentSuccess />,
-  },
-  {
-    path: ROUTES.PAYMENT_CANCEL,
-    element: <PaymentCancel />,
-  },
-  {
     path: '*',
     element: <DeepLinkRedirectPage />,
   },
@@ -92,6 +72,18 @@ export const router = createBrowserRouter([
     path: ROUTES.ROOT,
     element: <RootLayout />,
     children: [
+      {
+        path: ROUTES.USER_INFO_SETUP,
+        element: <EditUserProfilePage />,
+      },
+      {
+        path: ROUTES.PAYMENT.SUCCESS,
+        element: <PaymentSuccess />,
+      },
+      {
+        path: ROUTES.PAYMENT.CANCEL,
+        element: <PaymentCancel />,
+      },
       {
         path: ROUTES.MODERATOR.BASE,
         element: <ModeratorLayout />,
