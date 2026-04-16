@@ -1,10 +1,10 @@
-import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
 import Pagination from '@features/moderator/components/Pagination';
 import PendingTypeFilterSection from '@features/moderator/components/PendingTypeFilterSection';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
-import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
-import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetailsModal';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetailsModal';
 import useBranch from '@features/moderator/hooks/useBranch';
 import type {
   BranchRegisterRequest,
