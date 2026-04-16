@@ -67,7 +67,9 @@ export const reloadSettings = createAppAsyncThunk(
 export const settingSlice = createSlice({
   name: 'setting',
   initialState,
-  reducers: {},
+  reducers: {
+    resetSettingState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getAllSettings.fulfilled, (state, action) => {
@@ -104,6 +106,8 @@ export const settingSlice = createSlice({
       );
   },
 });
+
+export const { resetSettingState } = settingSlice.actions;
 
 export const selectSettings = (state: RootState): Setting[] =>
   state.setting.settings;
