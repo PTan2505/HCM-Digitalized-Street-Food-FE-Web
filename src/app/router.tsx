@@ -29,8 +29,10 @@ import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
 import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
-import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import ModeratorBranchPage from '@features/moderator/pages/BranchPage';
+import GhostPinVerificationPage from '@features/moderator/pages/GhostPinVerificationPage';
+import PendingVendorVerificationPage from '@features/moderator/pages/PendingVendorVerificationPage';
+import OwnershipRequestVerificationPage from '@features/moderator/pages/OwnershipRequestVerificationPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import DishManagementPage from '@features/manager/pages/DishManagementPage';
@@ -116,15 +118,15 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN,
-            element: <ModeratorVendorVerificationPage />,
+            element: <GhostPinVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR,
-            element: <ModeratorVendorVerificationPage />,
+            element: <PendingVendorVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST,
-            element: <ModeratorVendorVerificationPage />,
+            element: <OwnershipRequestVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.POSTS,
