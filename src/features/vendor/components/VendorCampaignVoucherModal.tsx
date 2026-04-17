@@ -5,7 +5,6 @@ import {
   Add as AddIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
@@ -130,10 +129,10 @@ export default function VendorCampaignVoucherModal({
     }
   };
 
-  const handleDelete = (voucher: Voucher): void => {
-    setDeletingVoucher(voucher);
-    setOpenDeleteDialog(true);
-  };
+  // const handleDelete = (voucher: Voucher): void => {
+  //   setDeletingVoucher(voucher);
+  //   setOpenDeleteDialog(true);
+  // };
 
   const handleConfirmDelete = async (): Promise<void> => {
     if (deletingVoucher) {

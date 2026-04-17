@@ -2,8 +2,8 @@ import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Add as AddIcon,
-  Delete as DeleteIcon,
   Edit as EditIcon,
+  Groups as GroupsIcon,
   HelpOutline as HelpOutlineIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
@@ -25,11 +25,12 @@ import {
 } from '@mui/material';
 import QuestDetailsModal from '@features/admin/components/QuestDetailsModal';
 import QuestFormModal from '@features/admin/components/QuestFormModal';
+import QuestParticipantsModal from '@features/admin/components/QuestParticipantsModal';
 import Pagination from '@features/admin/components/Pagination';
 import Table from '@features/admin/components/Table';
 import useQuest from '@features/admin/hooks/useQuest';
 import { getQuestManagementTourSteps } from '@features/admin/utils/questManagementTourSteps';
-import { QuestTaskType, type Quest } from '@features/admin/types/quest';
+import type { Quest } from '@features/admin/types/quest';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectQuestHasNext,
@@ -38,26 +39,6 @@ import {
   selectQuestTotalCount,
   selectQuests,
 } from '@slices/quest';
-
-const formatVNDatetime = (isoStr?: string): string => {
-  if (!isoStr) {
-    return '-';
-  }
-
-  const date = new Date(isoStr);
-  if (Number.isNaN(date.getTime())) {
-    return '-';
-  }
-
-  return date.toLocaleString('vi-VN', {
-    timeZone: 'Asia/Ho_Chi_Minh',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
 
 const StatusBadge = ({
   label,
@@ -93,6 +74,7 @@ export default function QuestPage(): JSX.Element {
     onGetQuestById,
     onCreateQuest,
     onUpdateQuest,
+    onUpdateQuestTasks,
     onDeleteQuest,
     onPostQuestImage,
   } = useQuest();
@@ -105,6 +87,9 @@ export default function QuestPage(): JSX.Element {
   const [viewingQuest, setViewingQuest] = useState<Quest | null>(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingQuest, setDeletingQuest] = useState<Quest | null>(null);
+  const [openParticipantsDialog, setOpenParticipantsDialog] = useState(false);
+  const [selectedParticipantQuest, setSelectedParticipantQuest] =
+    useState<Quest | null>(null);
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
@@ -133,34 +118,62 @@ export default function QuestPage(): JSX.Element {
     setEditingQuest(null);
   };
 
-  const handleSaveQuest = async (
-    data: Parameters<typeof onCreateQuest>[0],
-    imageFile?: File | null
-  ): Promise<void> => {
-    try {
-      let savedQuest: Quest;
+  const handleSaveQuest = useCallback(
+    async (
+      data: Parameters<typeof onCreateQuest>[0],
+      imageFile?: File | null
+    ): Promise<void> => {
+      try {
+        let savedQuest: Quest;
 
-      if (editingQuest) {
-        savedQuest = await onUpdateQuest(editingQuest.questId, data);
-      } else {
-        savedQuest = await onCreateQuest(data);
+        if (editingQuest) {
+          savedQuest = await onUpdateQuest(editingQuest.questId, {
+            title: data.title,
+            description: data.description,
+            imageUrl: data.imageUrl,
+            isActive: data.isActive,
+            requiresEnrollment: data.requiresEnrollment,
+            isStandalone: data.isStandalone,
+            campaignId: data.campaignId,
+          });
+
+          if ((editingQuest.userQuestCount ?? 0) === 0) {
+            await onUpdateQuestTasks(editingQuest.questId, data.tasks);
+          }
+        } else {
+          savedQuest = await onCreateQuest(data);
+        }
+
+        if (imageFile && savedQuest.questId) {
+          const formData = new FormData();
+          formData.append('imageFile', imageFile);
+          await onPostQuestImage(savedQuest.questId, formData);
+        }
+
+        await fetchQuests();
+        handleCloseModal();
+      } catch (error) {
+        console.error('Failed to save quest', error);
       }
+    },
+    [
+      editingQuest,
+      fetchQuests,
+      onCreateQuest,
+      onPostQuestImage,
+      onUpdateQuest,
+      onUpdateQuestTasks,
+    ]
+  );
 
-      if (imageFile && savedQuest.questId) {
-        const formData = new FormData();
-        formData.append('imageFile', imageFile);
-        await onPostQuestImage(savedQuest.questId, formData);
-      }
-
-      handleCloseModal();
-    } catch (error) {
-      console.error('Failed to save quest', error);
-    }
+  const handleOpenParticipants = (quest: Quest): void => {
+    setSelectedParticipantQuest(quest);
+    setOpenParticipantsDialog(true);
   };
 
-  const handleDelete = (quest: Quest): void => {
-    setDeletingQuest(quest);
-    setOpenDeleteDialog(true);
+  const handleCloseParticipantsDialog = (): void => {
+    setOpenParticipantsDialog(false);
+    setSelectedParticipantQuest(null);
   };
 
   const handleViewDetails = async (quest: Quest): Promise<void> => {
@@ -252,44 +265,12 @@ export default function QuestPage(): JSX.Element {
         />
       ),
     },
-    // {
-    //   key: 'isStandalone',
-    //   label: 'Kiểu',
-    //   render: (_: unknown, row: Quest): JSX.Element => {
-    //     const isUpgradeQuest = row.tasks.some(
-    //       (task) => task.type === QuestTaskType.TIER_UP
-    //     );
-
-    //     if (isUpgradeQuest) {
-    //       return <StatusBadge label="Nâng cấp" type="warning" />;
-    //     }
-
-    //     return (
-    //       <StatusBadge
-    //         label={row.isStandalone ? 'Độc lập' : 'Theo chiến dịch'}
-    //         type={row.isStandalone ? 'warning' : 'default'}
-    //       />
-    //     );
-    //   },
-    // },
-    // {
-    //   key: 'campaignId',
-    //   label: 'Áp dụng',
-    //   render: (value: unknown, row: Quest): JSX.Element => (
-    //     <Box className="text-table-text-secondary text-sm">
-    //       {row.isStandalone
-    //         ? 'Độc lập'
-    //         : `Campaign ${typeof value === 'number' ? value : '-'}`}
-    //     </Box>
-    //   ),
-    // },
     {
-      key: 'updatedAt',
-      label: 'Thời gian',
-      render: (_: unknown, row: Quest): JSX.Element => (
-        <Box className="text-table-text-secondary text-sm">
-          <div>Tạo: {formatVNDatetime(row.createdAt)}</div>
-          <div>Cập nhật: {formatVNDatetime(row.updatedAt)}</div>
+      key: 'userQuestCount',
+      label: 'Người tham gia',
+      render: (value: unknown): JSX.Element => (
+        <Box className="text-table-text-secondary text-sm font-semibold">
+          {typeof value === 'number' ? value : 0} người
         </Box>
       ),
     },
@@ -307,6 +288,16 @@ export default function QuestPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
+      id: 'participants',
+      label: <GroupsIcon fontSize="small" />,
+      onClick: (row: Quest): void => {
+        handleOpenParticipants(row);
+      },
+      tooltip: 'Xem người tham gia và tiến độ',
+      color: 'secondary' as const,
+      variant: 'outlined' as const,
+    },
+    {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Quest): void => handleOpenModal(row),
@@ -314,14 +305,6 @@ export default function QuestPage(): JSX.Element {
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
-    // {
-    //   id: 'delete',
-    //   label: <DeleteIcon fontSize="small" />,
-    //   onClick: (row: Quest): void => handleDelete(row),
-    //   tooltip: 'Xóa nhiệm vụ',
-    //   color: 'error' as const,
-    //   variant: 'outlined' as const,
-    // },
   ];
 
   return (
@@ -419,6 +402,9 @@ export default function QuestPage(): JSX.Element {
         onClose={handleCloseModal}
         onSubmit={handleSaveQuest}
         quest={editingQuest}
+        canEditTasks={
+          editingQuest ? (editingQuest.userQuestCount ?? 0) === 0 : true
+        }
         status={status}
       />
 
@@ -426,6 +412,12 @@ export default function QuestPage(): JSX.Element {
         isOpen={openDetailDialog}
         onClose={() => setOpenDetailDialog(false)}
         quest={viewingQuest}
+      />
+
+      <QuestParticipantsModal
+        isOpen={openParticipantsDialog}
+        onClose={handleCloseParticipantsDialog}
+        quest={selectedParticipantQuest}
       />
 
       <Dialog
