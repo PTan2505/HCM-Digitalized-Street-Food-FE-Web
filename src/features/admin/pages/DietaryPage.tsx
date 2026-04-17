@@ -3,6 +3,8 @@ import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
+  Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Edit as EditIcon,
   Restaurant as RestaurantIcon,
   HelpOutline as HelpOutlineIcon,
@@ -204,7 +206,7 @@ export default function DietaryPage(): JSX.Element {
     },
     {
       id: 'close',
-      label: 'Đóng',
+      label: <BlockIcon fontSize="small" />,
       onClick: (row: UserDietaryPreference): void => handleDelete(row),
       tooltip: 'Đóng chế độ ăn',
       color: 'warning' as const,
@@ -213,7 +215,7 @@ export default function DietaryPage(): JSX.Element {
     },
     {
       id: 'activate',
-      label: 'Kích hoạt',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
       onClick: (row: UserDietaryPreference): void => handleDelete(row),
       tooltip: 'Kích hoạt chế độ ăn',
       color: 'success' as const,

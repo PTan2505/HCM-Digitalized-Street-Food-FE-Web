@@ -3,6 +3,8 @@ import type { JSX } from 'react';
 import { Box, Avatar, Chip } from '@mui/material';
 import {
   Add as AddIcon,
+  Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Edit as EditIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -211,7 +213,7 @@ export default function CategoryPage(): JSX.Element {
     },
     {
       id: 'close',
-      label: 'Đóng',
+      label: <BlockIcon fontSize="small" />,
       onClick: (row: Category): void => handleDelete(row),
       tooltip: 'Đóng danh mục',
       color: 'warning' as const,
@@ -220,7 +222,7 @@ export default function CategoryPage(): JSX.Element {
     },
     {
       id: 'activate',
-      label: 'Kích hoạt',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
       onClick: (row: Category): void => handleDelete(row),
       tooltip: 'Kích hoạt danh mục',
       color: 'success' as const,

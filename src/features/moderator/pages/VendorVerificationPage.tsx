@@ -46,6 +46,29 @@ const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
   2: 'Chi tiết yêu cầu sở hữu quán',
 };
 
+const toDisplayText = (value: unknown): string => {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+    return trimmedValue === '' ? '-' : trimmedValue;
+  }
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  ) {
+    return `${value}`;
+  }
+  return '-';
+};
+
+const formatDisplayDateTime = (value: unknown): string => {
+  if (typeof value !== 'string' || value.trim() === '') return '-';
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) return '-';
+  return parsedDate.toLocaleString('vi-VN');
+};
+
 export default function VendorVerificationPage({
   pendingType,
   pageTitle,
@@ -224,7 +247,7 @@ export default function VendorVerificationPage({
       render: (_: unknown, row: Record<string, unknown>): string => {
         const branch = row.branch as { vendorId: number } | undefined;
         if (!branch) return '-';
-        return vendorDetails[branch.vendorId]?.name ?? '...';
+        return toDisplayText(vendorDetails[branch.vendorId]?.name);
       },
     },
     {
@@ -233,10 +256,7 @@ export default function VendorVerificationPage({
       render: (_: unknown, row: Record<string, unknown>): string => {
         const branch = row.branch as { vendorId: number } | undefined;
         if (!branch) return '-';
-        // const owner = vendorDetails[branch.vendorId]?.vendorOwner;
-        // if (!owner) return '...';
-        // return `${owner.firstName} ${owner.lastName}`.trim();
-        return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
+        return toDisplayText(vendorDetails[branch.vendorId]?.vendorOwnerName);
       },
     },
     ...(pendingType === 0
@@ -246,10 +266,8 @@ export default function VendorVerificationPage({
             label: 'Tên người chia sẻ',
             render: (_: unknown, row: Record<string, unknown>): string => {
               const registration = row as unknown as BranchRegisterRequest;
-              return (
-                registration.branch.userShareName ??
-                registration.userShareName ??
-                '-'
+              return toDisplayText(
+                registration.branch.userShareName ?? registration.userShareName
               );
             },
           },
@@ -258,10 +276,9 @@ export default function VendorVerificationPage({
             label: 'Email người chia sẻ',
             render: (_: unknown, row: Record<string, unknown>): string => {
               const registration = row as unknown as BranchRegisterRequest;
-              return (
+              return toDisplayText(
                 registration.branch.userShareEmail ??
-                registration.userShareEmail ??
-                '-'
+                  registration.userShareEmail
               );
             },
           },
@@ -270,10 +287,9 @@ export default function VendorVerificationPage({
             label: 'SĐT người chia sẻ',
             render: (_: unknown, row: Record<string, unknown>): string => {
               const registration = row as unknown as BranchRegisterRequest;
-              return (
+              return toDisplayText(
                 registration.branch.userSharePhone ??
-                registration.userSharePhone ??
-                '-'
+                  registration.userSharePhone
               );
             },
           },
@@ -286,10 +302,9 @@ export default function VendorVerificationPage({
             label: 'Tên người yêu cầu sở hữu',
             render: (_: unknown, row: Record<string, unknown>): string => {
               const registration = row as unknown as BranchRegisterRequest;
-              return (
+              return toDisplayText(
                 registration.branch.vendorUserName ??
-                registration.vendorUserName ??
-                '-'
+                  registration.vendorUserName
               );
             },
           },
@@ -298,10 +313,9 @@ export default function VendorVerificationPage({
             label: 'Email người yêu cầu',
             render: (_: unknown, row: Record<string, unknown>): string => {
               const registration = row as unknown as BranchRegisterRequest;
-              return (
+              return toDisplayText(
                 registration.branch.vendorUserEmail ??
-                registration.vendorUserEmail ??
-                '-'
+                  registration.vendorUserEmail
               );
             },
           },
@@ -310,10 +324,9 @@ export default function VendorVerificationPage({
             label: 'SĐT người yêu cầu',
             render: (_: unknown, row: Record<string, unknown>): string => {
               const registration = row as unknown as BranchRegisterRequest;
-              return (
+              return toDisplayText(
                 registration.branch.vendorUserPhone ??
-                registration.vendorUserPhone ??
-                '-'
+                  registration.vendorUserPhone
               );
             },
           },
@@ -323,20 +336,22 @@ export default function VendorVerificationPage({
       key: 'branch.name',
       label: 'Tên chi nhánh',
       className: 'font-medium',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'branch.email',
       label: 'Email',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'branch.phoneNumber',
       label: 'Số điện thoại',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
-      render: (value: unknown): string =>
-        new Date(value as string).toLocaleString('vi-VN'),
+      render: (value: unknown): string => formatDisplayDateTime(value),
     },
   ].filter((column) => !hiddenColumnKeys.includes(column.key));
 
