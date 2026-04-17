@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Box, Avatar } from '@mui/material';
+import { Box, Avatar, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
 import {
@@ -108,7 +107,6 @@ export default function CategoryPage(): JSX.Element {
     if (deletingCategory) {
       try {
         await onDeleteCategory(deletingCategory.categoryId);
-        await onGetAllCategories();
         setOpenDeleteDialog(false);
         setDeletingCategory(null);
       } catch (error) {
@@ -181,6 +179,25 @@ export default function CategoryPage(): JSX.Element {
         </Box>
       ),
     },
+    {
+      key: 'isActive',
+      label: 'Trạng thái',
+      style: { width: '140px' },
+      render: (value: unknown): React.ReactNode => {
+        const isActive = Boolean(value);
+        return (
+          <Chip
+            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
+            size="small"
+            className={
+              isActive
+                ? 'bg-green-100 font-semibold text-green-800'
+                : 'bg-red-100 font-semibold text-red-800'
+            }
+          />
+        );
+      },
+    },
   ];
 
   const actions = [
@@ -193,12 +210,22 @@ export default function CategoryPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
+      id: 'close',
+      label: 'Đóng',
       onClick: (row: Category): void => handleDelete(row),
-      tooltip: 'Xóa danh mục',
-      color: 'error' as const,
+      tooltip: 'Đóng danh mục',
+      color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: Category): boolean => row.isActive ?? false,
+    },
+    {
+      id: 'activate',
+      label: 'Kích hoạt',
+      onClick: (row: Category): void => handleDelete(row),
+      tooltip: 'Kích hoạt danh mục',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: Category): boolean => !(row.isActive ?? false),
     },
   ];
 
@@ -294,11 +321,18 @@ export default function CategoryPage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa danh mục"
+        title={
+          deletingCategory?.isActive
+            ? 'Xác nhận đóng danh mục'
+            : 'Xác nhận kích hoạt danh mục'
+        }
+        confirmButtonLabel={deletingCategory?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingCategory?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa danh mục &quot;{deletingCategory?.name}
-            &quot;? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingCategory?.isActive ? 'đóng' : 'kích hoạt'} danh mục &quot;
+            {deletingCategory?.name}&quot;?
           </>
         }
       />

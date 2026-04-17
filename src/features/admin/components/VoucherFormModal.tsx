@@ -485,6 +485,7 @@ export default function VoucherFormModal({
   disableCancel = false,
 }: VoucherFormModalProps): React.JSX.Element | null {
   const openedFromCampaign = fixedCampaignId !== undefined;
+  const isCampaignUpdateMode = openedFromCampaign && voucher !== null;
 
   const fixedStartDate = campaignStartDate
     ? toLocalDatetimeValue(campaignStartDate)
@@ -549,7 +550,7 @@ export default function VoucherFormModal({
   }, [singleWatchedType]);
 
   useEffect(() => {
-    if (!isOpen || openedFromCampaign) return;
+    if (!isOpen || (openedFromCampaign && !isCampaignUpdateMode)) return;
     typeMemory.current = {
       AMOUNT: {
         discountValue:
@@ -576,7 +577,7 @@ export default function VoucherFormModal({
         maxDiscountValue: voucher.maxDiscountValue,
         minAmountRequired: voucher.minAmountRequired,
         quantity: voucher.quantity,
-        redeemPoint: voucher.redeemPoint,
+        redeemPoint: isCampaignUpdateMode ? 0 : voucher.redeemPoint,
         startDate: toLocalDatetimeValue(voucher.startDate),
         endDate: toLocalDatetimeValue(voucher.endDate),
         expiredDate: null,
@@ -612,6 +613,24 @@ export default function VoucherFormModal({
       expiredDate: null,
       redeemPoint: data.redeemPoint ?? 0,
       campaignId: null,
+      description: data.description ?? null,
+      maxDiscountValue:
+        data.type === 'AMOUNT' ? null : (data.maxDiscountValue ?? null),
+    };
+    await onSubmit(payload);
+  };
+
+  const handleCampaignUpdateSubmit = async (
+    data: VoucherFormData
+  ): Promise<void> => {
+    const payload: VoucherCreate = {
+      ...data,
+      type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+      startDate: toIsoZulu(data.startDate) ?? '',
+      endDate: toIsoZulu(data.endDate) ?? null,
+      expiredDate: null,
+      redeemPoint: 0,
+      campaignId: fixedCampaignId ?? voucher?.campaignId ?? null,
       description: data.description ?? null,
       maxDiscountValue:
         data.type === 'AMOUNT' ? null : (data.maxDiscountValue ?? null),
@@ -672,7 +691,7 @@ export default function VoucherFormModal({
   if (!isOpen) return null;
 
   // ── Render: MULTI MODE ─────────────────────────────────────────────────
-  if (openedFromCampaign) {
+  if (openedFromCampaign && !isCampaignUpdateMode) {
     return (
       <Dialog
         open={isOpen}
@@ -793,9 +812,11 @@ export default function VoucherFormModal({
     >
       <AppModalHeader
         title={
-          voucher
-            ? 'Cập nhật voucher MarketPlace'
-            : 'Thêm voucher mới cho MarketPlace'
+          isCampaignUpdateMode
+            ? `Cập nhật voucher: ${voucher.name}`
+            : voucher
+              ? 'Cập nhật voucher MarketPlace'
+              : 'Thêm voucher mới cho MarketPlace'
         }
         subtitle={voucher?.name ?? campaignName ?? ''}
         icon={<LocalOfferIcon />}
@@ -803,7 +824,11 @@ export default function VoucherFormModal({
         onClose={disableCancel ? undefined : onClose}
       />
 
-      <form onSubmit={singleForm.handleSubmit(handleSingleSubmit)}>
+      <form
+        onSubmit={singleForm.handleSubmit(
+          isCampaignUpdateMode ? handleCampaignUpdateSubmit : handleSingleSubmit
+        )}
+      >
         <DialogContent
           dividers
           sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 150px)' }}
@@ -1016,52 +1041,92 @@ export default function VoucherFormModal({
                   )}
                 </div>
 
-                {/* Ngày bắt đầu + kết thúc (nhập thủ công MarketPlace) */}
                 <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Ngày bắt đầu <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="datetime-local"
-                      {...singleForm.register('startDate')}
-                      min={nowMin}
-                      step="60"
-                      className={inputClass(
-                        !!singleForm.formState.errors.startDate
-                      )}
-                    />
-                    {singleForm.formState.errors.startDate && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {singleForm.formState.errors.startDate.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Ngày kết thúc
-                    </label>
-                    <input
-                      type="datetime-local"
-                      {...singleForm.register('endDate')}
-                      min={singleWatchedStartDate || nowMin}
-                      step="60"
-                      className={inputClass(
-                        !!singleForm.formState.errors.endDate
-                      )}
-                    />
-                    {!voucher && (
-                      <p className="mt-1 text-[11px] text-gray-400 italic">
-                        * Nếu không chọn, voucher sẽ tồn tại vô hạn kể từ ngày
-                        bắt đầu
-                      </p>
-                    )}
-                    {singleForm.formState.errors.endDate && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {singleForm.formState.errors.endDate.message}
-                      </p>
-                    )}
-                  </div>
+                  {isCampaignUpdateMode ? (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                          Ngày bắt đầu
+                        </label>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700">
+                          {singleForm.watch('startDate')
+                            ? singleForm.watch('startDate').replace('T', ' ')
+                            : '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                          Ngày kết thúc
+                        </label>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700">
+                          {singleForm.watch('endDate')
+                            ? singleForm.watch('endDate').replace('T', ' ')
+                            : '—'}
+                        </div>
+                      </div>
+                      <input
+                        type="hidden"
+                        {...singleForm.register('startDate')}
+                      />
+                      <input
+                        type="hidden"
+                        {...singleForm.register('endDate')}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      {/* Ngày bắt đầu + kết thúc (nhập thủ công MarketPlace) */}
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                          Ngày bắt đầu <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          {...singleForm.register('startDate')}
+                          min={
+                            voucher?.startDate &&
+                            toLocalDatetimeValue(voucher.startDate) < nowMin
+                              ? toLocalDatetimeValue(voucher.startDate)
+                              : nowMin
+                          }
+                          step="60"
+                          className={inputClass(
+                            !!singleForm.formState.errors.startDate
+                          )}
+                        />
+                        {singleForm.formState.errors.startDate && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {singleForm.formState.errors.startDate.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                          Ngày kết thúc
+                        </label>
+                        <input
+                          type="datetime-local"
+                          {...singleForm.register('endDate')}
+                          min={singleWatchedStartDate || nowMin}
+                          step="60"
+                          className={inputClass(
+                            !!singleForm.formState.errors.endDate
+                          )}
+                        />
+                        {!voucher && (
+                          <p className="mt-1 text-[11px] text-gray-400 italic">
+                            * Nếu không chọn, voucher sẽ tồn tại vô hạn kể từ
+                            ngày bắt đầu
+                          </p>
+                        )}
+                        {singleForm.formState.errors.endDate && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {singleForm.formState.errors.endDate.message}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1072,40 +1137,41 @@ export default function VoucherFormModal({
             <div>
               {sectionLabel('Thông tin thêm')}
               <div className="flex flex-col gap-4">
-                {/* Điểm đổi (chỉ MarketPlace) */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Điểm đổi{' '}
-                      <span className="text-xs font-normal text-gray-500">
-                        (Redeem Point)
-                      </span>
-                    </label>
-                    <Controller
-                      control={singleForm.control}
-                      name="redeemPoint"
-                      render={({ field }) => (
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="0"
-                          className={inputClass(
-                            !!singleForm.formState.errors.redeemPoint
-                          )}
-                          value={formatNumberWithDots(field.value)}
-                          onChange={(e) =>
-                            field.onChange(parseNumberInput(e.target.value))
-                          }
-                        />
+                {!isCampaignUpdateMode && (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold text-gray-700">
+                        Điểm đổi{' '}
+                        <span className="text-xs font-normal text-gray-500">
+                          (Redeem Point)
+                        </span>
+                      </label>
+                      <Controller
+                        control={singleForm.control}
+                        name="redeemPoint"
+                        render={({ field }) => (
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            className={inputClass(
+                              !!singleForm.formState.errors.redeemPoint
+                            )}
+                            value={formatNumberWithDots(field.value)}
+                            onChange={(e) =>
+                              field.onChange(parseNumberInput(e.target.value))
+                            }
+                          />
+                        )}
+                      />
+                      {singleForm.formState.errors.redeemPoint && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {singleForm.formState.errors.redeemPoint.message}
+                        </p>
                       )}
-                    />
-                    {singleForm.formState.errors.redeemPoint && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {singleForm.formState.errors.redeemPoint.message}
-                      </p>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Mô tả */}
                 <div>

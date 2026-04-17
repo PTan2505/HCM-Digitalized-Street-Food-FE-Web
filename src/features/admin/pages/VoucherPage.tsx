@@ -66,6 +66,9 @@ const StatusBadge = ({
   );
 };
 
+const isMarketplaceVoucher = (voucher: Voucher): boolean =>
+  voucher.campaignId === null;
+
 export default function VoucherPage(): JSX.Element {
   const vouchers = useAppSelector(selectVouchers);
   const status = useAppSelector(selectVoucherStatus);
@@ -208,6 +211,18 @@ export default function VoucherPage(): JSX.Element {
         />
       ),
     },
+    {
+      key: 'campaignId',
+      label: 'Phạm vi',
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <StatusBadge
+          label={
+            isMarketplaceVoucher(row) ? 'MarketPlace' : 'Voucher chiến dịch'
+          }
+          type={isMarketplaceVoucher(row) ? 'default' : 'warning'}
+        />
+      ),
+    },
     // {
     //   key: 'discountValue',
     //   label: 'Giá trị giảm',
@@ -293,20 +308,21 @@ export default function VoucherPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenModal(row),
+      show: (row: Voucher): boolean => isMarketplaceVoucher(row),
       tooltip: 'Chỉnh sửa voucher',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
-    {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        void handleDelete(row);
-      },
-      tooltip: 'Xóa voucher',
-      color: 'error' as const,
-      variant: 'outlined' as const,
-    },
+    // {
+    //   id: 'delete',
+    //   label: <DeleteIcon fontSize="small" />,
+    //   onClick: (row: Voucher): void => {
+    //     void handleDelete(row);
+    //   },
+    //   tooltip: 'Xóa voucher',
+    //   color: 'error' as const,
+    //   variant: 'outlined' as const,
+    // },
   ];
 
   return (

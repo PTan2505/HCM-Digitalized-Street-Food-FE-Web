@@ -121,8 +121,13 @@ const categorySlice = createSlice({
       })
       // Delete category
       .addCase(deleteCategory.fulfilled, (state, action) => {
-        state.categories = state.categories.filter(
-          (category) => category.categoryId !== action.payload
+        state.categories = state.categories.map((category) =>
+          category.categoryId === action.payload
+            ? {
+                ...category,
+                isActive: !(category.isActive ?? false),
+              }
+            : category
         );
       })
       // Pending states

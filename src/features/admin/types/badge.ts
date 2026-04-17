@@ -3,6 +3,7 @@ export interface Badge {
   iconUrl: string;
   description: string;
   badgeId: number;
+  isActive?: boolean;
   isEarned?: boolean;
   earnedAt?: string;
 }

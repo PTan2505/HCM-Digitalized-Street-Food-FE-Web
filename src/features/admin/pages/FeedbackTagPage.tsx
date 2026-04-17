@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
 import {
@@ -162,6 +161,25 @@ export default function FeedbackTagPage(): JSX.Element {
         </Box>
       ),
     },
+    {
+      key: 'isActive',
+      label: 'Trạng thái',
+      style: { width: '140px' },
+      render: (value: unknown): React.ReactNode => {
+        const isActive = Boolean(value);
+        return (
+          <Chip
+            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
+            size="small"
+            className={
+              isActive
+                ? 'bg-green-100 font-semibold text-green-800'
+                : 'bg-red-100 font-semibold text-red-800'
+            }
+          />
+        );
+      },
+    },
   ];
 
   const actions = [
@@ -174,12 +192,22 @@ export default function FeedbackTagPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
+      id: 'close',
+      label: 'Đóng',
       onClick: (row: FeedbackTag): void => handleDelete(row),
-      tooltip: 'Xóa tag phản hồi',
-      color: 'error' as const,
+      tooltip: 'Đóng tag phản hồi',
+      color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: FeedbackTag): boolean => row.isActive ?? false,
+    },
+    {
+      id: 'activate',
+      label: 'Kích hoạt',
+      onClick: (row: FeedbackTag): void => handleDelete(row),
+      tooltip: 'Kích hoạt tag phản hồi',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: FeedbackTag): boolean => !(row.isActive ?? false),
     },
   ];
 
@@ -275,11 +303,17 @@ export default function FeedbackTagPage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa tag phản hồi"
+        title={
+          deletingTag?.isActive
+            ? 'Xác nhận đóng tag phản hồi'
+            : 'Xác nhận kích hoạt tag phản hồi'
+        }
+        confirmButtonLabel={deletingTag?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingTag?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa tag phản hồi &quot;{deletingTag?.tagName}
-            &quot;? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn {deletingTag?.isActive ? 'đóng' : 'kích hoạt'}{' '}
+            tag phản hồi &quot;{deletingTag?.tagName}&quot;?
           </>
         }
       />

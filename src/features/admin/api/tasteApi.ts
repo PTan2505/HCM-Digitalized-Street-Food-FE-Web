@@ -44,7 +44,7 @@ export class TasteApi {
 
   async deleteTaste(tasteId: number): Promise<{ message: string }> {
     let res = null;
-    res = await this.apiClient.delete<{ message: string }>({
+    res = await this.apiClient.patch<{ message: string }>({
       url: apiUrl.taste.updateOrDeleteTaste(tasteId),
     });
     return res.data;

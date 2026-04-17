@@ -1,10 +1,10 @@
-import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
 import Pagination from '@features/moderator/components/Pagination';
 import PendingTypeFilterSection from '@features/moderator/components/PendingTypeFilterSection';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
-import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
-import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetailsModal';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetailsModal';
 import useBranch from '@features/moderator/hooks/useBranch';
 import type {
   BranchRegisterRequest,
@@ -34,6 +34,25 @@ import {
 } from 'react-joyride';
 import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import { getVendorVerificationTourSteps } from '@features/admin/utils/vendorVerificationTourSteps';
+
+const HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string[]
+> = {
+  0: [
+    'branch.vendorId',
+    'branch.vendorOwnerName',
+    'branch.email',
+    'branch.phoneNumber',
+  ],
+  1: [],
+  2: [
+    'branch.vendorId',
+    'branch.vendorOwnerName',
+    'branch.email',
+    'branch.phoneNumber',
+  ],
+};
 
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
@@ -202,6 +221,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
     }
   };
 
+  const hiddenColumnKeys = HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE[pendingType];
+
   const columns = [
     {
       key: 'branchRequestId',
@@ -252,7 +273,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-  ];
+  ].filter((column) => !hiddenColumnKeys.includes(column.key));
 
   const actions = [
     {
