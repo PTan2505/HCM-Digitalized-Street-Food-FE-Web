@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import {
   Avatar,
@@ -73,8 +73,16 @@ export default function DishFormModal({
   onUpdateDish,
   onSuccess,
 }: DishFormModalProps): JSX.Element | null {
-  const categories = useAppSelector(selectCategories);
-  const tastes = useAppSelector(selectTastes);
+  const categoriesFromStore = useAppSelector(selectCategories);
+  const tastesFromStore = useAppSelector(selectTastes);
+  const categories = useMemo(
+    () => categoriesFromStore.filter((category) => category.isActive !== false),
+    [categoriesFromStore]
+  );
+  const tastes = useMemo(
+    () => tastesFromStore.filter((taste) => taste.isActive !== false),
+    [tastesFromStore]
+  );
   // const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
 
   const { onGetAllCategories } = useCategory();
@@ -115,7 +123,7 @@ export default function DishFormModal({
 
   useEffect(() => {
     if (isOpen && isEditMode && editingDish) {
-      const tasteIds = tastes
+      const tasteIds = tastesFromStore
         .filter((t: Taste) => editingDish.tasteNames.includes(t.name))
         .map((t: Taste) => t.tasteId);
 
@@ -152,7 +160,7 @@ export default function DishFormModal({
       setImagePreview('');
       setImageError('');
     }
-  }, [isOpen, isEditMode, editingDish, tastes, reset]);
+  }, [isOpen, isEditMode, editingDish, tastesFromStore, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
