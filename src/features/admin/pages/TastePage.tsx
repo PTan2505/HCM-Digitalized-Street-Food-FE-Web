@@ -3,6 +3,8 @@ import type { JSX } from 'react';
 import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
+  Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Edit as EditIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -186,7 +188,7 @@ export default function TastePage(): JSX.Element {
     },
     {
       id: 'close',
-      label: 'Đóng',
+      label: <BlockIcon fontSize="small" />,
       onClick: (row: Taste): void => handleDelete(row),
       tooltip: 'Đóng khẩu vị',
       color: 'warning' as const,
@@ -195,7 +197,7 @@ export default function TastePage(): JSX.Element {
     },
     {
       id: 'activate',
-      label: 'Kích hoạt',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
       onClick: (row: Taste): void => handleDelete(row),
       tooltip: 'Kích hoạt khẩu vị',
       color: 'success' as const,
