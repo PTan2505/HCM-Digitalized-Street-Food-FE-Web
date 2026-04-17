@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Restaurant as RestaurantIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -173,6 +172,25 @@ export default function DietaryPage(): JSX.Element {
         </Box>
       ),
     },
+    {
+      key: 'isActive',
+      label: 'Trạng thái',
+      style: { width: '140px' },
+      render: (value: unknown): React.ReactNode => {
+        const isActive = Boolean(value);
+        return (
+          <Chip
+            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
+            size="small"
+            className={
+              isActive
+                ? 'bg-green-100 font-semibold text-green-800'
+                : 'bg-red-100 font-semibold text-red-800'
+            }
+          />
+        );
+      },
+    },
   ];
 
   const actions = [
@@ -185,12 +203,22 @@ export default function DietaryPage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
+      id: 'close',
+      label: 'Đóng',
       onClick: (row: UserDietaryPreference): void => handleDelete(row),
-      tooltip: 'Xóa chế độ ăn',
-      color: 'error' as const,
+      tooltip: 'Đóng chế độ ăn',
+      color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: UserDietaryPreference): boolean => row.isActive ?? false,
+    },
+    {
+      id: 'activate',
+      label: 'Kích hoạt',
+      onClick: (row: UserDietaryPreference): void => handleDelete(row),
+      tooltip: 'Kích hoạt chế độ ăn',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: UserDietaryPreference): boolean => !(row.isActive ?? false),
     },
   ];
 
@@ -286,11 +314,18 @@ export default function DietaryPage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa chế độ ăn"
+        title={
+          deletingDietary?.isActive
+            ? 'Xác nhận đóng chế độ ăn'
+            : 'Xác nhận kích hoạt chế độ ăn'
+        }
+        confirmButtonLabel={deletingDietary?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingDietary?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa chế độ ăn &quot;{deletingDietary?.name}
-            &quot;? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingDietary?.isActive ? 'đóng' : 'kích hoạt'} chế độ ăn &quot;
+            {deletingDietary?.name}&quot;?
           </>
         }
       />

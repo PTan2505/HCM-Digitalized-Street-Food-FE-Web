@@ -161,7 +161,7 @@ export class VendorApi {
   }
 
   async deleteBranch(branchId: number): Promise<void> {
-    await this.apiClient.delete({
+    await this.apiClient.patch({
       url: apiUrl.vendor.updateOrDeleteBranch(branchId),
     });
   }

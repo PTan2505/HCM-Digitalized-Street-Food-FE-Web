@@ -48,7 +48,7 @@ export class FeedbackTagApi {
   }
 
   async deleteFeedbackTag(id: number): Promise<{ message: string }> {
-    const res = await this.apiClient.delete<{ message: string }>({
+    const res = await this.apiClient.patch<{ message: string }>({
       url: apiUrl.feedbackTag.updateOrDeleteFeedbackTag(id),
     });
     return res.data;

@@ -4,7 +4,6 @@ import { Avatar, Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
 import {
@@ -163,6 +162,25 @@ export default function BadgePage(): JSX.Element {
         </Box>
       ),
     },
+    {
+      key: 'isActive',
+      label: 'Trạng thái',
+      style: { width: '140px' },
+      render: (value: unknown): React.ReactNode => {
+        const isActive = Boolean(value);
+        return (
+          <Chip
+            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
+            size="small"
+            className={
+              isActive
+                ? 'bg-green-100 font-semibold text-green-800'
+                : 'bg-red-100 font-semibold text-red-800'
+            }
+          />
+        );
+      },
+    },
     // {
     //   key: 'pointToGet',
     //   label: 'Điểm yêu cầu',
@@ -196,12 +214,22 @@ export default function BadgePage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
+      id: 'close',
+      label: 'Đóng',
       onClick: (row: Badge): void => handleDelete(row),
-      tooltip: 'Xóa huy hiệu',
-      color: 'error' as const,
+      tooltip: 'Đóng huy hiệu',
+      color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: Badge): boolean => row.isActive ?? false,
+    },
+    {
+      id: 'activate',
+      label: 'Kích hoạt',
+      onClick: (row: Badge): void => handleDelete(row),
+      tooltip: 'Kích hoạt huy hiệu',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: Badge): boolean => !(row.isActive ?? false),
     },
   ];
 
@@ -297,11 +325,18 @@ export default function BadgePage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa badge"
+        title={
+          deletingBadge?.isActive
+            ? 'Xác nhận đóng badge'
+            : 'Xác nhận kích hoạt badge'
+        }
+        confirmButtonLabel={deletingBadge?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingBadge?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa badge &quot;{deletingBadge?.badgeName}
-            &quot;? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingBadge?.isActive ? 'đóng' : 'kích hoạt'} badge &quot;
+            {deletingBadge?.badgeName}&quot;?
           </>
         }
       />
