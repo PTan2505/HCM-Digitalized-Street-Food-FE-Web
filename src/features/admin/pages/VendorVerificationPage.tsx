@@ -54,6 +54,15 @@ const HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE: Record<
   ],
 };
 
+const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string
+> = {
+  0: 'Chi tiết quán reviewer chia sẻ',
+  1: 'Chi tiết đơn đăng ký quán ăn',
+  2: 'Chi tiết yêu cầu sở hữu quán',
+};
+
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
@@ -159,6 +168,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
     try {
       const registration = row as unknown as BranchRegisterRequest;
+      if (registration.branchId === null) return;
       await onVerifyBranchRegistration({
         branchId: registration.branchId,
         data: { branchId: registration.branchId },
@@ -210,6 +220,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const handleConfirmReject = async (reason: string): Promise<void> => {
     if (!selectedRegistration) return;
+    if (selectedRegistration.branchId === null) return;
     try {
       await onRejectBranchRegistration({
         branchId: selectedRegistration.branchId,
@@ -254,6 +265,86 @@ export default function VendorVerificationPage(): React.JSX.Element {
         return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
       },
     },
+    ...(pendingType === 0
+      ? [
+          {
+            key: 'branch.userShareName',
+            label: 'Tên người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userShareName ??
+                registration.userShareName ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.userShareEmail',
+            label: 'Email người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userShareEmail ??
+                registration.userShareEmail ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.userSharePhone',
+            label: 'SĐT người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userSharePhone ??
+                registration.userSharePhone ??
+                '-'
+              );
+            },
+          },
+        ]
+      : []),
+    ...(pendingType === 2
+      ? [
+          {
+            key: 'branch.vendorUserName',
+            label: 'Tên người yêu cầu sở hữu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserName ??
+                registration.vendorUserName ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserEmail',
+            label: 'Email người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserEmail ??
+                registration.vendorUserEmail ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserPhone',
+            label: 'SĐT người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserPhone ??
+                registration.vendorUserPhone ??
+                '-'
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: 'branch.name',
       label: 'Tên chi nhánh',
@@ -466,6 +557,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
         isOpen={detailsModalOpen}
         onClose={handleCloseDetailsModal}
         registration={selectedRegistration}
+        title={DETAILS_MODAL_TITLE_BY_PENDING_TYPE[pendingType]}
         vendorDetail={
           selectedRegistration
             ? (vendorDetails[selectedRegistration.branch.vendorId] ?? null)

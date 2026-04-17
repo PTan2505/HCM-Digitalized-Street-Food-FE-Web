@@ -144,6 +144,7 @@ export default function VendorVerificationPage({
   const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
     try {
       const registration = row as unknown as BranchRegisterRequest;
+      if (registration.branchId === null) return;
       await onVerifyBranchRegistration({
         branchId: registration.branchId,
         data: { branchId: registration.branchId },
@@ -195,6 +196,7 @@ export default function VendorVerificationPage({
 
   const handleConfirmReject = async (reason: string): Promise<void> => {
     if (!selectedRegistration) return;
+    if (selectedRegistration.branchId === null) return;
     try {
       await onRejectBranchRegistration({
         branchId: selectedRegistration.branchId,
@@ -237,6 +239,86 @@ export default function VendorVerificationPage({
         return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
       },
     },
+    ...(pendingType === 0
+      ? [
+          {
+            key: 'branch.userShareName',
+            label: 'Tên người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userShareName ??
+                registration.userShareName ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.userShareEmail',
+            label: 'Email người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userShareEmail ??
+                registration.userShareEmail ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.userSharePhone',
+            label: 'SĐT người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userSharePhone ??
+                registration.userSharePhone ??
+                '-'
+              );
+            },
+          },
+        ]
+      : []),
+    ...(pendingType === 2
+      ? [
+          {
+            key: 'branch.vendorUserName',
+            label: 'Tên người yêu cầu sở hữu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserName ??
+                registration.vendorUserName ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserEmail',
+            label: 'Email người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserEmail ??
+                registration.vendorUserEmail ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserPhone',
+            label: 'SĐT người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserPhone ??
+                registration.vendorUserPhone ??
+                '-'
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: 'branch.name',
       label: 'Tên chi nhánh',

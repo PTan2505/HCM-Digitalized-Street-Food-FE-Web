@@ -33,6 +33,67 @@ export default function VendorRegistrationDetails({
   const ownerFullName = owner
     ? `${owner.firstName} ${owner.lastName}`.trim()
     : '';
+  const isReviewerSharedDetail = title === 'Chi tiết quán reviewer chia sẻ';
+  const isOwnershipRequestDetail = title === 'Chi tiết yêu cầu sở hữu quán';
+  const shouldAlwaysShowContactSection =
+    isReviewerSharedDetail || isOwnershipRequestDetail;
+
+  const contactInfo = isReviewerSharedDetail
+    ? {
+        sectionTitle: 'Thông tin người chia sẻ',
+        shopNameLabel: '',
+        shopNameValue: '',
+        nameLabel: 'Tên người chia sẻ',
+        nameValue:
+          branch.userShareName ??
+          registration.userShareName ??
+          branch.user?.username ??
+          '-',
+        emailValue:
+          branch.userShareEmail ??
+          registration.userShareEmail ??
+          branch.user?.email ??
+          '-',
+        phoneValue:
+          branch.userSharePhone ??
+          registration.userSharePhone ??
+          branch.user?.phoneNumber ??
+          '-',
+        avatarUrl: null,
+      }
+    : isOwnershipRequestDetail
+      ? {
+          sectionTitle: 'Thông tin người yêu cầu sở hữu',
+          shopNameLabel: '',
+          shopNameValue: '',
+          nameLabel: 'Tên người yêu cầu sở hữu',
+          nameValue:
+            branch.vendorUserName ??
+            registration.vendorUserName ??
+            branch.user?.username ??
+            '-',
+          emailValue:
+            branch.vendorUserEmail ??
+            registration.vendorUserEmail ??
+            branch.user?.email ??
+            '-',
+          phoneValue:
+            branch.vendorUserPhone ??
+            registration.vendorUserPhone ??
+            branch.user?.phoneNumber ??
+            '-',
+          avatarUrl: null,
+        }
+      : {
+          sectionTitle: 'Thông tin người bán',
+          shopNameLabel: 'Tên cửa hàng',
+          shopNameValue: vendorDetail?.name ?? '',
+          nameLabel: 'Tên chủ cửa hàng',
+          nameValue: ownerFullName,
+          emailValue: owner?.email ?? '',
+          phoneValue: owner?.phoneNumber ?? '',
+          avatarUrl: owner?.avatarUrl ?? null,
+        };
 
   const hasValue = (value?: string | null): boolean => {
     if (value === null || value === undefined) return false;
@@ -62,8 +123,8 @@ export default function VendorRegistrationDetails({
 
   const branchRows: { label: string; value: string }[] = [
     { label: 'Tên chi nhánh', value: branch.name },
-    { label: 'Email', value: branch.email },
-    { label: 'Số điện thoại', value: branch.phoneNumber },
+    { label: 'Email', value: branch.email ?? '' },
+    { label: 'Số điện thoại', value: branch.phoneNumber ?? '' },
     { label: 'Địa chỉ chi tiết', value: branch.addressDetail },
     { label: 'Phường/Xã', value: branch.ward },
     { label: 'Thành phố', value: branch.city },
@@ -123,67 +184,73 @@ export default function VendorRegistrationDetails({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 sm:px-8">
-          {/* Vendor + Owner Info */}
-          {vendorDetail && owner && (
+          {/* Contact Info */}
+          {(shouldAlwaysShowContactSection ||
+            hasValue(contactInfo.nameValue) ||
+            hasValue(contactInfo.emailValue) ||
+            hasValue(contactInfo.phoneValue) ||
+            hasValue(contactInfo.shopNameValue) ||
+            Boolean(contactInfo.avatarUrl)) && (
             <>
               <h3 className="mb-3 flex items-center gap-2 text-sm font-bold tracking-wider text-gray-800 uppercase">
                 <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                Thông tin người bán
+                {contactInfo.sectionTitle}
               </h3>
               <div className="mb-6 overflow-hidden rounded-xl border border-gray-100 shadow-sm">
                 <table className="w-full text-sm">
                   <tbody>
-                    {owner.avatarUrl ? (
+                    {contactInfo.avatarUrl ? (
                       <tr className="bg-slate-50/70">
                         <td className="w-1/3 px-4 py-3 text-xs font-bold tracking-wide text-[var(--color-table-text-secondary)] uppercase">
                           Ảnh đại diện
                         </td>
                         <td className="px-4 py-3">
                           <img
-                            src={owner.avatarUrl}
+                            src={contactInfo.avatarUrl}
                             alt="avatar"
                             className="h-11 w-11 rounded-full border border-gray-200 object-cover"
                           />
                         </td>
                       </tr>
                     ) : null}
-                    {hasValue(vendorDetail.name) ? (
+                    {hasValue(contactInfo.shopNameValue) &&
+                    hasValue(contactInfo.shopNameLabel) ? (
                       <tr className="bg-white">
                         <td className="w-1/3 px-4 py-3 text-xs font-bold tracking-wide text-[var(--color-table-text-secondary)] uppercase">
-                          Tên cửa hàng
+                          {contactInfo.shopNameLabel}
                         </td>
                         <td className="px-4 py-3 font-medium text-[var(--color-table-text-primary)]">
-                          {vendorDetail.name}
+                          {contactInfo.shopNameValue}
                         </td>
                       </tr>
                     ) : null}
-                    {hasValue(ownerFullName) ? (
+                    {hasValue(contactInfo.nameValue) ? (
                       <tr className="bg-slate-50/70">
                         <td className="w-1/3 px-4 py-3 text-xs font-bold tracking-wide text-[var(--color-table-text-secondary)] uppercase">
-                          Tên chủ cửa hàng
+                          {contactInfo.nameLabel}
                         </td>
                         <td className="px-4 py-3 font-medium text-[var(--color-table-text-primary)]">
-                          {ownerFullName}
+                          {contactInfo.nameValue}
                         </td>
                       </tr>
                     ) : null}
-                    {hasValue(owner.email) ? (
+                    {hasValue(contactInfo.emailValue) ? (
                       <tr className="bg-white">
                         <td className="w-1/3 px-4 py-3 text-xs font-bold tracking-wide text-[var(--color-table-text-secondary)] uppercase">
                           Email
                         </td>
                         <td className="px-4 py-3 font-medium text-[var(--color-table-text-primary)]">
-                          {owner.email}
+                          {contactInfo.emailValue}
                         </td>
                       </tr>
                     ) : null}
-                    {hasValue(owner.phoneNumber) ? (
+                    {hasValue(contactInfo.phoneValue) ? (
                       <tr className="bg-slate-50/70">
                         <td className="w-1/3 px-4 py-3 text-xs font-bold tracking-wide text-[var(--color-table-text-secondary)] uppercase">
                           Số điện thoại
                         </td>
                         <td className="px-4 py-3 font-medium text-[var(--color-table-text-primary)]">
-                          {owner.phoneNumber}
+                          {contactInfo.phoneValue}
                         </td>
                       </tr>
                     ) : null}
