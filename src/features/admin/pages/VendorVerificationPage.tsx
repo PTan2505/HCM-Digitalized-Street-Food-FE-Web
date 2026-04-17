@@ -35,6 +35,25 @@ import {
 import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 import { getVendorVerificationTourSteps } from '@features/admin/utils/vendorVerificationTourSteps';
 
+const HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string[]
+> = {
+  0: [
+    'branch.vendorId',
+    'branch.vendorOwnerName',
+    'branch.email',
+    'branch.phoneNumber',
+  ],
+  1: [],
+  2: [
+    'branch.vendorId',
+    'branch.vendorOwnerName',
+    'branch.email',
+    'branch.phoneNumber',
+  ],
+};
+
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
@@ -202,6 +221,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
     }
   };
 
+  const hiddenColumnKeys = HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE[pendingType];
+
   const columns = [
     {
       key: 'branchRequestId',
@@ -252,7 +273,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-  ];
+  ].filter((column) => !hiddenColumnKeys.includes(column.key));
 
   const actions = [
     {

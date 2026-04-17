@@ -14,6 +14,14 @@ interface DeleteConfirmationDialogProps {
   onConfirm: () => void | Promise<void>;
   title: string;
   confirmationMessage?: React.ReactNode;
+  confirmButtonLabel?: string;
+  confirmButtonColor?:
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'warning'
+    | 'info'
+    | 'success';
 }
 
 export default function DeleteConfirmationDialog({
@@ -22,6 +30,8 @@ export default function DeleteConfirmationDialog({
   onConfirm,
   title,
   confirmationMessage,
+  confirmButtonLabel = 'Xóa',
+  confirmButtonColor = 'error',
 }: DeleteConfirmationDialogProps): JSX.Element {
   return (
     <Dialog
@@ -48,12 +58,12 @@ export default function DeleteConfirmationDialog({
         </Button>
         <Button
           onClick={() => void onConfirm()}
-          color="error"
+          color={confirmButtonColor}
           variant="outlined"
           className="font-[var(--font-nunito)] font-semibold"
           autoFocus
         >
-          Xóa
+          {confirmButtonLabel}
         </Button>
       </DialogActions>
     </Dialog>

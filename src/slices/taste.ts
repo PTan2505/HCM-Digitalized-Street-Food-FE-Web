@@ -107,8 +107,13 @@ export const tasteSlice = createSlice({
       })
       .addCase(deleteTaste.fulfilled, (state, action) => {
         if (action.payload) {
-          state.tastes = state.tastes.filter(
-            (taste) => taste.tasteId !== action.payload
+          state.tastes = state.tastes.map((taste) =>
+            taste.tasteId === action.payload
+              ? {
+                  ...taste,
+                  isActive: !(taste.isActive ?? false),
+                }
+              : taste
           );
         }
       })
