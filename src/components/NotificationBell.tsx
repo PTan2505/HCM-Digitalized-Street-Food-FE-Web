@@ -14,6 +14,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { useNotificationContext } from '@contexts/NotificationContext';
 
 interface NotificationBellProps {
@@ -238,21 +239,29 @@ export default function NotificationBell({
                       ? '#fff'
                       : notification.type === 'NewFeedback'
                         ? `color-mix(in srgb, ${theme.palette.warning.main} 8%, transparent)`
-                        : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
+                        : notification.type === 'BranchVerificationStatus'
+                          ? `color-mix(in srgb, ${theme.palette.info.main} 8%, transparent)`
+                          : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
                     borderLeft: notification.isRead
                       ? '3px solid transparent'
                       : notification.type === 'NewFeedback'
                         ? `3px solid ${theme.palette.warning.main}`
-                        : '3px solid var(--color-primary-500)',
+                        : notification.type === 'BranchVerificationStatus'
+                          ? `3px solid ${theme.palette.info.main}`
+                          : '3px solid var(--color-primary-500)',
                     transition: 'background 0.18s ease',
                     '&:hover': {
                       background: notification.isRead
                         ? notification.type === 'NewFeedback'
                           ? `color-mix(in srgb, ${theme.palette.warning.main} 6%, transparent)`
-                          : 'var(--color-primary-50)'
+                          : notification.type === 'BranchVerificationStatus'
+                            ? `color-mix(in srgb, ${theme.palette.info.main} 6%, transparent)`
+                            : 'var(--color-primary-50)'
                         : notification.type === 'NewFeedback'
                           ? `color-mix(in srgb, ${theme.palette.warning.main} 15%, transparent)`
-                          : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
+                          : notification.type === 'BranchVerificationStatus'
+                            ? `color-mix(in srgb, ${theme.palette.info.main} 15%, transparent)`
+                            : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
                     },
                   })}
                 >
@@ -296,6 +305,14 @@ export default function NotificationBell({
                           color="warning"
                         />
                       )}
+                      {notification.type === 'BranchVerificationStatus' && (
+                        <Chip
+                          icon={<FactCheckIcon />}
+                          label="Trạng thái xác minh chi nhánh"
+                          variant="outlined"
+                          color="info"
+                        />
+                      )}
                     </Box>
                     {!notification.isRead && (
                       <Box
@@ -308,11 +325,15 @@ export default function NotificationBell({
                           background:
                             notification.type === 'NewFeedback'
                               ? theme.palette.warning.main
-                              : 'var(--color-primary-500)',
+                              : notification.type === 'BranchVerificationStatus'
+                                ? theme.palette.info.main
+                                : 'var(--color-primary-500)',
                           boxShadow:
                             notification.type === 'NewFeedback'
                               ? `0 0 0 2px color-mix(in srgb, ${theme.palette.warning.main} 35%, transparent)`
-                              : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
+                              : notification.type === 'BranchVerificationStatus'
+                                ? `0 0 0 2px color-mix(in srgb, ${theme.palette.info.main} 35%, transparent)`
+                                : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
                         })}
                       />
                     )}

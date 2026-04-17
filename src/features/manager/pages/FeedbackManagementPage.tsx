@@ -3,6 +3,7 @@ import FeedbackListItem from '@features/manager/components/FeedbackListItem';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import Pagination from '@features/vendor/components/Pagination';
 import useFeedback from '@features/vendor/hooks/useFeedback';
+import { getManagerFeedbackManagementTourSteps } from '@features/manager/utils/feedbackManagementTourSteps';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectBranchFeedbacks,
@@ -10,6 +11,8 @@ import {
   selectFeedbackStatus,
 } from '@slices/feedback';
 import RateReviewIcon from '@mui/icons-material/RateReview';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import StarIcon from '@mui/icons-material/Star';
 import {
   Alert,
   Box,
@@ -19,6 +22,13 @@ import {
 } from '@mui/material';
 import type { JSX } from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
 
 type ReplyStatusFilter = 'all' | 'replied' | 'notReplied';
 
@@ -39,6 +49,8 @@ export default function FeedbackManagementPage(): JSX.Element {
   const [replyStatusFilter, setReplyStatusFilter] =
     useState<ReplyStatusFilter>('all');
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
   useEffect(() => {
     const loadManagerBranch = async (): Promise<void> => {
@@ -109,9 +121,88 @@ export default function FeedbackManagementPage(): JSX.Element {
     return feedbacks.filter((item) => !item.replyContent);
   }, [feedbacks, replyStatusFilter]);
 
+  const filledStars = Math.max(
+    0,
+    Math.min(5, Math.round(feedbackSummary.averageRating))
+  );
+
+  const startFeedbackTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getManagerFeedbackManagementTourSteps({
+      hasRows: filteredFeedbacks.length > 0,
+    });
+  }, [filteredFeedbacks.length]);
+
   return (
     <Box className="space-y-4">
-      <Box className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div data-tour="manager-feedback-header">
+        <div className="mb-1 flex items-start gap-2">
+          <h1 className="text-table-text-primary text-3xl font-bold">
+            Quản lý phản hồi chi nhánh
+          </h1>
+          <button
+            type="button"
+            onClick={startFeedbackTour}
+            aria-label="Mở hướng dẫn quản lý phản hồi"
+            title="Hướng dẫn"
+            className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+          >
+            <HelpOutlineIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
+        <p className="text-table-text-secondary text-sm">
+          Quản lý danh sách phản hồi của {branchName || 'chi nhánh'} và theo dõi
+          trạng thái đã phản hồi / chưa phản hồi
+        </p>
+      </div>
+
+      <Box
+        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4"
+        data-tour="manager-feedback-summary"
+      >
         <Box>
           <Typography className="text-sm font-semibold text-gray-500">
             Chi nhánh đang quản lý
@@ -121,8 +212,24 @@ export default function FeedbackManagementPage(): JSX.Element {
           </Typography>
         </Box>
 
-        <Box className="border-primary-200 bg-primary-50 text-primary-700 rounded-full border px-3 py-1.5 text-sm font-semibold">
-          Trung bình: {feedbackSummary.averageRating.toFixed(1)}/5.0 sao
+        <Box className="flex items-center gap-1.5">
+          <Typography className="text-sm font-semibold text-gray-600">
+            Trung bình:
+          </Typography>
+          <span className="inline-flex items-center">
+            {Array.from({ length: 5 }, (_, index) => (
+              <StarIcon
+                key={`feedback-rating-star-${index}`}
+                sx={{
+                  fontSize: 18,
+                  color: index < filledStars ? '#f59e0b' : '#d1d5db',
+                }}
+              />
+            ))}
+          </span>
+          <Typography className="text-sm font-semibold text-gray-700">
+            {feedbackSummary.averageRating.toFixed(1)}/5.0
+          </Typography>
         </Box>
       </Box>
 
@@ -146,7 +253,10 @@ export default function FeedbackManagementPage(): JSX.Element {
               </Typography>
             </Box>
 
-            <Box className="flex flex-wrap items-center gap-2">
+            <Box
+              className="flex flex-wrap items-center gap-2"
+              data-tour="manager-feedback-filter"
+            >
               <Button
                 size="small"
                 variant={replyStatusFilter === 'all' ? 'contained' : 'outlined'}
@@ -239,13 +349,16 @@ export default function FeedbackManagementPage(): JSX.Element {
                 <CircularProgress size={30} />
               </Box>
             ) : filteredFeedbacks.length === 0 ? (
-              <Box className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+              <Box
+                className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500"
+                data-tour="manager-feedback-list"
+              >
                 {feedbacks.length === 0
                   ? 'Chi nhánh chưa có phản hồi nào.'
                   : 'Không có phản hồi phù hợp với bộ lọc đang chọn.'}
               </Box>
             ) : (
-              <Box className="space-y-3">
+              <Box className="space-y-3" data-tour="manager-feedback-list">
                 {filteredFeedbacks.map((feedback) => (
                   <FeedbackListItem
                     key={feedback.feedbackId}
@@ -257,19 +370,21 @@ export default function FeedbackManagementPage(): JSX.Element {
             )}
           </Box>
 
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalCount={pagination.totalCount}
-            pageSize={pagination.pageSize}
-            hasPrevious={pagination.hasPrevious}
-            hasNext={pagination.hasNext}
-            onPageChange={setPageNumber}
-            onPageSizeChange={(value) => {
-              setPageSize(value);
-              setPageNumber(1);
-            }}
-          />
+          <div data-tour="manager-feedback-pagination">
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalCount={pagination.totalCount}
+              pageSize={pagination.pageSize}
+              hasPrevious={pagination.hasPrevious}
+              hasNext={pagination.hasNext}
+              onPageChange={setPageNumber}
+              onPageSizeChange={(value) => {
+                setPageSize(value);
+                setPageNumber(1);
+              }}
+            />
+          </div>
         </>
       )}
 

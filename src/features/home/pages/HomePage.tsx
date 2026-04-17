@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Container, Grid, Typography } from '@mui/material';
 import lightLogo from '../../../assets/ios-light.png';
@@ -12,14 +12,18 @@ import HeroCarousel from '../components/HeroCarousel';
 import PopularCategoriesSection from '../components/PopularCategoriesSection';
 import RecipeCard from '../components/RecipeCard';
 import useBranch from '../hooks/useBranch';
+import useCampaignCarousel from '../hooks/useCampaignCarousel';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { ROUTES } from '@constants/routes';
 import { selectActiveBranches } from '@slices/branch';
+import type { HeroSlide } from '../components/HeroCarousel';
 
 export default function HomePage(): JSX.Element {
   const { onGetActiveBranches } = useBranch();
+  const { onGetPublicCampaigns } = useCampaignCarousel();
   const activeBranches = useAppSelector(selectActiveBranches);
   const navigate = useNavigate();
+  const [carouselSlides, setCarouselSlides] = useState<HeroSlide[]>([]);
 
   const topFinalScoreBranches = useMemo(() => {
     return [...activeBranches]
@@ -33,6 +37,29 @@ export default function HomePage(): JSX.Element {
       pageSize: 100,
     });
   }, [onGetActiveBranches]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    void onGetPublicCampaigns().then((campaigns) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setCarouselSlides(
+        campaigns
+          .filter((campaign) => Boolean(campaign.imageUrl))
+          .map((campaign, index) => ({
+            src: campaign.imageUrl ?? '',
+            alt: campaign.name ?? `Campaign ${index + 1}`,
+          }))
+      );
+    });
+
+    return (): void => {
+      isMounted = false;
+    };
+  }, [onGetPublicCampaigns]);
 
   useEffect(() => {
     AOS.init({
@@ -49,7 +76,7 @@ export default function HomePage(): JSX.Element {
 
       {/* ── Hero Carousel (images only) ── */}
       <Box data-aos="fade-in" data-aos-duration="1000">
-        <HeroCarousel />
+        <HeroCarousel slides={carouselSlides} />
       </Box>
 
       <PopularCategoriesSection />

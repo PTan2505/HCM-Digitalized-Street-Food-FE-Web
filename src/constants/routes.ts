@@ -4,8 +4,6 @@ export const ROUTES = {
   HOME: '/home',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
   USER_INFO_SETUP: '/user-info-setup',
-  PAYMENT_SUCCESS: '/Payment/success',
-  PAYMENT_CANCEL: '/Payment/cancel',
 
   // Moderator routes
   MODERATOR: {

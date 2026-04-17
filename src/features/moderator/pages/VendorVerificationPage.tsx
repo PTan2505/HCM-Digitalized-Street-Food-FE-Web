@@ -1,9 +1,9 @@
-import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
 import Pagination from '@features/moderator/components/Pagination';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
-import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
-import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetailsModal';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetailsModal';
 import useBranch from '@features/moderator/hooks/useBranch';
 import type {
   BranchRegisterRequest,
@@ -24,12 +24,11 @@ import {
   selectPendingRegistrationsPagination,
 } from '@slices/branch';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 
-const VERIFICATION_TYPE_BY_PATH: Record<string, PendingRegistrationType> = {
-  'ghost-pin': 0,
-  vendor: 1,
-  'ownership-request': 2,
+type VendorVerificationPageProps = {
+  pendingType: PendingRegistrationType;
+  pageTitle?: string;
+  hiddenColumnKeys?: string[];
 };
 
 const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
@@ -38,11 +37,23 @@ const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
   2: 'Xác minh - Yêu cầu sở hữu quán',
 };
 
-export default function VendorVerificationPage(): React.JSX.Element {
+const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string
+> = {
+  0: 'Chi tiết quán reviewer chia sẻ',
+  1: 'Chi tiết đơn đăng ký quán ăn',
+  2: 'Chi tiết yêu cầu sở hữu quán',
+};
+
+export default function VendorVerificationPage({
+  pendingType,
+  pageTitle,
+  hiddenColumnKeys = [],
+}: VendorVerificationPageProps): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
   const status = useAppSelector(selectBranchStatus);
-  const location = useLocation();
   const {
     onGetPendingRegistrations,
     onVerifyBranchRegistration,
@@ -51,7 +62,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [pendingType, setPendingType] = useState<PendingRegistrationType>(1);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
@@ -74,13 +84,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
       }
     >
   >({});
-
-  useEffect(() => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const typeSegment = pathSegments[pathSegments.length - 1];
-    const routeType = VERIFICATION_TYPE_BY_PATH[typeSegment];
-    setPendingType(routeType ?? 1);
-  }, [location.pathname]);
 
   useEffect(() => {
     void onGetPendingRegistrations({ pageNumber, pageSize, type: pendingType });
@@ -253,7 +256,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-  ];
+  ].filter((column) => !hiddenColumnKeys.includes(column.key));
 
   const actions = [
     {
@@ -335,7 +338,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   return (
     <div className="font-(--font-nunito)">
       <h1 className="text-table-text-primary mb-6 text-2xl font-bold">
-        {TITLE_BY_PENDING_TYPE[pendingType]}
+        {pageTitle ?? TITLE_BY_PENDING_TYPE[pendingType]}
       </h1>
 
       {/* Table */}
@@ -366,6 +369,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
         isOpen={detailsModalOpen}
         onClose={handleCloseDetailsModal}
         registration={selectedRegistration}
+        title={DETAILS_MODAL_TITLE_BY_PENDING_TYPE[pendingType]}
         vendorDetail={
           selectedRegistration
             ? (vendorDetails[selectedRegistration.branch.vendorId] ?? null)

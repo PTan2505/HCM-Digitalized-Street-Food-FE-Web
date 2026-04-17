@@ -61,6 +61,20 @@ export default function BranchPage(): JSX.Element {
 
   const columns = [
     {
+      key: 'vendorName',
+      label: 'Tên cửa hàng',
+      style: { width: '180px' },
+      render: (value: unknown): React.ReactNode => {
+        const vendorName =
+          typeof value === 'string' && value.trim() !== '' ? value : '-';
+        return (
+          <Box className="text-table-text-secondary font-medium">
+            {vendorName}
+          </Box>
+        );
+      },
+    },
+    {
       key: 'name',
       label: 'Tên chi nhánh',
       render: (value: unknown): React.ReactNode => (

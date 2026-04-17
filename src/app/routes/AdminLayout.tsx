@@ -1,5 +1,4 @@
 import SidebarContent from '@components/layout/SidebarContent';
-import NotificationBell from '@components/NotificationBell';
 import type { NavigationItem } from '@components/layout/SidebarContent';
 import { ADMIN_USER_INFO } from '@constants/adminTheme';
 import useLogin from '@features/auth/hooks/useLogin';
@@ -26,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import FoodBankIcon from '@mui/icons-material/FoodBank';
 import { Box, IconButton, Typography } from '@mui/material';
+import { ROUTES } from '@constants/routes';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectUser } from '@slices/auth';
 import type { JSX } from 'react';
@@ -33,31 +33,38 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
+const adminBase = ROUTES.ADMIN.BASE;
+const adminPaths = ROUTES.ADMIN.PATHS;
+
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: ChartBarIcon },
+  {
+    name: 'Dashboard',
+    href: `${adminBase}/${adminPaths.DASHBOARD}`,
+    icon: ChartBarIcon,
+  },
   {
     name: 'Xác minh người bán',
-    href: '/admin/verification',
+    href: `${adminBase}/${adminPaths.VERIFICATION}`,
     icon: VerifiedIcon,
   },
   {
     name: 'Quản lý cửa hàng',
-    href: '/admin/vendors',
+    href: `${adminBase}/${adminPaths.VENDORS}`,
     icon: BuildingStorefrontIcon,
   },
   {
     name: 'Xem thông tin chi nhánh',
-    href: '/admin/branch',
+    href: `${adminBase}/${adminPaths.BRANCH}`,
     icon: BuildingStorefrontIcon,
   },
   {
     name: 'Quản lý danh mục món ăn',
-    href: '/admin/category',
+    href: `${adminBase}/${adminPaths.CATEGORY}`,
     icon: RectangleStackIcon,
   },
   {
     name: 'Quản lý khẩu vị món ăn',
-    href: '/admin/taste',
+    href: `${adminBase}/${adminPaths.TASTE}`,
     icon: SparklesIcon,
   },
   {
@@ -66,17 +73,17 @@ const navigation: NavigationItem[] = [
     children: [
       {
         name: 'Khách hàng',
-        href: '/admin/users/customer',
+        href: `${adminBase}/${adminPaths.USERS_CUSTOMER}`,
         icon: UserCircleIcon,
       },
       {
         name: 'Đối tác',
-        href: '/admin/users/vendor',
+        href: `${adminBase}/${adminPaths.USERS_VENDOR}`,
         icon: BuildingStorefrontIcon,
       },
       {
         name: 'Hệ thống',
-        href: '/admin/users/system',
+        href: `${adminBase}/${adminPaths.USERS_SYSTEM}`,
         icon: UserGroupIcon,
       },
     ],
@@ -87,12 +94,12 @@ const navigation: NavigationItem[] = [
     children: [
       {
         name: 'Quản lý chế độ ăn',
-        href: '/admin/user-dietary',
+        href: `${adminBase}/${adminPaths.USER_DIETARY}`,
         icon: FoodBankIcon,
       },
       {
         name: 'Chế độ ăn của người dùng',
-        href: '/admin/users-with-dietary',
+        href: `${adminBase}/${adminPaths.USER_WITH_DIETARY}`,
         icon: UserCircleIcon,
       },
     ],
@@ -103,19 +110,19 @@ const navigation: NavigationItem[] = [
     children: [
       {
         name: 'Quản lý huy hiệu',
-        href: '/admin/badge',
+        href: `${adminBase}/${adminPaths.BADGE}`,
         icon: StarIcon,
       },
       {
         name: 'Huy hiệu của người dùng',
-        href: '/admin/badge-users',
+        href: `${adminBase}/${adminPaths.BADGE_USERS}`,
         icon: ShoppingBagIcon,
       },
     ],
   },
   {
     name: 'Quản lý tag phản hồi',
-    href: '/admin/feedback-tag',
+    href: `${adminBase}/${adminPaths.FEEDBACK_TAG}`,
     icon: ChatBubbleOutlineIcon,
   },
   {
@@ -124,29 +131,29 @@ const navigation: NavigationItem[] = [
     children: [
       {
         name: 'Từ hệ thống',
-        href: '/admin/campaign',
+        href: `${adminBase}/${adminPaths.CAMPAIGN}`,
         icon: CampaignIcon,
       },
       {
         name: 'Từ cửa hàng',
-        href: '/admin/campaign/vendor',
+        href: `${adminBase}/${adminPaths.CAMPAIGN_VENDOR}`,
         icon: BuildingStorefrontIcon,
       },
     ],
   },
   {
     name: 'Quản lý nhiệm vụ',
-    href: '/admin/quest',
+    href: `${adminBase}/${adminPaths.QUEST}`,
     icon: AssignmentIcon,
   },
   {
     name: 'Quản lý voucher',
-    href: '/admin/voucher',
+    href: `${adminBase}/${adminPaths.VOUCHER}`,
     icon: LocalOfferIcon,
   },
   {
     name: 'Cấu hình hệ thống',
-    href: '/admin/setting',
+    href: `${adminBase}/${adminPaths.SETTING}`,
     icon: SettingsIcon,
   },
 ];
@@ -162,7 +169,7 @@ function AdminLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/admin');
+    navigate(adminBase);
   };
 
   const sidebarUserInfo = {
@@ -273,7 +280,7 @@ function AdminLayout(): JSX.Element {
             </Box>
 
             <Box className="flex items-center gap-4">
-              <NotificationBell />
+              {/* <NotificationBell /> */}
             </Box>
           </Box>
         </Box>

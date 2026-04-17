@@ -26,6 +26,10 @@ import { resetOrderState } from '@slices/order';
 import { resetCampaignState } from '@slices/campaign';
 import { resetFeedbackTagState } from '@slices/feedbackTag';
 import { resetVoucherState } from '@slices/voucher';
+import { resetQuestState } from '@slices/quest';
+import { resetAdminDashboardState } from '@slices/adminDashboard';
+import { resetVendorDashboardState } from '@slices/vendorDashboard';
+import { resetSettingState } from '@slices/setting';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -89,6 +93,10 @@ export default function useLogin(): {
     dispatch(resetCampaignState());
     dispatch(resetFeedbackTagState());
     dispatch(resetVoucherState());
+    dispatch(resetQuestState());
+    dispatch(resetAdminDashboardState());
+    dispatch(resetVendorDashboardState());
+    dispatch(resetSettingState());
     navigate(ROUTES.LOGIN);
   }
   return {

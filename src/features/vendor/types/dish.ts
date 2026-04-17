@@ -2,7 +2,7 @@ export interface CreateOrUpdateDishRequest {
   CategoryId: number;
   Description: string;
   DietaryPreferenceIds?: number[];
-  imageFile: File;
+  imageFile?: File;
   IsActive: boolean;
   Name: string;
   Price: number;

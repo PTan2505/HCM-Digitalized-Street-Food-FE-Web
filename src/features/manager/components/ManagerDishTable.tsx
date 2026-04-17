@@ -11,6 +11,7 @@ interface ManagerDishTableProps {
   actionLoading: Set<number>;
   isApplying: boolean;
   loading: boolean;
+  tourId?: string;
   onToggleSelection: (dishId: number) => void;
   onToggleAvailability: (dishId: number, currentSoldOut: boolean) => void;
 }
@@ -22,6 +23,7 @@ export default function ManagerDishTable({
   actionLoading,
   isApplying,
   loading,
+  tourId,
   onToggleSelection,
   onToggleAvailability,
 }: ManagerDishTableProps): JSX.Element {
@@ -155,6 +157,7 @@ export default function ManagerDishTable({
       data={dishes}
       rowKey="dishId"
       loading={loading}
+      tourId={tourId}
       emptyMessage={
         <span>Không tìm thấy món ăn phù hợp với từ khóa tìm kiếm.</span>
       }

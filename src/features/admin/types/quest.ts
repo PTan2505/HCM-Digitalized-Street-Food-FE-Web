@@ -3,6 +3,7 @@ export enum QuestTaskType {
   ORDER_AMOUNT = 2,
   SHARE = 3,
   CREATE_GHOST_PIN = 4,
+  TIER_UP = 5,
 }
 
 export enum QuestRewardType {
@@ -11,13 +12,25 @@ export enum QuestRewardType {
   VOUCHER = 3,
 }
 
+export interface QuestReward {
+  questTaskRewardId?: number;
+  rewardType: QuestRewardType;
+  rewardValue: number;
+  quantity: number | null;
+}
+
+export interface QuestRewardPayload {
+  rewardType: QuestRewardType;
+  rewardValue: number;
+  quantity: number | null;
+}
+
 export interface QuestTask {
   questTaskId: number;
   type: QuestTaskType;
   targetValue: number;
   description: string | null;
-  rewardType: QuestRewardType;
-  rewardValue: number;
+  rewards: QuestReward[];
   currentValue?: number;
   isCompleted?: boolean;
   rewardClaimed?: boolean;
@@ -27,8 +40,7 @@ export interface QuestTaskPayload {
   type: QuestTaskType;
   targetValue: number;
   description: string | null;
-  rewardType: QuestRewardType;
-  rewardValue: number;
+  rewards: QuestRewardPayload[];
 }
 
 export interface Quest {
@@ -37,6 +49,7 @@ export interface Quest {
   description: string | null;
   imageUrl: string | null;
   isActive: boolean;
+  requiresEnrollment: boolean;
   isStandalone: boolean;
   campaignId: number | null;
   createdAt?: string;
@@ -50,6 +63,7 @@ export interface QuestCreate {
   description: string | null;
   imageUrl: string | null;
   isActive: boolean;
+  requiresEnrollment?: boolean;
   isStandalone: boolean;
   campaignId: number | null;
   tasks: QuestTaskPayload[];
@@ -72,6 +86,7 @@ export const QUEST_TASK_TYPE_LABELS: Record<QuestTaskType, string> = {
   [QuestTaskType.ORDER_AMOUNT]: 'Tổng chi tiêu đơn hàng',
   [QuestTaskType.SHARE]: 'Chia sẻ',
   [QuestTaskType.CREATE_GHOST_PIN]: 'Tạo ghost pin',
+  [QuestTaskType.TIER_UP]: 'Nâng hạng',
 };
 
 export const QUEST_REWARD_TYPE_LABELS: Record<QuestRewardType, string> = {

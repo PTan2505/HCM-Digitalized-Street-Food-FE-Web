@@ -445,7 +445,13 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('registrationStartDate')}
-                    min={getTodayMinVN()}
+                    min={
+                      campaign?.registrationStartDate &&
+                      toLocalDatetimeValue(campaign.registrationStartDate) <
+                        getTodayMinVN()
+                        ? toLocalDatetimeValue(campaign.registrationStartDate)
+                        : getTodayMinVN()
+                    }
                     className={inputClass(!!errors.registrationStartDate)}
                   />
                   {errors.registrationStartDate && (
@@ -461,7 +467,7 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('registrationEndDate')}
-                    disabled={!registrationStartDate}
+                    disabled={!campaign && !registrationStartDate}
                     min={registrationStartDate || getTodayMinVN()}
                     className={inputClass(!!errors.registrationEndDate)}
                   />
@@ -487,7 +493,7 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('startDate')}
-                    disabled={!registrationEndDate}
+                    disabled={!campaign && !registrationEndDate}
                     min={registrationEndDate || getTodayMinVN()}
                     className={inputClass(!!errors.startDate)}
                   />
@@ -505,7 +511,7 @@ export default function CamPaignFormModal({
                   <input
                     type="datetime-local"
                     {...register('endDate')}
-                    disabled={!startDate}
+                    disabled={!campaign && !startDate}
                     min={startDate || getTodayMinVN()}
                     className={inputClass(!!errors.endDate)}
                   />

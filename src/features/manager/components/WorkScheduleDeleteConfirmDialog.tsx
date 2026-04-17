@@ -32,7 +32,7 @@ export default function WorkScheduleDeleteConfirmDialog({
         <Button onClick={onClose} color="primary">
           Hủy
         </Button>
-        <Button onClick={onConfirm} color="error" variant="contained">
+        <Button onClick={onConfirm} color="error" variant="outlined">
           Xóa
         </Button>
       </DialogActions>
