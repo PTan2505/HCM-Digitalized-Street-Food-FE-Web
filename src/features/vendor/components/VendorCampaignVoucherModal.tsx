@@ -262,7 +262,7 @@ export default function VendorCampaignVoucherModal({
           >
             <EditIcon fontSize="small" />
           </Button>
-          <Button
+          {/* <Button
             size="small"
             color="error"
             variant="outlined"
@@ -272,7 +272,7 @@ export default function VendorCampaignVoucherModal({
             }}
           >
             <DeleteIcon fontSize="small" />
-          </Button>
+          </Button> */}
         </Box>
       ),
     },
