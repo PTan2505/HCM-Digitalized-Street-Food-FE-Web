@@ -43,7 +43,7 @@ const navigation: NavigationItem[] = [
     icon: ChartBarIcon,
   },
   {
-    name: 'Xác minh người bán',
+    name: 'Xác minh',
     href: `${adminBase}/${adminPaths.VERIFICATION}`,
     icon: VerifiedIcon,
   },
@@ -52,11 +52,11 @@ const navigation: NavigationItem[] = [
     href: `${adminBase}/${adminPaths.VENDORS}`,
     icon: BuildingStorefrontIcon,
   },
-  {
-    name: 'Xem thông tin chi nhánh',
-    href: `${adminBase}/${adminPaths.BRANCH}`,
-    icon: BuildingStorefrontIcon,
-  },
+  // {
+  //   name: 'Xem thông tin chi nhánh',
+  //   href: `${adminBase}/${adminPaths.BRANCH}`,
+  //   icon: BuildingStorefrontIcon,
+  // },
   {
     name: 'Quản lý danh mục món ăn',
     href: `${adminBase}/${adminPaths.CATEGORY}`,

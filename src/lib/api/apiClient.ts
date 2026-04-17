@@ -109,7 +109,7 @@ export default class ApiClient {
     });
   }
 
-  patch<TResponse, TRequest>(
+  patch<TResponse, TRequest = unknown>(
     requestConfig: AxiosRequestConfig<TRequest>
   ): Promise<ApiResponse<TResponse>> {
     return this.handleRequest<TResponse, TRequest>({

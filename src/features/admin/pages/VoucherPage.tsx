@@ -313,16 +313,16 @@ export default function VoucherPage(): JSX.Element {
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
-    {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        void handleDelete(row);
-      },
-      tooltip: 'Xóa voucher',
-      color: 'error' as const,
-      variant: 'outlined' as const,
-    },
+    // {
+    //   id: 'delete',
+    //   label: <DeleteIcon fontSize="small" />,
+    //   onClick: (row: Voucher): void => {
+    //     void handleDelete(row);
+    //   },
+    //   tooltip: 'Xóa voucher',
+    //   color: 'error' as const,
+    //   variant: 'outlined' as const,
+    // },
   ];
 
   return (

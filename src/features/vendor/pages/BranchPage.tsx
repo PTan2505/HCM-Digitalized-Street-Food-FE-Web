@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
+import { Box, Chip, IconButton, Tooltip as MuiTooltip } from '@mui/material';
 import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -11,7 +11,8 @@ import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PaymentIcon from '@mui/icons-material/Payment';
@@ -350,6 +351,25 @@ function BranchPage(): JSX.Element {
     //   ),
     // },
     {
+      key: 'isActive',
+      label: 'Trạng thái',
+      style: { width: '140px' },
+      render: (value: unknown): React.ReactNode => {
+        const isActive = Boolean(value);
+        return (
+          <Chip
+            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
+            size="small"
+            className={
+              isActive
+                ? 'bg-green-100 font-semibold text-green-800'
+                : 'bg-red-100 font-semibold text-red-800'
+            }
+          />
+        );
+      },
+    },
+    {
       key: 'isSubscribed',
       label: 'Tình trạng đăng ký',
       style: { width: '120px' },
@@ -399,13 +419,24 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      menuLabel: 'Xóa chi nhánh',
+      id: 'close',
+      label: <BlockIcon fontSize="small" />,
+      menuLabel: 'Đóng chi nhánh',
       onClick: (branch: Branch): void => {
         handleDeleteBranch(branch);
       },
-      color: 'error' as const,
+      color: 'warning' as const,
+      show: (branch: Branch): boolean => branch.isActive,
+    },
+    {
+      id: 'activate',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
+      menuLabel: 'Kích hoạt chi nhánh',
+      onClick: (branch: Branch): void => {
+        handleDeleteBranch(branch);
+      },
+      color: 'success' as const,
+      show: (branch: Branch): boolean => !branch.isActive,
     },
     {
       id: 'images',
@@ -702,11 +733,18 @@ function BranchPage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa chi nhánh"
+        title={
+          deletingBranch?.isActive
+            ? 'Xác nhận đóng chi nhánh'
+            : 'Xác nhận kích hoạt chi nhánh'
+        }
+        confirmButtonLabel={deletingBranch?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingBranch?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa chi nhánh &quot;{deletingBranch?.name}
-            &quot;? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingBranch?.isActive ? 'đóng' : 'kích hoạt'} chi nhánh &quot;
+            {deletingBranch?.name}&quot;?
           </>
         }
       />

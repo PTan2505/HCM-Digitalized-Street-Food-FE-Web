@@ -159,9 +159,14 @@ export const userDietaryPreferenceSlice = createSlice({
       })
       .addCase(deleteUserDietaryPreference.fulfilled, (state, action) => {
         if (action.payload) {
-          state.userDietaryPreferences = state.userDietaryPreferences.filter(
+          state.userDietaryPreferences = state.userDietaryPreferences.map(
             (userDietaryPreference) =>
-              userDietaryPreference.dietaryPreferenceId !== action.payload
+              userDietaryPreference.dietaryPreferenceId === action.payload
+                ? {
+                    ...userDietaryPreference,
+                    isActive: !(userDietaryPreference.isActive ?? false),
+                  }
+                : userDietaryPreference
           );
         }
       })

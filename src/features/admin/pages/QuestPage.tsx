@@ -314,14 +314,14 @@ export default function QuestPage(): JSX.Element {
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
-    {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Quest): void => handleDelete(row),
-      tooltip: 'Xóa nhiệm vụ',
-      color: 'error' as const,
-      variant: 'outlined' as const,
-    },
+    // {
+    //   id: 'delete',
+    //   label: <DeleteIcon fontSize="small" />,
+    //   onClick: (row: Quest): void => handleDelete(row),
+    //   tooltip: 'Xóa nhiệm vụ',
+    //   color: 'error' as const,
+    //   variant: 'outlined' as const,
+    // },
   ];
 
   return (
