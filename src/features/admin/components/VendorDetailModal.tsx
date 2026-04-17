@@ -427,7 +427,7 @@ export default function VendorDetailModal({
           </Box>
         )}
       </DialogContent>
-      <DialogActions className="border-t border-gray-300">
+      {/* <DialogActions className="border-t border-gray-300">
         <Button
           onClick={onClose}
           color="primary"
@@ -436,7 +436,7 @@ export default function VendorDetailModal({
         >
           Đóng
         </Button>
-      </DialogActions>
+      </DialogActions> */}
     </Dialog>
   );
 }

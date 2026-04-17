@@ -28,7 +28,7 @@ export const getQuestManagementTourSteps = ({
       target: '[data-tour="admin-quest-table-wrapper"]',
       title: 'Danh sách nhiệm vụ',
       content:
-        'Bảng thể hiện tiêu đề, mô tả, trạng thái và thời gian cập nhật quest.',
+        'Bảng thể hiện tiêu đề, mô tả, trạng thái và số người đang tham gia quest.',
       placement: 'top',
     },
   ];
@@ -58,6 +58,13 @@ export const getQuestManagementTourSteps = ({
       target: `[data-tour-action="${ADMIN_QUEST_TOUR_ID}:detail"]`,
       title: 'Xem chi tiết nhiệm vụ',
       content: 'Mở chi tiết để xem đầy đủ task và điều kiện hoàn thành.',
+      placement: 'left',
+    },
+    {
+      target: `[data-tour-action="${ADMIN_QUEST_TOUR_ID}:participants"]`,
+      title: 'Xem tiến độ người tham gia',
+      content:
+        'Mở danh sách user đang tham gia quest và theo dõi tiến độ task.',
       placement: 'left',
     },
     {

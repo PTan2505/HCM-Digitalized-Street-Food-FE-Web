@@ -2,7 +2,10 @@ import type {
   Quest,
   QuestCreate,
   QuestListResponse,
+  QuestTasksUpdate,
   QuestUpdate,
+  QuestUserQuestTasksQuery,
+  QuestUserQuestTasksResponse,
 } from '@features/admin/types/quest';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import {
@@ -10,8 +13,10 @@ import {
   deleteQuest,
   getAllQuests,
   getQuestById,
+  getQuestUserQuestTasks,
   postQuestImage,
   updateQuest,
+  updateQuestTasks,
 } from '@slices/quest';
 import { useCallback } from 'react';
 
@@ -25,8 +30,13 @@ const useQuest = (): {
   onGetQuestById: (id: number) => Promise<Quest>;
   onCreateQuest: (data: QuestCreate) => Promise<Quest>;
   onUpdateQuest: (id: number, data: QuestUpdate) => Promise<Quest>;
+  onUpdateQuestTasks: (id: number, data: QuestTasksUpdate) => Promise<number>;
   onDeleteQuest: (id: number) => Promise<number>;
   onPostQuestImage: (id: number, data: FormData) => Promise<Quest>;
+  onGetQuestUserQuestTasks: (
+    questId: number,
+    params: QuestUserQuestTasksQuery
+  ) => Promise<QuestUserQuestTasksResponse>;
 } => {
   const dispatch = useAppDispatch();
 
@@ -70,9 +80,28 @@ const useQuest = (): {
     [dispatch]
   );
 
+  const onUpdateQuestTasks = useCallback(
+    async (id: number, data: QuestTasksUpdate): Promise<number> => {
+      return await dispatch(updateQuestTasks({ id, data })).unwrap();
+    },
+    [dispatch]
+  );
+
   const onPostQuestImage = useCallback(
     async (id: number, data: FormData): Promise<Quest> => {
       return await dispatch(postQuestImage({ id, data })).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onGetQuestUserQuestTasks = useCallback(
+    async (
+      questId: number,
+      params: QuestUserQuestTasksQuery
+    ): Promise<QuestUserQuestTasksResponse> => {
+      return await dispatch(
+        getQuestUserQuestTasks({ questId, params })
+      ).unwrap();
     },
     [dispatch]
   );
@@ -82,8 +111,10 @@ const useQuest = (): {
     onGetQuestById,
     onCreateQuest,
     onUpdateQuest,
+    onUpdateQuestTasks,
     onDeleteQuest,
     onPostQuestImage,
+    onGetQuestUserQuestTasks,
   };
 };
 

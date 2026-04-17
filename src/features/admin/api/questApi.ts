@@ -2,7 +2,10 @@ import type {
   Quest,
   QuestCreate,
   QuestListResponse,
+  QuestTasksUpdate,
   QuestUpdate,
+  QuestUserQuestTasksQuery,
+  QuestUserQuestTasksResponse,
 } from '@features/admin/types/quest';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -50,6 +53,13 @@ export class QuestApi {
     return res.data;
   }
 
+  async updateQuestTasks(id: number, data: QuestTasksUpdate): Promise<void> {
+    await this.apiClient.put<null, QuestTasksUpdate>({
+      url: apiUrl.quest.updateQuestTasks(id),
+      data,
+    });
+  }
+
   async deleteQuest(id: number): Promise<void> {
     await this.apiClient.delete<void>({
       url: apiUrl.quest.updateOrDeleteQuest(id),
@@ -62,6 +72,20 @@ export class QuestApi {
       data,
       headers: {
         'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  }
+
+  async getQuestUserQuestTasks(
+    questId: number,
+    params: QuestUserQuestTasksQuery
+  ): Promise<QuestUserQuestTasksResponse> {
+    const res = await this.apiClient.get<QuestUserQuestTasksResponse>({
+      url: apiUrl.quest.getUserQuestTasks,
+      params: {
+        ...params,
+        questId,
       },
     });
     return res.data;
