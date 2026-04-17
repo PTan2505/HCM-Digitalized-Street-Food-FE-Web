@@ -4,7 +4,6 @@ import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -67,7 +66,7 @@ const StatusBadge = ({
 };
 
 const isMarketplaceVoucher = (voucher: Voucher): boolean =>
-  voucher.campaignId === null;
+  voucher.campaignId === null || voucher.campaignId === undefined;
 
 export default function VoucherPage(): JSX.Element {
   const vouchers = useAppSelector(selectVouchers);
@@ -133,11 +132,6 @@ export default function VoucherPage(): JSX.Element {
     } catch (err) {
       console.error('Failed to save voucher', err);
     }
-  };
-
-  const handleDelete = (voucher: Voucher): void => {
-    setDeletingVoucher(voucher);
-    setOpenDeleteDialog(true);
   };
 
   const handleConfirmDelete = async (): Promise<void> => {
