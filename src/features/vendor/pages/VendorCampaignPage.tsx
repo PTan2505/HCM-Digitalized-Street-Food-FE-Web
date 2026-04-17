@@ -64,12 +64,6 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const isBeforeCampaignStart = (startDate: string): boolean => {
-  const startTime = new Date(startDate).getTime();
-  if (Number.isNaN(startTime)) return false;
-  return startTime > Date.now();
-};
-
 const StatusBadge = ({
   label,
   type,

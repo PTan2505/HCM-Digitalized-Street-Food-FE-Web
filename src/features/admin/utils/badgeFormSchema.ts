@@ -1,5 +1,4 @@
 import { VALIDATE_ERROR_MESSAGES } from '@constants/errorMessage';
-import validator from 'validator';
 import { z } from 'zod';
 
 export const BadgeFormSchema = z.object({
