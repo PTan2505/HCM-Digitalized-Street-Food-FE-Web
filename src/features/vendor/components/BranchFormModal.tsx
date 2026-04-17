@@ -1,4 +1,4 @@
-import { useState, useEffect, type JSX } from 'react';
+import { useState, useEffect, useMemo, type JSX } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -145,7 +145,16 @@ export default function BranchFormModal({
   mode,
   onSuccess,
 }: BranchFormModalProps): JSX.Element {
-  const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
+  const dietaryPreferencesFromStore = useAppSelector(
+    selectUserDietaryPreferences
+  );
+  const dietaryPreferences = useMemo(
+    () =>
+      dietaryPreferencesFromStore.filter(
+        (dietaryPreference) => dietaryPreference.isActive !== false
+      ),
+    [dietaryPreferencesFromStore]
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [licenseImages, setLicenseImages] = useState<File[]>([]);

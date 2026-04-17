@@ -26,7 +26,16 @@ import {
 import { getDietaryPreferencesTourSteps } from '@features/vendor/utils/dietaryPreferencesTourSteps';
 
 export default function DietaryPreferencesPage(): JSX.Element {
-  const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
+  const dietaryPreferencesFromStore = useAppSelector(
+    selectUserDietaryPreferences
+  );
+  const dietaryPreferences = useMemo(
+    () =>
+      dietaryPreferencesFromStore.filter(
+        (dietaryPreference) => dietaryPreference.isActive !== false
+      ),
+    [dietaryPreferencesFromStore]
+  );
   const myVendor = useAppSelector(selectMyVendor);
   const myVendorDietaryPreferences = useAppSelector(
     selectMyVendorDietaryPreferences

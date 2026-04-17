@@ -567,11 +567,13 @@ export default function QuestFormModal({
 
   const badgeRewardOptions = useMemo<RewardOption[]>(
     () =>
-      badgeOptions.map((badge) => ({
-        id: badge.badgeId,
-        label: badge.badgeName,
-        hint: '',
-      })),
+      badgeOptions
+        .filter((badge) => badge.isActive !== false)
+        .map((badge) => ({
+          id: badge.badgeId,
+          label: badge.badgeName,
+          hint: '',
+        })),
     [badgeOptions]
   );
 
