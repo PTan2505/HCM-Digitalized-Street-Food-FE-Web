@@ -161,7 +161,7 @@ export default function VendorCampaignBranchModal({
       ),
     },
     {
-      key: 'address',
+      key: 'addressDetail',
       label: 'Địa chỉ',
       render: (value: unknown): React.ReactNode => (
         <Box className="text-table-text-secondary block max-w-100 truncate">
