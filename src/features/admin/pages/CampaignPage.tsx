@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
 import {
   Box,
@@ -9,10 +9,10 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
   Edit as EditIcon,
   HelpOutline as HelpOutlineIcon,
   ConfirmationNumber as VoucherIcon,
-  CheckCircle as CheckCircleIcon,
   Visibility as VisibilityIcon,
   Storefront as StorefrontIcon,
 } from '@mui/icons-material';
@@ -25,13 +25,18 @@ import {
 } from 'react-joyride';
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
-import CamPaignFormModal from '@features/admin/components/CamPaignFormModal';
+import CamPaignFormModal, {
+  type CampaignQuestBundleDraft,
+} from '@features/admin/components/CamPaignFormModal';
+import QuestFormModal from '@features/admin/components/QuestFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
 import CampaignDetailModal from '@features/admin/components/CampaignDetailModal';
-import VoucherFormModal from '@features/admin/components/VoucherFormModal';
 import CampaignBranchModal from '@features/admin/components/CampaignBranchModal';
+import AppModalHeader from '@components/AppModalHeader';
 import type { Campaign } from '@features/admin/types/campaign';
+import { QuestRewardType } from '@features/admin/types/quest';
 import useCampaign from '@features/admin/hooks/useCampaign';
+import useQuest from '@features/admin/hooks/useQuest';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
@@ -39,10 +44,11 @@ import {
   selectCampaignStatus,
   selectCampaignTotalCount,
 } from '@slices/campaign';
-import { selectVoucherStatus } from '@slices/voucher';
+import { selectQuestStatus } from '@slices/quest';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 import { getCampaignOverviewTourSteps } from '@features/admin/utils/campaignOverviewTourSteps';
 import type { VoucherCreate } from '@custom-types/voucher';
+import type { Quest } from '@features/admin/types/quest';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -57,47 +63,6 @@ const formatVNDatetime = (isoStr: string | null): string => {
     minute: '2-digit',
   });
 };
-
-const hasRegistrationStarted = (
-  registrationStartDate: string | null
-): boolean => {
-  if (!registrationStartDate) return false;
-  const startTime = new Date(registrationStartDate).getTime();
-  if (Number.isNaN(startTime)) return false;
-  return startTime <= Date.now();
-};
-
-const StatusBadge = ({
-  label,
-  type,
-}: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
-}): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
-
-  return (
-    <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
-    >
-      {label}
-    </span>
-  );
-};
-
-/**
- * "Post-create" flow states:
- *  idle          → no post-create flow running
- *  prompt        → asking "Tạo voucher ngay?" dialog
- *  creating      → VoucherFormModal open
- *  done_one      → voucher created, asking "Tạo thêm / Thôi"
- */
-type PostCreateStep = 'idle' | 'prompt' | 'creating' | 'done_one';
 
 type CampaignStatusInfo = {
   label: string;
@@ -143,8 +108,8 @@ const getCampaignStatus = (row: Campaign): CampaignStatusInfo => {
 
 export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
-  const status = useAppSelector(selectCampaignStatus);
-  const voucherStatus = useAppSelector(selectVoucherStatus);
+  const campaignStatus = useAppSelector(selectCampaignStatus);
+  const questStatus = useAppSelector(selectQuestStatus);
   const totalCount = useAppSelector(selectCampaignTotalCount);
   const {
     onGetCampaigns,
@@ -154,6 +119,14 @@ export default function CampaignPage(): JSX.Element {
     onPostCampaignImage,
     onDeleteCampaignImage,
   } = useCampaign();
+  const {
+    onGetQuests,
+    onGetQuestById,
+    onCreateQuest,
+    onUpdateQuest,
+    onUpdateQuestTasks,
+    onPostQuestImage,
+  } = useQuest();
   const { onCreateVoucher } = useVoucher();
 
   const [page, setPage] = useState(1);
@@ -161,18 +134,19 @@ export default function CampaignPage(): JSX.Element {
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [openBranchModal, setOpenBranchModal] = useState(false);
+  const [openCampaignQuestModal, setOpenCampaignQuestModal] = useState(false);
+  const [openCampaignQuestHubModal, setOpenCampaignQuestHubModal] =
+    useState(false);
   const [openDetailModal, setOpenDetailModal] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
+  const [selectedCampaignQuest, setSelectedCampaignQuest] =
+    useState<Quest | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<Campaign | null>(null);
 
-  // Post-create flow
-  const [postCreateStep, setPostCreateStep] = useState<PostCreateStep>('idle');
-  const newCampaignRef = useRef<Campaign | null>(null);
-  const voucherCreatedCountRef = useRef(0);
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
@@ -209,7 +183,8 @@ export default function CampaignPage(): JSX.Element {
   const handleSubmit = async (
     data: CampaignFormData,
     imageFile: File | null,
-    isImageRemoved?: boolean
+    isImageRemoved?: boolean,
+    questBundles?: CampaignQuestBundleDraft[]
   ): Promise<void> => {
     try {
       if (editingCampaign) {
@@ -228,7 +203,6 @@ export default function CampaignPage(): JSX.Element {
 
         handleCloseModal();
       } else {
-        // ── Create flow → trigger post-create ──
         const createdCampaign = await onCreateCampaign(data);
 
         if (imageFile) {
@@ -237,11 +211,85 @@ export default function CampaignPage(): JSX.Element {
           await onPostCampaignImage(createdCampaign.campaignId, formData);
         }
 
-        // Close campaign form, start post-create prompt
+        if (questBundles && questBundles.length > 0) {
+          await Promise.all(
+            questBundles.map(async (questBundle) => {
+              const taskPayloads = await Promise.all(
+                questBundle.tasks.map(async (task) => {
+                  const voucherPayloads: VoucherCreate[] = task.rewards.map(
+                    (reward) => ({
+                      name: reward.voucher.name,
+                      voucherCode: reward.voucher.voucherCode,
+                      type:
+                        reward.voucher.type === 'PERCENT'
+                          ? 'PERCENTAGE'
+                          : 'AMOUNT',
+                      description:
+                        reward.voucher.description.trim() === ''
+                          ? null
+                          : reward.voucher.description,
+                      discountValue: reward.voucher.discountValue,
+                      maxDiscountValue:
+                        reward.voucher.type === 'AMOUNT'
+                          ? null
+                          : reward.voucher.maxDiscountValue,
+                      minAmountRequired: reward.voucher.minAmountRequired,
+                      quantity: reward.voucher.quantity,
+                      redeemPoint: 0,
+                      startDate: createdCampaign.startDate,
+                      endDate: createdCampaign.endDate,
+                      expiredDate: null,
+                      isActive: reward.voucher.isActive,
+                      campaignId: createdCampaign.campaignId,
+                    })
+                  );
+
+                  const createdVouchers =
+                    await onCreateVoucher(voucherPayloads);
+
+                  return {
+                    type: task.taskType,
+                    targetValue: task.targetValue,
+                    description:
+                      task.taskDescription.trim() === ''
+                        ? null
+                        : task.taskDescription,
+                    rewards: createdVouchers.map((voucher, index) => ({
+                      rewardType: QuestRewardType.VOUCHER,
+                      rewardValue: voucher.voucherId,
+                      quantity: task.rewards[index]?.quantity ?? 1,
+                    })),
+                  };
+                })
+              );
+
+              const createdQuest = await onCreateQuest({
+                title: questBundle.title,
+                description:
+                  questBundle.description.trim() === ''
+                    ? null
+                    : questBundle.description,
+                imageUrl: null,
+                isActive: true,
+                requiresEnrollment: true,
+                isStandalone: false,
+                campaignId: createdCampaign.campaignId,
+                tasks: taskPayloads,
+              });
+
+              if (questBundle.imageFile) {
+                const questImageFormData = new FormData();
+                questImageFormData.append('imageFile', questBundle.imageFile);
+                await onPostQuestImage(
+                  createdQuest.questId,
+                  questImageFormData
+                );
+              }
+            })
+          );
+        }
+
         handleCloseModal();
-        newCampaignRef.current = createdCampaign;
-        voucherCreatedCountRef.current = 0;
-        setPostCreateStep('prompt');
       }
     } catch (err) {
       console.error('Failed to save campaign', err);
@@ -263,41 +311,105 @@ export default function CampaignPage(): JSX.Element {
     }
   };
 
-  // ── Post-create: user chooses to create a voucher ──
-  const handleStartVoucherCreation = (): void => {
-    setPostCreateStep('creating');
+  const handleOpenCampaignQuestModal = async (row: Campaign): Promise<void> => {
+    setSelectedCampaign(row);
+    setSelectedCampaignQuest(null);
+
+    try {
+      const questsByCampaign = await onGetQuests({
+        pageNumber: 1,
+        pageSize: 100,
+        campaignId: row.campaignId,
+      });
+
+      const firstQuest = questsByCampaign.items[0];
+      if (!firstQuest) {
+        setSelectedCampaignQuest(null);
+        setOpenCampaignQuestHubModal(true);
+        return;
+      }
+
+      const questDetail = await onGetQuestById(firstQuest.questId);
+      setSelectedCampaignQuest(questDetail);
+      setOpenCampaignQuestModal(true);
+    } catch (err) {
+      console.error('Failed to fetch campaign quests', err);
+    }
   };
 
-  // ── Post-create: user skips voucher creation ──
-  const handleSkipVoucher = (): void => {
-    newCampaignRef.current = null;
-    voucherCreatedCountRef.current = 0;
-    setPostCreateStep('idle');
+  const handleOpenQuestFormFromHub = (): void => {
+    setOpenCampaignQuestHubModal(false);
+    setOpenCampaignQuestModal(true);
   };
 
-  // ── Post-create: VoucherFormModal submit ──
-  const handleVoucherSubmit = async (
-    data: VoucherCreate | VoucherCreate[]
+  const handleCloseCampaignQuestHubModal = (): void => {
+    setOpenCampaignQuestHubModal(false);
+    setSelectedCampaignQuest(null);
+    setSelectedCampaign(null);
+  };
+
+  const handleCloseCampaignQuestModal = (): void => {
+    setOpenCampaignQuestModal(false);
+    setSelectedCampaignQuest(null);
+    setSelectedCampaign(null);
+  };
+
+  const handleSaveCampaignQuest = async (
+    data: Parameters<typeof onCreateQuest>[0],
+    imageFile?: File | null
   ): Promise<void> => {
-    const items = Array.isArray(data) ? data : [data];
-    await onCreateVoucher(items);
-    voucherCreatedCountRef.current += items.length;
-    setPostCreateStep('done_one');
-  };
+    if (!selectedCampaign) {
+      return;
+    }
 
-  // ── Post-create: create another voucher → reset form by toggling step ──
-  const handleCreateAnother = (): void => {
-    // Go back to 'prompt' for a frame so VoucherFormModal unmounts+remounts (fresh form)
-    setPostCreateStep('prompt');
-    // Immediately go to 'creating' after paint
-    window.setTimeout(() => setPostCreateStep('creating'), 0);
-  };
+    try {
+      let savedQuest: Quest;
 
-  // ── Post-create: done ──
-  const handleDoneVoucher = (): void => {
-    newCampaignRef.current = null;
-    voucherCreatedCountRef.current = 0;
-    setPostCreateStep('idle');
+      if (selectedCampaignQuest) {
+        const canEditTasks = (selectedCampaignQuest.userQuestCount ?? 0) === 0;
+
+        savedQuest = await onUpdateQuest(selectedCampaignQuest.questId, {
+          title: data.title,
+          description: data.description,
+          imageUrl: data.imageUrl,
+          isActive: canEditTasks
+            ? data.isActive
+            : selectedCampaignQuest.isActive,
+          requiresEnrollment: canEditTasks
+            ? data.requiresEnrollment
+            : selectedCampaignQuest.requiresEnrollment,
+          isStandalone: canEditTasks
+            ? data.isStandalone
+            : selectedCampaignQuest.isStandalone,
+          campaignId: canEditTasks
+            ? data.campaignId
+            : selectedCampaignQuest.campaignId,
+        });
+
+        if (canEditTasks) {
+          await onUpdateQuestTasks(selectedCampaignQuest.questId, data.tasks);
+        }
+      } else {
+        savedQuest = await onCreateQuest({
+          ...data,
+          isStandalone: false,
+          requiresEnrollment: true,
+          campaignId: selectedCampaign.campaignId,
+        });
+      }
+
+      if (imageFile && savedQuest.questId) {
+        const formData = new FormData();
+        formData.append('imageFile', imageFile);
+        await onPostQuestImage(savedQuest.questId, formData);
+      }
+
+      const latestQuest = await onGetQuestById(savedQuest.questId);
+      setSelectedCampaignQuest(latestQuest);
+      handleCloseCampaignQuestModal();
+    } catch (error) {
+      console.error('Failed to save campaign quest', error);
+    }
   };
 
   const startTour = (): void => {
@@ -352,15 +464,15 @@ export default function CampaignPage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'targetSegment',
-      label: 'Phân khúc',
-      render: (value: unknown): JSX.Element => (
-        <Box className="text-table-text-primary">
-          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
-        </Box>
-      ),
-    },
+    // {
+    //   key: 'targetSegment',
+    //   label: 'Phân khúc',
+    //   render: (value: unknown): JSX.Element => (
+    //     <Box className="text-table-text-primary">
+    //       {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+    //     </Box>
+    //   ),
+    // },
     {
       key: 'status',
       label: 'Hoạt động',
@@ -388,6 +500,7 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'detail',
       label: <VisibilityIcon fontSize="small" />,
+      menuLabel: 'Xem chi tiết chiến dịch',
       onClick: (row: Campaign): void => {
         void handleOpenDetailModal(row);
       },
@@ -399,6 +512,7 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'branches',
       label: <StorefrontIcon fontSize="small" />,
+      menuLabel: 'Xem chi nhánh tham gia',
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
         setOpenBranchModal(true);
@@ -409,8 +523,21 @@ export default function CampaignPage(): JSX.Element {
       show: (): boolean => true,
     },
     {
+      id: 'quests',
+      label: <AssignmentTurnedInIcon fontSize="small" />,
+      menuLabel: 'Xem nhiệm vụ chiến dịch',
+      onClick: (row: Campaign): void => {
+        void handleOpenCampaignQuestModal(row);
+      },
+      tooltip: 'Xem nhiệm vụ chiến dịch',
+      color: 'secondary' as const,
+      variant: 'outlined' as const,
+      show: (row: Campaign): boolean => row.isUpdateable,
+    },
+    {
       id: 'voucher',
       label: <VoucherIcon fontSize="small" />,
+      menuLabel: 'Quản lý voucher chiến dịch',
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
         setOpenVoucherModal(true);
@@ -423,6 +550,7 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
+      menuLabel: 'Chỉnh sửa chiến dịch',
       onClick: (row: Campaign): void => handleOpenModal(row),
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
@@ -430,12 +558,6 @@ export default function CampaignPage(): JSX.Element {
       show: (row: Campaign): boolean => row.isUpdateable,
     },
   ];
-
-  const newCampaign = newCampaignRef.current;
-  const isUrgentVoucherCreation =
-    newCampaign?.registrationStartDate != null &&
-    new Date(newCampaign.registrationStartDate).toDateString() ===
-      new Date().toDateString();
 
   return (
     <div className="flex h-full flex-col font-[var(--font-nunito)]">
@@ -511,7 +633,8 @@ export default function CampaignPage(): JSX.Element {
           data={campaigns}
           rowKey="campaignId"
           actions={actions}
-          loading={status === 'pending'}
+          groupActionsInMenu
+          loading={campaignStatus === 'pending'}
           emptyMessage="Chưa có chiến dịch nào"
           noActionsMessage="Đã kết thúc"
           tourId="admin-campaign"
@@ -539,8 +662,73 @@ export default function CampaignPage(): JSX.Element {
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
         campaign={editingCampaign}
-        status={status}
+        status={campaignStatus}
       />
+
+      <QuestFormModal
+        isOpen={openCampaignQuestModal}
+        onClose={handleCloseCampaignQuestModal}
+        onSubmit={handleSaveCampaignQuest}
+        quest={selectedCampaignQuest}
+        forcedCampaignId={selectedCampaign?.campaignId ?? null}
+        forcedCampaignName={selectedCampaign?.name ?? null}
+        forcedCampaignStartDate={selectedCampaign?.startDate ?? null}
+        forcedCampaignEndDate={selectedCampaign?.endDate ?? null}
+        canEditTasks={
+          selectedCampaignQuest
+            ? (selectedCampaignQuest.userQuestCount ?? 0) === 0
+            : true
+        }
+        status={questStatus}
+        enableViewModeToggle
+        initialViewMode
+      />
+
+      <Dialog
+        open={openCampaignQuestHubModal}
+        onClose={handleCloseCampaignQuestHubModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <AppModalHeader
+          title="Nhiệm vụ chiến dịch"
+          subtitle={selectedCampaign?.name}
+          icon={<AssignmentTurnedInIcon />}
+          iconTone="campaign"
+          onClose={handleCloseCampaignQuestHubModal}
+        />
+        <DialogContent dividers>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-semibold text-amber-800">
+                Chưa có nhiệm vụ cho chiến dịch này.
+              </p>
+              <p className="mt-1 text-sm text-amber-700">
+                Tạo nhiệm vụ mới để bắt đầu cấu hình mục tiêu và phần thưởng.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCampaignQuestHubModal} color="inherit">
+            Đóng
+          </Button>
+          <Button
+            onClick={handleOpenQuestFormFromHub}
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+          >
+            Tạo nhiệm vụ
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Campaign Voucher Modal (from table row action) */}
       <CampaignVoucherModal
@@ -561,166 +749,6 @@ export default function CampaignPage(): JSX.Element {
         onClose={() => setOpenBranchModal(false)}
         campaign={selectedCampaign}
       />
-
-      {/* ══════════════════════════════════════════════════════
-          POST-CREATE FLOW — Step 1: Prompt
-          "Bạn muốn tạo voucher cho chiến dịch vừa tạo không?"
-         ══════════════════════════════════════════════════════ */}
-      <Dialog
-        open={postCreateStep === 'prompt'}
-        onClose={(event, reason) => {
-          if (
-            isUrgentVoucherCreation &&
-            (reason === 'backdropClick' || reason === 'escapeKeyDown')
-          ) {
-            return;
-          }
-          handleSkipVoucher();
-        }}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
-      >
-        {/* Green accent header */}
-        <div
-          className="flex items-center gap-3 px-6 py-4"
-          style={{
-            background: 'linear-gradient(135deg, #8bcf3f 0%, #6aaa28 100%)',
-          }}
-        >
-          <CheckCircleIcon sx={{ color: 'white', fontSize: 28 }} />
-          <div>
-            <p className="text-xs font-semibold text-white/70">
-              Chiến dịch đã được tạo thành công!
-            </p>
-            <p className="text-base font-bold text-white">
-              {newCampaign?.name ?? ''}
-            </p>
-          </div>
-        </div>
-
-        <DialogContent sx={{ pt: 3 }}>
-          <p className="text-sm text-gray-600">
-            Bạn có muốn tạo{' '}
-            <span className="font-semibold text-gray-800">voucher</span> cho
-            chiến dịch này ngay bây giờ không?
-          </p>
-          <p className="mt-1 text-xs text-gray-400">
-            Bạn cũng có thể thực hiện sau từ danh sách chiến dịch.
-          </p>
-          {newCampaign?.registrationStartDate && (
-            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
-              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
-              thêm voucher cho chiến dịch{' '}
-              <span className="font-semibold">{newCampaign.name}</span> khi
-              chiến dịch đã bắt đầu mở đăng ký (
-              {formatVNDatetime(newCampaign.registrationStartDate)}).
-            </div>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-          {!isUrgentVoucherCreation && (
-            <Button
-              onClick={handleSkipVoucher}
-              color="inherit"
-              variant="outlined"
-            >
-              Tạo voucher sau
-            </Button>
-          )}
-          <Button
-            onClick={handleStartVoucherCreation}
-            variant="contained"
-            color="primary"
-          >
-            Tạo voucher ngay
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* ══════════════════════════════════════════════════════
-          POST-CREATE FLOW — Step 2: VoucherFormModal
-         ══════════════════════════════════════════════════════ */}
-      {postCreateStep === 'creating' && newCampaign !== null && (
-        <VoucherFormModal
-          isOpen
-          onClose={handleSkipVoucher}
-          onSubmit={handleVoucherSubmit}
-          voucher={null}
-          status={voucherStatus}
-          fixedCampaignId={newCampaign.campaignId}
-          campaignStartDate={newCampaign.startDate}
-          campaignEndDate={newCampaign.endDate}
-          campaignName={newCampaign.name}
-          disableCancel={isUrgentVoucherCreation}
-        />
-      )}
-
-      {/* ══════════════════════════════════════════════════════
-          POST-CREATE FLOW — Step 3: "Tạo thêm / Thôi"
-         ══════════════════════════════════════════════════════ */}
-      <Dialog
-        open={postCreateStep === 'done_one'}
-        onClose={handleDoneVoucher}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
-      >
-        <div
-          className="flex items-center gap-3 px-6 py-4"
-          style={{
-            background: 'linear-gradient(135deg, #8bcf3f 0%, #6aaa28 100%)',
-          }}
-        >
-          <CheckCircleIcon sx={{ color: 'white', fontSize: 28 }} />
-          <div>
-            <p className="text-xs font-semibold text-white/70">
-              Voucher đã được tạo!
-            </p>
-            <p className="text-base font-bold text-white">
-              {newCampaign?.name ?? ''}
-            </p>
-          </div>
-        </div>
-
-        <DialogContent sx={{ pt: 3 }}>
-          <p className="text-sm text-gray-600">
-            Đã tạo{' '}
-            <span className="font-semibold text-gray-800">
-              {voucherCreatedCountRef.current}
-            </span>{' '}
-            voucher. Bạn muốn tiếp tục tạo thêm voucher cho chiến dịch này
-            không?
-          </p>
-          {newCampaign?.registrationStartDate && (
-            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
-              <span className="font-semibold">Lưu ý:</span> Bạn sẽ không thể tạo
-              thêm voucher cho chiến dịch{' '}
-              <span className="font-semibold">{newCampaign.name}</span> khi
-              chiến dịch đã bắt đầu mở đăng ký (
-              {formatVNDatetime(newCampaign.registrationStartDate)}).
-            </div>
-          )}
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-          <Button
-            onClick={handleDoneVoucher}
-            color="inherit"
-            variant="outlined"
-          >
-            Thôi, xong rồi
-          </Button>
-          <Button
-            onClick={handleCreateAnother}
-            variant="contained"
-            color="primary"
-          >
-            Tiếp tục tạo voucher
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 }

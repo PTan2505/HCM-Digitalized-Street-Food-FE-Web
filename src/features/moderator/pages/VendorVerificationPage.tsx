@@ -164,16 +164,33 @@ export default function VendorVerificationPage({
     setPageNumber(1);
   }, []);
 
-  const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
+  const verifyRegistration = async (
+    registration: BranchRegisterRequest
+  ): Promise<boolean> => {
     try {
-      const registration = row as unknown as BranchRegisterRequest;
-      if (registration.branchId === null) return;
+      if (registration.branchId === null) return false;
       await onVerifyBranchRegistration({
         branchId: registration.branchId,
         data: { branchId: registration.branchId },
       });
+      return true;
     } catch (error) {
       console.error('Failed to verify:', error);
+      return false;
+    }
+  };
+
+  const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
+    const registration = row as unknown as BranchRegisterRequest;
+    await verifyRegistration(registration);
+  };
+
+  const handleVerifyFromModal = async (
+    registration: BranchRegisterRequest
+  ): Promise<void> => {
+    const isVerified = await verifyRegistration(registration);
+    if (isVerified) {
+      handleCloseDetailsModal();
     }
   };
 
@@ -209,6 +226,12 @@ export default function VendorVerificationPage({
 
   const handleOpenRejectModal = (row: Record<string, unknown>): void => {
     setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectFromModal = (registration: BranchRegisterRequest): void => {
+    setSelectedRegistration(registration);
+    setDetailsModalOpen(false);
     setRejectModalOpen(true);
   };
 
@@ -467,6 +490,8 @@ export default function VendorVerificationPage({
         onClose={handleCloseDetailsModal}
         registration={selectedRegistration}
         title={DETAILS_MODAL_TITLE_BY_PENDING_TYPE[pendingType]}
+        onVerify={handleVerifyFromModal}
+        onReject={handleRejectFromModal}
         vendorDetail={
           selectedRegistration
             ? (vendorDetails[selectedRegistration.branch.vendorId] ?? null)
