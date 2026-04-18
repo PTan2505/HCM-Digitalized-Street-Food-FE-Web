@@ -142,14 +142,14 @@ const navigation: NavigationItem[] = [
     ],
   },
   {
-    name: 'Quản lý nhiệm vụ',
-    href: `${adminBase}/${adminPaths.QUEST}`,
-    icon: AssignmentIcon,
-  },
-  {
     name: 'Quản lý voucher',
     href: `${adminBase}/${adminPaths.VOUCHER}`,
     icon: LocalOfferIcon,
+  },
+  {
+    name: 'Quản lý nhiệm vụ',
+    href: `${adminBase}/${adminPaths.QUEST}`,
+    icon: AssignmentIcon,
   },
   {
     name: 'Cấu hình hệ thống',
