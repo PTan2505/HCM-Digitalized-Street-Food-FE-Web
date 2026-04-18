@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+} from '@mui/material';
 import {
   Add as AddIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
   Edit as EditIcon,
   HelpOutline as HelpOutlineIcon,
   ConfirmationNumber as VoucherIcon,
@@ -21,9 +28,11 @@ import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal, {
   type CampaignQuestBundleDraft,
 } from '@features/admin/components/CamPaignFormModal';
+import QuestFormModal from '@features/admin/components/QuestFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
 import CampaignDetailModal from '@features/admin/components/CampaignDetailModal';
 import CampaignBranchModal from '@features/admin/components/CampaignBranchModal';
+import AppModalHeader from '@components/AppModalHeader';
 import type { Campaign } from '@features/admin/types/campaign';
 import { QuestRewardType } from '@features/admin/types/quest';
 import useCampaign from '@features/admin/hooks/useCampaign';
@@ -35,9 +44,11 @@ import {
   selectCampaignStatus,
   selectCampaignTotalCount,
 } from '@slices/campaign';
+import { selectQuestStatus } from '@slices/quest';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 import { getCampaignOverviewTourSteps } from '@features/admin/utils/campaignOverviewTourSteps';
 import type { VoucherCreate } from '@custom-types/voucher';
+import type { Quest } from '@features/admin/types/quest';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -97,7 +108,8 @@ const getCampaignStatus = (row: Campaign): CampaignStatusInfo => {
 
 export default function CampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectCampaigns);
-  const status = useAppSelector(selectCampaignStatus);
+  const campaignStatus = useAppSelector(selectCampaignStatus);
+  const questStatus = useAppSelector(selectQuestStatus);
   const totalCount = useAppSelector(selectCampaignTotalCount);
   const {
     onGetCampaigns,
@@ -107,7 +119,14 @@ export default function CampaignPage(): JSX.Element {
     onPostCampaignImage,
     onDeleteCampaignImage,
   } = useCampaign();
-  const { onCreateQuest, onPostQuestImage } = useQuest();
+  const {
+    onGetQuests,
+    onGetQuestById,
+    onCreateQuest,
+    onUpdateQuest,
+    onUpdateQuestTasks,
+    onPostQuestImage,
+  } = useQuest();
   const { onCreateVoucher } = useVoucher();
 
   const [page, setPage] = useState(1);
@@ -115,12 +134,17 @@ export default function CampaignPage(): JSX.Element {
   const [openModal, setOpenModal] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [openBranchModal, setOpenBranchModal] = useState(false);
+  const [openCampaignQuestModal, setOpenCampaignQuestModal] = useState(false);
+  const [openCampaignQuestHubModal, setOpenCampaignQuestHubModal] =
+    useState(false);
   const [openDetailModal, setOpenDetailModal] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
+  const [selectedCampaignQuest, setSelectedCampaignQuest] =
+    useState<Quest | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<Campaign | null>(null);
 
   const [isTourRunning, setIsTourRunning] = useState(false);
@@ -255,7 +279,7 @@ export default function CampaignPage(): JSX.Element {
 
               if (questBundle.imageFile) {
                 const questImageFormData = new FormData();
-                questImageFormData.append('image', questBundle.imageFile);
+                questImageFormData.append('imageFile', questBundle.imageFile);
                 await onPostQuestImage(
                   createdQuest.questId,
                   questImageFormData
@@ -284,6 +308,107 @@ export default function CampaignPage(): JSX.Element {
       console.error('Failed to fetch campaign detail', err);
     } finally {
       setIsDetailLoading(false);
+    }
+  };
+
+  const handleOpenCampaignQuestModal = async (row: Campaign): Promise<void> => {
+    setSelectedCampaign(row);
+    setSelectedCampaignQuest(null);
+
+    try {
+      const questsByCampaign = await onGetQuests({
+        pageNumber: 1,
+        pageSize: 100,
+        campaignId: row.campaignId,
+      });
+
+      const firstQuest = questsByCampaign.items[0];
+      if (!firstQuest) {
+        setSelectedCampaignQuest(null);
+        setOpenCampaignQuestHubModal(true);
+        return;
+      }
+
+      const questDetail = await onGetQuestById(firstQuest.questId);
+      setSelectedCampaignQuest(questDetail);
+      setOpenCampaignQuestModal(true);
+    } catch (err) {
+      console.error('Failed to fetch campaign quests', err);
+    }
+  };
+
+  const handleOpenQuestFormFromHub = (): void => {
+    setOpenCampaignQuestHubModal(false);
+    setOpenCampaignQuestModal(true);
+  };
+
+  const handleCloseCampaignQuestHubModal = (): void => {
+    setOpenCampaignQuestHubModal(false);
+    setSelectedCampaignQuest(null);
+    setSelectedCampaign(null);
+  };
+
+  const handleCloseCampaignQuestModal = (): void => {
+    setOpenCampaignQuestModal(false);
+    setSelectedCampaignQuest(null);
+    setSelectedCampaign(null);
+  };
+
+  const handleSaveCampaignQuest = async (
+    data: Parameters<typeof onCreateQuest>[0],
+    imageFile?: File | null
+  ): Promise<void> => {
+    if (!selectedCampaign) {
+      return;
+    }
+
+    try {
+      let savedQuest: Quest;
+
+      if (selectedCampaignQuest) {
+        const canEditTasks = (selectedCampaignQuest.userQuestCount ?? 0) === 0;
+
+        savedQuest = await onUpdateQuest(selectedCampaignQuest.questId, {
+          title: data.title,
+          description: data.description,
+          imageUrl: data.imageUrl,
+          isActive: canEditTasks
+            ? data.isActive
+            : selectedCampaignQuest.isActive,
+          requiresEnrollment: canEditTasks
+            ? data.requiresEnrollment
+            : selectedCampaignQuest.requiresEnrollment,
+          isStandalone: canEditTasks
+            ? data.isStandalone
+            : selectedCampaignQuest.isStandalone,
+          campaignId: canEditTasks
+            ? data.campaignId
+            : selectedCampaignQuest.campaignId,
+        });
+
+        if (canEditTasks) {
+          await onUpdateQuestTasks(selectedCampaignQuest.questId, data.tasks);
+        }
+      } else {
+        savedQuest = await onCreateQuest({
+          ...data,
+          isStandalone: false,
+          requiresEnrollment: true,
+          campaignId: selectedCampaign.campaignId,
+        });
+      }
+
+      if (imageFile && savedQuest.questId) {
+        const formData = new FormData();
+        formData.append('imageFile', imageFile);
+        await onPostQuestImage(savedQuest.questId, formData);
+      }
+
+      const latestQuest = await onGetQuestById(savedQuest.questId);
+      setSelectedCampaignQuest(latestQuest);
+      handleCloseCampaignQuestModal();
+    } catch (error) {
+      console.error('Failed to save campaign quest', error);
     }
   };
 
@@ -339,15 +464,15 @@ export default function CampaignPage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'targetSegment',
-      label: 'Phân khúc',
-      render: (value: unknown): JSX.Element => (
-        <Box className="text-table-text-primary">
-          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
-        </Box>
-      ),
-    },
+    // {
+    //   key: 'targetSegment',
+    //   label: 'Phân khúc',
+    //   render: (value: unknown): JSX.Element => (
+    //     <Box className="text-table-text-primary">
+    //       {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+    //     </Box>
+    //   ),
+    // },
     {
       key: 'status',
       label: 'Hoạt động',
@@ -375,6 +500,7 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'detail',
       label: <VisibilityIcon fontSize="small" />,
+      menuLabel: 'Xem chi tiết chiến dịch',
       onClick: (row: Campaign): void => {
         void handleOpenDetailModal(row);
       },
@@ -386,6 +512,7 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'branches',
       label: <StorefrontIcon fontSize="small" />,
+      menuLabel: 'Xem chi nhánh tham gia',
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
         setOpenBranchModal(true);
@@ -396,8 +523,21 @@ export default function CampaignPage(): JSX.Element {
       show: (): boolean => true,
     },
     {
+      id: 'quests',
+      label: <AssignmentTurnedInIcon fontSize="small" />,
+      menuLabel: 'Xem nhiệm vụ chiến dịch',
+      onClick: (row: Campaign): void => {
+        void handleOpenCampaignQuestModal(row);
+      },
+      tooltip: 'Xem nhiệm vụ chiến dịch',
+      color: 'secondary' as const,
+      variant: 'outlined' as const,
+      show: (row: Campaign): boolean => row.isUpdateable,
+    },
+    {
       id: 'voucher',
       label: <VoucherIcon fontSize="small" />,
+      menuLabel: 'Quản lý voucher chiến dịch',
       onClick: (row: Campaign): void => {
         setSelectedCampaign(row);
         setOpenVoucherModal(true);
@@ -410,6 +550,7 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
+      menuLabel: 'Chỉnh sửa chiến dịch',
       onClick: (row: Campaign): void => handleOpenModal(row),
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
@@ -492,7 +633,8 @@ export default function CampaignPage(): JSX.Element {
           data={campaigns}
           rowKey="campaignId"
           actions={actions}
-          loading={status === 'pending'}
+          groupActionsInMenu
+          loading={campaignStatus === 'pending'}
           emptyMessage="Chưa có chiến dịch nào"
           noActionsMessage="Đã kết thúc"
           tourId="admin-campaign"
@@ -520,8 +662,73 @@ export default function CampaignPage(): JSX.Element {
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
         campaign={editingCampaign}
-        status={status}
+        status={campaignStatus}
       />
+
+      <QuestFormModal
+        isOpen={openCampaignQuestModal}
+        onClose={handleCloseCampaignQuestModal}
+        onSubmit={handleSaveCampaignQuest}
+        quest={selectedCampaignQuest}
+        forcedCampaignId={selectedCampaign?.campaignId ?? null}
+        forcedCampaignName={selectedCampaign?.name ?? null}
+        forcedCampaignStartDate={selectedCampaign?.startDate ?? null}
+        forcedCampaignEndDate={selectedCampaign?.endDate ?? null}
+        canEditTasks={
+          selectedCampaignQuest
+            ? (selectedCampaignQuest.userQuestCount ?? 0) === 0
+            : true
+        }
+        status={questStatus}
+        enableViewModeToggle
+        initialViewMode
+      />
+
+      <Dialog
+        open={openCampaignQuestHubModal}
+        onClose={handleCloseCampaignQuestHubModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <AppModalHeader
+          title="Nhiệm vụ chiến dịch"
+          subtitle={selectedCampaign?.name}
+          icon={<AssignmentTurnedInIcon />}
+          iconTone="campaign"
+          onClose={handleCloseCampaignQuestHubModal}
+        />
+        <DialogContent dividers>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-semibold text-amber-800">
+                Chưa có nhiệm vụ cho chiến dịch này.
+              </p>
+              <p className="mt-1 text-sm text-amber-700">
+                Tạo nhiệm vụ mới để bắt đầu cấu hình mục tiêu và phần thưởng.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCampaignQuestHubModal} color="inherit">
+            Đóng
+          </Button>
+          <Button
+            onClick={handleOpenQuestFormFromHub}
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+          >
+            Tạo nhiệm vụ
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Campaign Voucher Modal (from table row action) */}
       <CampaignVoucherModal

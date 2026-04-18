@@ -397,6 +397,13 @@ export default function CamPaignFormModal({
               );
               return;
             }
+
+            if (voucher.quantity !== reward.quantity) {
+              setQuestError(
+                `Số lượng phát hành voucher ở nhiệm vụ con ${taskIndex + 1} phải khớp với số lượng phần thưởng.`
+              );
+              return;
+            }
           }
         }
       }
@@ -411,12 +418,25 @@ export default function CamPaignFormModal({
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
     };
-    await onSubmit(
-      payload,
-      imageFile,
-      isImageRemoved,
-      campaign ? undefined : questBundles
-    );
+
+    const createQuestBundles = campaign
+      ? undefined
+      : questBundles.map((quest) => ({
+          ...quest,
+          tasks: quest.tasks.map((task) => ({
+            ...task,
+            rewards: task.rewards.map((reward) => ({
+              ...reward,
+              voucher: {
+                ...reward.voucher,
+                quantity: reward.quantity,
+                isActive: true,
+              },
+            })),
+          })),
+        }));
+
+    await onSubmit(payload, imageFile, isImageRemoved, createQuestBundles);
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -1079,38 +1099,71 @@ export default function CamPaignFormModal({
                                             *
                                           </span>
                                         </label>
-                                        <input
-                                          type="text"
-                                          inputMode="numeric"
-                                          value={
-                                            isOrderAmountTask
-                                              ? formatNumberWithDots(
-                                                  task.targetValue
-                                                )
-                                              : String(task.targetValue)
-                                          }
-                                          onChange={(event) =>
-                                            updateTaskField(
-                                              questIndex,
-                                              taskIndex,
-                                              (prevTask) => ({
-                                                ...prevTask,
-                                                targetValue: Math.max(
-                                                  1,
-                                                  parseNumberInput(
-                                                    event.target.value
+                                        {isOrderAmountTask ? (
+                                          <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={
+                                              task.targetValue > 0
+                                                ? formatNumberWithDots(
+                                                    task.targetValue
                                                   )
-                                                ),
-                                              })
-                                            )
-                                          }
-                                          className={inputClass(false)}
-                                          placeholder={
-                                            isOrderAmountTask
-                                              ? 'Ví dụ: 1.000.000'
-                                              : '1'
-                                          }
-                                        />
+                                                : ''
+                                            }
+                                            onChange={(event) => {
+                                              const rawValue =
+                                                event.target.value;
+                                              updateTaskField(
+                                                questIndex,
+                                                taskIndex,
+                                                (prevTask) => ({
+                                                  ...prevTask,
+                                                  targetValue:
+                                                    rawValue === ''
+                                                      ? 0
+                                                      : Math.max(
+                                                          1,
+                                                          parseNumberInput(
+                                                            rawValue
+                                                          )
+                                                        ),
+                                                })
+                                              );
+                                            }}
+                                            className={inputClass(false)}
+                                            placeholder="Ví dụ: 1.000.000"
+                                          />
+                                        ) : (
+                                          <input
+                                            type="number"
+                                            min={1}
+                                            value={
+                                              task.targetValue > 0
+                                                ? task.targetValue
+                                                : ''
+                                            }
+                                            onChange={(event) => {
+                                              const rawValue =
+                                                event.target.value;
+                                              updateTaskField(
+                                                questIndex,
+                                                taskIndex,
+                                                (prevTask) => ({
+                                                  ...prevTask,
+                                                  targetValue:
+                                                    rawValue === ''
+                                                      ? 0
+                                                      : Math.max(
+                                                          1,
+                                                          Number(rawValue)
+                                                        ),
+                                                })
+                                              );
+                                            }}
+                                            className={inputClass(false)}
+                                            placeholder="1"
+                                          />
+                                        )}
                                       </div>
 
                                       <div className="md:col-span-2">
@@ -1225,28 +1278,39 @@ export default function CamPaignFormModal({
                                                       </span>
                                                     </label>
                                                     <input
-                                                      type="text"
-                                                      inputMode="numeric"
-                                                      value={formatNumberWithDots(
-                                                        reward.quantity
-                                                      )}
-                                                      onChange={(event) =>
+                                                      type="number"
+                                                      min={1}
+                                                      value={
+                                                        reward.quantity > 0
+                                                          ? reward.quantity
+                                                          : ''
+                                                      }
+                                                      onChange={(event) => {
+                                                        const rawValue =
+                                                          event.target.value;
+                                                        const nextQuantity =
+                                                          rawValue === ''
+                                                            ? 0
+                                                            : Math.max(
+                                                                1,
+                                                                Number(rawValue)
+                                                              );
                                                         updateRewardField(
                                                           questIndex,
                                                           taskIndex,
                                                           rewardIndex,
                                                           (prevReward) => ({
                                                             ...prevReward,
-                                                            quantity: Math.max(
-                                                              1,
-                                                              parseNumberInput(
-                                                                event.target
-                                                                  .value
-                                                              )
-                                                            ),
+                                                            quantity:
+                                                              nextQuantity,
+                                                            voucher: {
+                                                              ...prevReward.voucher,
+                                                              quantity:
+                                                                nextQuantity,
+                                                            },
                                                           })
-                                                        )
-                                                      }
+                                                        );
+                                                      }}
                                                       className={inputClass(
                                                         false
                                                       )}
@@ -1538,31 +1602,19 @@ export default function CamPaignFormModal({
                                                         type="text"
                                                         inputMode="numeric"
                                                         value={formatNumberWithDots(
-                                                          voucher.quantity
+                                                          reward.quantity
                                                         )}
-                                                        onChange={(event) =>
-                                                          updateRewardField(
-                                                            questIndex,
-                                                            taskIndex,
-                                                            rewardIndex,
-                                                            (prevReward) => ({
-                                                              ...prevReward,
-                                                              voucher: {
-                                                                ...prevReward.voucher,
-                                                                quantity:
-                                                                  parseNumberInput(
-                                                                    event.target
-                                                                      .value
-                                                                  ),
-                                                              },
-                                                            })
-                                                          )
-                                                        }
+                                                        disabled
                                                         className={inputClass(
                                                           false
                                                         )}
                                                         placeholder="0"
                                                       />
+                                                      <p className="mt-1 text-[11px] text-gray-500">
+                                                        Tự đồng bộ theo Số lượng
+                                                        thưởng để tránh lệch dữ
+                                                        liệu.
+                                                      </p>
                                                     </div>
                                                   </div>
 
@@ -1594,48 +1646,6 @@ export default function CamPaignFormModal({
                                                       className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
                                                       placeholder="Nhập mô tả voucher (không bắt buộc)"
                                                     />
-                                                  </div>
-
-                                                  <div className="mt-3 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                                                    <p className="text-xs font-semibold text-gray-700">
-                                                      Kích hoạt voucher
-                                                    </p>
-                                                    <label className="relative inline-flex cursor-pointer items-center">
-                                                      <input
-                                                        type="checkbox"
-                                                        checked={
-                                                          voucher.isActive
-                                                        }
-                                                        onChange={(event) =>
-                                                          updateRewardField(
-                                                            questIndex,
-                                                            taskIndex,
-                                                            rewardIndex,
-                                                            (prevReward) => ({
-                                                              ...prevReward,
-                                                              voucher: {
-                                                                ...prevReward.voucher,
-                                                                isActive:
-                                                                  event.target
-                                                                    .checked,
-                                                              },
-                                                            })
-                                                          )
-                                                        }
-                                                        className="peer sr-only"
-                                                      />
-                                                      <div
-                                                        className="peer h-5 w-10 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                                                        style={{
-                                                          backgroundColor:
-                                                            voucher.isActive
-                                                              ? '#8bcf3f'
-                                                              : '#d1d5db',
-                                                          transition:
-                                                            'background-color 0.2s',
-                                                        }}
-                                                      />
-                                                    </label>
                                                   </div>
                                                 </div>
                                               </div>

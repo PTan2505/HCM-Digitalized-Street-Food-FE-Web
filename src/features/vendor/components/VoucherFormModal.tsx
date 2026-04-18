@@ -100,6 +100,7 @@ const makeDefaultEntry = (
 // ── Chuyển VoucherFormData → VoucherCreate ──────────────────────────────────
 const toPayload = (data: VoucherFormData): VoucherCreate => ({
   ...data,
+  isActive: true,
   type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
   startDate: toIsoZulu(data.startDate) ?? '',
   endDate: toIsoZulu(data.endDate) ?? '',
@@ -431,39 +432,6 @@ function VoucherEntry({
             placeholder="Nhập mô tả voucher (không bắt buộc)"
           />
         </div>
-
-        {/* isActive toggle */}
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
-          <div>
-            <p className="text-sm font-semibold text-gray-700">
-              Kích hoạt voucher
-            </p>
-            <p className="text-xs text-gray-500">
-              Voucher sẽ hiển thị và có thể sử dụng ngay
-            </p>
-          </div>
-          <Controller
-            control={control}
-            name={`entries.${index}.isActive`}
-            render={({ field }) => (
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onChange={field.onChange}
-                  className="peer sr-only"
-                />
-                <div
-                  className="peer h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                  style={{
-                    backgroundColor: field.value ? '#8bcf3f' : '#d1d5db',
-                    transition: 'background-color 0.2s',
-                  }}
-                />
-              </label>
-            )}
-          />
-        </div>
       </div>
     </div>
   );
@@ -517,7 +485,6 @@ export default function VoucherFormModal({
   });
 
   const singleWatchedType = singleForm.watch('type');
-  const singleWatchedIsActive = singleForm.watch('isActive');
 
   type DiscountMemory = {
     discountValue: number;
@@ -607,6 +574,7 @@ export default function VoucherFormModal({
   const handleSingleSubmit = async (data: VoucherFormData): Promise<void> => {
     const payload: VoucherCreate = {
       ...data,
+      isActive: true,
       type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
@@ -1105,33 +1073,27 @@ export default function VoucherFormModal({
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">
-                      Kích hoạt voucher
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Voucher sẽ hiển thị và có thể sử dụng ngay khi được kích
-                      hoạt
-                    </p>
+                {voucher && (
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        Kích hoạt voucher
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Voucher sẽ hiển thị và có thể sử dụng ngay khi được kích
+                        hoạt
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        {...singleForm.register('isActive')}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-[#d1d5db] peer-checked:bg-[#8bcf3f] after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full" />
+                    </label>
                   </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input
-                      type="checkbox"
-                      {...singleForm.register('isActive')}
-                      className="peer sr-only"
-                    />
-                    <div
-                      className="peer h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                      style={{
-                        backgroundColor: singleWatchedIsActive
-                          ? '#8bcf3f'
-                          : '#d1d5db',
-                        transition: 'background-color 0.2s',
-                      }}
-                    />
-                  </label>
-                </div>
+                )}
               </div>
             </div>
           </div>

@@ -280,7 +280,7 @@ export default function VendorCampaignFormModal({
         startDate: toIsoZulu(data.startDate) ?? '',
         endDate: toIsoZulu(data.endDate),
         expiredDate: null,
-        isActive: voucher.isActive,
+        isActive: true,
         campaignId: null,
       }));
     }
@@ -946,39 +946,6 @@ export default function VendorCampaignFormModal({
                               className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
                               placeholder="Nhập mô tả voucher (không bắt buộc)"
                             />
-                          </div>
-
-                          <div className="mt-4 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                            <div>
-                              <p className="text-sm font-semibold text-gray-700">
-                                Kích hoạt voucher
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Voucher sẽ hiển thị và có thể sử dụng ngay
-                              </p>
-                            </div>
-                            <label className="relative inline-flex cursor-pointer items-center">
-                              <input
-                                type="checkbox"
-                                checked={voucher.isActive}
-                                onChange={(event) => {
-                                  updateInlineVoucher(index, (prev) => ({
-                                    ...prev,
-                                    isActive: event.target.checked,
-                                  }));
-                                }}
-                                className="peer sr-only"
-                              />
-                              <div
-                                className="peer h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                                style={{
-                                  backgroundColor: voucher.isActive
-                                    ? '#8bcf3f'
-                                    : '#d1d5db',
-                                  transition: 'background-color 0.2s',
-                                }}
-                              />
-                            </label>
                           </div>
                         </div>
                       );
