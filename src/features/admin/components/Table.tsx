@@ -339,10 +339,17 @@ const Table = <T extends object>({
                 (menuState.row !== null && action.show(menuState.row))
             )
             .map((action, index) => {
-              const label =
-                typeof action.label === 'function' && menuState.row !== null
-                  ? action.label(menuState.row)
-                  : action.label;
+              const currentRow = menuState.row;
+              let label: React.ReactNode;
+
+              if (typeof action.label === 'function') {
+                if (currentRow === null) {
+                  return null;
+                }
+                label = action.label(currentRow);
+              } else {
+                label = action.label;
+              }
 
               return (
                 <MenuItem
