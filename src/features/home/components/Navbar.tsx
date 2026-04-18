@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import lowcaLogo from '@assets/logos/lowcaLogo.svg';
 import { Box, Button, Container, Drawer, IconButton } from '@mui/material';
 import {
-  Search as SearchIcon,
+  // Search as SearchIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
@@ -61,7 +61,7 @@ export default function Navbar(): JSX.Element {
                 display: { xs: 'flex', md: 'none' },
               }}
             >
-              <SearchIcon sx={{ fontSize: 22 }} />
+              {/* <SearchIcon sx={{ fontSize: 22 }} /> */}
             </IconButton>
 
             {/* ── Desktop Left: Logo ── */}

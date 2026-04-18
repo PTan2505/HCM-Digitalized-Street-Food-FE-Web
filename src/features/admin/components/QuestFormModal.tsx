@@ -65,6 +65,7 @@ interface QuestFormModalProps {
   onClose: () => void;
   onSubmit: (data: QuestCreate, imageFile?: File | null) => Promise<void>;
   quest: Quest | null;
+  canEditTasks?: boolean;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
 
@@ -155,6 +156,7 @@ const defaultValues: QuestFormInput = {
 
 interface TaskRewardFieldsProps {
   taskIndex: number;
+  isReadOnly: boolean;
   control: Control<QuestFormInput>;
   register: UseFormRegister<QuestFormInput>;
   watch: UseFormWatch<QuestFormInput>;
@@ -172,6 +174,7 @@ interface TaskRewardFieldsProps {
 
 function TaskRewardFields({
   taskIndex,
+  isReadOnly,
   control,
   register,
   watch,
@@ -198,7 +201,8 @@ function TaskRewardFields({
         <button
           type="button"
           onClick={() => onAppendReward(taskIndex)}
-          className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold"
+          disabled={isReadOnly}
+          className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
         >
           <AddIcon fontSize="small" />
           Thêm thưởng
@@ -223,7 +227,7 @@ function TaskRewardFields({
                 <button
                   type="button"
                   onClick={() => remove(rewardIndex)}
-                  disabled={fields.length === 1}
+                  disabled={fields.length === 1 || isReadOnly}
                   className="text-xs font-semibold text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
                 >
                   Xóa
@@ -267,6 +271,7 @@ function TaskRewardFields({
                         [rewardKey]: '',
                       }));
                     }}
+                    disabled={isReadOnly}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
                   >
                     {Object.entries(QUEST_REWARD_TYPE_LABELS).map(
@@ -290,6 +295,7 @@ function TaskRewardFields({
                         `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
                         { valueAsNumber: true }
                       )}
+                      disabled={isReadOnly}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
                     />
                   ) : (
@@ -339,12 +345,18 @@ function TaskRewardFields({
                             type="text"
                             value={query}
                             onFocus={() => {
+                              if (isReadOnly) {
+                                return;
+                              }
                               setRewardFocusedMap((prev) => ({
                                 ...prev,
                                 [rewardKey]: true,
                               }));
                             }}
                             onBlur={() => {
+                              if (isReadOnly) {
+                                return;
+                              }
                               window.setTimeout(() => {
                                 setRewardFocusedMap((prev) => ({
                                   ...prev,
@@ -353,12 +365,16 @@ function TaskRewardFields({
                               }, 120);
                             }}
                             onChange={(event) => {
+                              if (isReadOnly) {
+                                return;
+                              }
                               const nextQuery = event.target.value;
                               setRewardQueries((prev) => ({
                                 ...prev,
                                 [rewardKey]: nextQuery,
                               }));
                             }}
+                            disabled={isReadOnly}
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
                             placeholder={
                               isBadgeReward
@@ -367,7 +383,7 @@ function TaskRewardFields({
                             }
                           />
 
-                          {isFocused && (
+                          {isFocused && !isReadOnly && (
                             <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                               {isLoadingRewards ? (
                                 <p className="px-3 py-2 text-sm text-gray-500">
@@ -436,6 +452,7 @@ function TaskRewardFields({
                           value === '' ? null : Number(value),
                       }
                     )}
+                    disabled={isReadOnly}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
                   />
                 </div>
@@ -480,6 +497,7 @@ export default function QuestFormModal({
   onClose,
   onSubmit,
   quest,
+  canEditTasks = true,
   status,
 }: QuestFormModalProps): JSX.Element | null {
   const { onGetCampaigns } = useCampaign();
@@ -525,6 +543,7 @@ export default function QuestFormModal({
   const questScope = watch('questScope');
   const campaignId = watch('campaignId');
   const hasQuestChanges = isDirty || selectedImageFile !== null;
+  const isTaskEditingLocked = quest !== null && !canEditTasks;
 
   const selectedCampaign = useMemo(() => {
     if (!campaignId) {
@@ -567,11 +586,13 @@ export default function QuestFormModal({
 
   const badgeRewardOptions = useMemo<RewardOption[]>(
     () =>
-      badgeOptions.map((badge) => ({
-        id: badge.badgeId,
-        label: badge.badgeName,
-        hint: '',
-      })),
+      badgeOptions
+        .filter((badge) => badge.isActive !== false)
+        .map((badge) => ({
+          id: badge.badgeId,
+          label: badge.badgeName,
+          hint: '',
+        })),
     [badgeOptions]
   );
 
@@ -704,6 +725,10 @@ export default function QuestFormModal({
   }, [isCampaignFocused, selectedCampaign]);
 
   const handleQuestScopeChange = (scope: QuestScope): void => {
+    if (isTaskEditingLocked) {
+      return;
+    }
+
     setValue('questScope', scope, {
       shouldDirty: true,
       shouldValidate: true,
@@ -806,10 +831,18 @@ export default function QuestFormModal({
   };
 
   const handleAppendTask = (): void => {
+    if (isTaskEditingLocked) {
+      return;
+    }
+
     append(createDefaultTask());
   };
 
   const handleAppendReward = (taskIndex: number): void => {
+    if (isTaskEditingLocked) {
+      return;
+    }
+
     const currentRewards = watch(`tasks.${taskIndex}.rewards`) ?? [];
     setValue(
       `tasks.${taskIndex}.rewards`,
@@ -823,7 +856,7 @@ export default function QuestFormModal({
   }
 
   const inputClass = (hasError: boolean): string =>
-    `w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 ${
+    `w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 ${
       hasError
         ? 'border-red-500 focus:ring-red-200'
         : 'border-gray-300 focus:ring-amber-200'
@@ -870,37 +903,46 @@ export default function QuestFormModal({
                 <button
                   type="button"
                   onClick={() => handleQuestScopeChange('campaign')}
+                  disabled={isTaskEditingLocked}
                   className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
                     questScope === 'campaign'
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 bg-white text-gray-700'
-                  }`}
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   Theo chiến dịch
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuestScopeChange('standalone')}
+                  disabled={isTaskEditingLocked}
                   className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
                     questScope === 'standalone'
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 bg-white text-gray-700'
-                  }`}
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   Độc lập
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuestScopeChange('upgrade')}
+                  disabled={isTaskEditingLocked}
                   className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
                     questScope === 'upgrade'
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-gray-200 bg-white text-gray-700'
-                  }`}
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
                 >
                   Nâng cấp (Hạng)
                 </button>
               </div>
+              {isTaskEditingLocked && (
+                <p className="mt-2 text-xs text-amber-600">
+                  Quest đã có người tham gia, chỉ được chỉnh sửa tiêu đề, mô tả
+                  và ảnh.
+                </p>
+              )}
               <input type="hidden" {...register('questScope')} />
               <input type="hidden" {...register('isStandalone')} />
               <input type="hidden" {...register('requiresEnrollment')} />
@@ -916,6 +958,7 @@ export default function QuestFormModal({
                   <input
                     type="text"
                     value={campaignQuery}
+                    disabled={isTaskEditingLocked}
                     onFocus={() => setIsCampaignFocused(true)}
                     onBlur={() => {
                       window.setTimeout(() => setIsCampaignFocused(false), 120);
@@ -1087,7 +1130,8 @@ export default function QuestFormModal({
                   <button
                     type="button"
                     onClick={handleAppendTask}
-                    className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold"
+                    disabled={isTaskEditingLocked}
+                    className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
                   >
                     <AddIcon fontSize="small" />
                     Thêm nhiệm vụ
@@ -1122,7 +1166,9 @@ export default function QuestFormModal({
                           type="button"
                           onClick={() => remove(index)}
                           disabled={
-                            fields.length === 1 || questScope === 'upgrade'
+                            fields.length === 1 ||
+                            questScope === 'upgrade' ||
+                            isTaskEditingLocked
                           }
                           className="flex items-center gap-1 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
                         >
@@ -1146,6 +1192,7 @@ export default function QuestFormModal({
                               {...register(`tasks.${index}.type`, {
                                 setValueAs: (value) => Number(value),
                               })}
+                              disabled={isTaskEditingLocked}
                               className={inputClass(
                                 !!errors.tasks?.[index]?.type
                               )}
@@ -1180,6 +1227,7 @@ export default function QuestFormModal({
                               {...register(`tasks.${index}.targetValue`, {
                                 setValueAs: (value) => Number(value),
                               })}
+                              disabled={isTaskEditingLocked}
                               className={inputClass(
                                 !!errors.tasks?.[index]?.targetValue
                               )}
@@ -1204,6 +1252,7 @@ export default function QuestFormModal({
                                   <input
                                     type="text"
                                     inputMode="numeric"
+                                    disabled={isTaskEditingLocked}
                                     value={
                                       Number.isFinite(currentTargetValue)
                                         ? formatNumberWithDotGrouping(
@@ -1239,6 +1288,7 @@ export default function QuestFormModal({
                                   {...register(`tasks.${index}.targetValue`, {
                                     valueAsNumber: true,
                                   })}
+                                  disabled={isTaskEditingLocked}
                                   className={inputClass(
                                     !!errors.tasks?.[index]?.targetValue
                                   )}
@@ -1265,6 +1315,7 @@ export default function QuestFormModal({
                                   ? null
                                   : value,
                             })}
+                            disabled={isTaskEditingLocked}
                             className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
                           />
                         </div>
@@ -1272,6 +1323,7 @@ export default function QuestFormModal({
 
                       <TaskRewardFields
                         taskIndex={index}
+                        isReadOnly={isTaskEditingLocked}
                         control={control}
                         register={register}
                         watch={watch}

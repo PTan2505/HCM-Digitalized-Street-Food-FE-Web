@@ -25,35 +25,38 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
+const managerBase = ROUTES.MANAGER.BASE;
+const managerPaths = ROUTES.MANAGER.PATHS;
+
 const navigation = [
   {
     name: 'Quản lý đơn hàng',
-    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.ORDER}`,
+    href: `${managerBase}/${managerPaths.ORDER}`,
     icon: ShoppingBagIcon,
   },
   {
     name: 'Quản lý chi nhánh',
-    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.BRANCH}`,
+    href: `${managerBase}/${managerPaths.BRANCH}`,
     icon: StoreIcon,
   },
   {
     name: 'Quản lý thực đơn',
-    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DISH}`,
+    href: `${managerBase}/${managerPaths.DISH}`,
     icon: RestaurantMenuIcon,
   },
   {
     name: 'Quản lý phản hồi chi nhánh',
-    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.FEEDBACK}`,
+    href: `${managerBase}/${managerPaths.FEEDBACK}`,
     icon: RateReviewIcon,
   },
   {
     name: 'Quản lý thời gian hoạt động',
-    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.WORK_SCHEDULE}`,
+    href: `${managerBase}/${managerPaths.WORK_SCHEDULE}`,
     icon: ScheduleIcon,
   },
   {
     name: 'Quản lý thời gian nghỉ',
-    href: `${ROUTES.MANAGER.BASE}/${ROUTES.MANAGER.PATHS.DAY_OFF}`,
+    href: `${managerBase}/${managerPaths.DAY_OFF}`,
     icon: EventBusyIcon,
   },
 ];
@@ -71,7 +74,7 @@ function ManagerLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate(ROUTES.MANAGER.BASE);
+    navigate(managerBase);
   };
 
   const sidebarUserInfo = {

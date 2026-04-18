@@ -176,6 +176,7 @@ export const apiUrl = {
     getMyBranch: '/Branch/manager/my-branch',
   },
   campaign: {
+    GetPublicCampaigns: '/Campaign/public',
     GetOrPostSystemCampaign: '/Campaign/system',
     GetOrPostVendorCampaign: '/Campaign/vendor',
     GetCampaignDetail: (campaignId: number): string =>
@@ -205,7 +206,9 @@ export const apiUrl = {
   quest: {
     getOrPostQuest: '/Quest',
     updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+    updateQuestTasks: (questId: number): string => `/Quest/${questId}/tasks`,
     postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+    getUserQuestTasks: '/Quest/user-quest-tasks',
   },
   tier: {
     getAllTiers: '/Tier',

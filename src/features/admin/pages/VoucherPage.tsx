@@ -4,7 +4,6 @@ import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -65,6 +64,9 @@ const StatusBadge = ({
     </span>
   );
 };
+
+const isMarketplaceVoucher = (voucher: Voucher): boolean =>
+  voucher.campaignId === null || voucher.campaignId === undefined;
 
 export default function VoucherPage(): JSX.Element {
   const vouchers = useAppSelector(selectVouchers);
@@ -130,11 +132,6 @@ export default function VoucherPage(): JSX.Element {
     } catch (err) {
       console.error('Failed to save voucher', err);
     }
-  };
-
-  const handleDelete = (voucher: Voucher): void => {
-    setDeletingVoucher(voucher);
-    setOpenDeleteDialog(true);
   };
 
   const handleConfirmDelete = async (): Promise<void> => {
@@ -205,6 +202,18 @@ export default function VoucherPage(): JSX.Element {
           size="small"
           color={value === 'PERCENT' ? 'info' : 'primary'}
           variant="outlined"
+        />
+      ),
+    },
+    {
+      key: 'campaignId',
+      label: 'Phạm vi',
+      render: (_: unknown, row: Voucher): JSX.Element => (
+        <StatusBadge
+          label={
+            isMarketplaceVoucher(row) ? 'MarketPlace' : 'Voucher chiến dịch'
+          }
+          type={isMarketplaceVoucher(row) ? 'default' : 'warning'}
         />
       ),
     },
@@ -293,20 +302,21 @@ export default function VoucherPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenModal(row),
+      show: (row: Voucher): boolean => isMarketplaceVoucher(row),
       tooltip: 'Chỉnh sửa voucher',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
-    {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        void handleDelete(row);
-      },
-      tooltip: 'Xóa voucher',
-      color: 'error' as const,
-      variant: 'outlined' as const,
-    },
+    // {
+    //   id: 'delete',
+    //   label: <DeleteIcon fontSize="small" />,
+    //   onClick: (row: Voucher): void => {
+    //     void handleDelete(row);
+    //   },
+    //   tooltip: 'Xóa voucher',
+    //   color: 'error' as const,
+    //   variant: 'outlined' as const,
+    // },
   ];
 
   return (

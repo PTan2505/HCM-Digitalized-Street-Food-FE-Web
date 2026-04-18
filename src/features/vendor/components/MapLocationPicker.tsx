@@ -171,54 +171,54 @@ export default function MapLocationPicker({
   }, [latitude, longitude, reverseGeocodeAndSync]);
 
   // Hàm cập nhật marker từ input tọa độ
-  const handleApplyCoordinates = (): void => {
-    const lat = parseFloat(inputLat);
-    const lng = parseFloat(inputLng);
+  // const handleApplyCoordinates = (): void => {
+  //   const lat = parseFloat(inputLat);
+  //   const lng = parseFloat(inputLng);
 
-    if (isNaN(lat) || isNaN(lng)) {
-      alert('Vui lòng nhập tọa độ hợp lệ');
-      return;
-    }
+  //   if (isNaN(lat) || isNaN(lng)) {
+  //     alert('Vui lòng nhập tọa độ hợp lệ');
+  //     return;
+  //   }
 
-    // Kiểm tra tọa độ trong phạm vi TP.HCM
-    if (lat < 10.3 || lat > 11.2 || lng < 106.3 || lng > 107.1) {
-      const confirm = window.confirm(
-        'Tọa độ này có vẻ nằm ngoài TP. Hồ Chí Minh. Bạn có chắc muốn tiếp tục?'
-      );
-      if (!confirm) return;
-    }
+  //   // Kiểm tra tọa độ trong phạm vi TP.HCM
+  //   if (lat < 10.3 || lat > 11.2 || lng < 106.3 || lng > 107.1) {
+  //     const confirm = window.confirm(
+  //       'Tọa độ này có vẻ nằm ngoài TP. Hồ Chí Minh. Bạn có chắc muốn tiếp tục?'
+  //     );
+  //     if (!confirm) return;
+  //   }
 
-    updateSourceRef.current = 'map';
-    onLocationChangeRef.current(lat, lng);
-    void reverseGeocodeAndSync(lat, lng);
+  //   updateSourceRef.current = 'map';
+  //   onLocationChangeRef.current(lat, lng);
+  //   void reverseGeocodeAndSync(lat, lng);
 
-    // Cập nhật marker trên map
-    if (map.current) {
-      if (marker.current) {
-        marker.current.setLngLat([lng, lat]);
-      } else {
-        marker.current = new maplibregl.Marker({ draggable: true })
-          .setLngLat([lng, lat])
-          .addTo(map.current);
+  //   // Cập nhật marker trên map
+  //   if (map.current) {
+  //     if (marker.current) {
+  //       marker.current.setLngLat([lng, lat]);
+  //     } else {
+  //       marker.current = new maplibregl.Marker({ draggable: true })
+  //         .setLngLat([lng, lat])
+  //         .addTo(map.current);
 
-        marker.current.on('dragend', () => {
-          if (marker.current) {
-            const lngLat = marker.current.getLngLat();
-            updateSourceRef.current = 'map';
-            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
-            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
-          }
-        });
-      }
+  //       marker.current.on('dragend', () => {
+  //         if (marker.current) {
+  //           const lngLat = marker.current.getLngLat();
+  //           updateSourceRef.current = 'map';
+  //           onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+  //           void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
+  //         }
+  //       });
+  //     }
 
-      // Di chuyển map đến vị trí mới
-      map.current.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        duration: 1000,
-      });
-    }
-  };
+  //     // Di chuyển map đến vị trí mới
+  //     map.current.flyTo({
+  //       center: [lng, lat],
+  //       zoom: 17,
+  //       duration: 1000,
+  //     });
+  //   }
+  // };
 
   // Khởi tạo map
   useEffect(() => {
