@@ -50,6 +50,11 @@ interface TableProps<T extends object> {
   tourId?: string;
 }
 
+interface MenuState<T> {
+  anchorEl: HTMLElement | null;
+  row: T | null;
+}
+
 const Table = <T extends object>({
   columns,
   data,
@@ -63,10 +68,19 @@ const Table = <T extends object>({
   tourId,
 }: TableProps<T>): JSX.Element => {
   const totalColumns = columns.length + (actions && actions.length > 0 ? 1 : 0);
-  const [menuState, setMenuState] = useState<{
-    anchorEl: HTMLElement | null;
-    row: T | null;
-  }>({ anchorEl: null, row: null });
+  const [menuState, setMenuState] = useState<MenuState<T>>({
+    anchorEl: null,
+    row: null,
+  });
+
+  const closeMenu = (): void => {
+    // Keep row data during close transition to avoid visible action flicker.
+    setMenuState((prev) => ({ ...prev, anchorEl: null }));
+  };
+
+  const clearMenuRow = (): void => {
+    setMenuState((prev) => ({ ...prev, row: null }));
+  };
 
   return (
     <>
@@ -225,7 +239,10 @@ const Table = <T extends object>({
           anchorEl={menuState.anchorEl}
           open={Boolean(menuState.anchorEl)}
           data-tour-menu={tourId}
-          onClose={() => setMenuState({ anchorEl: null, row: null })}
+          onClose={closeMenu}
+          TransitionProps={{
+            onExited: clearMenuRow,
+          }}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           PaperProps={{
@@ -273,7 +290,7 @@ const Table = <T extends object>({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (menuState.row) action.onClick(menuState.row);
-                  setMenuState({ anchorEl: null, row: null });
+                  closeMenu();
                 }}
                 sx={{
                   color: action.color ? `${action.color}.main` : 'text.primary',

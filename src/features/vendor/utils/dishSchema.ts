@@ -11,7 +11,6 @@ export const DishSchema = z.object({
   // dietaryIds: z
   //   .array(z.number())
   //   .min(1, 'Vui lòng chọn ít nhất một chế độ ăn'),
-  isActive: z.boolean(),
 });
 
 export type DishFormData = z.infer<typeof DishSchema>;
