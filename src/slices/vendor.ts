@@ -641,8 +641,13 @@ export const vendorSlice = createSlice({
       })
       .addCase(deleteBranch.fulfilled, (state, action) => {
         if (state.myVendor) {
-          state.myVendor.branches = state.myVendor.branches.filter(
-            (b) => b.branchId !== action.payload
+          state.myVendor.branches = state.myVendor.branches.map((b) =>
+            b.branchId === action.payload
+              ? {
+                  ...b,
+                  isActive: !b.isActive,
+                }
+              : b
           );
         }
       })

@@ -4,8 +4,6 @@ export const ROUTES = {
   HOME: '/home',
   NEW_CUSTOMER_PROFILE: '/new-customer-profile',
   USER_INFO_SETUP: '/user-info-setup',
-  PAYMENT_SUCCESS: '/Payment/success',
-  PAYMENT_CANCEL: '/Payment/cancel',
 
   // Moderator routes
   MODERATOR: {
@@ -90,6 +88,18 @@ export const ROUTES = {
       GHOST_PIN: 'ghost-pin',
       CAMPAIGN: 'campaign',
       CAMPAIGN_SYSTEM: 'campaign/system',
+    },
+  },
+
+  // User routes
+  USER: {
+    BASE: '/user',
+    PATHS: {
+      // PROFILE: 'profile',
+      BRANCH: 'branch',
+      GHOST_PIN: 'ghost-pin',
+      REGISTRATION_HISTORY: 'registration-history',
+      // PAYMENT_HISTORY: 'payment-history',
     },
   },
 

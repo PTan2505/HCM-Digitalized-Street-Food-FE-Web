@@ -264,14 +264,14 @@ export default function VendorsPage(): JSX.Element {
       variant: 'outlined' as const,
       show: (row: AdminVendor): boolean => !row.isActive,
     },
-    {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: AdminVendor): void => handleDelete(row),
-      tooltip: 'Xóa cửa hàng',
-      color: 'error' as const,
-      variant: 'outlined' as const,
-    },
+    // {
+    //   id: 'delete',
+    //   label: <DeleteIcon fontSize="small" />,
+    //   onClick: (row: AdminVendor): void => handleDelete(row),
+    //   tooltip: 'Xóa cửa hàng',
+    //   color: 'error' as const,
+    //   variant: 'outlined' as const,
+    // },
   ];
 
   return (

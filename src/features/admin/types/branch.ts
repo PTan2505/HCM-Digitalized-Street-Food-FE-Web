@@ -1,6 +1,7 @@
 export interface BranchAdmin {
   branchId: number;
   vendorId: number;
+  vendorName?: string | null;
   managerId: number | null;
   name: string;
   phoneNumber: string | null;

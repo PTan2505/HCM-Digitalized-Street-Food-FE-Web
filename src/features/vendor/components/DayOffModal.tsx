@@ -432,13 +432,6 @@ export default function DayOffModal({
               <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20 text-gray-400">
                 <EventBusyIcon sx={{ fontSize: 64, opacity: 0.3 }} />
                 <p className="text-base font-medium">Chưa có ngày nghỉ</p>
-                <button
-                  className="flex items-center gap-2 rounded-lg border-2 border-dashed border-amber-300 px-6 py-3 text-sm font-semibold text-amber-500 transition hover:border-amber-500 hover:text-amber-700"
-                  onClick={openAddForm}
-                >
-                  <AddIcon fontSize="small" />
-                  Thêm ngày nghỉ đầu tiên
-                </button>
               </div>
             ) : (
               <div className="space-y-2">

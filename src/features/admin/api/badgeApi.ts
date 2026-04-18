@@ -21,7 +21,6 @@ export class BadgeApi {
   ): Promise<CreateOrUpdateBadgeResponse> {
     const formData = new FormData();
     formData.append('badgeName', data.badgeName);
-    formData.append('pointToGet', data.pointToGet.toString());
     formData.append('description', data.description);
     if (data.imageFile) {
       formData.append('imageFile', data.imageFile);
@@ -46,7 +45,6 @@ export class BadgeApi {
   ): Promise<CreateOrUpdateBadgeResponse> {
     const formData = new FormData();
     formData.append('badgeName', data.badgeName);
-    formData.append('pointToGet', data.pointToGet.toString());
     formData.append('description', data.description);
     if (data.imageFile) {
       formData.append('imageFile', data.imageFile);
@@ -66,7 +64,7 @@ export class BadgeApi {
 
   async deleteBadge(badgeId: number): Promise<{ message: string }> {
     let res = null;
-    res = await this.apiClient.delete<{ message: string }>({
+    res = await this.apiClient.patch<{ message: string }>({
       url: apiUrl.badge.updateOrDeleteBadge(badgeId),
     });
     return res.data;

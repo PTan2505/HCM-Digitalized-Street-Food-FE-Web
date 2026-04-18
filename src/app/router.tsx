@@ -2,6 +2,7 @@ import ManagerLayout from '@app/routes/ManagerLayout';
 import ModeratorLayout from '@app/routes/ModeratorLayout';
 import RootLayout from '@app/routes/RootLayout';
 import VendorLayout from '@app/routes/VendorLayout';
+import UserLayout from '@app/routes/UserLayout';
 import { ROUTES } from '@constants/routes';
 import AdminBadgePage from '@features/admin/pages/BadgePage';
 import AdminCategoryPage from '@features/admin/pages/CategoryPage';
@@ -28,8 +29,10 @@ import ModeratorPostsPage from '@features/moderator/pages/PostsPage';
 import ModeratorRevenuePage from '@features/moderator/pages/RevenuePage';
 import ModeratorTransactionsPage from '@features/moderator/pages/TransactionsPage';
 import ModeratorUsersPage from '@features/moderator/pages/UsersPage';
-import ModeratorVendorVerificationPage from '@features/moderator/pages/VendorVerificationPage';
 import ModeratorBranchPage from '@features/moderator/pages/BranchPage';
+import GhostPinVerificationPage from '@features/moderator/pages/GhostPinVerificationPage';
+import PendingVendorVerificationPage from '@features/moderator/pages/PendingVendorVerificationPage';
+import OwnershipRequestVerificationPage from '@features/moderator/pages/OwnershipRequestVerificationPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import DishManagementPage from '@features/manager/pages/DishManagementPage';
@@ -72,18 +75,6 @@ export const router = createBrowserRouter([
     element: <PaymentCancel />,
   },
   {
-    path: ROUTES.USER_INFO_SETUP,
-    element: <EditUserProfilePage />,
-  },
-  {
-    path: ROUTES.PAYMENT_SUCCESS,
-    element: <PaymentSuccess />,
-  },
-  {
-    path: ROUTES.PAYMENT_CANCEL,
-    element: <PaymentCancel />,
-  },
-  {
     path: '*',
     element: <DeepLinkRedirectPage />,
   },
@@ -91,6 +82,10 @@ export const router = createBrowserRouter([
     path: ROUTES.ROOT,
     element: <RootLayout />,
     children: [
+      {
+        path: ROUTES.USER_INFO_SETUP,
+        element: <EditUserProfilePage />,
+      },
       {
         path: ROUTES.MODERATOR.BASE,
         element: <ModeratorLayout />,
@@ -123,15 +118,15 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN,
-            element: <ModeratorVendorVerificationPage />,
+            element: <GhostPinVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR,
-            element: <ModeratorVendorVerificationPage />,
+            element: <PendingVendorVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST,
-            element: <ModeratorVendorVerificationPage />,
+            element: <OwnershipRequestVerificationPage />,
           },
           {
             path: ROUTES.MODERATOR.PATHS.POSTS,
@@ -233,6 +228,32 @@ export const router = createBrowserRouter([
             path: ROUTES.VENDOR.PATHS.CAMPAIGN_SYSTEM,
             element: <VendorSystemCampaignPage />,
           },
+        ],
+      },
+      {
+        path: ROUTES.USER.BASE,
+        element: <UserLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to={ROUTES.USER.PATHS.BRANCH} replace />,
+          },
+          {
+            path: ROUTES.USER.PATHS.BRANCH,
+            element: <VendorBranchPage />,
+          },
+          {
+            path: ROUTES.USER.PATHS.GHOST_PIN,
+            element: <GhostPinPage />,
+          },
+          {
+            path: ROUTES.USER.PATHS.REGISTRATION_HISTORY,
+            element: <VendorRegistrationHistoryPage />,
+          },
+          // {
+          //   path: ROUTES.USER.PATHS.PAYMENT_HISTORY,
+          //   element: <VendorPaymentHistoryPage />,
+          // },
         ],
       },
       {

@@ -61,7 +61,7 @@ export const getDishManagementTourSteps = ({
     {
       target: `[data-tour-action-trigger="${DISH_TOUR_ID}"]`,
       title: 'Menu thao tác',
-      content: 'Nhấn nút ba chấm để chỉnh sửa hoặc xóa món ăn.',
+      content: 'Nhấn nút ba chấm để chỉnh sửa hoặc đổi trạng thái bán món ăn.',
       placement: 'left',
       spotlightPadding: 8,
     },

@@ -25,6 +25,11 @@ const initialState: VoucherState = {
   error: null,
 };
 
+const normalizeVoucher = (voucher: Voucher): Voucher => ({
+  ...voucher,
+  campaignId: voucher.campaignId ?? null,
+});
+
 // ── Thunks ───────────────────────────────────────────────────────────────────
 
 export const getAllVouchers = createAppAsyncThunk(
@@ -112,20 +117,20 @@ export const voucherSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getAllVouchers.fulfilled, (state, action) => {
-        state.vouchers = action.payload;
+        state.vouchers = action.payload.map(normalizeVoucher);
       })
       .addCase(getVouchersByCampaignId.fulfilled, (state, action) => {
-        state.vouchers = action.payload;
+        state.vouchers = action.payload.map(normalizeVoucher);
       })
       .addCase(createVoucher.fulfilled, (state, action) => {
         // API trả Voucher[] — unshift tất cả vào đầu danh sách
         action.payload.forEach((voucher) => {
-          state.vouchers.unshift(voucher);
+          state.vouchers.unshift(normalizeVoucher(voucher));
         });
       })
       .addCase(updateVoucher.fulfilled, (state, action) => {
         if (action.payload) {
-          const voucher = action.payload;
+          const voucher = normalizeVoucher(action.payload);
           const index = state.vouchers.findIndex(
             (v) => v.voucherId === voucher.voucherId
           );

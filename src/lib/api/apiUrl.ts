@@ -5,7 +5,7 @@ export const apiUrl = {
     phoneVerify: '/Auth/phone-verify',
     login: '/Auth/login',
     googleLogin: '/Auth/google-login',
-    profile: '/Auth/profile',
+    profile: '/User/profile',
     register: '/Auth/register',
     verifyRegistration: '/Auth/verify-registration',
     resendRegistrationOTP: '/Auth/resend-registration-otp',
@@ -170,11 +170,13 @@ export const apiUrl = {
       `/order/vendor/orders/${orderId}/complete`,
     getVendorOrders: 'order/vendor/orders',
     getOrderDetails: (orderId: number): string => `/order/${orderId}`,
+    updateOrder: (orderId: number): string => `/Order/${orderId}`,
   },
   manager: {
     getMyBranch: '/Branch/manager/my-branch',
   },
   campaign: {
+    GetPublicCampaigns: '/Campaign/public',
     GetOrPostSystemCampaign: '/Campaign/system',
     GetOrPostVendorCampaign: '/Campaign/vendor',
     GetCampaignDetail: (campaignId: number): string =>
@@ -204,7 +206,12 @@ export const apiUrl = {
   quest: {
     getOrPostQuest: '/Quest',
     updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+    updateQuestTasks: (questId: number): string => `/Quest/${questId}/tasks`,
     postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+    getUserQuestTasks: '/Quest/user-quest-tasks',
+  },
+  tier: {
+    getAllTiers: '/Tier',
   },
   setting: {
     getSettings: '/Setting',

@@ -11,12 +11,21 @@ export interface BranchUser {
 export interface Branch {
   branchId: number;
   vendorId: number;
-  userId: number;
+  userId?: number | null;
+  managerId?: number | null;
+  createdById?: number | null;
+  requestedByUserId?: number | null;
+  userShareName?: string | null;
+  userShareEmail?: string | null;
+  userSharePhone?: string | null;
+  vendorUserName?: string | null;
+  vendorUserEmail?: string | null;
+  vendorUserPhone?: string | null;
   name: string;
-  phoneNumber: string;
-  email: string;
+  phoneNumber: string | null;
+  email: string | null;
   addressDetail: string;
-  branchName: string;
+  branchName?: string;
   ward: string;
   city: string;
   lat: number;
@@ -27,24 +36,30 @@ export interface Branch {
   avgRating: number;
   isActive: boolean;
   isSubscribed: boolean;
-  vendor: unknown | null;
-  user: BranchUser | null;
-  workSchedules: unknown[] | null;
-  dayOffs: unknown[] | null;
-  branchImages: unknown[] | null;
-  dishes: unknown[];
+  vendor?: unknown | null;
+  user?: BranchUser | null;
+  workSchedules?: unknown[] | null;
+  dayOffs?: unknown[] | null;
+  branchImages?: unknown[] | null;
+  dishes?: unknown[];
 }
 
 export interface BranchRegisterRequest {
   branchRequestId: number;
-  branchId: number;
-  licenseUrl: string;
+  branchId: number | null;
+  licenseUrl: string | null;
   status: number;
   rejectReason: string | null;
   createdAt: string;
   updatedAt: string;
   isCreatedByOwner: boolean;
   type: number;
+  userShareName?: string;
+  userShareEmail?: string;
+  userSharePhone?: string;
+  vendorUserName?: string;
+  vendorUserEmail?: string;
+  vendorUserPhone?: string;
   branch: Branch;
 }
 

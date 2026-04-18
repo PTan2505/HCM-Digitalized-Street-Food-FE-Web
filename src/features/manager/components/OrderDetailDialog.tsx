@@ -4,10 +4,12 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Typography,
 } from '@mui/material';
-import type { JSX } from 'react';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import { useEffect, useRef, useState, type JSX } from 'react';
 import type {
   ManagerOrder,
   ManagerOrderItem,
@@ -16,6 +18,8 @@ import {
   getOrderStatusMeta,
   OrderStatusBadge,
 } from '@features/manager/components/OrderStatusBadge';
+import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 const formatDateTime = (value: string | null | undefined): string => {
   if (!value) return '-';
@@ -92,10 +96,86 @@ const getDisplayOrderItemAmount = (
 export const OrderDetailDialog = ({
   detailOrder,
   onClose,
+  onUpdateOrderTable,
+  tableAutoEditKey,
 }: {
   detailOrder: ManagerOrder | null;
   onClose: () => void;
+  onUpdateOrderTable: (orderId: number, table: string) => Promise<void>;
+  tableAutoEditKey?: number;
 }): JSX.Element => {
+  const [isEditingTable, setIsEditingTable] = useState(false);
+  const [tableDraft, setTableDraft] = useState('');
+  const [isSavingTable, setIsSavingTable] = useState(false);
+  const lastAutoEditKeyRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!detailOrder) {
+      setIsEditingTable(false);
+      setTableDraft('');
+      setIsSavingTable(false);
+      return;
+    }
+
+    setIsEditingTable(false);
+    setTableDraft(detailOrder.table?.trim() ?? '');
+  }, [detailOrder]);
+
+  useEffect(() => {
+    if (
+      !detailOrder ||
+      detailOrder.isTakeAway ||
+      tableAutoEditKey === undefined
+    ) {
+      return;
+    }
+
+    if (lastAutoEditKeyRef.current === tableAutoEditKey) {
+      return;
+    }
+
+    lastAutoEditKeyRef.current = tableAutoEditKey;
+
+    if (detailOrder.table?.trim()) {
+      return;
+    }
+
+    setIsEditingTable(true);
+    setTableDraft(detailOrder.table?.trim() ?? '');
+  }, [detailOrder, tableAutoEditKey]);
+
+  const canEditTable = detailOrder !== null && !detailOrder.isTakeAway;
+
+  const handleStartEditTable = (): void => {
+    if (!canEditTable || !detailOrder) return;
+    setTableDraft(detailOrder.table?.trim() ?? '');
+    setIsEditingTable(true);
+  };
+
+  const handleCancelEditTable = (): void => {
+    setTableDraft(detailOrder?.table?.trim() ?? '');
+    setIsEditingTable(false);
+  };
+
+  const handleSaveTable = async (): Promise<void> => {
+    if (!detailOrder || isSavingTable) {
+      return;
+    }
+
+    const sanitizedTable = tableDraft.trim();
+    if (sanitizedTable.length === 0) {
+      return;
+    }
+
+    setIsSavingTable(true);
+    try {
+      await onUpdateOrderTable(detailOrder.orderId, sanitizedTable);
+      setIsEditingTable(false);
+    } finally {
+      setIsSavingTable(false);
+    }
+  };
+
   return (
     <Dialog
       open={detailOrder !== null}
@@ -107,24 +187,32 @@ export const OrderDetailDialog = ({
           'overflow-hidden rounded-2xl border border-gray-100 shadow-2xl',
       }}
     >
-      <DialogTitle className="border-b border-gray-100 bg-gray-50/70 px-6 py-4">
-        <Box className="flex items-start justify-between gap-4">
-          <Box>
-            <Typography className="text-table-text-primary text-xl font-bold">
-              Chi tiết đơn hàng
-            </Typography>
-            <Typography className="text-table-text-secondary mt-1 text-sm">
-              {detailOrder ? `#${detailOrder.orderId}` : '-'}
-            </Typography>
-          </Box>
-          {detailOrder ? (
-            <OrderStatusBadge
-              label={getOrderStatusMeta(detailOrder.status).label}
-              type={getOrderStatusMeta(detailOrder.status).type}
-            />
-          ) : null}
-        </Box>
-      </DialogTitle>
+      <VendorModalHeader
+        title="Chi tiết đơn hàng"
+        subtitle={
+          detailOrder?.branchName?.trim()
+            ? detailOrder.branchName.trim()
+            : detailOrder
+              ? `Chi nhánh #${detailOrder.branchId}`
+              : '—'
+        }
+        icon={<ReceiptLongIcon />}
+        iconTone="order"
+        onClose={onClose}
+        rightActions={
+          detailOrder ? (
+            <div className="flex items-center gap-2">
+              {/* <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-500">
+                #{detailOrder.orderId}
+              </span> */}
+              <OrderStatusBadge
+                label={getOrderStatusMeta(detailOrder.status).label}
+                type={getOrderStatusMeta(detailOrder.status).type}
+              />
+            </div>
+          ) : undefined
+        }
+      />
       <DialogContent dividers>
         <Box className="space-y-5 px-1 py-1">
           <Box className="rounded-xl border border-gray-100 bg-slate-50/60 p-4 shadow-sm">
@@ -156,12 +244,66 @@ export const OrderDetailDialog = ({
                 <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                   Bàn
                 </Typography>
-                <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {((): string => {
-                    const tableName = detailOrder?.table?.trim();
-                    return tableName && tableName.length > 0 ? tableName : '-';
-                  })()}
-                </Typography>
+                {isEditingTable ? (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <input
+                      value={tableDraft}
+                      onChange={(event) => setTableDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          void handleSaveTable();
+                        }
+
+                        if (event.key === 'Escape') {
+                          event.preventDefault();
+                          handleCancelEditTable();
+                        }
+                      }}
+                      className="focus:border-primary-500 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm outline-none"
+                      autoFocus
+                      disabled={isSavingTable}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleSaveTable();
+                      }}
+                      disabled={isSavingTable || tableDraft.trim().length === 0}
+                      className="inline-flex h-7 w-7 items-center justify-center text-green-700 transition-colors hover:text-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <CheckIcon sx={{ fontSize: 18, color: '#166534' }} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditTable}
+                      disabled={isSavingTable}
+                      className="inline-flex h-7 w-7 items-center justify-center text-red-700 transition-colors hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <CloseIcon sx={{ fontSize: 18, color: '#b91c1c' }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <Typography className="text-table-text-primary text-sm font-semibold">
+                      {((): string => {
+                        const tableName = detailOrder?.table?.trim();
+                        return tableName && tableName.length > 0
+                          ? tableName
+                          : '-';
+                      })()}
+                    </Typography>
+                    {canEditTable ? (
+                      <button
+                        type="button"
+                        onClick={handleStartEditTable}
+                        className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-700"
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </button>
+                    ) : null}
+                  </div>
+                )}
               </Box>
               <Box className="rounded-lg border border-gray-200/60 bg-white p-3">
                 <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
@@ -178,6 +320,14 @@ export const OrderDetailDialog = ({
                 <Typography className="text-table-text-primary mt-1 text-sm font-semibold">
                   {detailOrder?.userName?.trim() ??
                     `User #${detailOrder?.userId ?? '-'}`}
+                </Typography>
+              </Box>
+              <Box className="rounded-lg border border-gray-200/60 bg-white p-3 sm:col-span-2">
+                <Typography className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                  Ghi chú
+                </Typography>
+                <Typography className="text-table-text-primary mt-1 text-sm font-semibold whitespace-pre-wrap">
+                  {detailOrder?.note?.trim() ? detailOrder.note.trim() : '-'}
                 </Typography>
               </Box>
             </Box>
@@ -212,9 +362,9 @@ export const OrderDetailDialog = ({
                       <Typography className="text-table-text-primary truncate text-sm font-semibold">
                         {item.dishName}
                       </Typography>
-                      <Typography className="text-table-text-secondary text-xs">
+                      {/* <Typography className="text-table-text-secondary text-xs">
                         Mã món: #{item.dishId}
-                      </Typography>
+                      </Typography> */}
                     </Box>
                     <Typography className="text-right text-sm font-semibold text-gray-700">
                       x{item.quantity}

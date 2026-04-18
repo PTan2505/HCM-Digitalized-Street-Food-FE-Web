@@ -64,12 +64,6 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const isBeforeCampaignStart = (startDate: string): boolean => {
-  const startTime = new Date(startDate).getTime();
-  if (Number.isNaN(startTime)) return false;
-  return startTime > Date.now();
-};
-
 const StatusBadge = ({
   label,
   type,
@@ -176,9 +170,9 @@ export default function VendorCampaignPage(): JSX.Element {
   }, [fetchBranchOptions]);
 
   const handleOpenModal = (campaign?: VendorCampaign): void => {
-    if (campaign?.isActive) {
-      return;
-    }
+    // if (campaign?.isActive) {
+    //   return;
+    // }
 
     setEditingCampaign(campaign ?? null);
     setOpenModal(true);
@@ -224,9 +218,9 @@ export default function VendorCampaignPage(): JSX.Element {
     isImageRemoved?: boolean
   ): Promise<void> => {
     try {
-      if (editingCampaign?.isActive) {
-        return;
-      }
+      // if (editingCampaign?.isActive) {
+      //   return;
+      // }
 
       const payload = {
         name: data.name,

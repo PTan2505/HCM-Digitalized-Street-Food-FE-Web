@@ -25,7 +25,11 @@ const RootLayout = (): JSX.Element => {
 
   useEffect(() => {
     if (isDone && !user) {
-      navigate(ROUTES.LOGIN);
+      if (location.pathname === ROUTES.ROOT) {
+        navigate(ROUTES.HOME, { replace: true });
+      } else {
+        navigate(ROUTES.LOGIN);
+      }
       return;
     }
 
@@ -60,9 +64,9 @@ const RootLayout = (): JSX.Element => {
           }
         } else if (
           currentPath === ROUTES.ROOT ||
-          !currentPath.startsWith(ROUTES.VENDOR.BASE)
+          !currentPath.startsWith(ROUTES.USER.BASE)
         ) {
-          navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`, {
+          navigate(`${ROUTES.USER.BASE}/${ROUTES.USER.PATHS.BRANCH}`, {
             replace: true,
           });
         }

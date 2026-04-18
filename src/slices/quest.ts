@@ -3,7 +3,10 @@ import type {
   Quest,
   QuestCreate,
   QuestListResponse,
+  QuestTasksUpdate,
   QuestUpdate,
+  QuestUserQuestTasksQuery,
+  QuestUserQuestTasksResponse,
 } from '@features/admin/types/quest';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -98,6 +101,40 @@ export const updateQuest = createAppAsyncThunk(
   }
 );
 
+export const updateQuestTasks = createAppAsyncThunk(
+  'quest/updateQuestTasks',
+  async (
+    payload: { id: number; data: QuestTasksUpdate },
+    { rejectWithValue }
+  ) => {
+    try {
+      await axiosApi.questApi.updateQuestTasks(payload.id, payload.data);
+      return payload.id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getQuestUserQuestTasks = createAppAsyncThunk(
+  'quest/getQuestUserQuestTasks',
+  async (
+    payload: { questId: number; params: QuestUserQuestTasksQuery },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: QuestUserQuestTasksResponse =
+        await axiosApi.questApi.getQuestUserQuestTasks(
+          payload.questId,
+          payload.params
+        );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const deleteQuest = createAppAsyncThunk(
   'quest/deleteQuest',
   async (id: number, { rejectWithValue }) => {
@@ -179,9 +216,9 @@ export const questSlice = createSlice({
       .addMatcher(
         isPending(
           getAllQuests,
-          getQuestById,
           createQuest,
           updateQuest,
+          updateQuestTasks,
           deleteQuest,
           postQuestImage
         ),
@@ -192,9 +229,9 @@ export const questSlice = createSlice({
       .addMatcher(
         isFulfilled(
           getAllQuests,
-          getQuestById,
           createQuest,
           updateQuest,
+          updateQuestTasks,
           deleteQuest,
           postQuestImage
         ),
@@ -206,9 +243,9 @@ export const questSlice = createSlice({
       .addMatcher(
         isRejected(
           getAllQuests,
-          getQuestById,
           createQuest,
           updateQuest,
+          updateQuestTasks,
           deleteQuest,
           postQuestImage
         ),
