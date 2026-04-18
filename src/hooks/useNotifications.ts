@@ -7,8 +7,47 @@ import type { NotificationDto } from '@custom-types/notification';
 import { playNotificationSound } from '@utils/notificationSound';
 import { useAppDispatch } from '@hooks/reduxHooks';
 import { addNewOrder } from '@slices/order';
+import { updateBranchVerificationStatusRealtime } from '@slices/vendor';
 
 export type { NotificationDto } from '@custom-types/notification';
+
+const BRANCH_NAME_REGEX = /chi nhánh\s+'([^']+)'/i;
+const REJECT_REASON_REGEX = /Lý do:\s*(.+)$/i;
+
+const parseBranchVerificationNotification = (
+  message: string
+): {
+  branchName: string | null;
+  status: 'Accept' | 'Reject' | null;
+  rejectReason: string | null;
+} => {
+  const trimmedMessage = message.trim();
+  const nameMatch = trimmedMessage.match(BRANCH_NAME_REGEX);
+  const branchName = nameMatch?.[1]?.trim() ?? null;
+
+  if (trimmedMessage.includes('đã được xác minh thành công')) {
+    return {
+      branchName,
+      status: 'Accept',
+      rejectReason: null,
+    };
+  }
+
+  if (trimmedMessage.includes('đã bị từ chối')) {
+    const reasonMatch = trimmedMessage.match(REJECT_REASON_REGEX);
+    return {
+      branchName,
+      status: 'Reject',
+      rejectReason: reasonMatch?.[1]?.trim() ?? null,
+    };
+  }
+
+  return {
+    branchName,
+    status: null,
+    rejectReason: null,
+  };
+};
 
 interface UseNotificationsReturn {
   isConnected: boolean;
@@ -144,6 +183,20 @@ export const useNotifications = (
             .catch((err) => {
               console.error('Failed to fetch new order detail:', err);
             });
+        }
+
+        if (data.type === 'BranchVerificationStatus') {
+          const parsed = parseBranchVerificationNotification(data.message);
+          if (!parsed.status) return;
+
+          dispatch(
+            updateBranchVerificationStatusRealtime({
+              branchId: data.referenceId,
+              branchName: parsed.branchName,
+              status: parsed.status,
+              rejectReason: parsed.rejectReason,
+            })
+          );
         }
       };
 

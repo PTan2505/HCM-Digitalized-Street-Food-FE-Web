@@ -30,7 +30,7 @@ import Pagination from '@features/admin/components/Pagination';
 import Table from '@features/admin/components/Table';
 import useQuest from '@features/admin/hooks/useQuest';
 import { getQuestManagementTourSteps } from '@features/admin/utils/questManagementTourSteps';
-import type { Quest } from '@features/admin/types/quest';
+import { type Quest, QuestTaskType } from '@features/admin/types/quest';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectQuestHasNext,
@@ -234,15 +234,34 @@ export default function QuestPage(): JSX.Element {
       ),
     },
     {
-      key: 'description',
-      label: 'Mô tả',
-      render: (value: unknown): JSX.Element => (
-        <Box className="text-table-text-secondary line-clamp-2 max-w-50 text-sm">
-          {typeof value === 'string' && value.trim().length > 0
-            ? value
-            : 'Không có mô tả'}
-        </Box>
-      ),
+      key: 'questType',
+      label: 'Loại quest',
+      render: (_: unknown, row: Quest): JSX.Element => {
+        const isUpgradeQuest = row.tasks.some(
+          (task) => task.type === QuestTaskType.TIER_UP
+        );
+        const questTypeLabel = isUpgradeQuest
+          ? 'Nâng hạng'
+          : row.isStandalone
+            ? 'Độc lập'
+            : 'Theo chiến dịch';
+
+        const badgeStyle = isUpgradeQuest
+          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+          : row.isStandalone
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            : 'border-amber-200 bg-amber-50 text-amber-700';
+
+        return (
+          <Box>
+            <span
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeStyle}`}
+            >
+              {questTypeLabel}
+            </span>
+          </Box>
+        );
+      },
     },
     {
       key: 'tasks',
@@ -301,6 +320,7 @@ export default function QuestPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Quest): void => handleOpenModal(row),
+      show: (row: Quest): boolean => row.campaignId === null,
       tooltip: 'Chỉnh sửa nhiệm vụ',
       color: 'primary' as const,
       variant: 'outlined' as const,

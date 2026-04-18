@@ -17,6 +17,8 @@ interface VendorRegistrationDetailsProps {
   registration: BranchRegisterRequest | null;
   title?: string;
   vendorDetail?: { name: string; vendorOwner: VendorOwnerInfo } | null;
+  onVerify?: (registration: BranchRegisterRequest) => Promise<void> | void;
+  onReject?: (registration: BranchRegisterRequest) => void;
 }
 
 export default function VendorRegistrationDetails({
@@ -25,6 +27,8 @@ export default function VendorRegistrationDetails({
   registration,
   title,
   vendorDetail,
+  onVerify,
+  onReject,
 }: VendorRegistrationDetailsProps): JSX.Element | null {
   if (!isOpen || !registration) return null;
 
@@ -165,6 +169,16 @@ export default function VendorRegistrationDetails({
     </div>
   );
 
+  const handleVerifyClick = (): void => {
+    if (!onVerify) return;
+    void onVerify(registration);
+  };
+
+  const handleRejectClick = (): void => {
+    if (!onReject) return;
+    onReject(registration);
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity"
@@ -276,7 +290,7 @@ export default function VendorRegistrationDetails({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end border-t border-gray-100 bg-gray-50/60 px-6 py-4 sm:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/60 px-6 py-4 sm:px-8">
           <button
             onClick={onClose}
             type="button"
@@ -284,6 +298,23 @@ export default function VendorRegistrationDetails({
           >
             Đóng
           </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRejectClick}
+              type="button"
+              className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 font-semibold text-rose-700 transition-colors hover:bg-rose-100"
+            >
+              Từ chối
+            </button>
+            <button
+              onClick={handleVerifyClick}
+              type="button"
+              className="rounded-lg border border-emerald-200 bg-emerald-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-emerald-600"
+            >
+              Duyệt
+            </button>
+          </div>
         </div>
       </div>
     </div>
