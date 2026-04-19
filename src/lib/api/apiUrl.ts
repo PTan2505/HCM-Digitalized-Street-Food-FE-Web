@@ -12,6 +12,8 @@ export const apiUrl = {
     forgetPassword: '/Auth/forget-password',
     resetPassword: '/Auth/reset-password',
     resendForgetPasswordOTP: '/Auth/resend-forget-password-otp',
+    contactVerification: '/Auth/contact-verification',
+    verifyOTPProfile: '/User/profile/verify-otp',
   },
   // dietaryPreference: {
   //   getAll: '/DietaryPreference',

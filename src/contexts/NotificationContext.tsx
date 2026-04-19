@@ -18,8 +18,19 @@ interface NotificationContextType {
   markAllAsRead: () => Promise<void>;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(
-  undefined
+const defaultNotificationContext: NotificationContextType = {
+  isConnected: false,
+  connectionError: null,
+  notifications: [],
+  unreadCount: 0,
+  hasMore: false,
+  loadMore: async (): Promise<void> => {},
+  markAsRead: async (): Promise<void> => {},
+  markAllAsRead: async (): Promise<void> => {},
+};
+
+const NotificationContext = createContext<NotificationContextType>(
+  defaultNotificationContext
 );
 
 export const NotificationProvider = ({
@@ -61,10 +72,12 @@ export const NotificationProvider = ({
 
 export const useNotificationContext = (): NotificationContextType => {
   const context = useContext(NotificationContext);
-  if (context === undefined) {
-    throw new Error(
-      'useNotificationContext must be used within a NotificationProvider'
+
+  if (context === defaultNotificationContext) {
+    console.warn(
+      'useNotificationContext fallback is being used because NotificationProvider is missing or not ready yet.'
     );
   }
+
   return context;
 };
