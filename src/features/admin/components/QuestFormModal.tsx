@@ -130,6 +130,13 @@ const getDefaultRewardValue = (rewardType: QuestRewardType): number => {
   return 0;
 };
 
+const isFixedQuantityRewardType = (rewardType: unknown): boolean => {
+  return (
+    Number(rewardType) === Number(QuestRewardType.POINTS) ||
+    Number(rewardType) === Number(QuestRewardType.BADGE)
+  );
+};
+
 const formatNumberWithDots = (value: number | null | undefined): string => {
   if (value === null || value === undefined) {
     return '';
@@ -282,6 +289,7 @@ function TaskRewardFields({
 
       <div className="space-y-3">
         {fields.map((rewardField, rewardIndex) => {
+          const currentTaskRewards = watch(`tasks.${taskIndex}.rewards`) ?? [];
           const rewardType =
             watch(`tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`) ??
             QuestRewardType.POINTS;
@@ -295,6 +303,7 @@ function TaskRewardFields({
             watchedRewardQuantity === undefined
               ? null
               : Number(watchedRewardQuantity);
+          const isFixedQuantityReward = isFixedQuantityRewardType(rewardType);
           const selectedVoucherOption =
             rewardType === QuestRewardType.VOUCHER
               ? (voucherRewardOptions.find(
@@ -468,6 +477,33 @@ function TaskRewardFields({
                       ) ? (
                         ((): JSX.Element => {
                           const rewardOptions = voucherRewardOptions;
+                          const selectedVoucherIds = new Set<number>(
+                            currentTaskRewards
+                              .map((taskReward, taskRewardIndex) => {
+                                if (taskRewardIndex === rewardIndex) {
+                                  return null;
+                                }
+
+                                if (
+                                  Number(taskReward.rewardType) !==
+                                  Number(QuestRewardType.VOUCHER)
+                                ) {
+                                  return null;
+                                }
+
+                                return Number(taskReward.rewardValue);
+                              })
+                              .filter(
+                                (rewardValue): rewardValue is number =>
+                                  typeof rewardValue === 'number' &&
+                                  rewardValue > 0
+                              )
+                          );
+                          const availableRewardOptions = rewardOptions.filter(
+                            (option) =>
+                              option.id === currentRewardValue ||
+                              !selectedVoucherIds.has(option.id)
+                          );
                           const selectedRewardOption =
                             rewardOptions.find(
                               (option) => option.id === currentRewardValue
@@ -480,8 +516,8 @@ function TaskRewardFields({
                             queryFromState ?? selectedRewardOption?.label ?? '';
                           const normalizedQuery = query.trim().toLowerCase();
                           const filteredRewardOptions = !normalizedQuery
-                            ? rewardOptions.slice(0, 8)
-                            : rewardOptions
+                            ? availableRewardOptions.slice(0, 8)
+                            : availableRewardOptions
                                 .filter((option) =>
                                   `${option.label} ${option.searchText ?? option.hint}`
                                     .toLowerCase()
@@ -529,6 +565,19 @@ function TaskRewardFields({
                                     return;
                                   }
                                   const nextQuery = event.target.value;
+                                  if (
+                                    nextQuery.trim().length === 0 &&
+                                    Number(currentRewardValue) > 0
+                                  ) {
+                                    setValue(
+                                      `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                      0,
+                                      {
+                                        shouldDirty: true,
+                                        shouldValidate: true,
+                                      }
+                                    );
+                                  }
                                   setRewardQueries((prev) => ({
                                     ...prev,
                                     [rewardKey]: nextQuery,
@@ -641,9 +690,38 @@ function TaskRewardFields({
                     ((): JSX.Element => {
                       const isBadgeReward =
                         rewardType === QuestRewardType.BADGE;
+                      const targetRewardType = isBadgeReward
+                        ? QuestRewardType.BADGE
+                        : QuestRewardType.VOUCHER;
                       const rewardOptions = isBadgeReward
                         ? badgeRewardOptions
                         : voucherRewardOptions;
+                      const selectedRewardIds = new Set<number>(
+                        currentTaskRewards
+                          .map((taskReward, taskRewardIndex) => {
+                            if (taskRewardIndex === rewardIndex) {
+                              return null;
+                            }
+
+                            if (
+                              Number(taskReward.rewardType) !==
+                              Number(targetRewardType)
+                            ) {
+                              return null;
+                            }
+
+                            return Number(taskReward.rewardValue);
+                          })
+                          .filter(
+                            (rewardValue): rewardValue is number =>
+                              typeof rewardValue === 'number' && rewardValue > 0
+                          )
+                      );
+                      const availableRewardOptions = rewardOptions.filter(
+                        (option) =>
+                          option.id === currentRewardValue ||
+                          !selectedRewardIds.has(option.id)
+                      );
                       const selectedRewardOption =
                         rewardOptions.find(
                           (option) => option.id === currentRewardValue
@@ -655,8 +733,8 @@ function TaskRewardFields({
                         queryFromState ?? selectedRewardOption?.label ?? '';
                       const normalizedQuery = query.trim().toLowerCase();
                       const filteredRewardOptions = !normalizedQuery
-                        ? rewardOptions.slice(0, 8)
-                        : rewardOptions
+                        ? availableRewardOptions.slice(0, 8)
+                        : availableRewardOptions
                             .filter((option) =>
                               `${option.label} ${option.searchText ?? option.hint}`
                                 .toLowerCase()
@@ -704,6 +782,19 @@ function TaskRewardFields({
                                 return;
                               }
                               const nextQuery = event.target.value;
+                              if (
+                                nextQuery.trim().length === 0 &&
+                                Number(currentRewardValue) > 0
+                              ) {
+                                setValue(
+                                  `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                  0,
+                                  {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  }
+                                );
+                              }
                               setRewardQueries((prev) => ({
                                 ...prev,
                                 [rewardKey]: nextQuery,
@@ -821,6 +912,10 @@ function TaskRewardFields({
                     }
                     value={currentRewardQuantity ?? ''}
                     onChange={(event) => {
+                      if (isFixedQuantityReward) {
+                        return;
+                      }
+
                       const rawValue = event.target.value;
 
                       if (rawValue === '') {
@@ -884,9 +979,30 @@ function TaskRewardFields({
                         }));
                       }
                     }}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isFixedQuantityReward}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
                   />
+                  {isFixedQuantityReward &&
+                    currentRewardQuantity !== null &&
+                    currentRewardQuantity !== 1 &&
+                    !isReadOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue(
+                            `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                            1,
+                            {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            }
+                          );
+                        }}
+                        className="text-primary-600 hover:text-primary-700 mt-1 text-xs font-semibold"
+                      >
+                        Đặt về 1
+                      </button>
+                    )}
                 </div>
               </div>
 
@@ -1245,6 +1361,9 @@ export default function QuestFormModal({
   const isCampaignSelectionDisabled =
     isTaskEditingLocked || isUpdateMode || isForcedCampaignCreate;
   const shouldLoadCampaignOptions = !isCampaignSelectionDisabled;
+  const hasForcedCampaignName = Boolean(forcedCampaignName?.trim());
+  const shouldResolveCampaignNameOnUpdate =
+    isCampaignQuestEdit && !hasForcedCampaignName;
 
   useEffect(() => {
     if (!isOpen) {
@@ -1333,7 +1452,10 @@ export default function QuestFormModal({
   }, [tierOptions]);
 
   const fetchReferenceData = useCallback(async (): Promise<void> => {
-    setIsLoadingCampaigns(shouldLoadCampaignOptions);
+    const shouldFetchCampaignOptions =
+      shouldLoadCampaignOptions || shouldResolveCampaignNameOnUpdate;
+
+    setIsLoadingCampaigns(shouldFetchCampaignOptions);
     setIsLoadingRewards(true);
 
     try {
@@ -1348,15 +1470,18 @@ export default function QuestFormModal({
         axiosApi.tierApi.getTiers(),
       ]);
 
-      if (shouldLoadCampaignOptions) {
+      if (shouldFetchCampaignOptions) {
         const campaignResponse = await onGetCampaigns(1, 200);
+        const allCampaigns = campaignResponse.items ?? [];
         setCampaignOptions(
-          (campaignResponse.items ?? []).filter(
-            (campaign) =>
-              campaign.createdByVendorId === null &&
-              campaign.createdByBranchId === null &&
-              campaign.isUpdateable
-          )
+          shouldLoadCampaignOptions
+            ? allCampaigns.filter(
+                (campaign) =>
+                  campaign.createdByVendorId === null &&
+                  campaign.createdByBranchId === null &&
+                  campaign.isUpdateable
+              )
+            : allCampaigns
         );
       } else {
         setCampaignOptions([]);
@@ -1381,9 +1506,8 @@ export default function QuestFormModal({
     onGetAllBadges,
     onGetCampaigns,
     onGetVouchersByCampaignId,
-    forcedCampaignId,
-    isForcedCampaignCreate,
     onGetVouchers,
+    shouldResolveCampaignNameOnUpdate,
     shouldLoadCampaignOptions,
   ]);
 
@@ -1505,13 +1629,7 @@ export default function QuestFormModal({
           getValues(`${rewardPath}.rewardValue`) ??
           getDefaultRewardValue(QuestRewardType.VOUCHER);
 
-        if (
-          hasCampaignVoucherOptions &&
-          (currentRewardValue === 0 ||
-            !voucherRewardOptions.some(
-              (voucherOption) => voucherOption.id === currentRewardValue
-            ))
-        ) {
+        if (hasCampaignVoucherOptions && currentRewardValue === 0) {
           const defaultVoucherId = voucherRewardOptions[0]?.id ?? 0;
           setValue(`${rewardPath}.rewardValue`, defaultVoucherId, {
             shouldDirty: false,
@@ -1560,6 +1678,24 @@ export default function QuestFormModal({
 
     setCampaignQuery(selectedCampaign?.name ?? '');
   }, [isCampaignFocused, isCampaignSelectionDisabled, selectedCampaign]);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !isCampaignQuestEdit ||
+      !shouldResolveCampaignNameOnUpdate ||
+      !selectedCampaign?.name
+    ) {
+      return;
+    }
+
+    setCampaignQuery(selectedCampaign.name);
+  }, [
+    isOpen,
+    isCampaignQuestEdit,
+    selectedCampaign,
+    shouldResolveCampaignNameOnUpdate,
+  ]);
 
   const handleQuestScopeChange = (scope: QuestScope): void => {
     if (isFormReadOnly) {
