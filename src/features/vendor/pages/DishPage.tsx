@@ -19,6 +19,7 @@ import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import DishFormModal from '@features/vendor/components/DishFormModal';
 import DishFilterSection from '@features/vendor/components/DishFilterSection';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { DishFilterValues } from '@features/vendor/components/DishFilterSection';
 import type { CreateOrUpdateDishResponse } from '@features/vendor/types/dish';
 import useDish from '@features/vendor/hooks/useDish';
@@ -70,6 +71,9 @@ export default function DishPage(): JSX.Element {
 
   const [openFormModal, setOpenFormModal] = useState(false);
   const [editingDish, setEditingDish] =
+    useState<CreateOrUpdateDishResponse | null>(null);
+  const [openDeactivateDialog, setOpenDeactivateDialog] = useState(false);
+  const [deactivatingDish, setDeactivatingDish] =
     useState<CreateOrUpdateDishResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
@@ -161,6 +165,25 @@ export default function DishPage(): JSX.Element {
     } catch (error) {
       console.error('Failed to toggle dish selling status:', error);
     }
+  };
+
+  const handleOpenDeactivateDialog = (
+    dish: CreateOrUpdateDishResponse
+  ): void => {
+    setDeactivatingDish(dish);
+    setOpenDeactivateDialog(true);
+  };
+
+  const handleCloseDeactivateDialog = (): void => {
+    setOpenDeactivateDialog(false);
+    setDeactivatingDish(null);
+  };
+
+  const handleConfirmDeactivate = async (): Promise<void> => {
+    if (!deactivatingDish) return;
+
+    await handleToggleSellingStatus(deactivatingDish);
+    handleCloseDeactivateDialog();
   };
 
   const handlePageChange = (page: number): void => {
@@ -300,7 +323,7 @@ export default function DishPage(): JSX.Element {
       label: <PauseCircleOutlineIcon fontSize="small" />,
       menuLabel: 'Ngừng bán',
       onClick: (row: CreateOrUpdateDishResponse): void => {
-        void handleToggleSellingStatus(row);
+        handleOpenDeactivateDialog(row);
       },
       color: 'warning' as const,
       show: (row: CreateOrUpdateDishResponse): boolean => row.isActive,
@@ -423,6 +446,23 @@ export default function DishPage(): JSX.Element {
         onCreateDish={onCreateDish}
         onUpdateDish={onUpdateDish}
         onSuccess={handleFormSuccess}
+      />
+
+      <DeleteConfirmationDialog
+        open={openDeactivateDialog}
+        onClose={handleCloseDeactivateDialog}
+        onConfirm={() => {
+          void handleConfirmDeactivate();
+        }}
+        title="Xác nhận ngừng bán món"
+        confirmButtonLabel="Ngừng bán"
+        confirmButtonColor="warning"
+        confirmationMessage={
+          <>
+            Bạn có chắc chắn muốn ngừng bán món &quot;
+            {deactivatingDish?.name ?? ''}&quot;?
+          </>
+        }
       />
     </div>
   );
