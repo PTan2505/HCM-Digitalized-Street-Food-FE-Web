@@ -49,6 +49,36 @@ const initialState: CampaignState = {
   error: null,
 };
 
+const getRuntimeCampaignFlags = (payload: {
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
+  startDate: string;
+  endDate: string;
+}): { isActive: boolean; isRegisterable: boolean } => {
+  const now = Date.now();
+  const start = new Date(payload.startDate).getTime();
+  const end = new Date(payload.endDate).getTime();
+  const regStart = payload.registrationStartDate
+    ? new Date(payload.registrationStartDate).getTime()
+    : null;
+  const regEnd = payload.registrationEndDate
+    ? new Date(payload.registrationEndDate).getTime()
+    : null;
+
+  const isActive = now >= start && now <= end;
+  const isRegisterable =
+    !isActive &&
+    regStart !== null &&
+    regEnd !== null &&
+    now >= regStart &&
+    now <= regEnd;
+
+  return {
+    isActive,
+    isRegisterable,
+  };
+};
+
 // ── Admin Campaign Thunks ────────────────────────────────────────────────────
 
 export const getAllCampaigns = createAppAsyncThunk(
@@ -372,15 +402,25 @@ export const campaignSlice = createSlice({
         }
       })
       .addCase(updateCampaign.fulfilled, (state, action) => {
-        if (action.payload) {
-          const campaign = action.payload;
-          const index = state.campaigns.findIndex(
-            (c) => c.campaignId === campaign.campaignId
-          );
-          if (index !== -1) {
-            state.campaigns[index] = campaign;
-          }
+        const { id, ...updatedFields } = action.meta.arg;
+        const index = state.campaigns.findIndex((c) => c.campaignId === id);
+
+        if (index === -1) {
+          return;
         }
+
+        const currentCampaign = state.campaigns[index];
+        const mergedCampaign = {
+          ...currentCampaign,
+          ...(action.payload ?? {}),
+          ...updatedFields,
+        };
+        const runtimeFlags = getRuntimeCampaignFlags(mergedCampaign);
+
+        state.campaigns[index] = {
+          ...mergedCampaign,
+          ...runtimeFlags,
+        };
       })
       .addCase(getCampaignImage.fulfilled, (state, action) => {
         const campaignId = action.meta.arg;
