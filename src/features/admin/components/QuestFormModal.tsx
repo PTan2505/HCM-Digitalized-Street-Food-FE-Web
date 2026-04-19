@@ -3,6 +3,7 @@ import {
   Add as AddIcon,
   AddPhotoAlternate as AddPhotoAlternateIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import {
   Button,
@@ -54,11 +55,17 @@ import {
   type UseFormSetValue,
   type UseFormWatch,
 } from 'react-hook-form';
-import type { Voucher } from '@custom-types/voucher';
+import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 
 type QuestScope = 'standalone' | 'campaign' | 'upgrade';
 
 const ALLOWED_TIER_TARGET_NAMES = new Set(['gold', 'diamond', 'silver']);
+
+const QUEST_SCOPE_LABELS: Record<QuestScope, string> = {
+  standalone: 'Độc lập',
+  campaign: 'Theo chiến dịch',
+  upgrade: 'Nâng cấp (Hạng)',
+};
 
 interface QuestFormModalProps {
   isOpen: boolean;
@@ -66,7 +73,26 @@ interface QuestFormModalProps {
   onSubmit: (data: QuestCreate, imageFile?: File | null) => Promise<void>;
   quest: Quest | null;
   canEditTasks?: boolean;
+  enableViewModeToggle?: boolean;
+  initialViewMode?: boolean;
+  forcedCampaignId?: number | null;
+  forcedCampaignName?: string | null;
+  forcedCampaignStartDate?: string | null;
+  forcedCampaignEndDate?: string | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
+}
+
+type RewardVoucherMode = 'existing' | 'create';
+
+interface VoucherDraft {
+  name: string;
+  voucherCode: string;
+  type: 'AMOUNT' | 'PERCENT';
+  description: string;
+  discountValue: number;
+  maxDiscountValue: number | null;
+  minAmountRequired: number;
+  quantity: number;
 }
 
 interface RewardOption {
@@ -74,6 +100,7 @@ interface RewardOption {
   label: string;
   hint: string;
   searchText?: string;
+  maxQuantity?: number;
 }
 
 const formatCurrencyVND = (value: number): string => {
@@ -103,23 +130,36 @@ const getDefaultRewardValue = (rewardType: QuestRewardType): number => {
   return 0;
 };
 
-const formatNumberWithDotGrouping = (value: number): string => {
-  const safeNumber = Number.isFinite(value) ? Math.trunc(value) : 0;
-  return safeNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
-const createDefaultReward =
-  (): QuestFormInput['tasks'][number]['rewards'][number] => ({
-    rewardType: QuestRewardType.POINTS,
-    rewardValue: getDefaultRewardValue(QuestRewardType.POINTS),
-    quantity: 1,
-  });
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
+};
 
-const createDefaultTask = (): QuestFormInput['tasks'][number] => ({
+const createDefaultReward = (
+  rewardType: QuestRewardType = QuestRewardType.POINTS,
+  rewardValue?: number
+): QuestFormInput['tasks'][number]['rewards'][number] => ({
+  rewardType,
+  rewardValue: rewardValue ?? getDefaultRewardValue(rewardType),
+  quantity: 1,
+});
+
+const createDefaultTask = (
+  rewardType: QuestRewardType = QuestRewardType.POINTS,
+  rewardValue?: number
+): QuestFormInput['tasks'][number] => ({
   type: QuestTaskType.REVIEW,
   targetValue: 1,
   description: null,
-  rewards: [createDefaultReward()],
+  rewards: [createDefaultReward(rewardType, rewardValue)],
 });
 
 const createUpgradeTask = (tiers: Tier[]): QuestFormInput['tasks'][number] => ({
@@ -127,6 +167,17 @@ const createUpgradeTask = (tiers: Tier[]): QuestFormInput['tasks'][number] => ({
   targetValue: tiers[0]?.tierId ?? 1,
   description: null,
   rewards: [createDefaultReward()],
+});
+
+const defaultVoucherDraft = (): VoucherDraft => ({
+  name: '',
+  voucherCode: '',
+  type: 'AMOUNT',
+  description: '',
+  discountValue: 0,
+  maxDiscountValue: null,
+  minAmountRequired: 0,
+  quantity: 0,
 });
 
 const defaultValues: QuestFormInput = {
@@ -157,6 +208,9 @@ const defaultValues: QuestFormInput = {
 interface TaskRewardFieldsProps {
   taskIndex: number;
   isReadOnly: boolean;
+  isForcedCampaignCreate: boolean;
+  isCampaignVoucherLocked: boolean;
+  hasCampaignVoucherOptions: boolean;
   control: Control<QuestFormInput>;
   register: UseFormRegister<QuestFormInput>;
   watch: UseFormWatch<QuestFormInput>;
@@ -169,12 +223,24 @@ interface TaskRewardFieldsProps {
   setRewardQueries: Dispatch<SetStateAction<Record<string, string>>>;
   rewardFocusedMap: Record<string, boolean>;
   setRewardFocusedMap: Dispatch<SetStateAction<Record<string, boolean>>>;
+  rewardVoucherModeMap: Record<string, RewardVoucherMode>;
+  setRewardVoucherModeMap: Dispatch<
+    SetStateAction<Record<string, RewardVoucherMode>>
+  >;
+  rewardVoucherDraftMap: Record<string, VoucherDraft>;
+  setRewardVoucherDraftMap: Dispatch<
+    SetStateAction<Record<string, VoucherDraft>>
+  >;
   onAppendReward: (taskIndex: number) => void;
+  inputClass: (hasError: boolean) => string;
 }
 
 function TaskRewardFields({
   taskIndex,
   isReadOnly,
+  isForcedCampaignCreate,
+  isCampaignVoucherLocked,
+  hasCampaignVoucherOptions,
   control,
   register,
   watch,
@@ -187,7 +253,12 @@ function TaskRewardFields({
   setRewardQueries,
   rewardFocusedMap,
   setRewardFocusedMap,
+  rewardVoucherModeMap,
+  setRewardVoucherModeMap,
+  rewardVoucherDraftMap,
+  setRewardVoucherDraftMap,
   onAppendReward,
+  inputClass,
 }: TaskRewardFieldsProps): JSX.Element {
   const { fields, remove } = useFieldArray({
     control,
@@ -214,6 +285,29 @@ function TaskRewardFields({
           const rewardType =
             watch(`tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`) ??
             QuestRewardType.POINTS;
+          const currentRewardValue =
+            watch(`tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`) ?? 0;
+          const watchedRewardQuantity = watch(
+            `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`
+          );
+          const currentRewardQuantity =
+            watchedRewardQuantity === null ||
+            watchedRewardQuantity === undefined
+              ? null
+              : Number(watchedRewardQuantity);
+          const selectedVoucherOption =
+            rewardType === QuestRewardType.VOUCHER
+              ? (voucherRewardOptions.find(
+                  (option) => option.id === currentRewardValue
+                ) ?? null)
+              : null;
+          const voucherRemainLimit = selectedVoucherOption?.maxQuantity ?? null;
+          const rewardIndexKey = `${taskIndex}-${rewardIndex}`;
+          const rewardVoucherMode =
+            rewardVoucherModeMap[rewardIndexKey] ??
+            (hasCampaignVoucherOptions ? 'existing' : 'create');
+          const voucherDraft =
+            rewardVoucherDraftMap[rewardIndexKey] ?? defaultVoucherDraft();
 
           return (
             <div
@@ -239,56 +333,301 @@ function TaskRewardFields({
                   <label className="mb-1 block text-xs font-semibold text-gray-700">
                     Loại thưởng
                   </label>
-                  <select
-                    {...register(
-                      `tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`,
-                      {
-                        setValueAs: (value) => Number(value),
-                      }
-                    )}
-                    onChange={(event) => {
-                      const nextRewardType = Number(
-                        event.target.value
-                      ) as QuestRewardType;
-                      const rewardKey = rewardField.id;
-                      setValue(
+                  {isCampaignVoucherLocked ? (
+                    <>
+                      <input
+                        type="hidden"
+                        {...register(
+                          `tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`,
+                          {
+                            setValueAs: (value) => Number(value),
+                          }
+                        )}
+                      />
+                      <div className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
+                        {QUEST_REWARD_TYPE_LABELS[QuestRewardType.VOUCHER]}
+                      </div>
+                    </>
+                  ) : (
+                    <select
+                      {...register(
                         `tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`,
-                        nextRewardType,
-                        { shouldDirty: true, shouldValidate: true }
-                      );
-                      setValue(
-                        `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
-                        getDefaultRewardValue(nextRewardType),
-                        { shouldDirty: true, shouldValidate: true }
-                      );
-                      setValue(
-                        `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
-                        1,
-                        { shouldDirty: true, shouldValidate: true }
-                      );
-                      setRewardQueries((prev) => ({
-                        ...prev,
-                        [rewardKey]: '',
-                      }));
-                    }}
-                    disabled={isReadOnly}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
-                  >
-                    {Object.entries(QUEST_REWARD_TYPE_LABELS).map(
-                      ([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      )
-                    )}
-                  </select>
+                        {
+                          setValueAs: (value) => Number(value),
+                        }
+                      )}
+                      onChange={(event) => {
+                        const nextRewardType = Number(
+                          event.target.value
+                        ) as QuestRewardType;
+                        const rewardKey = rewardField.id;
+                        setValue(
+                          `tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`,
+                          nextRewardType,
+                          { shouldDirty: true, shouldValidate: true }
+                        );
+                        setValue(
+                          `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                          getDefaultRewardValue(nextRewardType),
+                          { shouldDirty: true, shouldValidate: true }
+                        );
+                        setValue(
+                          `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                          1,
+                          { shouldDirty: true, shouldValidate: true }
+                        );
+                        setRewardQueries((prev) => ({
+                          ...prev,
+                          [rewardKey]: '',
+                        }));
+                      }}
+                      disabled={isReadOnly}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                    >
+                      {Object.entries(QUEST_REWARD_TYPE_LABELS).map(
+                        ([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  )}
                 </div>
 
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-gray-700">
                     Giá trị thưởng
                   </label>
-                  {rewardType === QuestRewardType.POINTS ? (
+                  {isCampaignVoucherLocked ? (
+                    <div className="space-y-2">
+                      {isForcedCampaignCreate && hasCampaignVoucherOptions && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            disabled={isReadOnly}
+                            onClick={() => {
+                              setRewardVoucherModeMap((prev) => ({
+                                ...prev,
+                                [rewardIndexKey]: 'existing',
+                              }));
+                            }}
+                            className={`rounded-lg border px-2 py-1 text-xs font-semibold ${
+                              rewardVoucherMode === 'existing'
+                                ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                : 'border-gray-200 bg-white text-gray-600'
+                            }`}
+                          >
+                            Chọn voucher có sẵn
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isReadOnly}
+                            onClick={() => {
+                              setRewardVoucherModeMap((prev) => ({
+                                ...prev,
+                                [rewardIndexKey]: 'create',
+                              }));
+                              const syncedQuantity =
+                                currentRewardQuantity !== null &&
+                                currentRewardQuantity > 0
+                                  ? currentRewardQuantity
+                                  : 1;
+                              setRewardVoucherDraftMap((prev) => ({
+                                ...prev,
+                                [rewardIndexKey]: {
+                                  ...(prev[rewardIndexKey] ?? voucherDraft),
+                                  quantity: syncedQuantity,
+                                },
+                              }));
+                              setValue(
+                                `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                0,
+                                {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                }
+                              );
+                            }}
+                            className={`rounded-lg border px-2 py-1 text-xs font-semibold ${
+                              rewardVoucherMode === 'create'
+                                ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                : 'border-gray-200 bg-white text-gray-600'
+                            }`}
+                          >
+                            Tạo voucher mới
+                          </button>
+                        </div>
+                      )}
+
+                      {(
+                        isForcedCampaignCreate
+                          ? rewardVoucherMode === 'existing' &&
+                            hasCampaignVoucherOptions
+                          : true
+                      ) ? (
+                        ((): JSX.Element => {
+                          const rewardOptions = voucherRewardOptions;
+                          const selectedRewardOption =
+                            rewardOptions.find(
+                              (option) => option.id === currentRewardValue
+                            ) ?? null;
+                          const rewardKey = rewardField.id;
+                          const isFocused =
+                            rewardFocusedMap[rewardKey] ?? false;
+                          const queryFromState = rewardQueries[rewardKey];
+                          const query =
+                            queryFromState ?? selectedRewardOption?.label ?? '';
+                          const normalizedQuery = query.trim().toLowerCase();
+                          const filteredRewardOptions = !normalizedQuery
+                            ? rewardOptions.slice(0, 8)
+                            : rewardOptions
+                                .filter((option) =>
+                                  `${option.label} ${option.searchText ?? option.hint}`
+                                    .toLowerCase()
+                                    .includes(normalizedQuery)
+                                )
+                                .slice(0, 8);
+
+                          return (
+                            <div className="relative">
+                              <input
+                                type="hidden"
+                                {...register(
+                                  `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                  {
+                                    valueAsNumber: true,
+                                  }
+                                )}
+                              />
+
+                              <input
+                                type="text"
+                                value={query}
+                                onFocus={() => {
+                                  if (isReadOnly) {
+                                    return;
+                                  }
+                                  setRewardFocusedMap((prev) => ({
+                                    ...prev,
+                                    [rewardKey]: true,
+                                  }));
+                                }}
+                                onBlur={() => {
+                                  if (isReadOnly) {
+                                    return;
+                                  }
+                                  window.setTimeout(() => {
+                                    setRewardFocusedMap((prev) => ({
+                                      ...prev,
+                                      [rewardKey]: false,
+                                    }));
+                                  }, 120);
+                                }}
+                                onChange={(event) => {
+                                  if (isReadOnly) {
+                                    return;
+                                  }
+                                  const nextQuery = event.target.value;
+                                  setRewardQueries((prev) => ({
+                                    ...prev,
+                                    [rewardKey]: nextQuery,
+                                  }));
+                                }}
+                                disabled={isReadOnly}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                                placeholder="Nhập để tìm voucher chiến dịch"
+                              />
+
+                              {isFocused && !isReadOnly && (
+                                <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                                  {isLoadingRewards ? (
+                                    <p className="px-3 py-2 text-sm text-gray-500">
+                                      Đang tải dữ liệu phần thưởng...
+                                    </p>
+                                  ) : filteredRewardOptions.length > 0 ? (
+                                    filteredRewardOptions.map((option) => (
+                                      <button
+                                        key={option.id}
+                                        type="button"
+                                        onMouseDown={(event) =>
+                                          event.preventDefault()
+                                        }
+                                        onClick={() => {
+                                          setValue(
+                                            `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                            option.id,
+                                            {
+                                              shouldDirty: true,
+                                              shouldValidate: true,
+                                            }
+                                          );
+                                          if (
+                                            typeof option.maxQuantity ===
+                                            'number'
+                                          ) {
+                                            const currentQuantityRaw =
+                                              watch(
+                                                `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`
+                                              ) ?? 1;
+                                            const currentQuantity =
+                                              Number(currentQuantityRaw);
+                                            const adjustedQuantity = Math.min(
+                                              Math.max(
+                                                1,
+                                                Number.isNaN(currentQuantity)
+                                                  ? 1
+                                                  : currentQuantity
+                                              ),
+                                              option.maxQuantity
+                                            );
+                                            setValue(
+                                              `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                                              adjustedQuantity,
+                                              {
+                                                shouldDirty: true,
+                                                shouldValidate: true,
+                                              }
+                                            );
+                                          }
+                                          setRewardQueries((prev) => ({
+                                            ...prev,
+                                            [rewardKey]: option.label,
+                                          }));
+                                          setRewardFocusedMap((prev) => ({
+                                            ...prev,
+                                            [rewardKey]: false,
+                                          }));
+                                        }}
+                                        className="hover:bg-primary-50 w-full px-3 py-2 text-left text-sm"
+                                      >
+                                        <p className="font-medium text-gray-800">
+                                          {option.label}
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                          {option.hint}
+                                        </p>
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <p className="px-3 py-2 text-sm text-gray-500">
+                                      Không tìm thấy voucher phù hợp.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()
+                      ) : isForcedCampaignCreate ? (
+                        <input
+                          value="Tự động theo voucher tạo mới"
+                          disabled
+                          className="w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500"
+                        />
+                      ) : null}
+                    </div>
+                  ) : rewardType === QuestRewardType.POINTS ? (
                     <input
                       type="number"
                       {...register(
@@ -305,10 +644,6 @@ function TaskRewardFields({
                       const rewardOptions = isBadgeReward
                         ? badgeRewardOptions
                         : voucherRewardOptions;
-                      const currentRewardValue =
-                        watch(
-                          `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`
-                        ) ?? 0;
                       const selectedRewardOption =
                         rewardOptions.find(
                           (option) => option.id === currentRewardValue
@@ -406,6 +741,33 @@ function TaskRewardFields({
                                           shouldValidate: true,
                                         }
                                       );
+                                      if (
+                                        typeof option.maxQuantity === 'number'
+                                      ) {
+                                        const currentQuantityRaw =
+                                          watch(
+                                            `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`
+                                          ) ?? 1;
+                                        const currentQuantity =
+                                          Number(currentQuantityRaw);
+                                        const adjustedQuantity = Math.min(
+                                          Math.max(
+                                            1,
+                                            Number.isNaN(currentQuantity)
+                                              ? 1
+                                              : currentQuantity
+                                          ),
+                                          option.maxQuantity
+                                        );
+                                        setValue(
+                                          `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                                          adjustedQuantity,
+                                          {
+                                            shouldDirty: true,
+                                            shouldValidate: true,
+                                          }
+                                        );
+                                      }
                                       setRewardQueries((prev) => ({
                                         ...prev,
                                         [rewardKey]: option.label,
@@ -441,22 +803,326 @@ function TaskRewardFields({
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-gray-700">
                     Số lượng
+                    {rewardType === QuestRewardType.VOUCHER &&
+                    voucherRemainLimit !== null ? (
+                      <span className="ml-1 text-[11px] font-normal text-gray-500">
+                        (Tồn: {voucherRemainLimit})
+                      </span>
+                    ) : null}
                   </label>
                   <input
                     type="number"
                     min={1}
-                    {...register(
-                      `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
-                      {
-                        setValueAs: (value) =>
-                          value === '' ? null : Number(value),
+                    max={
+                      rewardType === QuestRewardType.VOUCHER &&
+                      voucherRemainLimit !== null
+                        ? voucherRemainLimit
+                        : undefined
+                    }
+                    value={currentRewardQuantity ?? ''}
+                    onChange={(event) => {
+                      const rawValue = event.target.value;
+
+                      if (rawValue === '') {
+                        setValue(
+                          `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                          null,
+                          {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          }
+                        );
+                        if (
+                          isForcedCampaignCreate &&
+                          (!hasCampaignVoucherOptions ||
+                            rewardVoucherMode === 'create')
+                        ) {
+                          setRewardVoucherDraftMap((prev) => ({
+                            ...prev,
+                            [rewardIndexKey]: {
+                              ...voucherDraft,
+                              quantity: 0,
+                            },
+                          }));
+                        }
+                        return;
                       }
-                    )}
+
+                      let nextQuantity = Math.max(1, Number(rawValue));
+                      if (
+                        rewardType === QuestRewardType.VOUCHER &&
+                        voucherRemainLimit !== null
+                      ) {
+                        nextQuantity = Math.min(
+                          nextQuantity,
+                          voucherRemainLimit
+                        );
+                      }
+
+                      setValue(
+                        `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                        Number.isNaN(nextQuantity) ? null : nextQuantity,
+                        {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        }
+                      );
+
+                      if (
+                        isForcedCampaignCreate &&
+                        (!hasCampaignVoucherOptions ||
+                          rewardVoucherMode === 'create')
+                      ) {
+                        setRewardVoucherDraftMap((prev) => ({
+                          ...prev,
+                          [rewardIndexKey]: {
+                            ...voucherDraft,
+                            quantity: Number.isNaN(nextQuantity)
+                              ? 0
+                              : nextQuantity,
+                          },
+                        }));
+                      }
+                    }}
                     disabled={isReadOnly}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
                   />
                 </div>
               </div>
+
+              {isForcedCampaignCreate &&
+                (!hasCampaignVoucherOptions ||
+                  rewardVoucherMode === 'create') && (
+                  <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3">
+                    <p
+                      className="mb-3 text-xs font-bold uppercase"
+                      style={{ color: '#8bcf3f' }}
+                    >
+                      Tạo voucher cho phần thưởng này
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-gray-700">
+                          Tên voucher <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          value={voucherDraft.name}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            setRewardVoucherDraftMap((prev) => ({
+                              ...prev,
+                              [rewardIndexKey]: {
+                                ...voucherDraft,
+                                name: nextValue,
+                              },
+                            }));
+                          }}
+                          disabled={isReadOnly}
+                          className={inputClass(false)}
+                          placeholder="Nhập tên voucher"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-gray-700">
+                          Mã voucher <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          value={voucherDraft.voucherCode}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            setRewardVoucherDraftMap((prev) => ({
+                              ...prev,
+                              [rewardIndexKey]: {
+                                ...voucherDraft,
+                                voucherCode: nextValue,
+                              },
+                            }));
+                          }}
+                          disabled={isReadOnly}
+                          className={inputClass(false)}
+                          placeholder="VD: QUEST2026"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-gray-700">
+                          Loại giảm giá <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={voucherDraft.type}
+                          onChange={(event) => {
+                            const nextType = event.target.value as
+                              | 'AMOUNT'
+                              | 'PERCENT';
+                            setRewardVoucherDraftMap((prev) => ({
+                              ...prev,
+                              [rewardIndexKey]: {
+                                ...voucherDraft,
+                                type: nextType,
+                                maxDiscountValue:
+                                  nextType === 'AMOUNT'
+                                    ? null
+                                    : voucherDraft.maxDiscountValue,
+                              },
+                            }));
+                          }}
+                          disabled={isReadOnly}
+                          className={inputClass(false)}
+                        >
+                          <option value="AMOUNT">Giảm theo số tiền</option>
+                          <option value="PERCENT">Giảm theo %</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-gray-700">
+                          Giá trị giảm <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={
+                            voucherDraft.type === 'PERCENT'
+                              ? String(voucherDraft.discountValue)
+                              : formatNumberWithDots(voucherDraft.discountValue)
+                          }
+                          onChange={(event) => {
+                            const nextValue =
+                              voucherDraft.type === 'PERCENT'
+                                ? Math.min(
+                                    Number(
+                                      event.target.value.replace(/[^0-9]/g, '')
+                                    ),
+                                    100
+                                  )
+                                : parseNumberInput(event.target.value);
+
+                            setRewardVoucherDraftMap((prev) => ({
+                              ...prev,
+                              [rewardIndexKey]: {
+                                ...voucherDraft,
+                                discountValue: Number.isNaN(nextValue)
+                                  ? 0
+                                  : nextValue,
+                              },
+                            }));
+                          }}
+                          disabled={isReadOnly}
+                          className={inputClass(false)}
+                          placeholder="0"
+                        />
+                      </div>
+
+                      {voucherDraft.type === 'PERCENT' && (
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-gray-700">
+                            Giảm tối đa (VNĐ)
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={formatNumberWithDots(
+                              voucherDraft.maxDiscountValue
+                            )}
+                            onChange={(event) => {
+                              const nextValue = event.target.value;
+                              setRewardVoucherDraftMap((prev) => ({
+                                ...prev,
+                                [rewardIndexKey]: {
+                                  ...voucherDraft,
+                                  maxDiscountValue:
+                                    nextValue === ''
+                                      ? null
+                                      : parseNumberInput(nextValue),
+                                },
+                              }));
+                            }}
+                            disabled={isReadOnly}
+                            className={inputClass(false)}
+                            placeholder="Không giới hạn"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-gray-700">
+                          Đơn hàng tối thiểu (VNĐ){' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formatNumberWithDots(
+                            voucherDraft.minAmountRequired
+                          )}
+                          onChange={(event) => {
+                            setRewardVoucherDraftMap((prev) => ({
+                              ...prev,
+                              [rewardIndexKey]: {
+                                ...voucherDraft,
+                                minAmountRequired: parseNumberInput(
+                                  event.target.value
+                                ),
+                              },
+                            }));
+                          }}
+                          disabled={isReadOnly}
+                          className={inputClass(false)}
+                          placeholder="0"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-gray-700">
+                          Số lượng phát hành{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formatNumberWithDots(
+                            currentRewardQuantity !== null &&
+                              currentRewardQuantity > 0
+                              ? currentRewardQuantity
+                              : 0
+                          )}
+                          disabled
+                          className={inputClass(false)}
+                          placeholder="0"
+                        />
+                        <p className="mt-1 text-[11px] text-gray-500">
+                          Tự đồng bộ theo Số lượng phần thưởng để tránh lệch dữ
+                          liệu.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <label className="mb-1 block text-xs font-semibold text-gray-700">
+                        Mô tả voucher
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={voucherDraft.description}
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          setRewardVoucherDraftMap((prev) => ({
+                            ...prev,
+                            [rewardIndexKey]: {
+                              ...voucherDraft,
+                              description: nextValue,
+                            },
+                          }));
+                        }}
+                        disabled={isReadOnly}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                        placeholder="Nhập mô tả voucher (không bắt buộc)"
+                      />
+                    </div>
+                  </div>
+                )}
 
               {errors.tasks?.[taskIndex]?.rewards?.[rewardIndex]
                 ?.rewardType && (
@@ -498,11 +1164,18 @@ export default function QuestFormModal({
   onSubmit,
   quest,
   canEditTasks = true,
+  enableViewModeToggle = false,
+  initialViewMode = false,
+  forcedCampaignId = null,
+  forcedCampaignName = null,
+  forcedCampaignStartDate = null,
+  forcedCampaignEndDate = null,
   status,
 }: QuestFormModalProps): JSX.Element | null {
   const { onGetCampaigns } = useCampaign();
   const { onGetAllBadges } = useBadge();
-  const { onGetVouchers } = useVoucher();
+  const { onGetVouchers, onGetVouchersByCampaignId, onCreateVoucher } =
+    useVoucher();
 
   const [campaignOptions, setCampaignOptions] = useState<Campaign[]>([]);
   const [badgeOptions, setBadgeOptions] = useState<Badge[]>([]);
@@ -518,6 +1191,13 @@ export default function QuestFormModal({
   const [rewardFocusedMap, setRewardFocusedMap] = useState<
     Record<string, boolean>
   >({});
+  const [rewardVoucherModeMap, setRewardVoucherModeMap] = useState<
+    Record<string, RewardVoucherMode>
+  >({});
+  const [rewardVoucherDraftMap, setRewardVoucherDraftMap] = useState<
+    Record<string, VoucherDraft>
+  >({});
+  const [isViewMode, setIsViewMode] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -527,6 +1207,7 @@ export default function QuestFormModal({
     control,
     handleSubmit,
     reset,
+    getValues,
     setValue,
     watch,
     formState: { errors, isDirty },
@@ -542,8 +1223,38 @@ export default function QuestFormModal({
 
   const questScope = watch('questScope');
   const campaignId = watch('campaignId');
-  const hasQuestChanges = isDirty || selectedImageFile !== null;
+  const hasRewardQueryChanges = Object.values(rewardQueries).some(
+    (query) => query.trim().length > 0
+  );
+  const hasQuestChanges =
+    isDirty || selectedImageFile !== null || hasRewardQueryChanges;
+  const isUpdateMode = quest !== null;
+  const isForcedCampaignCreate = !isUpdateMode && forcedCampaignId !== null;
+  const isCampaignQuestEdit =
+    isUpdateMode &&
+    questScope === 'campaign' &&
+    (quest?.campaignId ?? null) !== null;
+  const campaignVoucherSourceId = isForcedCampaignCreate
+    ? forcedCampaignId
+    : isCampaignQuestEdit
+      ? (quest?.campaignId ?? campaignId)
+      : null;
+  const isCampaignVoucherLocked = isForcedCampaignCreate || isCampaignQuestEdit;
   const isTaskEditingLocked = quest !== null && !canEditTasks;
+  const isFormReadOnly = isTaskEditingLocked || isViewMode;
+  const isCampaignSelectionDisabled =
+    isTaskEditingLocked || isUpdateMode || isForcedCampaignCreate;
+  const shouldLoadCampaignOptions = !isCampaignSelectionDisabled;
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setIsViewMode(
+      Boolean(quest !== null && enableViewModeToggle && initialViewMode)
+    );
+  }, [enableViewModeToggle, initialViewMode, isOpen, quest]);
 
   const selectedCampaign = useMemo(() => {
     if (!campaignId) {
@@ -599,6 +1310,10 @@ export default function QuestFormModal({
   const voucherRewardOptions = useMemo<RewardOption[]>(
     () =>
       voucherOptions.map((voucher) => ({
+        maxQuantity:
+          typeof voucher.remain === 'number'
+            ? Math.max(voucher.remain, 0)
+            : Math.max(voucher.quantity - voucher.usedQuantity, 0),
         id: voucher.voucherId,
         label: voucher.name,
         hint: `${buildVoucherDiscountText(voucher)} | Đơn tối thiểu ${formatCurrencyVND(
@@ -608,6 +1323,8 @@ export default function QuestFormModal({
       })),
     [voucherOptions]
   );
+  const hasCampaignVoucherOptions =
+    isCampaignVoucherLocked && voucherRewardOptions.length > 0;
 
   const filteredTierOptions = useMemo((): Tier[] => {
     return tierOptions.filter((tier) =>
@@ -616,25 +1333,35 @@ export default function QuestFormModal({
   }, [tierOptions]);
 
   const fetchReferenceData = useCallback(async (): Promise<void> => {
-    setIsLoadingCampaigns(true);
+    setIsLoadingCampaigns(shouldLoadCampaignOptions);
     setIsLoadingRewards(true);
 
     try {
-      const [campaignResponse, badges, vouchers, tiers] = await Promise.all([
-        onGetCampaigns(1, 200),
+      const voucherPromise =
+        isCampaignVoucherLocked && campaignVoucherSourceId !== null
+          ? onGetVouchersByCampaignId(campaignVoucherSourceId)
+          : onGetVouchers();
+
+      const [badges, vouchers, tiers] = await Promise.all([
         onGetAllBadges(),
-        onGetVouchers(),
+        voucherPromise,
         axiosApi.tierApi.getTiers(),
       ]);
 
-      setCampaignOptions(
-        (campaignResponse.items ?? []).filter(
-          (campaign) =>
-            campaign.createdByVendorId === null &&
-            campaign.createdByBranchId === null &&
-            campaign.isUpdateable
-        )
-      );
+      if (shouldLoadCampaignOptions) {
+        const campaignResponse = await onGetCampaigns(1, 200);
+        setCampaignOptions(
+          (campaignResponse.items ?? []).filter(
+            (campaign) =>
+              campaign.createdByVendorId === null &&
+              campaign.createdByBranchId === null &&
+              campaign.isUpdateable
+          )
+        );
+      } else {
+        setCampaignOptions([]);
+      }
+
       setBadgeOptions(badges);
       setVoucherOptions(vouchers);
       setTierOptions(tiers);
@@ -648,7 +1375,17 @@ export default function QuestFormModal({
       setIsLoadingCampaigns(false);
       setIsLoadingRewards(false);
     }
-  }, [onGetAllBadges, onGetCampaigns, onGetVouchers]);
+  }, [
+    campaignVoucherSourceId,
+    isCampaignVoucherLocked,
+    onGetAllBadges,
+    onGetCampaigns,
+    onGetVouchersByCampaignId,
+    forcedCampaignId,
+    isForcedCampaignCreate,
+    onGetVouchers,
+    shouldLoadCampaignOptions,
+  ]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -694,19 +1431,51 @@ export default function QuestFormModal({
       });
       setSelectedImageFile(null);
       setImagePreviewUrl(quest.imageUrl ?? null);
-      setCampaignQuery('');
+      setCampaignQuery(
+        forcedCampaignName ??
+          (quest.campaignId ? `Chiến dịch #${quest.campaignId}` : '')
+      );
       setRewardQueries({});
       setRewardFocusedMap({});
       return;
     }
 
     reset(defaultValues);
+    if (isForcedCampaignCreate) {
+      setValue('questScope', 'campaign', {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+      setValue('isStandalone', false, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+      setValue('requiresEnrollment', true, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+      setValue('campaignId', forcedCampaignId, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+    }
     setSelectedImageFile(null);
     setImagePreviewUrl(null);
-    setCampaignQuery('');
+    setCampaignQuery(isForcedCampaignCreate ? (forcedCampaignName ?? '') : '');
     setRewardQueries({});
     setRewardFocusedMap({});
-  }, [fetchReferenceData, isOpen, quest, reset]);
+    setRewardVoucherModeMap({});
+    setRewardVoucherDraftMap({});
+  }, [
+    fetchReferenceData,
+    forcedCampaignId,
+    forcedCampaignName,
+    isForcedCampaignCreate,
+    isOpen,
+    quest,
+    reset,
+    setValue,
+  ]);
 
   useEffect((): (() => void) => {
     return (): void => {
@@ -717,15 +1486,83 @@ export default function QuestFormModal({
   }, [imagePreviewUrl]);
 
   useEffect(() => {
-    if (isCampaignFocused) {
+    if (!isOpen || !isCampaignVoucherLocked) {
+      return;
+    }
+
+    const currentTasks = getValues('tasks');
+    currentTasks.forEach((task, taskIndex) => {
+      task.rewards.forEach((_, rewardIndex) => {
+        const rewardPath = `tasks.${taskIndex}.rewards.${rewardIndex}` as const;
+        const rewardModeKey = `${taskIndex}-${rewardIndex}`;
+
+        setValue(`${rewardPath}.rewardType`, QuestRewardType.VOUCHER, {
+          shouldDirty: false,
+          shouldValidate: false,
+        });
+
+        const currentRewardValue =
+          getValues(`${rewardPath}.rewardValue`) ??
+          getDefaultRewardValue(QuestRewardType.VOUCHER);
+
+        if (
+          hasCampaignVoucherOptions &&
+          (currentRewardValue === 0 ||
+            !voucherRewardOptions.some(
+              (voucherOption) => voucherOption.id === currentRewardValue
+            ))
+        ) {
+          const defaultVoucherId = voucherRewardOptions[0]?.id ?? 0;
+          setValue(`${rewardPath}.rewardValue`, defaultVoucherId, {
+            shouldDirty: false,
+            shouldValidate: false,
+          });
+        }
+
+        setRewardVoucherModeMap((prev) => ({
+          ...prev,
+          [rewardModeKey]:
+            prev[rewardModeKey] ??
+            (hasCampaignVoucherOptions ? 'existing' : 'create'),
+        }));
+
+        setRewardVoucherDraftMap((prev) => {
+          const currentRewardQuantity = Number(
+            task.rewards[rewardIndex]?.quantity ?? 0
+          );
+
+          return {
+            ...prev,
+            [rewardModeKey]: prev[rewardModeKey] ?? {
+              ...defaultVoucherDraft(),
+              quantity:
+                Number.isNaN(currentRewardQuantity) || currentRewardQuantity < 0
+                  ? 0
+                  : currentRewardQuantity,
+            },
+          };
+        });
+      });
+    });
+  }, [
+    getValues,
+    hasCampaignVoucherOptions,
+    isCampaignVoucherLocked,
+    isOpen,
+    setValue,
+    voucherRewardOptions,
+  ]);
+
+  useEffect(() => {
+    if (isCampaignFocused || isCampaignSelectionDisabled) {
       return;
     }
 
     setCampaignQuery(selectedCampaign?.name ?? '');
-  }, [isCampaignFocused, selectedCampaign]);
+  }, [isCampaignFocused, isCampaignSelectionDisabled, selectedCampaign]);
 
   const handleQuestScopeChange = (scope: QuestScope): void => {
-    if (isTaskEditingLocked) {
+    if (isFormReadOnly) {
       return;
     }
 
@@ -779,6 +1616,162 @@ export default function QuestFormModal({
     const isUpgrade = data.questScope === 'upgrade';
     const isCampaign = data.questScope === 'campaign';
 
+    const normalizedTasks = data.tasks.map((task, taskIndex) => ({
+      type: isUpgrade ? QuestTaskType.TIER_UP : task.type,
+      targetValue: task.targetValue,
+      description: task.description,
+      rewards: task.rewards.map((reward, rewardIndex) => ({
+        rewardType: reward.rewardType,
+        rewardValue: reward.rewardValue,
+        quantity: reward.quantity,
+        rewardIndex,
+      })),
+      taskIndex,
+    }));
+
+    const voucherRemainMap = new Map<number, number>(
+      voucherOptions.map((voucher) => [
+        voucher.voucherId,
+        typeof voucher.remain === 'number'
+          ? Math.max(voucher.remain, 0)
+          : Math.max(voucher.quantity - voucher.usedQuantity, 0),
+      ])
+    );
+
+    for (const task of normalizedTasks) {
+      for (const reward of task.rewards) {
+        if (Number(reward.rewardType) !== Number(QuestRewardType.VOUCHER)) {
+          continue;
+        }
+
+        if (reward.rewardValue <= 0) {
+          continue;
+        }
+
+        const remain = voucherRemainMap.get(reward.rewardValue);
+        const rewardQuantity = reward.quantity ?? 0;
+        if (remain !== undefined && rewardQuantity > remain) {
+          throw new Error(
+            `Số lượng voucher ở nhiệm vụ con ${task.taskIndex + 1} không được vượt quá tồn (${remain}).`
+          );
+        }
+      }
+    }
+
+    if (isForcedCampaignCreate && !isUpdateMode) {
+      const campaignId = forcedCampaignId ?? data.campaignId;
+      if (!campaignId) {
+        return;
+      }
+
+      const voucherPayloads: VoucherCreate[] = [];
+      const draftRewardLocations: Array<{
+        taskIndex: number;
+        rewardIndex: number;
+      }> = [];
+
+      for (const task of normalizedTasks) {
+        for (const reward of task.rewards) {
+          const rewardModeKey = `${task.taskIndex}-${reward.rewardIndex}`;
+          const voucherMode =
+            rewardVoucherModeMap[rewardModeKey] ??
+            (hasCampaignVoucherOptions ? 'existing' : 'create');
+
+          if (voucherMode === 'existing' && hasCampaignVoucherOptions) {
+            if (
+              reward.rewardValue <= 0 ||
+              !voucherRewardOptions.some(
+                (voucherOption) => voucherOption.id === reward.rewardValue
+              )
+            ) {
+              throw new Error(
+                'Vui lòng chọn voucher có sẵn cho phần thưởng chiến dịch.'
+              );
+            }
+            continue;
+          }
+
+          const voucherDraft =
+            rewardVoucherDraftMap[rewardModeKey] ?? defaultVoucherDraft();
+
+          const trimmedName = voucherDraft.name.trim();
+          const trimmedCode = voucherDraft.voucherCode.trim();
+          const trimmedDescription = voucherDraft.description.trim();
+
+          if (
+            trimmedName.length === 0 ||
+            trimmedCode.length === 0 ||
+            voucherDraft.discountValue <= 0 ||
+            (voucherDraft.type === 'PERCENT' &&
+              voucherDraft.discountValue > 100) ||
+            voucherDraft.minAmountRequired < 0 ||
+            voucherDraft.quantity <= 0 ||
+            (voucherDraft.type === 'PERCENT' &&
+              (voucherDraft.maxDiscountValue === null ||
+                voucherDraft.maxDiscountValue <= 0))
+          ) {
+            throw new Error(
+              'Vui lòng nhập đầy đủ thông tin voucher mới cho phần thưởng chiến dịch.'
+            );
+          }
+
+          voucherPayloads.push({
+            name: trimmedName,
+            voucherCode: trimmedCode,
+            type: voucherDraft.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+            description:
+              trimmedDescription.length > 0 ? trimmedDescription : null,
+            discountValue: voucherDraft.discountValue,
+            maxDiscountValue:
+              voucherDraft.type === 'PERCENT'
+                ? voucherDraft.maxDiscountValue
+                : null,
+            minAmountRequired: voucherDraft.minAmountRequired,
+            quantity: voucherDraft.quantity,
+            redeemPoint: 0,
+            startDate: forcedCampaignStartDate ?? new Date().toISOString(),
+            endDate: forcedCampaignEndDate ?? null,
+            expiredDate: null,
+            isActive: true,
+            campaignId,
+          });
+
+          draftRewardLocations.push({
+            taskIndex: task.taskIndex,
+            rewardIndex: reward.rewardIndex,
+          });
+        }
+      }
+
+      const createdVouchers =
+        voucherPayloads.length > 0
+          ? await onCreateVoucher(voucherPayloads)
+          : [];
+
+      draftRewardLocations.forEach((location, index) => {
+        const createdVoucherId = createdVouchers[index]?.voucherId;
+        if (!createdVoucherId) {
+          return;
+        }
+
+        const task = normalizedTasks[location.taskIndex];
+        const reward = task?.rewards[location.rewardIndex];
+
+        if (!reward) {
+          return;
+        }
+
+        reward.rewardType = QuestRewardType.VOUCHER;
+        reward.rewardValue = createdVoucherId;
+      });
+
+      normalizedTasks.forEach((task) => {
+        task.rewards.forEach((reward) => {
+          reward.rewardType = QuestRewardType.VOUCHER;
+        });
+      });
+    }
+
     await onSubmit(
       {
         title: data.title,
@@ -787,8 +1780,8 @@ export default function QuestFormModal({
         isActive: true,
         isStandalone: !isCampaign,
         campaignId: isCampaign ? data.campaignId : null,
-        tasks: data.tasks.map((task) => ({
-          type: isUpgrade ? QuestTaskType.TIER_UP : task.type,
+        tasks: normalizedTasks.map((task) => ({
+          type: task.type,
           targetValue: task.targetValue,
           description: task.description,
           rewards: task.rewards.map((reward) => ({
@@ -831,22 +1824,31 @@ export default function QuestFormModal({
   };
 
   const handleAppendTask = (): void => {
-    if (isTaskEditingLocked) {
+    if (isFormReadOnly) {
       return;
     }
 
-    append(createDefaultTask());
+    append(
+      isCampaignVoucherLocked
+        ? createDefaultTask(QuestRewardType.VOUCHER, 0)
+        : createDefaultTask()
+    );
   };
 
   const handleAppendReward = (taskIndex: number): void => {
-    if (isTaskEditingLocked) {
+    if (isFormReadOnly) {
       return;
     }
 
     const currentRewards = watch(`tasks.${taskIndex}.rewards`) ?? [];
     setValue(
       `tasks.${taskIndex}.rewards`,
-      [...currentRewards, createDefaultReward()],
+      [
+        ...currentRewards,
+        isCampaignVoucherLocked
+          ? createDefaultReward(QuestRewardType.VOUCHER, 0)
+          : createDefaultReward(),
+      ],
       { shouldDirty: true, shouldValidate: true }
     );
   };
@@ -883,486 +1885,521 @@ export default function QuestFormModal({
         subtitle={quest?.title ?? ''}
         icon={<AddIcon />}
         iconTone="admin"
+        rightActions={
+          quest !== null && enableViewModeToggle ? (
+            <Tooltip
+              title={isViewMode ? 'Bật chế độ chỉnh sửa' : 'Bật chế độ xem'}
+              arrow
+            >
+              <IconButton
+                size="small"
+                onClick={() => setIsViewMode((prev) => !prev)}
+                sx={{
+                  bgcolor: 'white',
+                  border: '1px solid #f3f4f6',
+                  '&:hover': { bgcolor: '#f3f4f6' },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null
+        }
         onClose={onClose}
       />
 
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <DialogContent
-          dividers
-          sx={{
-            overflowY: 'auto',
-            maxHeight: 'calc(90vh - 150px)',
-          }}
-        >
-          <div className="flex flex-col gap-6">
-            <div>
-              <p className="mb-2 text-xs font-bold tracking-wide text-gray-500 uppercase">
-                Loại quest
-              </p>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={() => handleQuestScopeChange('campaign')}
-                  disabled={isTaskEditingLocked}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
-                    questScope === 'campaign'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 bg-white text-gray-700'
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
-                >
-                  Theo chiến dịch
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuestScopeChange('standalone')}
-                  disabled={isTaskEditingLocked}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
-                    questScope === 'standalone'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 bg-white text-gray-700'
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
-                >
-                  Độc lập
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuestScopeChange('upgrade')}
-                  disabled={isTaskEditingLocked}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
-                    questScope === 'upgrade'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 bg-white text-gray-700'
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
-                >
-                  Nâng cấp (Hạng)
-                </button>
-              </div>
-              {isTaskEditingLocked && (
-                <p className="mt-2 text-xs text-amber-600">
-                  Quest đã có người tham gia, chỉ được chỉnh sửa tiêu đề, mô tả
-                  và ảnh.
-                </p>
-              )}
-              <input type="hidden" {...register('questScope')} />
-              <input type="hidden" {...register('isStandalone')} />
-              <input type="hidden" {...register('requiresEnrollment')} />
-              <input type="hidden" {...register('isActive')} />
-            </div>
-
-            {questScope === 'campaign' && (
+        <fieldset disabled={isViewMode} className="m-0 min-w-0 border-0 p-0">
+          <DialogContent
+            dividers
+            sx={{
+              overflowY: 'auto',
+              maxHeight: 'calc(90vh - 150px)',
+            }}
+          >
+            <div className="flex flex-col gap-6">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">
-                  Tên chiến dịch <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={campaignQuery}
-                    disabled={isTaskEditingLocked}
-                    onFocus={() => setIsCampaignFocused(true)}
-                    onBlur={() => {
-                      window.setTimeout(() => setIsCampaignFocused(false), 120);
-                    }}
-                    onChange={(event) => {
-                      const nextQuery = event.target.value;
-                      setCampaignQuery(nextQuery);
-                      setValue('campaignId', null, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                    }}
-                    className={inputClass(!!errors.campaignId)}
-                    placeholder="Nhập tên chiến dịch để tìm"
-                  />
+                <p className="mb-2 text-xs font-bold tracking-wide text-gray-500 uppercase">
+                  Loại quest
+                </p>
+                {isUpdateMode || isForcedCampaignCreate ? (
+                  <div className="border-primary-500 bg-primary-50 text-primary-700 rounded-lg border px-3 py-2 text-sm font-semibold">
+                    {QUEST_SCOPE_LABELS[questScope]}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => handleQuestScopeChange('standalone')}
+                      disabled={isTaskEditingLocked}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
+                        questScope === 'standalone'
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : 'border-gray-200 bg-white text-gray-700'
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {QUEST_SCOPE_LABELS.standalone}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuestScopeChange('upgrade')}
+                      disabled={isTaskEditingLocked}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold ${
+                        questScope === 'upgrade'
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : 'border-gray-200 bg-white text-gray-700'
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {QUEST_SCOPE_LABELS.upgrade}
+                    </button>
+                  </div>
+                )}
+                {isTaskEditingLocked && !isViewMode && (
+                  <p className="mt-2 text-xs text-amber-600">
+                    Quest đã có người tham gia, chỉ được chỉnh sửa tiêu đề, mô
+                    tả và ảnh.
+                  </p>
+                )}
+                <input type="hidden" {...register('questScope')} />
+                <input type="hidden" {...register('isStandalone')} />
+                <input type="hidden" {...register('requiresEnrollment')} />
+                <input type="hidden" {...register('isActive')} />
+              </div>
 
-                  {isCampaignFocused && campaignQuery.trim().length > 0 && (
-                    <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                      {isLoadingCampaigns ? (
-                        <p className="px-3 py-2 text-sm text-gray-500">
-                          Đang tải chiến dịch...
-                        </p>
-                      ) : filteredCampaigns.length > 0 ? (
-                        filteredCampaigns.map((campaign) => (
-                          <button
-                            key={campaign.campaignId}
-                            type="button"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => {
-                              setValue('campaignId', campaign.campaignId, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              });
-                              setCampaignQuery(campaign.name);
-                              setIsCampaignFocused(false);
-                            }}
-                            className="hover:bg-primary-50 w-full px-3 py-2 text-left text-sm"
-                          >
-                            <p className="font-medium text-gray-800">
-                              {campaign.name}
+              {questScope === 'campaign' && (
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Tên chiến dịch <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={campaignQuery}
+                      disabled={isCampaignSelectionDisabled}
+                      onFocus={() => setIsCampaignFocused(true)}
+                      onBlur={() => {
+                        window.setTimeout(
+                          () => setIsCampaignFocused(false),
+                          120
+                        );
+                      }}
+                      onChange={(event) => {
+                        const nextQuery = event.target.value;
+                        setCampaignQuery(nextQuery);
+                        setValue('campaignId', null, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                      }}
+                      className={inputClass(!!errors.campaignId)}
+                      placeholder="Nhập tên chiến dịch để tìm"
+                    />
+
+                    {!isCampaignSelectionDisabled &&
+                      isCampaignFocused &&
+                      campaignQuery.trim().length > 0 && (
+                        <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                          {isLoadingCampaigns ? (
+                            <p className="px-3 py-2 text-sm text-gray-500">
+                              Đang tải chiến dịch...
                             </p>
-                          </button>
-                        ))
-                      ) : (
-                        <p className="px-3 py-2 text-sm text-gray-500">
-                          Không tìm thấy chiến dịch phù hợp.
-                        </p>
+                          ) : filteredCampaigns.length > 0 ? (
+                            filteredCampaigns.map((campaign) => (
+                              <button
+                                key={campaign.campaignId}
+                                type="button"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => {
+                                  setValue('campaignId', campaign.campaignId, {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  });
+                                  setCampaignQuery(campaign.name);
+                                  setIsCampaignFocused(false);
+                                }}
+                                className="hover:bg-primary-50 w-full px-3 py-2 text-left text-sm"
+                              >
+                                <p className="font-medium text-gray-800">
+                                  {campaign.name}
+                                </p>
+                              </button>
+                            ))
+                          ) : (
+                            <p className="px-3 py-2 text-sm text-gray-500">
+                              Không tìm thấy chiến dịch phù hợp.
+                            </p>
+                          )}
+                        </div>
                       )}
-                    </div>
+                  </div>
+                  {errors.campaignId && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.campaignId.message}
+                    </p>
                   )}
                 </div>
-                {errors.campaignId && (
+              )}
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Tiêu đề <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  {...register('title')}
+                  className={inputClass(!!errors.title)}
+                  placeholder="Nhập tiêu đề nhiệm vụ"
+                />
+                {errors.title && (
                   <p className="mt-1 text-xs text-red-500">
-                    {errors.campaignId.message}
+                    {errors.title.message}
                   </p>
                 )}
               </div>
-            )}
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Tiêu đề <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                {...register('title')}
-                className={inputClass(!!errors.title)}
-                placeholder="Nhập tiêu đề nhiệm vụ"
-              />
-              {errors.title && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.title.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">
-                Mô tả
-              </label>
-              <textarea
-                rows={3}
-                {...register('description', {
-                  setValueAs: (value) =>
-                    typeof value === 'string' && value.trim() === ''
-                      ? null
-                      : value,
-                })}
-                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                placeholder="Nhập mô tả nhiệm vụ"
-              />
-              {errors.description && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Ảnh nhiệm vụ
-              </label>
-              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                {imagePreviewUrl ? (
-                  <div className="group relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
-                    <img
-                      src={imagePreviewUrl}
-                      alt="Quest preview"
-                      className="h-40 w-auto max-w-full object-contain"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 transition-all duration-300 group-hover:opacity-100">
-                      <Tooltip title="Đổi ảnh khác" arrow>
-                        <IconButton
-                          onClick={() => fileInputRef.current?.click()}
-                          sx={{
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                            color: 'var(--color-primary-600)',
-                            '&:hover': {
-                              bgcolor: 'white',
-                            },
-                          }}
-                        >
-                          <AddPhotoAlternateIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Xóa ảnh" arrow>
-                        <IconButton
-                          onClick={handleClearImage}
-                          sx={{
-                            bgcolor: 'rgba(255,255,255,0.95)',
-                            color: '#ef4444',
-                            '&:hover': {
-                              bgcolor: '#fee2e2',
-                            },
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <AddPhotoAlternateIcon fontSize="medium" />
-                    <p className="mt-2 text-sm font-semibold text-gray-700">
-                      Nhấn để tải ảnh lên
-                    </p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Mô tả
+                </label>
+                <textarea
+                  rows={3}
+                  {...register('description', {
+                    setValueAs: (value) =>
+                      typeof value === 'string' && value.trim() === ''
+                        ? null
+                        : value,
+                  })}
+                  className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                  placeholder="Nhập mô tả nhiệm vụ"
                 />
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
-                  Danh sách nhiệm vụ con
-                </p>
-                {questScope !== 'upgrade' && (
-                  <button
-                    type="button"
-                    onClick={handleAppendTask}
-                    disabled={isTaskEditingLocked}
-                    className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
-                  >
-                    <AddIcon fontSize="small" />
-                    Thêm nhiệm vụ
-                  </button>
+                {errors.description && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.description.message}
+                  </p>
                 )}
               </div>
 
-              {errors.tasks?.message && (
-                <p className="mb-2 text-xs text-red-500">
-                  {errors.tasks.message}
-                </p>
-              )}
-
-              <div className="space-y-4">
-                {fields.map((field, index) => {
-                  const currentTaskType =
-                    watch(`tasks.${index}.type`) ?? QuestTaskType.REVIEW;
-                  const currentTargetValue = Number(
-                    watch(`tasks.${index}.targetValue`) ?? 0
-                  );
-
-                  return (
-                    <div
-                      key={field.id}
-                      className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <h4 className="font-semibold text-gray-700">
-                          Nhiệm vụ {index + 1}
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          disabled={
-                            fields.length === 1 ||
-                            questScope === 'upgrade' ||
-                            isTaskEditingLocked
-                          }
-                          className="flex items-center gap-1 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
-                        >
-                          <DeleteIcon fontSize="small" />
-                          Xóa
-                        </button>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">
+                  Ảnh nhiệm vụ
+                </label>
+                <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  {imagePreviewUrl ? (
+                    <div className="group relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Quest preview"
+                        className="h-40 w-auto max-w-full object-contain"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                        <Tooltip title="Đổi ảnh khác" arrow>
+                          <IconButton
+                            onClick={() => fileInputRef.current?.click()}
+                            sx={{
+                              bgcolor: 'rgba(255,255,255,0.95)',
+                              color: 'var(--color-primary-600)',
+                              '&:hover': {
+                                bgcolor: 'white',
+                              },
+                            }}
+                          >
+                            <AddPhotoAlternateIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Xóa ảnh" arrow>
+                          <IconButton
+                            onClick={handleClearImage}
+                            sx={{
+                              bgcolor: 'rgba(255,255,255,0.95)',
+                              color: '#ef4444',
+                              '&:hover': {
+                                bgcolor: '#fee2e2',
+                              },
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                       </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <AddPhotoAlternateIcon fontSize="medium" />
+                      <p className="mt-2 text-sm font-semibold text-gray-700">
+                        Nhấn để tải ảnh lên
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </div>
+              </div>
 
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                          <label className="mb-1 block text-sm font-semibold text-gray-700">
-                            Loại nhiệm vụ{' '}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          {questScope === 'upgrade' ? (
-                            <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
-                              {QUEST_TASK_TYPE_LABELS[QuestTaskType.TIER_UP]}
-                            </div>
-                          ) : (
-                            <select
-                              {...register(`tasks.${index}.type`, {
-                                setValueAs: (value) => Number(value),
-                              })}
-                              disabled={isTaskEditingLocked}
-                              className={inputClass(
-                                !!errors.tasks?.[index]?.type
-                              )}
-                            >
-                              {Object.entries(QUEST_TASK_TYPE_LABELS)
-                                .filter(
-                                  ([value]) =>
-                                    value !== String(QuestTaskType.TIER_UP)
-                                )
-                                .map(([value, label]) => (
-                                  <option key={value} value={value}>
-                                    {label}
-                                  </option>
-                                ))}
-                            </select>
-                          )}
-                          {errors.tasks?.[index]?.type && (
-                            <p className="mt-1 text-xs text-red-500">
-                              {errors.tasks[index]?.type?.message}
-                            </p>
-                          )}
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                    Danh sách nhiệm vụ con
+                  </p>
+                  {questScope !== 'upgrade' && (
+                    <button
+                      type="button"
+                      onClick={handleAppendTask}
+                      disabled={isTaskEditingLocked}
+                      className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+                    >
+                      <AddIcon fontSize="small" />
+                      Thêm nhiệm vụ
+                    </button>
+                  )}
+                </div>
+
+                {errors.tasks?.message && (
+                  <p className="mb-2 text-xs text-red-500">
+                    {errors.tasks.message}
+                  </p>
+                )}
+
+                <div className="space-y-4">
+                  {fields.map((field, index) => {
+                    const currentTaskType =
+                      watch(`tasks.${index}.type`) ?? QuestTaskType.REVIEW;
+                    const currentTargetValue = Number(
+                      watch(`tasks.${index}.targetValue`) ?? 0
+                    );
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <h4 className="font-semibold text-gray-700">
+                            Nhiệm vụ {index + 1}
+                          </h4>
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            disabled={
+                              fields.length === 1 ||
+                              questScope === 'upgrade' ||
+                              isTaskEditingLocked
+                            }
+                            className="flex items-center gap-1 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
+                          >
+                            <DeleteIcon fontSize="small" />
+                            Xóa
+                          </button>
                         </div>
 
-                        <div>
-                          <label className="mb-1 block text-sm font-semibold text-gray-700">
-                            Giá trị cần đạt{' '}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          {questScope === 'upgrade' ||
-                          currentTaskType === QuestTaskType.TIER_UP ? (
-                            <select
-                              {...register(`tasks.${index}.targetValue`, {
-                                setValueAs: (value) => Number(value),
-                              })}
-                              disabled={isTaskEditingLocked}
-                              className={inputClass(
-                                !!errors.tasks?.[index]?.targetValue
-                              )}
-                            >
-                              {filteredTierOptions.map((tier) => (
-                                <option key={tier.tierId} value={tier.tierId}>
-                                  {tier.name}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <>
-                              {currentTaskType ===
-                              QuestTaskType.ORDER_AMOUNT ? (
-                                <>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-sm font-semibold text-gray-700">
+                              Loại nhiệm vụ{' '}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            {questScope === 'upgrade' ? (
+                              <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
+                                {QUEST_TASK_TYPE_LABELS[QuestTaskType.TIER_UP]}
+                              </div>
+                            ) : (
+                              <select
+                                {...register(`tasks.${index}.type`, {
+                                  setValueAs: (value) => Number(value),
+                                })}
+                                disabled={isTaskEditingLocked}
+                                className={inputClass(
+                                  !!errors.tasks?.[index]?.type
+                                )}
+                              >
+                                {Object.entries(QUEST_TASK_TYPE_LABELS)
+                                  .filter(
+                                    ([value]) =>
+                                      value !== String(QuestTaskType.TIER_UP)
+                                  )
+                                  .map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                      {label}
+                                    </option>
+                                  ))}
+                              </select>
+                            )}
+                            {errors.tasks?.[index]?.type && (
+                              <p className="mt-1 text-xs text-red-500">
+                                {errors.tasks[index]?.type?.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="mb-1 block text-sm font-semibold text-gray-700">
+                              Giá trị cần đạt{' '}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            {questScope === 'upgrade' ||
+                            currentTaskType === QuestTaskType.TIER_UP ? (
+                              <select
+                                {...register(`tasks.${index}.targetValue`, {
+                                  setValueAs: (value) => Number(value),
+                                })}
+                                disabled={isTaskEditingLocked}
+                                className={inputClass(
+                                  !!errors.tasks?.[index]?.targetValue
+                                )}
+                              >
+                                {filteredTierOptions.map((tier) => (
+                                  <option key={tier.tierId} value={tier.tierId}>
+                                    {tier.name}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <>
+                                {currentTaskType ===
+                                QuestTaskType.ORDER_AMOUNT ? (
+                                  <>
+                                    <input
+                                      type="hidden"
+                                      {...register(
+                                        `tasks.${index}.targetValue`,
+                                        {
+                                          valueAsNumber: true,
+                                        }
+                                      )}
+                                    />
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      disabled={isTaskEditingLocked}
+                                      value={
+                                        Number.isFinite(currentTargetValue)
+                                          ? formatNumberWithDots(
+                                              currentTargetValue
+                                            )
+                                          : ''
+                                      }
+                                      onChange={(event) => {
+                                        const digitsOnly =
+                                          event.target.value.replace(/\D/g, '');
+                                        const parsedValue =
+                                          digitsOnly.length > 0
+                                            ? Number(digitsOnly)
+                                            : Number.NaN;
+                                        setValue(
+                                          `tasks.${index}.targetValue`,
+                                          parsedValue,
+                                          {
+                                            shouldDirty: true,
+                                            shouldValidate: true,
+                                          }
+                                        );
+                                      }}
+                                      className={inputClass(
+                                        !!errors.tasks?.[index]?.targetValue
+                                      )}
+                                      placeholder="Ví dụ: 1.000.000"
+                                    />
+                                  </>
+                                ) : (
                                   <input
-                                    type="hidden"
+                                    type="number"
                                     {...register(`tasks.${index}.targetValue`, {
                                       valueAsNumber: true,
                                     })}
-                                  />
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
                                     disabled={isTaskEditingLocked}
-                                    value={
-                                      Number.isFinite(currentTargetValue)
-                                        ? formatNumberWithDotGrouping(
-                                            currentTargetValue
-                                          )
-                                        : ''
-                                    }
-                                    onChange={(event) => {
-                                      const digitsOnly =
-                                        event.target.value.replace(/\D/g, '');
-                                      const parsedValue =
-                                        digitsOnly.length > 0
-                                          ? Number(digitsOnly)
-                                          : Number.NaN;
-                                      setValue(
-                                        `tasks.${index}.targetValue`,
-                                        parsedValue,
-                                        {
-                                          shouldDirty: true,
-                                          shouldValidate: true,
-                                        }
-                                      );
-                                    }}
                                     className={inputClass(
                                       !!errors.tasks?.[index]?.targetValue
                                     )}
-                                    placeholder="Ví dụ: 1.000.000"
                                   />
-                                </>
-                              ) : (
-                                <input
-                                  type="number"
-                                  {...register(`tasks.${index}.targetValue`, {
-                                    valueAsNumber: true,
-                                  })}
-                                  disabled={isTaskEditingLocked}
-                                  className={inputClass(
-                                    !!errors.tasks?.[index]?.targetValue
-                                  )}
-                                />
-                              )}
-                            </>
-                          )}
-                          {errors.tasks?.[index]?.targetValue && (
-                            <p className="mt-1 text-xs text-red-500">
-                              {errors.tasks[index]?.targetValue?.message}
-                            </p>
-                          )}
+                                )}
+                              </>
+                            )}
+                            {errors.tasks?.[index]?.targetValue && (
+                              <p className="mt-1 text-xs text-red-500">
+                                {errors.tasks[index]?.targetValue?.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="mb-1 block text-sm font-semibold text-gray-700">
+                              Mô tả nhiệm vụ con
+                            </label>
+                            <textarea
+                              rows={2}
+                              {...register(`tasks.${index}.description`, {
+                                setValueAs: (value) =>
+                                  typeof value === 'string' &&
+                                  value.trim() === ''
+                                    ? null
+                                    : value,
+                              })}
+                              disabled={isTaskEditingLocked}
+                              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                            />
+                          </div>
                         </div>
 
-                        <div className="md:col-span-2">
-                          <label className="mb-1 block text-sm font-semibold text-gray-700">
-                            Mô tả nhiệm vụ con
-                          </label>
-                          <textarea
-                            rows={2}
-                            {...register(`tasks.${index}.description`, {
-                              setValueAs: (value) =>
-                                typeof value === 'string' && value.trim() === ''
-                                  ? null
-                                  : value,
-                            })}
-                            disabled={isTaskEditingLocked}
-                            className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                          />
-                        </div>
+                        <TaskRewardFields
+                          taskIndex={index}
+                          isReadOnly={isFormReadOnly}
+                          isForcedCampaignCreate={isForcedCampaignCreate}
+                          isCampaignVoucherLocked={isCampaignVoucherLocked}
+                          hasCampaignVoucherOptions={hasCampaignVoucherOptions}
+                          control={control}
+                          register={register}
+                          watch={watch}
+                          setValue={setValue}
+                          errors={errors}
+                          badgeRewardOptions={badgeRewardOptions}
+                          voucherRewardOptions={voucherRewardOptions}
+                          isLoadingRewards={isLoadingRewards}
+                          rewardQueries={rewardQueries}
+                          setRewardQueries={setRewardQueries}
+                          rewardFocusedMap={rewardFocusedMap}
+                          setRewardFocusedMap={setRewardFocusedMap}
+                          rewardVoucherModeMap={rewardVoucherModeMap}
+                          setRewardVoucherModeMap={setRewardVoucherModeMap}
+                          rewardVoucherDraftMap={rewardVoucherDraftMap}
+                          setRewardVoucherDraftMap={setRewardVoucherDraftMap}
+                          onAppendReward={handleAppendReward}
+                          inputClass={inputClass}
+                        />
                       </div>
-
-                      <TaskRewardFields
-                        taskIndex={index}
-                        isReadOnly={isTaskEditingLocked}
-                        control={control}
-                        register={register}
-                        watch={watch}
-                        setValue={setValue}
-                        errors={errors}
-                        badgeRewardOptions={badgeRewardOptions}
-                        voucherRewardOptions={voucherRewardOptions}
-                        isLoadingRewards={isLoadingRewards}
-                        rewardQueries={rewardQueries}
-                        setRewardQueries={setRewardQueries}
-                        rewardFocusedMap={rewardFocusedMap}
-                        setRewardFocusedMap={setRewardFocusedMap}
-                        onAppendReward={handleAppendReward}
-                      />
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        </DialogContent>
+          </DialogContent>
+        </fieldset>
 
         <DialogActions sx={{ px: 3, py: 1 }}>
           <Button onClick={onClose} color="inherit">
             Hủy
           </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={
-              status === 'pending' || (quest !== null && !hasQuestChanges)
-            }
-            startIcon={
-              status === 'pending' ? <CircularProgress size={20} /> : null
-            }
-          >
-            {quest ? 'Cập nhật' : 'Tạo nhiệm vụ'}
-          </Button>
+          {!isViewMode && (
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={
+                status === 'pending' || (quest !== null && !hasQuestChanges)
+              }
+              startIcon={
+                status === 'pending' ? <CircularProgress size={20} /> : null
+              }
+            >
+              {quest ? 'Cập nhật' : 'Tạo nhiệm vụ'}
+            </Button>
+          )}
         </DialogActions>
       </form>
     </Dialog>

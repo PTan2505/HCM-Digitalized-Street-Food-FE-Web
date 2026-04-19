@@ -81,7 +81,7 @@ export default function StoreSection({
         </label>
         <input
           type="text"
-          placeholder="Chi nhánh Thủ Đức"
+          placeholder="Thủ Đức"
           value={formData.branchName}
           onChange={(e) => onChange('branchName', e.target.value)}
           disabled={readonly}
