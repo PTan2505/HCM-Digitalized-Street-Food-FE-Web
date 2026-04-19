@@ -1,5 +1,6 @@
 import type { RootState } from '@app/store';
 import type { User } from '@custom-types/user';
+import type { VerifyOtpProfileResponse } from '@features/user/api/profileApi';
 import type {
   LoginWithFacebookRequest,
   LoginWithGoogleRequest,
@@ -28,6 +29,8 @@ const initialState: AuthState = {
   status: 'idle',
   error: null,
 };
+
+type VerifiableField = 'email' | 'phoneNumber';
 
 export const userLoginWithGoogle = createAppAsyncThunk(
   'auth/loginWithGoogle',
@@ -146,6 +149,40 @@ export const markUserInfoSetup = createAppAsyncThunk(
   }
 );
 
+export const requestContactVerification = createAppAsyncThunk(
+  'user/requestContactVerification',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.userProfileApi.requestContactVerification();
+      console.log('contactVerification response:', response);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const verifyProfileOTP = createAppAsyncThunk(
+  'user/verifyProfileOTP',
+  async (
+    payload: { otp: string; field: VerifiableField },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.userProfileApi.verifyOTPProfile(
+        payload.otp
+      );
+      return {
+        response,
+        requestedField: payload.field,
+      };
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: 'user',
   initialState,
@@ -180,6 +217,31 @@ export const authSlice = createSlice({
       })
       .addCase(markUserInfoSetup.fulfilled, (state) => {
         if (state.value) state.value.userInfoSetup = true;
+      })
+      .addCase(verifyProfileOTP.fulfilled, (state, action) => {
+        if (!state.value) {
+          return;
+        }
+
+        const payload = action.payload as {
+          response: VerifyOtpProfileResponse;
+          requestedField: VerifiableField;
+        };
+
+        const channel = payload.response.channel;
+        const verifiedField: VerifiableField =
+          channel === 'email'
+            ? 'email'
+            : channel === 'phone' || channel === 'phoneNumber'
+              ? 'phoneNumber'
+              : payload.requestedField;
+
+        if (verifiedField === 'email') {
+          state.value.emailVerified = true;
+          return;
+        }
+
+        state.value.phoneNumberVerified = true;
       })
       // Matcher: Gom tất cả các case đang chạy (pending)
       .addMatcher(isPending, (state) => {
