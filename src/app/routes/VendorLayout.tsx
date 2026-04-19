@@ -75,9 +75,9 @@ const navigation = [
     icon: QueueListIcon,
   },
   {
-    name: 'Chế độ ăn',
+    name: 'Chế độ ăn của cửa hàng',
     href: `${vendorBase}/${vendorPaths.DIETARY}`,
-    icon: UserGroupIcon,
+    icon: ShoppingBagIcon,
   },
   {
     name: 'Xác nhận sở hữu quán',

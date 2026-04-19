@@ -473,7 +473,7 @@ function BranchPage(): JSX.Element {
         setDishBranch(branch);
       },
       color: 'primary' as const,
-      show: (branch: Branch): boolean => branch.isSubscribed,
+      // show: (branch: Branch): boolean => branch.isSubscribed,
     },
     {
       id: 'manager',

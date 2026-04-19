@@ -596,6 +596,42 @@ export const vendorSlice = createSlice({
   initialState,
   reducers: {
     resetVendorState: () => initialState,
+    updateBranchVerificationStatusRealtime: (
+      state,
+      action: {
+        payload: {
+          branchId?: number | null;
+          branchName?: string | null;
+          status: 'Accept' | 'Reject';
+          rejectReason?: string | null;
+        };
+      }
+    ) => {
+      if (!state.myVendor) return;
+
+      const normalizedBranchName = action.payload.branchName?.trim();
+      const targetBranch =
+        action.payload.branchId !== null &&
+        action.payload.branchId !== undefined
+          ? state.myVendor.branches.find(
+              (branch) => branch.branchId === action.payload.branchId
+            )
+          : normalizedBranchName
+            ? state.myVendor.branches.find(
+                (branch) => branch.name.trim() === normalizedBranchName
+              )
+            : undefined;
+
+      if (!targetBranch) return;
+
+      targetBranch.licenseStatus = action.payload.status;
+      targetBranch.licenseRejectReason =
+        action.payload.status === 'Reject'
+          ? (action.payload.rejectReason ?? null)
+          : null;
+      targetBranch.isVerified = action.payload.status === 'Accept';
+      targetBranch.isActive = true;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -964,7 +1000,8 @@ export const vendorSlice = createSlice({
   },
 });
 
-export const { resetVendorState } = vendorSlice.actions;
+export const { resetVendorState, updateBranchVerificationStatusRealtime } =
+  vendorSlice.actions;
 
 export default vendorSlice.reducer;
 
