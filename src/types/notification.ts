@@ -1,6 +1,13 @@
+export type NotificationType =
+  | 'NewFeedback'
+  | 'NewOrder'
+  | 'BranchVerificationStatus'
+  | 'SystemCampaignCreated'
+  | (string & {});
+
 export interface NotificationDto {
   notificationId: number;
-  type: string;
+  type: NotificationType;
   title: string;
   message: string;
   referenceId: number | null;
