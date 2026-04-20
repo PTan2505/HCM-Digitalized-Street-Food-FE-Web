@@ -26,7 +26,7 @@ import {
 import Table from '@features/admin/components/Table';
 import Pagination from '@features/admin/components/Pagination';
 import CamPaignFormModal, {
-  type CampaignQuestBundleDraft,
+  type CampaignQuestBundleSubmitDraft,
 } from '@features/admin/components/CamPaignFormModal';
 import QuestFormModal from '@features/admin/components/QuestFormModal';
 import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
@@ -184,7 +184,7 @@ export default function CampaignPage(): JSX.Element {
     data: CampaignFormData,
     imageFile: File | null,
     isImageRemoved?: boolean,
-    questBundles?: CampaignQuestBundleDraft[]
+    questBundles?: CampaignQuestBundleSubmitDraft[]
   ): Promise<void> => {
     try {
       if (editingCampaign) {
