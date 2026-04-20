@@ -146,7 +146,7 @@ export default function PaymentBenefitsModal({
                   </Box>
                 </Box>
 
-                <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                {/* <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
                     <MenuBookIcon fontSize="small" />
                   </Box>
@@ -162,7 +162,7 @@ export default function PaymentBenefitsModal({
                       thực khách dễ dàng tìm kiếm và xem trước món ngon của bạn.
                     </Typography>
                   </Box>
-                </Box>
+                </Box> */}
 
                 {/* <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">

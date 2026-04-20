@@ -76,7 +76,7 @@ export default function OnboardingGuideModal({
               <p className="text-sm leading-relaxed text-gray-600">
                 Nếu bạn đã có chi nhánh trên hệ thống,{' '}
                 <Link
-                  to={`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.GHOST_PIN}`}
+                  to={`${ROUTES.USER.BASE}/${ROUTES.USER.PATHS.GHOST_PIN}`}
                   onClick={onClose}
                   className="font-semibold text-[#7ab82d] transition-colors hover:text-[#5f9324]"
                 >
