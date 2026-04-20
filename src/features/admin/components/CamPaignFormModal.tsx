@@ -44,6 +44,14 @@ type QuestTaskDraft = {
   taskType: QuestTaskType;
   targetValue: number;
   taskDescription: string;
+  expectedParticipantCount: number;
+  rewards: RewardDraft[];
+};
+
+type QuestTaskSubmitDraft = {
+  taskType: QuestTaskType;
+  targetValue: number;
+  taskDescription: string;
   rewards: RewardDraft[];
 };
 
@@ -55,6 +63,14 @@ export type CampaignQuestBundleDraft = {
   tasks: QuestTaskDraft[];
 };
 
+export type CampaignQuestBundleSubmitDraft = {
+  title: string;
+  description: string;
+  imageFile: File | null;
+  imagePreviewUrl: string | null;
+  tasks: QuestTaskSubmitDraft[];
+};
+
 interface CamPaignFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -62,7 +78,7 @@ interface CamPaignFormModalProps {
     data: CampaignFormData,
     imageFile: File | null,
     isImageRemoved?: boolean,
-    questBundles?: CampaignQuestBundleDraft[]
+    questBundles?: CampaignQuestBundleSubmitDraft[]
   ) => Promise<void>;
   campaign: Campaign | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
@@ -154,6 +170,7 @@ const defaultQuestTaskDraft = (): QuestTaskDraft => ({
   taskType: QuestTaskType.REVIEW,
   targetValue: 1,
   taskDescription: '',
+  expectedParticipantCount: 1,
   rewards: [defaultRewardDraft()],
 });
 
@@ -177,6 +194,17 @@ const taskOptions: Array<{ value: QuestTaskType; label: string }> = [
   { value: QuestTaskType.SHARE, label: 'Chia sẻ' },
   { value: QuestTaskType.CREATE_GHOST_PIN, label: 'Tạo ghost pin' },
 ];
+
+const getIssuedVoucherQuantity = (
+  rewardQuantity: number,
+  expectedParticipantCount: number
+): number => {
+  if (rewardQuantity <= 0 || expectedParticipantCount <= 0) {
+    return 0;
+  }
+
+  return rewardQuantity * expectedParticipantCount;
+};
 
 export default function CamPaignFormModal({
   isOpen,
@@ -353,6 +381,13 @@ export default function CamPaignFormModal({
             return;
           }
 
+          if (task.expectedParticipantCount <= 0) {
+            setQuestError(
+              `Số người kỳ vọng tham gia của nhiệm vụ con ${taskIndex + 1} trong nhiệm vụ ${questIndex + 1} phải lớn hơn 0.`
+            );
+            return;
+          }
+
           if (task.rewards.length === 0) {
             setQuestError(
               `Nhiệm vụ con ${taskIndex + 1} trong nhiệm vụ ${questIndex + 1} cần ít nhất một phần thưởng.`
@@ -367,6 +402,10 @@ export default function CamPaignFormModal({
           ) {
             const reward = task.rewards[rewardIndex];
             const voucher = reward.voucher;
+            const issuedVoucherQuantity = getIssuedVoucherQuantity(
+              reward.quantity,
+              task.expectedParticipantCount
+            );
             if (reward.quantity <= 0) {
               setQuestError(
                 `Số lượng phần thưởng ${rewardIndex + 1} của nhiệm vụ con ${taskIndex + 1} phải lớn hơn 0.`
@@ -391,16 +430,9 @@ export default function CamPaignFormModal({
               return;
             }
 
-            if (voucher.quantity <= 0) {
+            if (issuedVoucherQuantity <= 0) {
               setQuestError(
                 `Số lượng phát hành voucher ở nhiệm vụ con ${taskIndex + 1} phải lớn hơn 0.`
-              );
-              return;
-            }
-
-            if (voucher.quantity !== reward.quantity) {
-              setQuestError(
-                `Số lượng phát hành voucher ở nhiệm vụ con ${taskIndex + 1} phải khớp với số lượng phần thưởng.`
               );
               return;
             }
@@ -424,12 +456,17 @@ export default function CamPaignFormModal({
       : questBundles.map((quest) => ({
           ...quest,
           tasks: quest.tasks.map((task) => ({
-            ...task,
+            taskType: task.taskType,
+            targetValue: task.targetValue,
+            taskDescription: task.taskDescription,
             rewards: task.rewards.map((reward) => ({
               ...reward,
               voucher: {
                 ...reward.voucher,
-                quantity: reward.quantity,
+                quantity: getIssuedVoucherQuantity(
+                  reward.quantity,
+                  task.expectedParticipantCount
+                ),
                 isActive: true,
               },
             })),
@@ -1188,6 +1225,47 @@ export default function CamPaignFormModal({
                                           placeholder="Mô tả nhiệm vụ con (tùy chọn)"
                                         />
                                       </div>
+
+                                      <div>
+                                        <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                          Số người kỳ vọng tham gia{' '}
+                                          <span className="text-red-500">
+                                            *
+                                          </span>
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          value={
+                                            task.expectedParticipantCount > 0
+                                              ? task.expectedParticipantCount
+                                              : ''
+                                          }
+                                          onChange={(event) => {
+                                            const rawValue = event.target.value;
+                                            updateTaskField(
+                                              questIndex,
+                                              taskIndex,
+                                              (prevTask) => ({
+                                                ...prevTask,
+                                                expectedParticipantCount:
+                                                  rawValue === ''
+                                                    ? 0
+                                                    : Math.max(
+                                                        1,
+                                                        Number(rawValue)
+                                                      ),
+                                              })
+                                            );
+                                          }}
+                                          className={inputClass(false)}
+                                          placeholder="1"
+                                        />
+                                        <p className="mt-1 text-[11px] text-gray-500">
+                                          Áp dụng cho tất cả phần thưởng trong
+                                          nhiệm vụ con này.
+                                        </p>
+                                      </div>
                                     </div>
 
                                     <div className="mt-4">
@@ -1303,11 +1381,6 @@ export default function CamPaignFormModal({
                                                             ...prevReward,
                                                             quantity:
                                                               nextQuantity,
-                                                            voucher: {
-                                                              ...prevReward.voucher,
-                                                              quantity:
-                                                                nextQuantity,
-                                                            },
                                                           })
                                                         );
                                                       }}
@@ -1602,7 +1675,10 @@ export default function CamPaignFormModal({
                                                         type="text"
                                                         inputMode="numeric"
                                                         value={formatNumberWithDots(
-                                                          reward.quantity
+                                                          getIssuedVoucherQuantity(
+                                                            reward.quantity,
+                                                            task.expectedParticipantCount
+                                                          )
                                                         )}
                                                         disabled
                                                         className={inputClass(
@@ -1611,9 +1687,9 @@ export default function CamPaignFormModal({
                                                         placeholder="0"
                                                       />
                                                       <p className="mt-1 text-[11px] text-gray-500">
-                                                        Tự đồng bộ theo Số lượng
-                                                        thưởng để tránh lệch dữ
-                                                        liệu.
+                                                        Tự tính theo công thức:
+                                                        Số lượng thưởng x Số
+                                                        người kỳ vọng tham gia.
                                                       </p>
                                                     </div>
                                                   </div>
