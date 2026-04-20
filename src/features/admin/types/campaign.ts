@@ -1,6 +1,5 @@
 export interface Campaign {
   campaignId: number;
-  createdByBranchId: number | null;
   createdByVendorId: number | null;
   name: string;
   description: string | null;

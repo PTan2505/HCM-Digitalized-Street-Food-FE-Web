@@ -1,44 +1,44 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { JSX, MouseEvent } from 'react';
-import { Box, Button, Tooltip } from '@mui/material';
+import type { VoucherCreate } from '@custom-types/voucher';
+import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSystemCampaignModal';
+import Pagination from '@features/vendor/components/Pagination';
+import Table from '@features/vendor/components/Table';
+import VendorCampaignBranchModal from '@features/vendor/components/VendorCampaignBranchModal';
+import VendorCampaignDetailModal from '@features/vendor/components/VendorCampaignDetailModal';
+import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
+import VendorCampaignVoucherModal from '@features/vendor/components/VendorCampaignVoucherModal';
+import useVendor from '@features/vendor/hooks/useVendor';
+import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
+import useVoucher from '@features/vendor/hooks/useVoucher';
+import type { VendorCampaign } from '@features/vendor/types/campaign';
+import type { Branch } from '@features/vendor/types/vendor';
+import { getCampaignManagementTourSteps } from '@features/vendor/utils/campaignManagementTourSteps';
+import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
+import { useAppSelector } from '@hooks/reduxHooks';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  ConfirmationNumber as VoucherIcon,
-  Storefront as StorefrontIcon,
   GroupAdd as GroupAddIcon,
   HelpOutline as HelpOutlineIcon,
+  Storefront as StorefrontIcon,
   Visibility as VisibilityIcon,
+  ConfirmationNumber as VoucherIcon,
 } from '@mui/icons-material';
+import { Box, Button, Tooltip } from '@mui/material';
 import {
-  type Controls,
-  EVENTS,
-  Joyride,
-  STATUS,
-  type EventData,
-} from 'react-joyride';
-import Table from '@features/vendor/components/Table';
-import Pagination from '@features/vendor/components/Pagination';
-import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
-import VendorCampaignVoucherModal from '@features/vendor/components/VendorCampaignVoucherModal';
-import VendorCampaignBranchModal from '@features/vendor/components/VendorCampaignBranchModal';
-import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSystemCampaignModal';
-import VendorCampaignDetailModal from '@features/vendor/components/VendorCampaignDetailModal';
-import type { VendorCampaign } from '@features/vendor/types/campaign';
-import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
-import useVendor from '@features/vendor/hooks/useVendor';
-import { useAppSelector } from '@hooks/reduxHooks';
-import {
-  selectVendorCampaigns,
   selectCampaignStatus,
+  selectVendorCampaigns,
   selectVendorCampaignTotalCount,
 } from '@slices/campaign';
 import { selectMyVendor } from '@slices/vendor';
-import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
-import type { Branch } from '@features/vendor/types/vendor';
-import type { VoucherCreate } from '@custom-types/voucher';
-import useVoucher from '@features/vendor/hooks/useVoucher';
-import { getCampaignManagementTourSteps } from '@features/vendor/utils/campaignManagementTourSteps';
+import type { JSX, MouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  EVENTS,
+  Joyride,
+  STATUS,
+  type Controls,
+  type EventData,
+} from 'react-joyride';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -285,20 +285,14 @@ export default function VendorCampaignPage(): JSX.Element {
       key: 'creator',
       label: 'Nguồn tạo',
       render: (_: unknown, row: VendorCampaign): JSX.Element => {
-        if (!row.createdByBranchId && !row.createdByVendorId) {
+        if (!row.createdByVendorId) {
           return (
             <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 shadow-sm">
               Từ hệ thống
             </span>
           );
         }
-        if (row.createdByBranchId) {
-          return (
-            <span className="inline-flex items-center justify-center rounded-full border border-teal-200 bg-teal-100 px-2.5 py-0.5 text-xs font-bold text-teal-700 shadow-sm">
-              Từ chi nhánh
-            </span>
-          );
-        }
+
         return (
           <span className="inline-flex items-center justify-center rounded-full border border-purple-200 bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-700 shadow-sm">
             Từ vendor
