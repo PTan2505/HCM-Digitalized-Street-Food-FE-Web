@@ -65,7 +65,9 @@ const toIsoZulu = (localStr: string | null): string | null => {
 };
 
 const formatNumberWithDots = (value: number | null | undefined): string => {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '';
+  }
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
@@ -463,8 +465,15 @@ export default function VoucherFormModal({
     : null;
 
   // ╔═══════════════════════ SINGLE MODE (MarketPlace) ═══════════════════╗
+  const SingleVoucherSchema = openedFromCampaign
+    ? VoucherSchema
+    : VoucherSchema.refine((data) => data.redeemPoint > 0, {
+        path: ['redeemPoint'],
+        message: 'Điểm đổi phải lớn hơn 0',
+      });
+
   const singleForm = useForm<VoucherFormData>({
-    resolver: zodResolver(VoucherSchema),
+    resolver: zodResolver(SingleVoucherSchema),
     defaultValues: {
       name: '',
       voucherCode: '',
@@ -474,7 +483,7 @@ export default function VoucherFormModal({
       maxDiscountValue: null,
       minAmountRequired: 0,
       quantity: 0,
-      redeemPoint: 0,
+      redeemPoint: openedFromCampaign ? 0 : 1,
       startDate: '',
       endDate: '',
       expiredDate: null,
@@ -544,7 +553,9 @@ export default function VoucherFormModal({
         maxDiscountValue: voucher.maxDiscountValue,
         minAmountRequired: voucher.minAmountRequired,
         quantity: voucher.quantity,
-        redeemPoint: isCampaignUpdateMode ? 0 : voucher.redeemPoint,
+        redeemPoint: isCampaignUpdateMode
+          ? 0
+          : Math.max(1, voucher.redeemPoint ?? 1),
         startDate: toLocalDatetimeValue(voucher.startDate),
         endDate: toLocalDatetimeValue(voucher.endDate),
         expiredDate: null,
@@ -561,7 +572,7 @@ export default function VoucherFormModal({
         maxDiscountValue: null,
         minAmountRequired: 0,
         quantity: 0,
-        redeemPoint: 0,
+        redeemPoint: openedFromCampaign ? 0 : 1,
         startDate: '',
         endDate: '',
         expiredDate: null,
@@ -1110,26 +1121,70 @@ export default function VoucherFormModal({
                     <div>
                       <label className="mb-1 block text-sm font-semibold text-gray-700">
                         Điểm đổi{' '}
-                        <span className="text-xs font-normal text-gray-500">
+                        {/* <span className="text-xs font-normal text-gray-500">
                           (Redeem Point)
-                        </span>
+                        </span> */}
                       </label>
                       <Controller
                         control={singleForm.control}
                         name="redeemPoint"
                         render={({ field }) => (
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="0"
-                            className={inputClass(
-                              !!singleForm.formState.errors.redeemPoint
-                            )}
-                            value={formatNumberWithDots(field.value)}
-                            onChange={(e) =>
-                              field.onChange(parseNumberInput(e.target.value))
-                            }
-                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const current = Number.isFinite(field.value)
+                                  ? field.value
+                                  : 1;
+                                field.onChange(Math.max(1, current - 1));
+                              }}
+                              className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-lg font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+                              aria-label="Giảm điểm đổi"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="1"
+                              className={inputClass(
+                                !!singleForm.formState.errors.redeemPoint
+                              )}
+                              value={formatNumberWithDots(field.value)}
+                              onChange={(e) => {
+                                const normalized = e.target.value
+                                  .replace(/\./g, '')
+                                  .replace(/[^0-9]/g, '');
+
+                                if (normalized === '') {
+                                  field.onChange(Number.NaN);
+                                  return;
+                                }
+
+                                const parsed = Number(normalized);
+                                field.onChange(parsed === 0 ? 1 : parsed);
+                              }}
+                              onBlur={() => {
+                                const current = Number.isFinite(field.value)
+                                  ? field.value
+                                  : 1;
+                                field.onChange(Math.max(1, current));
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const current = Number.isFinite(field.value)
+                                  ? field.value
+                                  : 0;
+                                field.onChange(Math.max(1, current + 1));
+                              }}
+                              className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-lg font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+                              aria-label="Tăng điểm đổi"
+                            >
+                              +
+                            </button>
+                          </div>
                         )}
                       />
                       {singleForm.formState.errors.redeemPoint && (
