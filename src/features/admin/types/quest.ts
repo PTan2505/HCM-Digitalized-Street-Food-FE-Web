@@ -70,15 +70,16 @@ export interface QuestCreate {
   tasks: QuestTaskPayload[];
 }
 
-export interface QuestUpdate {
+export type QuestUpdate = {
+  isActive: boolean;
+} & Partial<{
   title: string;
   description: string | null;
   imageUrl: string | null;
-  isActive: boolean;
-  requiresEnrollment?: boolean;
+  requiresEnrollment: boolean;
   isStandalone: boolean;
   campaignId: number | null;
-}
+}>;
 
 export type QuestTasksUpdate = QuestTaskPayload[];
 

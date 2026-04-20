@@ -150,6 +150,17 @@ const parseNumberInput = (value: string): number => {
   return normalized === '' ? 0 : Number(normalized);
 };
 
+const getIssuedVoucherQuantity = (
+  rewardQuantity: number,
+  expectedParticipantCount: number
+): number => {
+  if (rewardQuantity <= 0 || expectedParticipantCount <= 0) {
+    return 0;
+  }
+
+  return rewardQuantity * expectedParticipantCount;
+};
+
 const createDefaultReward = (
   rewardType: QuestRewardType = QuestRewardType.POINTS,
   rewardValue?: number
@@ -215,6 +226,8 @@ const defaultValues: QuestFormInput = {
 interface TaskRewardFieldsProps {
   taskIndex: number;
   isReadOnly: boolean;
+  isCreateMode: boolean;
+  questScope: QuestScope;
   isForcedCampaignCreate: boolean;
   isCampaignVoucherLocked: boolean;
   hasCampaignVoucherOptions: boolean;
@@ -238,6 +251,10 @@ interface TaskRewardFieldsProps {
   setRewardVoucherDraftMap: Dispatch<
     SetStateAction<Record<string, VoucherDraft>>
   >;
+  rewardExpectedParticipantMap: Record<string, number>;
+  setRewardExpectedParticipantMap: Dispatch<
+    SetStateAction<Record<string, number>>
+  >;
   onAppendReward: (taskIndex: number) => void;
   inputClass: (hasError: boolean) => string;
 }
@@ -245,6 +262,8 @@ interface TaskRewardFieldsProps {
 function TaskRewardFields({
   taskIndex,
   isReadOnly,
+  isCreateMode,
+  questScope,
   isForcedCampaignCreate,
   isCampaignVoucherLocked,
   hasCampaignVoucherOptions,
@@ -264,6 +283,8 @@ function TaskRewardFields({
   setRewardVoucherModeMap,
   rewardVoucherDraftMap,
   setRewardVoucherDraftMap,
+  rewardExpectedParticipantMap,
+  setRewardExpectedParticipantMap,
   onAppendReward,
   inputClass,
 }: TaskRewardFieldsProps): JSX.Element {
@@ -312,11 +333,40 @@ function TaskRewardFields({
               : null;
           const voucherRemainLimit = selectedVoucherOption?.maxQuantity ?? null;
           const rewardIndexKey = `${taskIndex}-${rewardIndex}`;
+          const isStandaloneCreateQuest =
+            isCreateMode && questScope === 'standalone';
+          const isUpgradeCreateQuest = isCreateMode && questScope === 'upgrade';
+          const hasStandaloneVoucherOptions =
+            isStandaloneCreateQuest && voucherRewardOptions.length > 0;
           const rewardVoucherMode =
             rewardVoucherModeMap[rewardIndexKey] ??
-            (hasCampaignVoucherOptions ? 'existing' : 'create');
+            (isCampaignVoucherLocked
+              ? hasCampaignVoucherOptions
+                ? 'existing'
+                : 'create'
+              : isUpgradeCreateQuest
+                ? 'create'
+                : hasStandaloneVoucherOptions
+                  ? 'existing'
+                  : 'create');
           const voucherDraft =
             rewardVoucherDraftMap[rewardIndexKey] ?? defaultVoucherDraft();
+          const expectedParticipantCount =
+            rewardExpectedParticipantMap[rewardIndexKey] ?? 1;
+          const shouldUseExpectedParticipant =
+            rewardType === QuestRewardType.VOUCHER &&
+            isStandaloneCreateQuest &&
+            rewardVoucherMode === 'create';
+          const issuedVoucherQuantity = shouldUseExpectedParticipant
+            ? getIssuedVoucherQuantity(
+                currentRewardQuantity !== null && currentRewardQuantity > 0
+                  ? currentRewardQuantity
+                  : 0,
+                expectedParticipantCount
+              )
+            : currentRewardQuantity !== null && currentRewardQuantity > 0
+              ? currentRewardQuantity
+              : 0;
 
           return (
             <div
@@ -370,6 +420,14 @@ function TaskRewardFields({
                           event.target.value
                         ) as QuestRewardType;
                         const rewardKey = rewardField.id;
+                        const nextRewardMode: RewardVoucherMode =
+                          isCreateMode && questScope === 'upgrade'
+                            ? 'create'
+                            : isCreateMode &&
+                                questScope === 'standalone' &&
+                                voucherRewardOptions.length > 0
+                              ? 'existing'
+                              : 'create';
                         setValue(
                           `tasks.${taskIndex}.rewards.${rewardIndex}.rewardType`,
                           nextRewardType,
@@ -385,6 +443,16 @@ function TaskRewardFields({
                           1,
                           { shouldDirty: true, shouldValidate: true }
                         );
+                        if (nextRewardType === QuestRewardType.VOUCHER) {
+                          setRewardVoucherModeMap((prev) => ({
+                            ...prev,
+                            [rewardIndexKey]: nextRewardMode,
+                          }));
+                          setRewardExpectedParticipantMap((prev) => ({
+                            ...prev,
+                            [rewardIndexKey]: prev[rewardIndexKey] ?? 1,
+                          }));
+                        }
                         setRewardQueries((prev) => ({
                           ...prev,
                           [rewardKey]: '',
@@ -676,6 +744,270 @@ function TaskRewardFields({
                         />
                       ) : null}
                     </div>
+                  ) : rewardType === QuestRewardType.VOUCHER &&
+                    isCreateMode &&
+                    (questScope === 'standalone' ||
+                      questScope === 'upgrade') ? (
+                    <div className="space-y-2">
+                      {questScope === 'standalone' &&
+                        hasStandaloneVoucherOptions && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              disabled={isReadOnly}
+                              onClick={() => {
+                                setRewardVoucherModeMap((prev) => ({
+                                  ...prev,
+                                  [rewardIndexKey]: 'existing',
+                                }));
+                              }}
+                              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${
+                                rewardVoucherMode === 'existing'
+                                  ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                  : 'border-gray-200 bg-white text-gray-600'
+                              }`}
+                            >
+                              Chọn voucher có sẵn
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isReadOnly}
+                              onClick={() => {
+                                setRewardVoucherModeMap((prev) => ({
+                                  ...prev,
+                                  [rewardIndexKey]: 'create',
+                                }));
+                                setValue(
+                                  `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                  0,
+                                  {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  }
+                                );
+                                setRewardExpectedParticipantMap((prev) => ({
+                                  ...prev,
+                                  [rewardIndexKey]: prev[rewardIndexKey] ?? 1,
+                                }));
+                              }}
+                              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${
+                                rewardVoucherMode === 'create'
+                                  ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                  : 'border-gray-200 bg-white text-gray-600'
+                              }`}
+                            >
+                              Tạo voucher mới
+                            </button>
+                          </div>
+                        )}
+
+                      {(questScope === 'upgrade' ||
+                        rewardVoucherMode === 'create' ||
+                        !hasStandaloneVoucherOptions) && (
+                        <input
+                          value="Tự động theo voucher tạo mới"
+                          disabled
+                          className="w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500"
+                        />
+                      )}
+
+                      {questScope === 'standalone' &&
+                        rewardVoucherMode === 'existing' &&
+                        hasStandaloneVoucherOptions &&
+                        ((): JSX.Element => {
+                          const rewardOptions = voucherRewardOptions;
+                          const selectedVoucherIds = new Set<number>(
+                            currentTaskRewards
+                              .map((taskReward, taskRewardIndex) => {
+                                if (taskRewardIndex === rewardIndex) {
+                                  return null;
+                                }
+
+                                if (
+                                  Number(taskReward.rewardType) !==
+                                  Number(QuestRewardType.VOUCHER)
+                                ) {
+                                  return null;
+                                }
+
+                                return Number(taskReward.rewardValue);
+                              })
+                              .filter(
+                                (rewardValue): rewardValue is number =>
+                                  typeof rewardValue === 'number' &&
+                                  rewardValue > 0
+                              )
+                          );
+                          const availableRewardOptions = rewardOptions.filter(
+                            (option) =>
+                              option.id === currentRewardValue ||
+                              !selectedVoucherIds.has(option.id)
+                          );
+                          const selectedRewardOption =
+                            rewardOptions.find(
+                              (option) => option.id === currentRewardValue
+                            ) ?? null;
+                          const rewardKey = rewardField.id;
+                          const isFocused =
+                            rewardFocusedMap[rewardKey] ?? false;
+                          const queryFromState = rewardQueries[rewardKey];
+                          const query =
+                            queryFromState ?? selectedRewardOption?.label ?? '';
+                          const normalizedQuery = query.trim().toLowerCase();
+                          const filteredRewardOptions = !normalizedQuery
+                            ? availableRewardOptions.slice(0, 8)
+                            : availableRewardOptions
+                                .filter((option) =>
+                                  `${option.label} ${option.searchText ?? option.hint}`
+                                    .toLowerCase()
+                                    .includes(normalizedQuery)
+                                )
+                                .slice(0, 8);
+
+                          return (
+                            <div className="relative">
+                              <input
+                                type="hidden"
+                                {...register(
+                                  `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                  {
+                                    valueAsNumber: true,
+                                  }
+                                )}
+                              />
+
+                              <input
+                                type="text"
+                                value={query}
+                                onFocus={() => {
+                                  if (isReadOnly) {
+                                    return;
+                                  }
+                                  setRewardFocusedMap((prev) => ({
+                                    ...prev,
+                                    [rewardKey]: true,
+                                  }));
+                                }}
+                                onBlur={() => {
+                                  if (isReadOnly) {
+                                    return;
+                                  }
+                                  window.setTimeout(() => {
+                                    setRewardFocusedMap((prev) => ({
+                                      ...prev,
+                                      [rewardKey]: false,
+                                    }));
+                                  }, 120);
+                                }}
+                                onChange={(event) => {
+                                  if (isReadOnly) {
+                                    return;
+                                  }
+                                  const nextQuery = event.target.value;
+                                  if (
+                                    nextQuery.trim().length === 0 &&
+                                    Number(currentRewardValue) > 0
+                                  ) {
+                                    setValue(
+                                      `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                      0,
+                                      {
+                                        shouldDirty: true,
+                                        shouldValidate: true,
+                                      }
+                                    );
+                                  }
+                                  setRewardQueries((prev) => ({
+                                    ...prev,
+                                    [rewardKey]: nextQuery,
+                                  }));
+                                }}
+                                disabled={isReadOnly}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                                placeholder="Nhập để tìm voucher"
+                              />
+
+                              {isFocused && !isReadOnly && (
+                                <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                                  {isLoadingRewards ? (
+                                    <p className="px-3 py-2 text-sm text-gray-500">
+                                      Đang tải dữ liệu phần thưởng...
+                                    </p>
+                                  ) : filteredRewardOptions.length > 0 ? (
+                                    filteredRewardOptions.map((option) => (
+                                      <button
+                                        key={option.id}
+                                        type="button"
+                                        onMouseDown={(event) =>
+                                          event.preventDefault()
+                                        }
+                                        onClick={() => {
+                                          setValue(
+                                            `tasks.${taskIndex}.rewards.${rewardIndex}.rewardValue`,
+                                            option.id,
+                                            {
+                                              shouldDirty: true,
+                                              shouldValidate: true,
+                                            }
+                                          );
+                                          if (
+                                            typeof option.maxQuantity ===
+                                            'number'
+                                          ) {
+                                            const currentQuantityRaw =
+                                              watch(
+                                                `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`
+                                              ) ?? 1;
+                                            const currentQuantity =
+                                              Number(currentQuantityRaw);
+                                            const adjustedQuantity = Math.min(
+                                              Math.max(
+                                                1,
+                                                Number.isNaN(currentQuantity)
+                                                  ? 1
+                                                  : currentQuantity
+                                              ),
+                                              option.maxQuantity
+                                            );
+                                            setValue(
+                                              `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                                              adjustedQuantity,
+                                              {
+                                                shouldDirty: true,
+                                                shouldValidate: true,
+                                              }
+                                            );
+                                          }
+                                          setRewardQueries((prev) => ({
+                                            ...prev,
+                                            [rewardKey]: option.label,
+                                          }));
+                                          setRewardFocusedMap((prev) => ({
+                                            ...prev,
+                                            [rewardKey]: false,
+                                          }));
+                                        }}
+                                        className="hover:bg-primary-50 w-full px-3 py-2 text-left text-sm"
+                                      >
+                                        <p className="font-medium text-gray-800">
+                                          {option.label}
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                          {option.hint}
+                                        </p>
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <p className="px-3 py-2 text-sm text-gray-500">
+                                      Không tìm thấy voucher phù hợp.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                    </div>
                   ) : rewardType === QuestRewardType.POINTS ? (
                     <input
                       type="number"
@@ -906,7 +1238,13 @@ function TaskRewardFields({
                     min={1}
                     max={
                       rewardType === QuestRewardType.VOUCHER &&
-                      voucherRemainLimit !== null
+                      voucherRemainLimit !== null &&
+                      !(
+                        isCreateMode &&
+                        (questScope === 'standalone' ||
+                          questScope === 'upgrade') &&
+                        rewardVoucherMode === 'create'
+                      )
                         ? voucherRemainLimit
                         : undefined
                     }
@@ -946,7 +1284,13 @@ function TaskRewardFields({
                       let nextQuantity = Math.max(1, Number(rawValue));
                       if (
                         rewardType === QuestRewardType.VOUCHER &&
-                        voucherRemainLimit !== null
+                        voucherRemainLimit !== null &&
+                        !(
+                          isCreateMode &&
+                          (questScope === 'standalone' ||
+                            questScope === 'upgrade') &&
+                          rewardVoucherMode === 'create'
+                        )
                       ) {
                         nextQuantity = Math.min(
                           nextQuantity,
@@ -1006,9 +1350,15 @@ function TaskRewardFields({
                 </div>
               </div>
 
-              {isForcedCampaignCreate &&
-                (!hasCampaignVoucherOptions ||
-                  rewardVoucherMode === 'create') && (
+              {rewardType === QuestRewardType.VOUCHER &&
+                ((isForcedCampaignCreate &&
+                  (!hasCampaignVoucherOptions ||
+                    rewardVoucherMode === 'create')) ||
+                  (isCreateMode &&
+                    (questScope === 'standalone' || questScope === 'upgrade') &&
+                    (questScope === 'upgrade' ||
+                      rewardVoucherMode === 'create' ||
+                      !hasStandaloneVoucherOptions))) && (
                   <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3">
                     <p
                       className="mb-3 text-xs font-bold uppercase"
@@ -1190,29 +1540,63 @@ function TaskRewardFields({
                         />
                       </div>
 
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-gray-700">
-                          Số lượng phát hành{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={formatNumberWithDots(
-                            currentRewardQuantity !== null &&
-                              currentRewardQuantity > 0
-                              ? currentRewardQuantity
-                              : 0
-                          )}
-                          disabled
-                          className={inputClass(false)}
-                          placeholder="0"
-                        />
-                        <p className="mt-1 text-[11px] text-gray-500">
-                          Tự đồng bộ theo Số lượng phần thưởng để tránh lệch dữ
-                          liệu.
-                        </p>
-                      </div>
+                      {questScope === 'standalone' &&
+                        rewardVoucherMode === 'create' && (
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold text-gray-700">
+                              Số người kỳ vọng tham gia{' '}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              min={1}
+                              value={expectedParticipantCount}
+                              onChange={(event) => {
+                                const nextExpectedParticipant = Math.max(
+                                  1,
+                                  Number(event.target.value)
+                                );
+                                setRewardExpectedParticipantMap((prev) => ({
+                                  ...prev,
+                                  [rewardIndexKey]: Number.isNaN(
+                                    nextExpectedParticipant
+                                  )
+                                    ? 1
+                                    : nextExpectedParticipant,
+                                }));
+                              }}
+                              disabled={isReadOnly}
+                              className={inputClass(false)}
+                              placeholder="1"
+                            />
+                            <p className="mt-1 text-[11px] text-gray-500">
+                              Field ảo chỉ dùng để tính số lượng phát hành.
+                            </p>
+                          </div>
+                        )}
+
+                      {!(isCreateMode && questScope === 'upgrade') && (
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-gray-700">
+                            Số lượng phát hành{' '}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={formatNumberWithDots(issuedVoucherQuantity)}
+                            disabled
+                            className={inputClass(false)}
+                            placeholder="0"
+                          />
+                          <p className="mt-1 text-[11px] text-gray-500">
+                            {questScope === 'standalone' &&
+                            rewardVoucherMode === 'create'
+                              ? 'Tự tính theo công thức: Số lượng x Số người kỳ vọng tham gia.'
+                              : 'Tự đồng bộ theo Số lượng phần thưởng để tránh lệch dữ liệu.'}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-3">
@@ -1313,6 +1697,8 @@ export default function QuestFormModal({
   const [rewardVoucherDraftMap, setRewardVoucherDraftMap] = useState<
     Record<string, VoucherDraft>
   >({});
+  const [rewardExpectedParticipantMap, setRewardExpectedParticipantMap] =
+    useState<Record<string, number>>({});
   const [isViewMode, setIsViewMode] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -1462,7 +1848,12 @@ export default function QuestFormModal({
       const voucherPromise =
         isCampaignVoucherLocked && campaignVoucherSourceId !== null
           ? onGetVouchersByCampaignId(campaignVoucherSourceId)
-          : onGetVouchers();
+          : !isUpdateMode && questScope === 'standalone'
+            ? onGetVouchers({
+                isBelongAQuestTask: false,
+                isRemaining: true,
+              })
+            : onGetVouchers();
 
       const [badges, vouchers, tiers] = await Promise.all([
         onGetAllBadges(),
@@ -1501,10 +1892,12 @@ export default function QuestFormModal({
   }, [
     campaignVoucherSourceId,
     isCampaignVoucherLocked,
+    isUpdateMode,
     onGetAllBadges,
     onGetCampaigns,
     onGetVouchersByCampaignId,
     onGetVouchers,
+    questScope,
     shouldResolveCampaignNameOnUpdate,
     shouldLoadCampaignOptions,
   ]);
@@ -1515,6 +1908,12 @@ export default function QuestFormModal({
     }
 
     void fetchReferenceData();
+  }, [fetchReferenceData, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
 
     if (quest) {
       const normalizedTasks =
@@ -1559,6 +1958,7 @@ export default function QuestFormModal({
       );
       setRewardQueries({});
       setRewardFocusedMap({});
+      setRewardExpectedParticipantMap({});
       return;
     }
 
@@ -1588,14 +1988,15 @@ export default function QuestFormModal({
     setRewardFocusedMap({});
     setRewardVoucherModeMap({});
     setRewardVoucherDraftMap({});
+    setRewardExpectedParticipantMap({});
   }, [
-    fetchReferenceData,
     forcedCampaignId,
     forcedCampaignName,
     isForcedCampaignCreate,
     isOpen,
     quest,
     reset,
+    setRewardExpectedParticipantMap,
     setValue,
   ]);
 
@@ -1665,6 +2066,64 @@ export default function QuestFormModal({
     hasCampaignVoucherOptions,
     isCampaignVoucherLocked,
     isOpen,
+    setValue,
+    voucherRewardOptions,
+  ]);
+
+  useEffect(() => {
+    if (!isOpen || isUpdateMode || isCampaignVoucherLocked) {
+      return;
+    }
+
+    const hasStandaloneVoucherOptions =
+      questScope === 'standalone' && voucherRewardOptions.length > 0;
+
+    const currentTasks = getValues('tasks');
+    currentTasks.forEach((task, taskIndex) => {
+      task.rewards.forEach((reward, rewardIndex) => {
+        if (Number(reward.rewardType) !== Number(QuestRewardType.VOUCHER)) {
+          return;
+        }
+
+        const rewardPath = `tasks.${taskIndex}.rewards.${rewardIndex}` as const;
+        const rewardModeKey = `${taskIndex}-${rewardIndex}`;
+        const defaultMode: RewardVoucherMode =
+          questScope === 'upgrade'
+            ? 'create'
+            : hasStandaloneVoucherOptions
+              ? 'existing'
+              : 'create';
+
+        setRewardVoucherModeMap((prev) => ({
+          ...prev,
+          [rewardModeKey]: prev[rewardModeKey] ?? defaultMode,
+        }));
+
+        setRewardExpectedParticipantMap((prev) => ({
+          ...prev,
+          [rewardModeKey]: prev[rewardModeKey] ?? 1,
+        }));
+
+        const currentMode = rewardVoucherModeMap[rewardModeKey] ?? defaultMode;
+        if (
+          questScope === 'upgrade' ||
+          currentMode === 'create' ||
+          !hasStandaloneVoucherOptions
+        ) {
+          setValue(`${rewardPath}.rewardValue`, 0, {
+            shouldDirty: false,
+            shouldValidate: false,
+          });
+        }
+      });
+    });
+  }, [
+    getValues,
+    isCampaignVoucherLocked,
+    isOpen,
+    isUpdateMode,
+    questScope,
+    rewardVoucherModeMap,
     setValue,
     voucherRewardOptions,
   ]);
@@ -1792,118 +2251,168 @@ export default function QuestFormModal({
       }
     }
 
-    if (isForcedCampaignCreate && !isUpdateMode) {
-      const campaignId = forcedCampaignId ?? data.campaignId;
-      if (!campaignId) {
-        return;
-      }
+    if (!isUpdateMode) {
+      const isStandaloneCreateQuest = data.questScope === 'standalone';
+      const isUpgradeCreateQuest = data.questScope === 'upgrade';
+      const shouldHandleVoucherCreateFlow =
+        isForcedCampaignCreate ||
+        isStandaloneCreateQuest ||
+        isUpgradeCreateQuest;
 
-      const voucherPayloads: VoucherCreate[] = [];
-      const draftRewardLocations: Array<{
-        taskIndex: number;
-        rewardIndex: number;
-      }> = [];
+      if (shouldHandleVoucherCreateFlow) {
+        const campaignId = isForcedCampaignCreate
+          ? (forcedCampaignId ?? data.campaignId)
+          : null;
 
-      for (const task of normalizedTasks) {
-        for (const reward of task.rewards) {
-          const rewardModeKey = `${task.taskIndex}-${reward.rewardIndex}`;
-          const voucherMode =
-            rewardVoucherModeMap[rewardModeKey] ??
-            (hasCampaignVoucherOptions ? 'existing' : 'create');
+        if (isForcedCampaignCreate && !campaignId) {
+          return;
+        }
 
-          if (voucherMode === 'existing' && hasCampaignVoucherOptions) {
+        const hasStandaloneVoucherOptions =
+          isStandaloneCreateQuest && voucherRewardOptions.length > 0;
+
+        const voucherPayloads: VoucherCreate[] = [];
+        const draftRewardLocations: Array<{
+          taskIndex: number;
+          rewardIndex: number;
+        }> = [];
+
+        for (const task of normalizedTasks) {
+          for (const reward of task.rewards) {
+            if (Number(reward.rewardType) !== Number(QuestRewardType.VOUCHER)) {
+              continue;
+            }
+
+            const rewardModeKey = `${task.taskIndex}-${reward.rewardIndex}`;
+            const defaultVoucherMode: RewardVoucherMode = isForcedCampaignCreate
+              ? hasCampaignVoucherOptions
+                ? 'existing'
+                : 'create'
+              : isUpgradeCreateQuest
+                ? 'create'
+                : hasStandaloneVoucherOptions
+                  ? 'existing'
+                  : 'create';
+            const voucherMode =
+              rewardVoucherModeMap[rewardModeKey] ?? defaultVoucherMode;
+            const shouldUseExistingVoucher =
+              voucherMode === 'existing' &&
+              ((isForcedCampaignCreate && hasCampaignVoucherOptions) ||
+                (isStandaloneCreateQuest && hasStandaloneVoucherOptions));
+
+            if (shouldUseExistingVoucher) {
+              if (
+                reward.rewardValue <= 0 ||
+                !voucherRewardOptions.some(
+                  (voucherOption) => voucherOption.id === reward.rewardValue
+                )
+              ) {
+                throw new Error(
+                  isForcedCampaignCreate
+                    ? 'Vui lòng chọn voucher có sẵn cho phần thưởng chiến dịch.'
+                    : 'Vui lòng chọn voucher có sẵn cho phần thưởng độc lập.'
+                );
+              }
+              continue;
+            }
+
+            const voucherDraft =
+              rewardVoucherDraftMap[rewardModeKey] ?? defaultVoucherDraft();
+            const trimmedName = voucherDraft.name.trim();
+            const trimmedCode = voucherDraft.voucherCode.trim();
+            const trimmedDescription = voucherDraft.description.trim();
+            const expectedParticipantCount =
+              rewardExpectedParticipantMap[rewardModeKey] ?? 1;
+
+            const issuedVoucherQuantity = isUpgradeCreateQuest
+              ? -1
+              : isStandaloneCreateQuest
+                ? getIssuedVoucherQuantity(
+                    reward.quantity ?? 0,
+                    expectedParticipantCount
+                  )
+                : (reward.quantity ?? 0);
+
             if (
-              reward.rewardValue <= 0 ||
-              !voucherRewardOptions.some(
-                (voucherOption) => voucherOption.id === reward.rewardValue
-              )
+              trimmedName.length === 0 ||
+              trimmedCode.length === 0 ||
+              voucherDraft.discountValue <= 0 ||
+              (voucherDraft.type === 'PERCENT' &&
+                voucherDraft.discountValue > 100) ||
+              voucherDraft.minAmountRequired < 0 ||
+              (!isUpgradeCreateQuest && issuedVoucherQuantity <= 0) ||
+              (voucherDraft.type === 'PERCENT' &&
+                (voucherDraft.maxDiscountValue === null ||
+                  voucherDraft.maxDiscountValue <= 0)) ||
+              (isStandaloneCreateQuest && expectedParticipantCount <= 0)
             ) {
               throw new Error(
-                'Vui lòng chọn voucher có sẵn cho phần thưởng chiến dịch.'
+                isForcedCampaignCreate
+                  ? 'Vui lòng nhập đầy đủ thông tin voucher mới cho phần thưởng chiến dịch.'
+                  : isUpgradeCreateQuest
+                    ? 'Vui lòng nhập đầy đủ thông tin voucher mới cho phần thưởng nâng hạng.'
+                    : 'Vui lòng nhập đầy đủ thông tin voucher mới cho phần thưởng độc lập.'
               );
             }
-            continue;
+
+            voucherPayloads.push({
+              name: trimmedName,
+              voucherCode: trimmedCode,
+              type: voucherDraft.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+              description:
+                trimmedDescription.length > 0 ? trimmedDescription : null,
+              discountValue: voucherDraft.discountValue,
+              maxDiscountValue:
+                voucherDraft.type === 'PERCENT'
+                  ? voucherDraft.maxDiscountValue
+                  : null,
+              minAmountRequired: voucherDraft.minAmountRequired,
+              quantity: issuedVoucherQuantity,
+              redeemPoint: 0,
+              startDate: forcedCampaignStartDate ?? new Date().toISOString(),
+              endDate: forcedCampaignEndDate ?? null,
+              expiredDate: null,
+              isActive: true,
+              campaignId,
+            });
+
+            draftRewardLocations.push({
+              taskIndex: task.taskIndex,
+              rewardIndex: reward.rewardIndex,
+            });
+          }
+        }
+
+        const createdVouchers =
+          voucherPayloads.length > 0
+            ? await onCreateVoucher(voucherPayloads)
+            : [];
+
+        draftRewardLocations.forEach((location, index) => {
+          const createdVoucherId = createdVouchers[index]?.voucherId;
+          if (!createdVoucherId) {
+            return;
           }
 
-          const voucherDraft =
-            rewardVoucherDraftMap[rewardModeKey] ?? defaultVoucherDraft();
+          const task = normalizedTasks[location.taskIndex];
+          const reward = task?.rewards[location.rewardIndex];
 
-          const trimmedName = voucherDraft.name.trim();
-          const trimmedCode = voucherDraft.voucherCode.trim();
-          const trimmedDescription = voucherDraft.description.trim();
-
-          if (
-            trimmedName.length === 0 ||
-            trimmedCode.length === 0 ||
-            voucherDraft.discountValue <= 0 ||
-            (voucherDraft.type === 'PERCENT' &&
-              voucherDraft.discountValue > 100) ||
-            voucherDraft.minAmountRequired < 0 ||
-            voucherDraft.quantity <= 0 ||
-            (voucherDraft.type === 'PERCENT' &&
-              (voucherDraft.maxDiscountValue === null ||
-                voucherDraft.maxDiscountValue <= 0))
-          ) {
-            throw new Error(
-              'Vui lòng nhập đầy đủ thông tin voucher mới cho phần thưởng chiến dịch.'
-            );
+          if (!reward) {
+            return;
           }
 
-          voucherPayloads.push({
-            name: trimmedName,
-            voucherCode: trimmedCode,
-            type: voucherDraft.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
-            description:
-              trimmedDescription.length > 0 ? trimmedDescription : null,
-            discountValue: voucherDraft.discountValue,
-            maxDiscountValue:
-              voucherDraft.type === 'PERCENT'
-                ? voucherDraft.maxDiscountValue
-                : null,
-            minAmountRequired: voucherDraft.minAmountRequired,
-            quantity: voucherDraft.quantity,
-            redeemPoint: 0,
-            startDate: forcedCampaignStartDate ?? new Date().toISOString(),
-            endDate: forcedCampaignEndDate ?? null,
-            expiredDate: null,
-            isActive: true,
-            campaignId,
-          });
+          reward.rewardType = QuestRewardType.VOUCHER;
+          reward.rewardValue = createdVoucherId;
+        });
 
-          draftRewardLocations.push({
-            taskIndex: task.taskIndex,
-            rewardIndex: reward.rewardIndex,
+        if (isForcedCampaignCreate) {
+          normalizedTasks.forEach((task) => {
+            task.rewards.forEach((reward) => {
+              reward.rewardType = QuestRewardType.VOUCHER;
+            });
           });
         }
       }
-
-      const createdVouchers =
-        voucherPayloads.length > 0
-          ? await onCreateVoucher(voucherPayloads)
-          : [];
-
-      draftRewardLocations.forEach((location, index) => {
-        const createdVoucherId = createdVouchers[index]?.voucherId;
-        if (!createdVoucherId) {
-          return;
-        }
-
-        const task = normalizedTasks[location.taskIndex];
-        const reward = task?.rewards[location.rewardIndex];
-
-        if (!reward) {
-          return;
-        }
-
-        reward.rewardType = QuestRewardType.VOUCHER;
-        reward.rewardValue = createdVoucherId;
-      });
-
-      normalizedTasks.forEach((task) => {
-        task.rewards.forEach((reward) => {
-          reward.rewardType = QuestRewardType.VOUCHER;
-        });
-      });
     }
 
     await onSubmit(
@@ -2484,6 +2993,8 @@ export default function QuestFormModal({
                         <TaskRewardFields
                           taskIndex={index}
                           isReadOnly={isFormReadOnly}
+                          isCreateMode={!isUpdateMode}
+                          questScope={questScope}
                           isForcedCampaignCreate={isForcedCampaignCreate}
                           isCampaignVoucherLocked={isCampaignVoucherLocked}
                           hasCampaignVoucherOptions={hasCampaignVoucherOptions}
@@ -2503,6 +3014,12 @@ export default function QuestFormModal({
                           setRewardVoucherModeMap={setRewardVoucherModeMap}
                           rewardVoucherDraftMap={rewardVoucherDraftMap}
                           setRewardVoucherDraftMap={setRewardVoucherDraftMap}
+                          rewardExpectedParticipantMap={
+                            rewardExpectedParticipantMap
+                          }
+                          setRewardExpectedParticipantMap={
+                            setRewardExpectedParticipantMap
+                          }
                           onAppendReward={handleAppendReward}
                           inputClass={inputClass}
                         />

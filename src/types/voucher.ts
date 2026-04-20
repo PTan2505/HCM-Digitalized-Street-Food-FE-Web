@@ -20,6 +20,11 @@ export interface Voucher {
   updatedAt?: string | null;
 }
 
+export interface VoucherQueryParams {
+  isBelongAQuestTask?: boolean;
+  isRemaining?: boolean;
+}
+
 export interface VoucherCreate {
   name: string;
   voucherCode: string;

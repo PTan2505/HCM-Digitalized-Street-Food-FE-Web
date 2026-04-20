@@ -140,14 +140,14 @@ export default function VoucherDetailsModal({
                 label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
                 type={voucher.isActive ? 'success' : 'error'}
               />
-              <Chip
+              {/* <Chip
                 label={
                   campaignName ? `Chiến dịch: ${campaignName}` : 'MarketPlace'
                 }
                 size="small"
                 color={campaignName ? 'info' : 'secondary'}
                 variant={campaignName ? 'outlined' : 'filled'}
-              />
+              /> */}
             </div>
 
             <div
