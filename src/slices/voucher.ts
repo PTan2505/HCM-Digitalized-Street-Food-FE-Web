@@ -2,6 +2,7 @@ import type { RootState } from '@app/store';
 import type {
   Voucher,
   VoucherCreate,
+  VoucherQueryParams,
   VoucherUpdate,
 } from '@custom-types/voucher';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
@@ -34,9 +35,9 @@ const normalizeVoucher = (voucher: Voucher): Voucher => ({
 
 export const getAllVouchers = createAppAsyncThunk(
   'voucher/getAllVouchers',
-  async (_, { rejectWithValue }) => {
+  async (params: VoucherQueryParams | undefined, { rejectWithValue }) => {
     try {
-      const response = await axiosApi.voucherApi.getVouchers();
+      const response = await axiosApi.voucherApi.getVouchers(params);
       return response;
     } catch (error) {
       return rejectWithValue(error);

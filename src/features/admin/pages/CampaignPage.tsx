@@ -71,38 +71,54 @@ type CampaignStatusInfo = {
 
 const getCampaignStatus = (row: Campaign): CampaignStatusInfo => {
   const now = Date.now();
-  const regStart = row.registrationStartDate
-    ? new Date(row.registrationStartDate).getTime()
-    : null;
-  const regEnd = row.registrationEndDate
-    ? new Date(row.registrationEndDate).getTime()
-    : null;
-  const start = new Date(row.startDate).getTime();
-  const end = new Date(row.endDate).getTime();
+  const parseTime = (value: string | null | undefined): number | null => {
+    if (!value) {
+      return null;
+    }
 
-  if (row.isActive && !row.isRegisterable) {
-    // Đang trong thời gian chiến dịch hoạt động
+    const timestamp = new Date(value).getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+  };
+
+  const regStart = parseTime(row.registrationStartDate);
+  const regEnd = parseTime(row.registrationEndDate);
+  const start = parseTime(row.startDate);
+  const end = parseTime(row.endDate);
+
+  if (end !== null && now > end) {
+    return { label: 'Đã kết thúc', type: 'error' };
+  }
+
+  if (start !== null && end !== null && now >= start && now <= end) {
     return { label: 'Đang hoạt động', type: 'success' };
   }
-  if (row.isRegisterable && !row.isActive) {
-    // Đang trong thời gian mở đăng ký
+
+  if (
+    regStart !== null &&
+    regEnd !== null &&
+    now >= regStart &&
+    now <= regEnd &&
+    (start === null || now < start)
+  ) {
     return { label: 'Đang mở đăng ký', type: 'info' };
   }
-  if (!row.isActive && !row.isRegisterable) {
-    if (now > end) {
-      return { label: 'Đã kết thúc', type: 'error' };
-    }
-    if (regEnd !== null && now > regEnd && now < start) {
-      // Đã qua đăng ký nhưng chưa bắt đầu
-      return { label: 'Chưa bắt đầu', type: 'warning' };
-    }
-    if (regStart !== null && now < regStart) {
-      // Chưa tới thời gian đăng ký
-      return { label: 'Chưa đến lúc đăng ký', type: 'default' };
-    }
-    // Fallback: chưa bắt đầu
+
+  if (regStart !== null && now < regStart) {
+    return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+  }
+
+  if (start !== null && now < start) {
     return { label: 'Chưa bắt đầu', type: 'warning' };
   }
+
+  if (row.isRegisterable && !row.isActive) {
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  }
+
+  if (row.isActive && !row.isRegisterable) {
+    return { label: 'Đang hoạt động', type: 'success' };
+  }
+
   return { label: 'Không xác định', type: 'default' };
 };
 

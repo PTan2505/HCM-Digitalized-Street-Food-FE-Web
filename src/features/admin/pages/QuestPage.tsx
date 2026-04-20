@@ -2,6 +2,8 @@ import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Add as AddIcon,
+  Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Edit as EditIcon,
   Groups as GroupsIcon,
   HelpOutline as HelpOutlineIcon,
@@ -75,7 +77,6 @@ export default function QuestPage(): JSX.Element {
     onCreateQuest,
     onUpdateQuest,
     onUpdateQuestTasks,
-    onDeleteQuest,
     onPostQuestImage,
   } = useQuest();
 
@@ -193,12 +194,19 @@ export default function QuestPage(): JSX.Element {
     }
 
     try {
-      await onDeleteQuest(deletingQuest.questId);
+      await onUpdateQuest(deletingQuest.questId, {
+        isActive: !deletingQuest.isActive,
+      });
       setOpenDeleteDialog(false);
       setDeletingQuest(null);
     } catch (error) {
-      console.error('Failed to delete quest', error);
+      console.error('Failed to update quest status', error);
     }
+  };
+
+  const handleOpenStatusDialog = (quest: Quest): void => {
+    setDeletingQuest(quest);
+    setOpenDeleteDialog(true);
   };
 
   const startTour = (): void => {
@@ -315,6 +323,7 @@ export default function QuestPage(): JSX.Element {
       tooltip: 'Xem người tham gia và tiến độ',
       color: 'secondary' as const,
       variant: 'outlined' as const,
+      show: (row: Quest): boolean => (row.userQuestCount ?? 0) > 0,
     },
     {
       id: 'edit',
@@ -324,6 +333,26 @@ export default function QuestPage(): JSX.Element {
       tooltip: 'Chỉnh sửa nhiệm vụ',
       color: 'primary' as const,
       variant: 'outlined' as const,
+    },
+    {
+      id: 'deactivate',
+      label: <BlockIcon fontSize="small" />,
+      onClick: (row: Quest): void => handleOpenStatusDialog(row),
+      tooltip: 'Tạm ngưng nhiệm vụ',
+      color: 'warning' as const,
+      variant: 'outlined' as const,
+      show: (row: Quest): boolean =>
+        (row.userQuestCount ?? 0) === 0 && row.isActive,
+    },
+    {
+      id: 'activate',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
+      onClick: (row: Quest): void => handleOpenStatusDialog(row),
+      tooltip: 'Kích hoạt nhiệm vụ',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: Quest): boolean =>
+        (row.userQuestCount ?? 0) === 0 && !row.isActive,
     },
   ];
 
@@ -442,25 +471,40 @@ export default function QuestPage(): JSX.Element {
 
       <Dialog
         open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
+        onClose={() => {
+          setOpenDeleteDialog(false);
+          setDeletingQuest(null);
+        }}
         aria-labelledby="delete-quest-dialog-title"
         aria-describedby="delete-quest-dialog-description"
       >
-        <DialogTitle id="delete-quest-dialog-title">Xóa nhiệm vụ</DialogTitle>
+        <DialogTitle id="delete-quest-dialog-title">
+          {deletingQuest?.isActive
+            ? 'Xác nhận tạm ngưng nhiệm vụ'
+            : 'Xác nhận kích hoạt nhiệm vụ'}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-quest-dialog-description">
-            Bạn có chắc muốn xóa nhiệm vụ &quot;{deletingQuest?.title}&quot;?
-            Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingQuest?.isActive ? 'tạm ngưng' : 'kích hoạt'} nhiệm vụ
+            &quot;{deletingQuest?.title}&quot;?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Hủy</Button>
           <Button
-            color="error"
+            onClick={() => {
+              setOpenDeleteDialog(false);
+              setDeletingQuest(null);
+            }}
+          >
+            Hủy
+          </Button>
+          <Button
+            color={deletingQuest?.isActive ? 'warning' : 'success'}
             variant="outlined"
             onClick={() => void handleConfirmDelete()}
           >
-            Xóa
+            {deletingQuest?.isActive ? 'Tạm ngưng' : 'Kích hoạt'}
           </Button>
         </DialogActions>
       </Dialog>
