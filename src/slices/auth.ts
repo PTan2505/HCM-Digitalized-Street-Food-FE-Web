@@ -36,11 +36,15 @@ export const userLoginWithGoogle = createAppAsyncThunk(
   'auth/loginWithGoogle',
   async (payload: LoginWithGoogleRequest, { rejectWithValue }) => {
     try {
-      const { user, token } = await axiosApi.loginApi.loginWithGoogle({
-        accessToken: payload.accessToken,
-      });
+      const { user, token, refreshToken } =
+        await axiosApi.loginApi.loginWithGoogle({
+          accessToken: payload.accessToken,
+        });
 
-      tokenManagement.setTokens({ newAccessToken: token });
+      tokenManagement.setTokens({
+        newAccessToken: token,
+        newRefreshToken: refreshToken,
+      });
 
       return user;
     } catch (error) {
@@ -53,11 +57,15 @@ export const userLoginWithFacebook = createAppAsyncThunk(
   'auth/loginWithFacebook',
   async (payload: LoginWithFacebookRequest, { rejectWithValue }) => {
     try {
-      const { user, token } = await axiosApi.loginApi.loginWithFacebook({
-        accessToken: payload.accessToken,
-      });
+      const { user, token, refreshToken } =
+        await axiosApi.loginApi.loginWithFacebook({
+          accessToken: payload.accessToken,
+        });
 
-      tokenManagement.setTokens({ newAccessToken: token });
+      tokenManagement.setTokens({
+        newAccessToken: token,
+        newRefreshToken: refreshToken,
+      });
 
       return user;
     } catch (error) {
@@ -98,11 +106,15 @@ export const verifyPhoneNumber = createAppAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const { user, token } = await axiosApi.loginApi.verifyPhoneNumber({
-        phoneNumber: payload.phoneNumber,
-        otp: payload.otp,
+      const { user, token, refreshToken } =
+        await axiosApi.loginApi.verifyPhoneNumber({
+          phoneNumber: payload.phoneNumber,
+          otp: payload.otp,
+        });
+      tokenManagement.setTokens({
+        newAccessToken: token,
+        newRefreshToken: refreshToken,
       });
-      tokenManagement.setTokens({ newAccessToken: token });
 
       return user;
     } catch (error) {
@@ -115,7 +127,10 @@ export const verifyPhoneNumber = createAppAsyncThunk(
 export const loadUserFromStorage = createAppAsyncThunk(
   'user/loadUserFromStorage',
   async () => {
-    if (!tokenManagement.getAccessToken()) {
+    const accessToken = tokenManagement.getAccessToken();
+    const refreshToken = tokenManagement.getRefreshToken();
+
+    if (!accessToken && !refreshToken) {
       tokenManagement.clearTokens();
       return null;
     }

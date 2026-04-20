@@ -17,7 +17,7 @@ const initAudioContext = (): AudioContext => {
 
 // Gemini TTS trả về RAW PCM 16-bit, sample rate 24kHz
 // Cần decode từ base64 rồi phát qua Web Audio API
-const playPCMBase64 = (base64str: string): void => {
+const playPCMBase64 = async (base64str: string): Promise<void> => {
   const ctx = initAudioContext();
 
   // Giải mã base64 → Uint8Array
@@ -43,7 +43,10 @@ const playPCMBase64 = (base64str: string): void => {
   const source = ctx.createBufferSource();
   source.buffer = audioBuffer;
   source.connect(ctx.destination);
-  source.start();
+  await new Promise<void>((resolve) => {
+    source.onended = () => resolve();
+    source.start();
+  });
 };
 
 export const playGeminiTTS = async (text: string): Promise<void> => {
@@ -78,7 +81,7 @@ export const playGeminiTTS = async (text: string): Promise<void> => {
     ).candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
     if (data) {
-      playPCMBase64(data);
+      await playPCMBase64(data);
     } else {
       console.warn('Không nhận được dữ liệu audio từ Gemini TTS');
     }
