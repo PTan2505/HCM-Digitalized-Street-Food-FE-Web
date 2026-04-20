@@ -23,6 +23,7 @@ export interface Voucher {
 export interface VoucherQueryParams {
   isBelongAQuestTask?: boolean;
   isRemaining?: boolean;
+  isSystemVoucher?: boolean;
 }
 
 export interface VoucherCreate {
