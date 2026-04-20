@@ -62,7 +62,7 @@ export default function VoucherDetailsModal({
 
   const campaignName = voucher.campaignId
     ? (campaigns.find((campaign) => campaign.campaignId === voucher.campaignId)
-        ?.name ?? 'Không')
+        ?.name ?? 'voucher này thuộc chiến dịch của vendor')
     : null;
 
   const remainQuantity =
