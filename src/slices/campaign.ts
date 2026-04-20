@@ -5,10 +5,10 @@ import type {
   CampaignUpdate,
 } from '@features/admin/types/campaign';
 import type {
+  JoinSystemCampaignResponse,
   VendorCampaign,
   VendorCampaignCreate,
   VendorCampaignUpdate,
-  JoinSystemCampaignResponse,
 } from '@features/vendor/types/campaign';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -508,15 +508,6 @@ export const campaignSlice = createSlice({
           if (index !== -1) {
             const campaign = state.vendorCampaigns[index];
             campaign.branchIds = payload.branchIds;
-
-            if (payload.branchIds.length === 1) {
-              campaign.createdByBranchId = payload.branchIds[0];
-            } else {
-              campaign.createdByBranchId = null;
-              if (!campaign.createdByBranchId && !campaign.createdByVendorId) {
-                campaign.createdByVendorId = -1;
-              }
-            }
           }
         }
       })
@@ -529,15 +520,6 @@ export const campaignSlice = createSlice({
           if (index !== -1) {
             const campaign = state.vendorCampaigns[index];
             campaign.branchIds = payload.branchIds;
-
-            if (payload.branchIds.length === 1) {
-              campaign.createdByBranchId = payload.branchIds[0];
-            } else {
-              campaign.createdByBranchId = null;
-              if (!campaign.createdByBranchId && !campaign.createdByVendorId) {
-                campaign.createdByVendorId = -1;
-              }
-            }
           }
         }
       })

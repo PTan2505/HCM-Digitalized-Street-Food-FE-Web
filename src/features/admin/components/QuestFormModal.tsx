@@ -1,4 +1,26 @@
+import AppModalHeader from '@components/AppModalHeader';
+import type { Voucher, VoucherCreate } from '@custom-types/voucher';
+import useBadge from '@features/admin/hooks/useBadge';
+import useCampaign from '@features/admin/hooks/useCampaign';
+import useVoucher from '@features/admin/hooks/useVoucher';
+import type { Badge } from '@features/admin/types/badge';
+import type { Campaign } from '@features/admin/types/campaign';
+import {
+  QUEST_REWARD_TYPE_LABELS,
+  QUEST_TASK_TYPE_LABELS,
+  QuestRewardType,
+  QuestTaskType,
+  type Quest,
+  type QuestCreate,
+} from '@features/admin/types/quest';
+import type { Tier } from '@features/admin/types/tier';
+import {
+  QuestSchema,
+  type QuestFormData,
+  type QuestFormInput,
+} from '@features/admin/utils/questSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { axiosApi } from '@lib/api/apiInstance';
 import {
   Add as AddIcon,
   AddPhotoAlternate as AddPhotoAlternateIcon,
@@ -14,35 +36,14 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
-import AppModalHeader from '@components/AppModalHeader';
-import useBadge from '@features/admin/hooks/useBadge';
-import useCampaign from '@features/admin/hooks/useCampaign';
-import useVoucher from '@features/admin/hooks/useVoucher';
-import type { Badge } from '@features/admin/types/badge';
-import type { Campaign } from '@features/admin/types/campaign';
-import type { Tier } from '@features/admin/types/tier';
-import {
-  type Quest,
-  type QuestCreate,
-  QuestRewardType,
-  QUEST_REWARD_TYPE_LABELS,
-  QuestTaskType,
-  QUEST_TASK_TYPE_LABELS,
-} from '@features/admin/types/quest';
-import {
-  type QuestFormData,
-  type QuestFormInput,
-  QuestSchema,
-} from '@features/admin/utils/questSchema';
-import { axiosApi } from '@lib/api/apiInstance';
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type Dispatch,
   type ChangeEvent,
+  type Dispatch,
   type JSX,
   type SetStateAction,
 } from 'react';
@@ -55,7 +56,6 @@ import {
   type UseFormSetValue,
   type UseFormWatch,
 } from 'react-hook-form';
-import type { Voucher, VoucherCreate } from '@custom-types/voucher';
 
 type QuestScope = 'standalone' | 'campaign' | 'upgrade';
 
@@ -1477,9 +1477,7 @@ export default function QuestFormModal({
           shouldLoadCampaignOptions
             ? allCampaigns.filter(
                 (campaign) =>
-                  campaign.createdByVendorId === null &&
-                  campaign.createdByBranchId === null &&
-                  campaign.isUpdateable
+                  campaign.createdByVendorId === null && campaign.isUpdateable
               )
             : allCampaigns
         );
