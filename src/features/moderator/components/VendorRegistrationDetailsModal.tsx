@@ -110,14 +110,14 @@ export default function VendorRegistrationDetails({
   };
 
   const infoRows: { label: string; value: string }[] = [
-    {
-      label: 'Mã yêu cầu',
-      value: String(registration.branchRequestId),
-    },
-    { label: 'Mã chi nhánh', value: String(registration.branchId) },
-    ...(registration.rejectReason
-      ? [{ label: 'Lý do từ chối', value: registration.rejectReason }]
-      : []),
+    // {
+    //   label: 'Mã yêu cầu',
+    //   value: String(registration.branchRequestId),
+    // },
+    // { label: 'Mã chi nhánh', value: String(registration.branchId) },
+    // ...(registration.rejectReason
+    //   ? [{ label: 'Lý do từ chối', value: registration.rejectReason }]
+    //   : []),
     { label: 'Ngày tạo yêu cầu', value: formatDate(registration.createdAt) },
     {
       label: 'Ngày cập nhật yêu cầu',
@@ -132,12 +132,12 @@ export default function VendorRegistrationDetails({
     { label: 'Địa chỉ chi tiết', value: branch.addressDetail },
     { label: 'Phường/Xã', value: branch.ward },
     { label: 'Thành phố', value: branch.city },
-    { label: 'Vĩ độ', value: String(branch.lat) },
-    { label: 'Kinh độ', value: String(branch.long) },
+    // { label: 'Vĩ độ', value: String(branch.lat) },
+    // { label: 'Kinh độ', value: String(branch.long) },
     { label: 'Đã xác minh', value: branch.isVerified ? 'Có' : 'Chưa' },
     { label: 'Đang hoạt động', value: branch.isActive ? 'Có' : 'Không' },
     { label: 'Đã đăng ký gói', value: branch.isSubscribed ? 'Có' : 'Không' },
-    { label: 'Ngày tạo', value: formatDate(branch.createdAt) },
+    // { label: 'Ngày tạo', value: formatDate(branch.createdAt) },
   ];
 
   const renderTable = (
