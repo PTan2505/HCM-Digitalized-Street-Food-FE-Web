@@ -77,6 +77,12 @@ export const PhoneNumberLoginForm = ({ onBack }: Props): JSX.Element => {
               phoneNumber={getValues('phoneNumber')}
               name="otp"
               onSubmit={onSubmit}
+              onResend={async () =>
+                await onPhoneNumberLoginSubmit({
+                  phoneNumber: getValues('phoneNumber'),
+                  otp: '',
+                })
+              }
             />
           ) : (
             <Box

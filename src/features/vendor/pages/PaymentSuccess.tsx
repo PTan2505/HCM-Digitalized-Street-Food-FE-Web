@@ -159,7 +159,8 @@ export default function PaymentSuccess(): JSX.Element {
                 size="large"
                 onClick={() =>
                   void navigate(
-                    `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`
+                    // `${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`
+                    `${ROUTES.VENDOR.BASE}`
                   )
                 }
                 sx={{
@@ -172,7 +173,8 @@ export default function PaymentSuccess(): JSX.Element {
                   textTransform: 'none',
                 }}
               >
-                {confirmed ? 'Về trang chính' : 'Về trang chi nhánh'}
+                {/* {confirmed ? 'Về trang chính' : 'Về trang chi nhánh'} */}
+                Về trang chính
               </Button>
 
               {/* <Button
