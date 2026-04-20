@@ -5,9 +5,12 @@ import { toast } from 'react-toastify';
 import CustomNotification from '@components/CustomNotification';
 import type { NotificationDto } from '@custom-types/notification';
 import { playNotificationSound } from '@utils/notificationSound';
-import { useAppDispatch } from '@hooks/reduxHooks';
+import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import { addNewOrder } from '@slices/order';
 import { updateBranchVerificationStatusRealtime } from '@slices/vendor';
+import { loadUserFromStorage, selectUser } from '@slices/auth';
+import { ROLES } from '@constants/role';
+import { tokenManagement } from '@utils/tokenManagement';
 
 export type { NotificationDto } from '@custom-types/notification';
 
@@ -64,6 +67,7 @@ export const useNotifications = (
   token: string | null
 ): UseNotificationsReturn => {
   const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
@@ -132,6 +136,30 @@ export const useNotifications = (
     }
   }, []);
 
+  const refreshAccessTokenOnVerifiedBranch = useCallback(async () => {
+    if (user?.role !== ROLES.USER) return;
+
+    const currentRefreshToken = tokenManagement.getRefreshToken();
+    if (!currentRefreshToken) return;
+
+    try {
+      const refreshResult = await axiosApi.loginApi.refreshToken({
+        refreshToken: currentRefreshToken,
+      });
+
+      tokenManagement.setTokens({
+        newAccessToken: refreshResult.token,
+      });
+
+      await dispatch(loadUserFromStorage());
+    } catch (error) {
+      console.error(
+        'Failed to refresh token after branch verification:',
+        error
+      );
+    }
+  }, [dispatch, user?.role]);
+
   // SignalR connection + event listener
   useEffect(() => {
     if (!token) return;
@@ -154,50 +182,57 @@ export const useNotifications = (
       setIsConnected(true);
       setConnectionError(null);
 
-      // Handle incoming real-time notifications (NewFeedback, NewOrder, BranchVerificationStatus)
+      // Handle incoming real-time notifications (NewFeedback, NewOrder, BranchVerificationStatus, SystemCampaignCreated)
       const handler = (data: NotificationDto): void => {
         if (
           data.type !== 'NewFeedback' &&
           data.type !== 'NewOrder' &&
-          data.type !== 'BranchVerificationStatus'
+          data.type !== 'BranchVerificationStatus' &&
+          data.type !== 'SystemCampaignCreated'
         )
           return;
 
-        console.log('📬 New notification:', data);
-        playNotificationSound(data.type, data.message);
-        toast.info(CustomNotification, {
-          data: {
-            title: data.title,
-            content: data.message,
-          },
-        });
-        setNotifications((prev) => [data, ...prev]);
-        setUnreadCount((prev) => prev + 1);
+        void (async (): Promise<void> => {
+          console.log('📬 New notification:', data);
+          await Promise.resolve(playNotificationSound(data.type, data.message));
+          toast.info(CustomNotification, {
+            data: {
+              title: data.title,
+              content: data.message,
+            },
+          });
+          setNotifications((prev) => [data, ...prev]);
+          setUnreadCount((prev) => prev + 1);
 
-        if (data.type === 'NewOrder' && data.referenceId) {
-          axiosApi.orderApi
-            .getOrderDetails(data.referenceId)
-            .then((order) => {
-              dispatch(addNewOrder(order));
-            })
-            .catch((err) => {
-              console.error('Failed to fetch new order detail:', err);
-            });
-        }
+          if (data.type === 'NewOrder' && data.referenceId) {
+            axiosApi.orderApi
+              .getOrderDetails(data.referenceId)
+              .then((order) => {
+                dispatch(addNewOrder(order));
+              })
+              .catch((err) => {
+                console.error('Failed to fetch new order detail:', err);
+              });
+          }
 
-        if (data.type === 'BranchVerificationStatus') {
-          const parsed = parseBranchVerificationNotification(data.message);
-          if (!parsed.status) return;
+          if (data.type === 'BranchVerificationStatus') {
+            const parsed = parseBranchVerificationNotification(data.message);
+            if (!parsed.status) return;
 
-          dispatch(
-            updateBranchVerificationStatusRealtime({
-              branchId: data.referenceId,
-              branchName: parsed.branchName,
-              status: parsed.status,
-              rejectReason: parsed.rejectReason,
-            })
-          );
-        }
+            dispatch(
+              updateBranchVerificationStatusRealtime({
+                branchId: data.referenceId,
+                branchName: parsed.branchName,
+                status: parsed.status,
+                rejectReason: parsed.rejectReason,
+              })
+            );
+
+            if (parsed.status === 'Accept') {
+              await refreshAccessTokenOnVerifiedBranch();
+            }
+          }
+        })();
       };
 
       signalRService.on<NotificationDto>('ReceiveNotification', handler);
@@ -233,7 +268,7 @@ export const useNotifications = (
       });
       signalRService.disconnect();
     };
-  }, [token, fetchInitialData, dispatch]);
+  }, [token, fetchInitialData, dispatch, refreshAccessTokenOnVerifiedBranch]);
 
   return {
     isConnected,

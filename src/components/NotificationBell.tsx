@@ -15,6 +15,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import { useNotificationContext } from '@contexts/NotificationContext';
 
 interface NotificationBellProps {
@@ -241,14 +242,18 @@ export default function NotificationBell({
                         ? `color-mix(in srgb, ${theme.palette.warning.main} 8%, transparent)`
                         : notification.type === 'BranchVerificationStatus'
                           ? `color-mix(in srgb, ${theme.palette.info.main} 8%, transparent)`
-                          : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
+                          : notification.type === 'SystemCampaignCreated'
+                            ? `color-mix(in srgb, ${theme.palette.success.main} 8%, transparent)`
+                            : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
                     borderLeft: notification.isRead
                       ? '3px solid transparent'
                       : notification.type === 'NewFeedback'
                         ? `3px solid ${theme.palette.warning.main}`
                         : notification.type === 'BranchVerificationStatus'
                           ? `3px solid ${theme.palette.info.main}`
-                          : '3px solid var(--color-primary-500)',
+                          : notification.type === 'SystemCampaignCreated'
+                            ? `3px solid ${theme.palette.success.main}`
+                            : '3px solid var(--color-primary-500)',
                     transition: 'background 0.18s ease',
                     '&:hover': {
                       background: notification.isRead
@@ -256,12 +261,16 @@ export default function NotificationBell({
                           ? `color-mix(in srgb, ${theme.palette.warning.main} 6%, transparent)`
                           : notification.type === 'BranchVerificationStatus'
                             ? `color-mix(in srgb, ${theme.palette.info.main} 6%, transparent)`
-                            : 'var(--color-primary-50)'
+                            : notification.type === 'SystemCampaignCreated'
+                              ? `color-mix(in srgb, ${theme.palette.success.main} 6%, transparent)`
+                              : 'var(--color-primary-50)'
                         : notification.type === 'NewFeedback'
                           ? `color-mix(in srgb, ${theme.palette.warning.main} 15%, transparent)`
                           : notification.type === 'BranchVerificationStatus'
                             ? `color-mix(in srgb, ${theme.palette.info.main} 15%, transparent)`
-                            : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
+                            : notification.type === 'SystemCampaignCreated'
+                              ? `color-mix(in srgb, ${theme.palette.success.main} 15%, transparent)`
+                              : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
                     },
                   })}
                 >
@@ -313,6 +322,14 @@ export default function NotificationBell({
                           color="info"
                         />
                       )}
+                      {notification.type === 'SystemCampaignCreated' && (
+                        <Chip
+                          icon={<CampaignIcon />}
+                          label="Chiến dịch hệ thống mới"
+                          variant="outlined"
+                          color="success"
+                        />
+                      )}
                     </Box>
                     {!notification.isRead && (
                       <Box
@@ -327,13 +344,17 @@ export default function NotificationBell({
                               ? theme.palette.warning.main
                               : notification.type === 'BranchVerificationStatus'
                                 ? theme.palette.info.main
-                                : 'var(--color-primary-500)',
+                                : notification.type === 'SystemCampaignCreated'
+                                  ? theme.palette.success.main
+                                  : 'var(--color-primary-500)',
                           boxShadow:
                             notification.type === 'NewFeedback'
                               ? `0 0 0 2px color-mix(in srgb, ${theme.palette.warning.main} 35%, transparent)`
                               : notification.type === 'BranchVerificationStatus'
                                 ? `0 0 0 2px color-mix(in srgb, ${theme.palette.info.main} 35%, transparent)`
-                                : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
+                                : notification.type === 'SystemCampaignCreated'
+                                  ? `0 0 0 2px color-mix(in srgb, ${theme.palette.success.main} 35%, transparent)`
+                                  : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
                         })}
                       />
                     )}
