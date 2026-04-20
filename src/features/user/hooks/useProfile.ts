@@ -1,6 +1,11 @@
 import type { User } from '@custom-types/user';
 import { useAppDispatch } from '@hooks/reduxHooks';
-import { markUserInfoSetup, updateProfile } from '@slices/auth';
+import {
+  markUserInfoSetup,
+  requestContactVerification,
+  updateProfile,
+  verifyProfileOTP,
+} from '@slices/auth';
 import { useCallback } from 'react';
 
 export default function useProfile(): {
@@ -8,6 +13,11 @@ export default function useProfile(): {
     data: Partial<User>,
     skipMarkSetup?: boolean
   ) => Promise<void>;
+  requestProfileContactVerification: () => Promise<void>;
+  verifyProfileContactOTP: (payload: {
+    otp: string;
+    field: 'email' | 'phoneNumber';
+  }) => Promise<void>;
 } {
   const dispatch = useAppDispatch();
 
@@ -21,7 +31,24 @@ export default function useProfile(): {
     [dispatch]
   );
 
+  const requestProfileContactVerification =
+    useCallback(async (): Promise<void> => {
+      await dispatch(requestContactVerification()).unwrap();
+    }, [dispatch]);
+
+  const verifyProfileContactOTP = useCallback(
+    async (payload: {
+      otp: string;
+      field: 'email' | 'phoneNumber';
+    }): Promise<void> => {
+      await dispatch(verifyProfileOTP(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     updateUserProfile,
+    requestProfileContactVerification,
+    verifyProfileContactOTP,
   };
 }

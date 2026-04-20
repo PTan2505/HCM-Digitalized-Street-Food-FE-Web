@@ -7,9 +7,9 @@ import {
   styled,
   Typography,
 } from '@mui/material';
-import { changeAccount, userLoginWithPhoneNumber } from '@slices/auth';
+import { changeAccount } from '@slices/auth';
 import { MuiOtpInput } from 'mui-one-time-password-input';
-import { type JSX } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import {
   Controller,
   useFormContext,
@@ -24,7 +24,10 @@ type Props<T extends FieldValues> = {
   phoneNumber: string;
   name: FieldPath<T>;
   onSubmit: SubmitHandler<T>;
+  onResend: () => Promise<void>;
 };
+
+const RESEND_COOLDOWN_SECONDS = 6 * 60;
 
 const CustomOTPInput = styled(MuiOtpInput)({
   gap: '10px',
@@ -75,9 +78,31 @@ const CustomOTPInput = styled(MuiOtpInput)({
 });
 
 const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
-  const { phoneNumber, name, onSubmit } = props;
+  const { phoneNumber, name, onSubmit, onResend } = props;
   const { control, handleSubmit } = useFormContext<T>();
   const dispatch = useAppDispatch();
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(
+    RESEND_COOLDOWN_SECONDS
+  );
+  const [isResending, setIsResending] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (remainingSeconds <= 0) return;
+
+    const interval = window.setInterval(() => {
+      setRemainingSeconds((previous) => {
+        if (previous <= 1) {
+          window.clearInterval(interval);
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return function cleanupTimer(): void {
+      window.clearInterval(interval);
+    };
+  }, [remainingSeconds]);
 
   const disabledSubmitButton = useWatch({
     name,
@@ -98,6 +123,28 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
     }
 
     return phoneNumberArray.join('');
+  };
+
+  const formatRemainingTime = (): string => {
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(
+      2,
+      '0'
+    )}`;
+  };
+
+  const handleResendOtp = async (): Promise<void> => {
+    if (remainingSeconds > 0 || isResending) return;
+
+    setIsResending(true);
+    try {
+      await onResend();
+      setRemainingSeconds(RESEND_COOLDOWN_SECONDS);
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -140,19 +187,43 @@ const VerifyOTPForm = <T extends FieldValues>(props: Props<T>): JSX.Element => {
           );
         }}
       />
-      <Typography className="body-large text-[#3d6647]">
-        Bạn chưa nhận được mã OTP?{' '}
+      <Typography
+        className="body-large flex w-full flex-wrap items-center justify-center gap-2 text-[#3d6647]"
+        component="div"
+      >
+        <Box component="span">Bạn chưa nhận được mã OTP?</Box>
         <Link
-          className="label-large font-semibold text-[#2f6f3b]"
+          className="label-large font-semibold"
           component="button"
           type="button"
-          onClick={async () =>
-            await dispatch(
-              userLoginWithPhoneNumber({ phoneNumber: phoneNumber })
-            ).unwrap()
-          }
+          underline="none"
+          onClick={handleResendOtp}
+          aria-disabled={remainingSeconds > 0 || isResending}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 34,
+            px: 1.5,
+            borderRadius: '999px',
+            border: '1px solid',
+            borderColor:
+              remainingSeconds > 0 || isResending ? '#b9cfbe' : '#6ea57c',
+            backgroundColor:
+              remainingSeconds > 0 || isResending ? '#f1f7f2' : '#e7f4ea',
+            color: remainingSeconds > 0 || isResending ? '#6c8974' : '#2f6f3b',
+            pointerEvents:
+              remainingSeconds > 0 || isResending ? 'none' : 'auto',
+            transition: 'all .2s ease',
+            '&:hover': {
+              backgroundColor: '#dbefdf',
+              borderColor: '#5f966e',
+            },
+          }}
         >
-          Gửi lại mã
+          {remainingSeconds > 0
+            ? `Gửi lại mã sau ${formatRemainingTime()}`
+            : 'Gửi lại mã'}
         </Link>
       </Typography>
       <Button

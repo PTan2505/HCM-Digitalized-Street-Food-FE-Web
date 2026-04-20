@@ -320,7 +320,7 @@ export default function QuestPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Quest): void => handleOpenModal(row),
-      show: (row: Quest): boolean => row.campaignId === null,
+      // show: (row: Quest): boolean => row.campaignId === null,
       tooltip: 'Chỉnh sửa nhiệm vụ',
       color: 'primary' as const,
       variant: 'outlined' as const,
