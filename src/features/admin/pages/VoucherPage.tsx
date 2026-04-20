@@ -66,7 +66,7 @@ const StatusBadge = ({
 };
 
 const isMarketplaceVoucher = (voucher: Voucher): boolean =>
-  voucher.campaignId === null || voucher.campaignId === undefined;
+  (voucher.redeemPoint ?? 0) > 0;
 
 export default function VoucherPage(): JSX.Element {
   const vouchers = useAppSelector(selectVouchers);
@@ -206,7 +206,7 @@ export default function VoucherPage(): JSX.Element {
       ),
     },
     {
-      key: 'campaignId',
+      key: 'redeemPoint',
       label: 'Phạm vi',
       render: (_: unknown, row: Voucher): JSX.Element => (
         <StatusBadge
