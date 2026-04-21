@@ -13,6 +13,7 @@ export interface Campaign {
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
+  requiredTierId?: number | null;
   imageUrl?: string | null;
   isUpdateable: boolean;
 }
@@ -23,6 +24,7 @@ export interface CampaignCreate {
   targetSegment: string | null;
   registrationStartDate: string | null;
   registrationEndDate: string | null;
+  requiredTierId?: number | null;
   startDate: string;
   endDate: string;
 }
@@ -33,6 +35,7 @@ export interface CampaignUpdate {
   targetSegment: string | null;
   registrationStartDate: string | null;
   registrationEndDate: string | null;
+  requiredTierId?: number | null;
   startDate: string;
   endDate: string;
 }
