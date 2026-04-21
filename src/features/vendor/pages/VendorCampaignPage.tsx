@@ -6,7 +6,6 @@ import VendorCampaignBranchModal from '@features/vendor/components/VendorCampaig
 import VendorCampaignDetailModal from '@features/vendor/components/VendorCampaignDetailModal';
 import VendorCampaignFormModal from '@features/vendor/components/VendorCampaignFormModal';
 import VendorCampaignVoucherModal from '@features/vendor/components/VendorCampaignVoucherModal';
-import useVendor from '@features/vendor/hooks/useVendor';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
 import useVoucher from '@features/vendor/hooks/useVoucher';
 import type { VendorCampaign } from '@features/vendor/types/campaign';
@@ -54,29 +53,6 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const StatusBadge = ({
-  label,
-  type,
-}: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
-}): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
-
-  return (
-    <span
-      className={`inline-flex min-w-[100px] items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
-    >
-      {label}
-    </span>
-  );
-};
-
 export default function VendorCampaignPage(): JSX.Element {
   const campaigns = useAppSelector(selectVendorCampaigns);
   const myVendor = useAppSelector(selectMyVendor);
@@ -90,7 +66,6 @@ export default function VendorCampaignPage(): JSX.Element {
     onPostCampaignImage,
     onDeleteCampaignImage,
   } = useVendorCampaign();
-  const { onGetBranchesByVendor } = useVendor();
   const { onCreateVoucher } = useVoucher();
 
   const [page, setPage] = useState(1);
@@ -109,9 +84,12 @@ export default function VendorCampaignPage(): JSX.Element {
   const [detailCampaign, setDetailCampaign] = useState<VendorCampaign | null>(
     null
   );
-  const [branchOptions, setBranchOptions] = useState<Branch[]>([]);
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
+
+  const branchOptions = useMemo<Branch[]>(() => {
+    return myVendor?.branches ?? [];
+  }, [myVendor?.branches]);
 
   const fetchCampaigns = useCallback(async (): Promise<void> => {
     try {
@@ -124,25 +102,6 @@ export default function VendorCampaignPage(): JSX.Element {
   useEffect(() => {
     void fetchCampaigns();
   }, [fetchCampaigns]);
-
-  const fetchBranchOptions = useCallback(async (): Promise<void> => {
-    if (!myVendor?.vendorId) {
-      setBranchOptions([]);
-      return;
-    }
-
-    try {
-      const branches = await onGetBranchesByVendor(myVendor.vendorId);
-      setBranchOptions(branches);
-    } catch (err) {
-      console.error('Failed to fetch vendor branches', err);
-      setBranchOptions([]);
-    }
-  }, [myVendor?.vendorId, onGetBranchesByVendor]);
-
-  useEffect(() => {
-    void fetchBranchOptions();
-  }, [fetchBranchOptions]);
 
   const handleOpenModal = (campaign?: VendorCampaign): void => {
     // if (campaign?.isActive) {
@@ -368,9 +327,6 @@ export default function VendorCampaignPage(): JSX.Element {
           );
         }
 
-        const isEnded = new Date(row.endDate) < new Date();
-        const isStarted = new Date(row.startDate) > new Date();
-        const isLocked = row.isActive || isEnded;
         // const isLocked = isEnded;
 
         return (
