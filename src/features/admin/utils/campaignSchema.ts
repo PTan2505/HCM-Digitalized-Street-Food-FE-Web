@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const CampaignSchema = z
   .object({
     name: z.string().min(1, 'Tên chiến dịch không được để trống'),
-    description: z.string().nullable(),
+    description: z
+      .string()
+      .trim()
+      .min(1, 'Mô tả chiến dịch không được để trống'),
     targetSegment: z.string().nullable(),
     registrationStartDate: z
       .string()
