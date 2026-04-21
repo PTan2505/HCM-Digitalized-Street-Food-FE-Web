@@ -87,7 +87,7 @@ export default function VoucherPage(): JSX.Element {
 
   const fetchVouchers = useCallback(async (): Promise<void> => {
     try {
-      await onGetVouchers();
+      await onGetVouchers({ isSystemVoucher: true });
     } catch (err) {
       console.error('Failed to fetch vouchers', err);
     }
