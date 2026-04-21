@@ -216,6 +216,7 @@ export default function CamPaignFormModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [questBundles, setQuestBundles] = useState<CampaignQuestBundleDraft[]>([
     defaultQuestBundleDraft(),
   ]);
@@ -287,6 +288,7 @@ export default function CamPaignFormModal({
       setImageFile(null);
       setImagePreviewUrl(null);
       setIsImageRemoved(false);
+      setImageError(null);
       setQuestBundles([defaultQuestBundleDraft()]);
       setQuestError(null);
       if (fileInputRef.current) {
@@ -346,6 +348,14 @@ export default function CamPaignFormModal({
   }, [campaign, startDate, endDate, setValue]);
 
   const handleFormSubmit = async (data: CampaignFormData): Promise<void> => {
+    const hasBannerImage =
+      imageFile !== null || (!isImageRemoved && Boolean(campaign?.imageUrl));
+    if (!hasBannerImage) {
+      setImageError('Ảnh banner chiến dịch không được để trống');
+      return;
+    }
+    setImageError(null);
+
     if (!campaign) {
       for (
         let questIndex = 0;
@@ -486,6 +496,7 @@ export default function CamPaignFormModal({
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
     setIsImageRemoved(false);
+    setImageError(null);
   };
 
   const handleClearSelectedImage = (): void => {
@@ -495,6 +506,7 @@ export default function CamPaignFormModal({
     setImageFile(null);
     setImagePreviewUrl(null);
     setIsImageRemoved(true);
+    setImageError('Ảnh banner chiến dịch không được để trống');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -719,19 +731,25 @@ export default function CamPaignFormModal({
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
-                    Mô tả
+                    Mô tả <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     {...register('description')}
                     rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                    className={`${inputClass(!!errors.description)} resize-none`}
                     placeholder="Nhập mô tả chiến dịch"
                   />
+                  {errors.description && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.description.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Ảnh banner chiến dịch
+                    Ảnh banner chiến dịch{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                     {displayImageUrl ? (
@@ -803,6 +821,11 @@ export default function CamPaignFormModal({
                     <p className="text-center text-xs text-gray-500">
                       Định dạng hỗ trợ: JPG, PNG, WEBP.
                     </p>
+                    {imageError && (
+                      <p className="text-center text-xs text-red-500">
+                        {imageError}
+                      </p>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"
