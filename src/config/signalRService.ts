@@ -23,6 +23,8 @@ class SignalRService {
     this.connection = new HubConnectionBuilder()
       .withUrl(ENV.signalr.url, {
         accessTokenFactory: () => tokenManagement.getAccessToken() || '',
+        skipNegotiation: true,
+        transport: 1,
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000])
       .configureLogging(LogLevel.Information)
