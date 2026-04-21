@@ -27,6 +27,11 @@ interface CampaignDetailModalProps {
   isLoading?: boolean;
 }
 
+type CampaignStatusInfo = {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
+};
+
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
   const date = new Date(isoStr);
@@ -42,16 +47,74 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const StatusBadge = ({ isActive }: { isActive: boolean }): JSX.Element => {
-  const tone = isActive
-    ? 'bg-green-100 text-green-700 border-green-200'
-    : 'bg-amber-100 text-amber-700 border-amber-200';
+const getCampaignStatus = (row: Campaign): CampaignStatusInfo => {
+  const now = Date.now();
+  const parseTime = (value: string | null | undefined): number | null => {
+    if (!value) {
+      return null;
+    }
+
+    const timestamp = new Date(value).getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+  };
+
+  const regStart = parseTime(row.registrationStartDate);
+  const regEnd = parseTime(row.registrationEndDate);
+  const start = parseTime(row.startDate);
+  const end = parseTime(row.endDate);
+
+  if (end !== null && now > end) {
+    return { label: 'Đã kết thúc', type: 'error' };
+  }
+
+  if (start !== null && end !== null && now >= start && now <= end) {
+    return { label: 'Đang hoạt động', type: 'success' };
+  }
+
+  if (
+    regStart !== null &&
+    regEnd !== null &&
+    now >= regStart &&
+    now <= regEnd &&
+    (start === null || now < start)
+  ) {
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  }
+
+  if (regStart !== null && now < regStart) {
+    return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+  }
+
+  if (start !== null && now < start) {
+    return { label: 'Chưa bắt đầu', type: 'warning' };
+  }
+
+  if (row.isRegisterable && !row.isActive) {
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  }
+
+  if (row.isActive && !row.isRegisterable) {
+    return { label: 'Đang hoạt động', type: 'success' };
+  }
+
+  return { label: 'Không xác định', type: 'default' };
+};
+
+const StatusBadge = ({ campaign }: { campaign: Campaign }): JSX.Element => {
+  const { label, type } = getCampaignStatus(campaign);
+  const toneMap: Record<CampaignStatusInfo['type'], string> = {
+    success: 'bg-green-100 text-green-700 border-green-200',
+    error: 'bg-red-100 text-red-700 border-red-200',
+    warning: 'bg-amber-100 text-amber-700 border-amber-200',
+    default: 'bg-slate-100 text-slate-700 border-slate-200',
+    info: 'bg-blue-100 text-blue-700 border-blue-200',
+  };
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${tone}`}
+      className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${toneMap[type]}`}
     >
-      {isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+      {label}
     </span>
   );
 };
@@ -204,7 +267,7 @@ export default function CampaignDetailModal({
             <div className="space-y-4">
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <StatusBadge isActive={campaign.isActive} />
+                  <StatusBadge campaign={campaign} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
