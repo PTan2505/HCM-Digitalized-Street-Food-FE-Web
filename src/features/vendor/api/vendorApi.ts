@@ -128,6 +128,10 @@ export class VendorApi {
   async getBranches(vendorId: number): Promise<Branch[]> {
     const res = await this.apiClient.get<unknown>({
       url: apiUrl.vendor.createOrGetBranchesOfAVendor(vendorId),
+      params: {
+        pageNumber: 1,
+        pageSize: 100,
+      },
     });
 
     if (Array.isArray(res.data)) {

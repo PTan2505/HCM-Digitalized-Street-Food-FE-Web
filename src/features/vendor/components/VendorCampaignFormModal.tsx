@@ -140,6 +140,7 @@ export default function VendorCampaignFormModal({
     () =>
       branches.filter(
         (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+        // (branch) => branch.isSubscribed
       ),
     [branches]
   );
