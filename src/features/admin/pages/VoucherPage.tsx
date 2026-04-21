@@ -68,6 +68,19 @@ const StatusBadge = ({
 const isMarketplaceVoucher = (voucher: Voucher): boolean =>
   (voucher.redeemPoint ?? 0) > 0;
 
+const isUnlimitedVoucher = (
+  voucher: Voucher,
+  remainingQuantity: number
+): boolean => remainingQuantity === 0 && voucher.quantity < 0;
+
+const getRemainingQuantity = (voucher: Voucher): number => {
+  if (typeof voucher.remain === 'number' && !Number.isNaN(voucher.remain)) {
+    return Math.max(voucher.remain, 0);
+  }
+
+  return Math.max(voucher.quantity - (voucher.usedQuantity ?? 0), 0);
+};
+
 export default function VoucherPage(): JSX.Element {
   const vouchers = useAppSelector(selectVouchers);
   const status = useAppSelector(selectVoucherStatus);
@@ -246,14 +259,12 @@ export default function VoucherPage(): JSX.Element {
       key: 'availableQuantity',
       label: 'Số lượng còn lại',
       render: (_: unknown, row: Voucher): JSX.Element => {
-        const remainingQuantity = Math.max(
-          row.quantity - (row.usedQuantity ?? 0),
-          0
-        );
+        const remainingQuantity = getRemainingQuantity(row);
+        const unlimited = isUnlimitedVoucher(row, remainingQuantity);
 
         return (
           <span className="text-table-text-primary text-sm font-medium">
-            {remainingQuantity}
+            {unlimited ? 'Vô hạn' : remainingQuantity}
           </span>
         );
       },
@@ -261,11 +272,16 @@ export default function VoucherPage(): JSX.Element {
     {
       key: 'quantity',
       label: 'Số lượng',
-      render: (value: unknown): JSX.Element => (
-        <span className="text-table-text-primary text-sm font-medium">
-          {value as number}
-        </span>
-      ),
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const remainingQuantity = getRemainingQuantity(row);
+        const unlimited = isUnlimitedVoucher(row, remainingQuantity);
+
+        return (
+          <span className="text-table-text-primary text-sm font-medium">
+            {unlimited ? 'Vô hạn' : row.quantity}
+          </span>
+        );
+      },
     },
     {
       key: 'startDate',
