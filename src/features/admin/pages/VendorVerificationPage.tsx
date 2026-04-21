@@ -499,7 +499,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
         <div>
           <div className="mb-1 flex items-start gap-2">
             <h1 className="text-table-text-primary text-3xl font-bold">
-              Xác minh người bán
+              Xác minh
             </h1>
             <button
               type="button"
