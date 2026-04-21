@@ -71,24 +71,44 @@ const formatVNDatetime = (isoStr: string | null): string => {
 };
 
 const StatusBadge = ({
-  label,
-  type,
+  startDate,
+  endDate,
 }: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
+  startDate: string | null;
+  endDate: string | null;
 }): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
+  const now = new Date();
+  const start = startDate ? new Date(startDate) : null;
+  const end = endDate ? new Date(endDate) : null;
+
+  const hasValidStart = start !== null && !Number.isNaN(start.getTime());
+  const hasValidEnd = end !== null && !Number.isNaN(end.getTime());
+
+  const status = !hasValidStart
+    ? {
+        label: 'Chưa diễn ra',
+        tone: 'bg-sky-100 text-sky-700 border-sky-200',
+      }
+    : now < start
+      ? {
+          label: 'Chưa diễn ra',
+          tone: 'bg-sky-100 text-sky-700 border-sky-200',
+        }
+      : hasValidEnd && now > end
+        ? {
+            label: 'Đã kết thúc',
+            tone: 'bg-slate-100 text-slate-700 border-slate-200',
+          }
+        : {
+            label: 'Đang hoạt động',
+            tone: 'bg-green-100 text-green-700 border-green-200',
+          };
 
   return (
     <span
-      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${status.tone}`}
     >
-      {label}
+      {status.label}
     </span>
   );
 };
@@ -281,11 +301,8 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     {
       key: 'isActive',
       label: 'Tình trạng',
-      render: (value: unknown): JSX.Element => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Đã kết thúc'}
-          type={value === true ? 'success' : 'error'}
-        />
+      render: (_: unknown, row: AdminVendorCampaignRow): JSX.Element => (
+        <StatusBadge startDate={row.startDate} endDate={row.endDate} />
       ),
     },
   ];

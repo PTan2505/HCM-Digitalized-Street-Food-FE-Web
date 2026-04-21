@@ -45,6 +45,10 @@ export default function VendorCampaignBranchModal({
       ),
     [branches]
   );
+  const subscribedBranchIdSet = useMemo(
+    () => new Set(subscribedBranches.map((branch) => branch.branchId)),
+    [subscribedBranches]
+  );
 
   const [initialIds, setInitialIds] = useState<number[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -67,8 +71,11 @@ export default function VendorCampaignBranchModal({
         ? await onGetBranchesOfACampaign(campaign.campaignId)
         : await onGetVendorBranchesOfACampaign(campaign.campaignId);
       const fetchedBranchIds = res.items?.map((item) => item.branchId) ?? [];
-      setInitialIds(fetchedBranchIds);
-      setSelectedIds(fetchedBranchIds);
+      const vendorBranchIds = fetchedBranchIds.filter((id) =>
+        subscribedBranchIdSet.has(id)
+      );
+      setInitialIds(vendorBranchIds);
+      setSelectedIds(vendorBranchIds);
     } catch (err) {
       console.error(err);
       setInitialIds([]);
@@ -76,7 +83,12 @@ export default function VendorCampaignBranchModal({
     } finally {
       setIsLoading(false);
     }
-  }, [campaign, onGetBranchesOfACampaign, onGetVendorBranchesOfACampaign]);
+  }, [
+    campaign,
+    onGetBranchesOfACampaign,
+    onGetVendorBranchesOfACampaign,
+    subscribedBranchIdSet,
+  ]);
 
   useEffect(() => {
     if (isOpen && campaign) {
