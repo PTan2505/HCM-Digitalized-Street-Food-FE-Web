@@ -63,7 +63,7 @@ import {
 
 type QuestScope = 'standalone' | 'campaign' | 'upgrade';
 
-const ALLOWED_TIER_TARGET_NAMES = new Set(['gold', 'diamond', 'silver']);
+const ALLOWED_TIER_TARGET_NAMES = new Set(['gold', 'diamond']);
 
 const QUEST_SCOPE_LABELS: Record<QuestScope, string> = {
   standalone: 'Độc lập',
