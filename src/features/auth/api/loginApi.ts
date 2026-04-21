@@ -4,6 +4,10 @@ import type {
   LoginWithGoogleRequest,
   LoginWithPhoneNumberRequest,
 } from '@features/auth/types/login';
+import type {
+  RefreshTokenData,
+  RefreshTokenRequest,
+} from '@custom-types/refreshToken';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
 
@@ -58,6 +62,15 @@ export class LoginApi {
         data,
       }
     );
+    return res.data;
+  }
+
+  async refreshToken(data: RefreshTokenRequest): Promise<RefreshTokenData> {
+    let res = null;
+    res = await this.apiClient.post<RefreshTokenData, RefreshTokenRequest>({
+      url: apiUrl.auth.refreshToken,
+      data,
+    });
     return res.data;
   }
 }

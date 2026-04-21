@@ -64,7 +64,7 @@ export class BadgeApi {
 
   async deleteBadge(badgeId: number): Promise<{ message: string }> {
     let res = null;
-    res = await this.apiClient.delete<{ message: string }>({
+    res = await this.apiClient.patch<{ message: string }>({
       url: apiUrl.badge.updateOrDeleteBadge(badgeId),
     });
     return res.data;

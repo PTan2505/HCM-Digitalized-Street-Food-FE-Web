@@ -287,7 +287,7 @@ export default function CampaignVoucherModal({
           >
             <EditIcon fontSize="small" />
           </Button>
-          <Button
+          {/* <Button
             size="small"
             color="error"
             variant="outlined"
@@ -297,7 +297,7 @@ export default function CampaignVoucherModal({
             }}
           >
             <DeleteIcon fontSize="small" />
-          </Button>
+          </Button> */}
         </Box>
       ),
     },
@@ -314,7 +314,7 @@ export default function CampaignVoucherModal({
           onClose={onClose}
         />
         <DialogContent dividers>
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          {/* <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -323,7 +323,7 @@ export default function CampaignVoucherModal({
             >
               Thêm Voucher
             </Button>
-          </Box>
+          </Box> */}
           <Box sx={{ minHeight: '400px' }}>
             <Table
               columns={columns}

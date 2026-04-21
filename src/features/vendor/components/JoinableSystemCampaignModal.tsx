@@ -98,7 +98,7 @@ export default function JoinableSystemCampaignModal({
   joinedCampaignIds = [],
 }: JoinableSystemCampaignModalProps): JSX.Element {
   const campaigns = useAppSelector(selectJoinableSystemCampaigns);
-  const vendorCampaigns = useAppSelector(selectVendorCampaigns);
+  // const vendorCampaigns = useAppSelector(selectVendorCampaigns);
   const totalCount = useAppSelector(selectJoinableSystemCampaignTotalCount);
   const status = useAppSelector(selectCampaignStatus);
   const { onGetJoinableSystemCampaigns, onJoinBranchToSystemCampaign } =

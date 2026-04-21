@@ -10,12 +10,13 @@ import {
 } from '@slices/voucher';
 import type {
   VoucherCreate,
+  VoucherQueryParams,
   VoucherUpdate,
   Voucher,
 } from '@custom-types/voucher';
 
 const useVoucher = (): {
-  onGetVouchers: () => Promise<Voucher[]>;
+  onGetVouchers: (params?: VoucherQueryParams) => Promise<Voucher[]>;
   onGetVouchersByCampaignId: (campaignId: number) => Promise<Voucher[]>;
   onGetVoucherById: (id: number) => Promise<Voucher>;
   onCreateVoucher: (data: VoucherCreate[]) => Promise<Voucher[]>;
@@ -24,9 +25,12 @@ const useVoucher = (): {
 } => {
   const dispatch = useAppDispatch();
 
-  const onGetVouchers = useCallback(async (): Promise<Voucher[]> => {
-    return await dispatch(getAllVouchers()).unwrap();
-  }, [dispatch]);
+  const onGetVouchers = useCallback(
+    async (params?: VoucherQueryParams): Promise<Voucher[]> => {
+      return await dispatch(getAllVouchers(params)).unwrap();
+    },
+    [dispatch]
+  );
 
   const onGetVouchersByCampaignId = useCallback(
     async (campaignId: number): Promise<Voucher[]> => {

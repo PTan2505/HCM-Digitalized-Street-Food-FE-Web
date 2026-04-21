@@ -29,6 +29,7 @@ import {
   LocationOn as MapPinIcon,
   Campaign as CampaignIcon,
   Group as UserGroupIcon,
+  BarChart as ChartBarIcon,
 } from '@mui/icons-material';
 import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
@@ -56,7 +57,7 @@ const navigation = [
   {
     name: 'Dashboard',
     href: `${vendorBase}/${vendorPaths.DASHBOARD}`,
-    icon: HomeIcon,
+    icon: ChartBarIcon,
   },
   {
     name: 'Chi nhánh',
@@ -74,9 +75,9 @@ const navigation = [
     icon: QueueListIcon,
   },
   {
-    name: 'Chế độ ăn',
+    name: 'Chế độ ăn của cửa hàng',
     href: `${vendorBase}/${vendorPaths.DIETARY}`,
-    icon: UserGroupIcon,
+    icon: ShoppingBagIcon,
   },
   {
     name: 'Xác nhận sở hữu quán',

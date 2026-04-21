@@ -394,13 +394,6 @@ export default function WorkScheduleModal({
                 <p className="text-base font-medium">
                   Chưa có thời gian hoạt động
                 </p>
-                <button
-                  className="flex items-center gap-2 rounded-lg border-2 border-dashed border-blue-300 px-6 py-3 text-sm font-semibold text-blue-500 transition hover:border-blue-500 hover:text-blue-700"
-                  onClick={() => setShowAddForm(true)}
-                >
-                  <AddIcon fontSize="small" />
-                  Thêm thời gian hoạt động đầu tiên
-                </button>
               </div>
             ) : (
               <div className="space-y-2">

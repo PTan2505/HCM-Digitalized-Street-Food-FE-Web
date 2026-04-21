@@ -2,6 +2,7 @@ export interface UserDietaryPreference {
   dietaryPreferenceId: number;
   name: string;
   description: string;
+  isActive?: boolean;
 }
 
 export interface UsersWithDietaryPreferences {

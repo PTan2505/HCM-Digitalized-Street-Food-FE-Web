@@ -1,3 +1,34 @@
+import Pagination from '@features/admin/components/Pagination';
+import Table from '@features/admin/components/Table';
+import useVendor from '@features/admin/hooks/useVendor';
+import type { AdminVendor } from '@features/admin/types/vendor';
+import { getAdminVendorCampaignTourSteps } from '@features/admin/utils/adminVendorCampaignTourSteps';
+import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
+import {
+  FilterAltOff as FilterAltOffIcon,
+  HelpOutline as HelpOutlineIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from '@mui/material';
+import {
+  getVendorCampaigns,
+  selectCampaignStatus,
+  selectVendorCampaigns,
+  selectVendorCampaignTotalCount,
+} from '@slices/campaign';
+import type { JSX } from 'react';
 import {
   useCallback,
   useDeferredValue,
@@ -5,48 +36,16 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type { JSX } from 'react';
 import {
-  Box,
-  Chip,
-  Autocomplete,
-  TextField,
-  Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  FilterAltOff as FilterAltOffIcon,
-  HelpOutline as HelpOutlineIcon,
-} from '@mui/icons-material';
-import {
-  type Controls,
   EVENTS,
   Joyride,
   STATUS,
+  type Controls,
   type EventData,
 } from 'react-joyride';
-import Table from '@features/admin/components/Table';
-import Pagination from '@features/admin/components/Pagination';
-import useVendor from '@features/admin/hooks/useVendor';
-import type { AdminVendor } from '@features/admin/types/vendor';
-import { getAdminVendorCampaignTourSteps } from '@features/admin/utils/adminVendorCampaignTourSteps';
-import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
-import {
-  getVendorCampaigns,
-  selectCampaignStatus,
-  selectVendorCampaigns,
-  selectVendorCampaignTotalCount,
-} from '@slices/campaign';
 
 interface AdminVendorCampaignRow {
   campaignId: number;
-  createdByBranchId: number | null;
   createdByVendorId: number | null;
   createdAt: string;
   name: string;
@@ -245,18 +244,10 @@ export default function AdminVendorCampaignPage(): JSX.Element {
       key: 'creator',
       label: 'Nguồn tạo',
       render: (_: unknown, row: AdminVendorCampaignRow): JSX.Element => {
-        if (!row.createdByBranchId && !row.createdByVendorId) {
+        if (!row.createdByVendorId) {
           return (
             <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 shadow-sm">
               Từ hệ thống
-            </span>
-          );
-        }
-
-        if (row.createdByBranchId) {
-          return (
-            <span className="inline-flex items-center justify-center rounded-full border border-teal-200 bg-teal-100 px-2.5 py-0.5 text-xs font-bold text-teal-700 shadow-sm">
-              Từ chi nhánh
             </span>
           );
         }

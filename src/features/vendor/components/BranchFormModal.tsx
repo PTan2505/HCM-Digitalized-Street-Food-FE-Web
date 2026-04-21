@@ -1,4 +1,4 @@
-import { useState, useEffect, type JSX } from 'react';
+import { useState, useEffect, useMemo, type JSX } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -145,7 +145,16 @@ export default function BranchFormModal({
   mode,
   onSuccess,
 }: BranchFormModalProps): JSX.Element {
-  const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
+  const dietaryPreferencesFromStore = useAppSelector(
+    selectUserDietaryPreferences
+  );
+  const dietaryPreferences = useMemo(
+    () =>
+      dietaryPreferencesFromStore.filter(
+        (dietaryPreference) => dietaryPreference.isActive !== false
+      ),
+    [dietaryPreferencesFromStore]
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [licenseImages, setLicenseImages] = useState<File[]>([]);
@@ -219,6 +228,7 @@ export default function BranchFormModal({
 
     const selectedDietaryPreferenceIds =
       (form as { dietaryPreferenceIds?: number[] }).dietaryPreferenceIds ?? [];
+    const normalizedBranchName = form.branchName?.trim() ?? '';
 
     setSubmitting(true);
     try {
@@ -227,7 +237,7 @@ export default function BranchFormModal({
           name: (form as { ownerName?: string }).ownerName ?? '',
           phoneNumber: form.ownerPhone,
           email: form.email,
-          branchName: form.branchName,
+          ...(normalizedBranchName ? { branchName: normalizedBranchName } : {}),
           addressDetail: form.detailAddress,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
@@ -272,7 +282,7 @@ export default function BranchFormModal({
         const payload: VendorRegistrationRequest = {
           phoneNumber: form.ownerPhone,
           email: form.email,
-          name: form.branchName,
+          ...(normalizedBranchName ? { name: normalizedBranchName } : {}),
           addressDetail: form.detailAddress,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
@@ -347,7 +357,7 @@ export default function BranchFormModal({
             {mode.type === 'createVendor' && (
               <div className="mb-12">
                 <h2 className="mb-6 text-lg font-semibold text-gray-800">
-                  2. Chế độ ăn của cửa hàng
+                  2. Cửa hàng của bạn phù hợp với chế độ ăn nào?
                 </h2>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Chọn chế độ ăn <span className="text-red-500">*</span>

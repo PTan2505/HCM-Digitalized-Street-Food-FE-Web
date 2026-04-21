@@ -107,8 +107,13 @@ export const feedbackTagSlice = createSlice({
       })
       .addCase(deleteFeedbackTag.fulfilled, (state, action) => {
         if (action.payload) {
-          state.feedbackTags = state.feedbackTags.filter(
-            (tag) => tag.tagId !== action.payload
+          state.feedbackTags = state.feedbackTags.map((tag) =>
+            tag.tagId === action.payload
+              ? {
+                  ...tag,
+                  isActive: !(tag.isActive ?? false),
+                }
+              : tag
           );
         }
       })

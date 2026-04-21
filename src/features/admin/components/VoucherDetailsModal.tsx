@@ -62,7 +62,7 @@ export default function VoucherDetailsModal({
 
   const campaignName = voucher.campaignId
     ? (campaigns.find((campaign) => campaign.campaignId === voucher.campaignId)
-        ?.name ?? 'Không')
+        ?.name ?? 'voucher này thuộc chiến dịch của vendor')
     : null;
 
   const remainQuantity =
@@ -140,17 +140,19 @@ export default function VoucherDetailsModal({
                 label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
                 type={voucher.isActive ? 'success' : 'error'}
               />
-              <Chip
+              {/* <Chip
                 label={
                   campaignName ? `Chiến dịch: ${campaignName}` : 'MarketPlace'
                 }
                 size="small"
                 color={campaignName ? 'info' : 'secondary'}
                 variant={campaignName ? 'outlined' : 'filled'}
-              />
+              /> */}
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div
+              className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${campaignName ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}
+            >
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                   Giá trị giảm
@@ -169,14 +171,16 @@ export default function VoucherDetailsModal({
                 </p>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  Điểm đổi
-                </p>
-                <p className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {voucher.redeemPoint}
-                </p>
-              </div>
+              {!campaignName && (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                    Điểm đổi
+                  </p>
+                  <p className="text-table-text-primary mt-1 text-sm font-semibold">
+                    {voucher.redeemPoint}
+                  </p>
+                </div>
+              )}
 
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">

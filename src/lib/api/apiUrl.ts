@@ -12,6 +12,9 @@ export const apiUrl = {
     forgetPassword: '/Auth/forget-password',
     resetPassword: '/Auth/reset-password',
     resendForgetPasswordOTP: '/Auth/resend-forget-password-otp',
+    contactVerification: '/Auth/contact-verification',
+    verifyOTPProfile: '/User/profile/verify-otp',
+    refreshToken: '/Auth/refresh-token',
   },
   // dietaryPreference: {
   //   getAll: '/DietaryPreference',
@@ -206,7 +209,9 @@ export const apiUrl = {
   quest: {
     getOrPostQuest: '/Quest',
     updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+    updateQuestTasks: (questId: number): string => `/Quest/${questId}/tasks`,
     postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+    getUserQuestTasks: '/Quest/user-quest-tasks',
   },
   tier: {
     getAllTiers: '/Tier',

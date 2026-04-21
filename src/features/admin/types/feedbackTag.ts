@@ -2,6 +2,7 @@ export interface FeedbackTag {
   tagId: number;
   tagName: string;
   description: string | null;
+  isActive?: boolean;
 }
 
 export interface CreateOrUpdateFeedbackTagRequest {

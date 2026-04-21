@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import {
   Avatar,
@@ -73,8 +73,16 @@ export default function DishFormModal({
   onUpdateDish,
   onSuccess,
 }: DishFormModalProps): JSX.Element | null {
-  const categories = useAppSelector(selectCategories);
-  const tastes = useAppSelector(selectTastes);
+  const categoriesFromStore = useAppSelector(selectCategories);
+  const tastesFromStore = useAppSelector(selectTastes);
+  const categories = useMemo(
+    () => categoriesFromStore.filter((category) => category.isActive !== false),
+    [categoriesFromStore]
+  );
+  const tastes = useMemo(
+    () => tastesFromStore.filter((taste) => taste.isActive !== false),
+    [tastesFromStore]
+  );
   // const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
 
   const { onGetAllCategories } = useCategory();
@@ -101,7 +109,6 @@ export default function DishFormModal({
       categoryId: 0,
       tasteIds: [],
       // dietaryIds: [],
-      isActive: true,
     },
   });
 
@@ -115,7 +122,7 @@ export default function DishFormModal({
 
   useEffect(() => {
     if (isOpen && isEditMode && editingDish) {
-      const tasteIds = tastes
+      const tasteIds = tastesFromStore
         .filter((t: Taste) => editingDish.tasteNames.includes(t.name))
         .map((t: Taste) => t.tasteId);
 
@@ -132,7 +139,6 @@ export default function DishFormModal({
         categoryId: editingDish.categoryId,
         tasteIds: tasteIds,
         // dietaryIds: dietaryIds,
-        isActive: editingDish.isActive,
       });
 
       setImagePreview(editingDish.imageUrl);
@@ -146,13 +152,12 @@ export default function DishFormModal({
         categoryId: 0,
         tasteIds: [],
         // dietaryIds: [],
-        isActive: true,
       });
       setImageFile(null);
       setImagePreview('');
       setImageError('');
     }
-  }, [isOpen, isEditMode, editingDish, tastes, reset]);
+  }, [isOpen, isEditMode, editingDish, tastesFromStore, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
@@ -180,8 +185,7 @@ export default function DishFormModal({
         TasteIds: data.tasteIds,
         // DietaryPreferenceIds: data.dietaryIds,
         DietaryPreferenceIds: [],
-        IsActive:
-          isEditMode && editingDish ? editingDish.isActive : data.isActive,
+        IsActive: isEditMode && editingDish ? editingDish.isActive : true,
         ...(imageFile ? { imageFile } : {}),
       };
 
@@ -331,52 +335,6 @@ export default function DishFormModal({
                   )}
                 />
               </Box>
-
-              {!isEditMode && (
-                <Box>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                    Trạng thái kinh doanh
-                  </label>
-                  <Controller
-                    name="isActive"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value ? 1 : 0}
-                        onChange={(e) =>
-                          field.onChange(Number(e.target.value) === 1)
-                        }
-                        fullWidth
-                        className="rounded-xl bg-white"
-                        sx={{
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#e5e7eb',
-                            borderRadius: '0.75rem',
-                          },
-                          '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#d1d5db',
-                          },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'var(--color-primary-500)',
-                            borderWidth: '1px',
-                          },
-                        }}
-                      >
-                        <MenuItem value={1}>
-                          <span className="font-medium text-green-700">
-                            Đang bán
-                          </span>
-                        </MenuItem>
-                        <MenuItem value={0}>
-                          <span className="font-medium text-red-700">
-                            Ngừng bán
-                          </span>
-                        </MenuItem>
-                      </Select>
-                    )}
-                  />
-                </Box>
-              )}
             </Box>
 
             {/* Cột 2: Danh mục & Ảnh */}
