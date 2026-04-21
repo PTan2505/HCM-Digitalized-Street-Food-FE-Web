@@ -126,7 +126,7 @@ export const apiUrl = {
     getPaymentHistory: '/Payment/history',
     getPaymentSuccess: '/Payment/success',
     getPaymentCancel: '/Payment/cancel',
-    confirmPayment: '/Payment/confirm/',
+    confirmPayment: '/Payment/confirm',
     getVendorBalance: '/Payment/vendor/balance',
     vendorRequestTransfer: '/Payment/vendor/transfer',
   },
