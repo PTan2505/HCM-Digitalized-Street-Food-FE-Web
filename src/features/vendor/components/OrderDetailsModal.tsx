@@ -225,6 +225,22 @@ export default function OrderDetailsModal({
                     <span>Tổng tiền món:</span>
                     <span>{formatCurrencyVnd(order.totalAmount)}</span>
                   </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Mã voucher:</span>
+                    <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                      {order.appliedVoucherCode?.trim()
+                        ? order.appliedVoucherCode.trim()
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3 text-sm text-gray-600">
+                    <span>Tên voucher:</span>
+                    <span className="text-right font-medium text-gray-700">
+                      {order.appliedVoucherName?.trim()
+                        ? order.appliedVoucherName.trim()
+                        : '-'}
+                    </span>
+                  </div>
                   {order.discountAmount && order.discountAmount > 0 ? (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Giảm giá:</span>
