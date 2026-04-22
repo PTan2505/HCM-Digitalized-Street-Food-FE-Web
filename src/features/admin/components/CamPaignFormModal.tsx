@@ -23,7 +23,7 @@ import { QuestTaskType } from '@features/admin/types/quest';
 import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 import AppModalHeader from '@components/AppModalHeader';
-import { axiosApi } from '@lib/api/apiInstance';
+import useTier from '@features/admin/hooks/useTier';
 
 type VoucherDraft = {
   name: string;
@@ -215,6 +215,7 @@ export default function CamPaignFormModal({
   campaign,
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
+  const { onGetAllTiers } = useTier();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -265,7 +266,7 @@ export default function CamPaignFormModal({
 
     void (async (): Promise<void> => {
       try {
-        const response = await axiosApi.tierApi.getTiers();
+        const response = await onGetAllTiers();
         const supportedTiers = response.filter((tier) => {
           const normalizedName = tier.name.trim().toLowerCase();
 
@@ -282,7 +283,7 @@ export default function CamPaignFormModal({
         setTiers([]);
       }
     })();
-  }, [isOpen]);
+  }, [isOpen, onGetAllTiers]);
 
   useEffect(() => {
     if (isOpen) {

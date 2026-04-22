@@ -6,6 +6,7 @@ import type {
 } from '@custom-types/voucher';
 import useBadge from '@features/admin/hooks/useBadge';
 import useCampaign from '@features/admin/hooks/useCampaign';
+import useTier from '@features/admin/hooks/useTier';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import type { Badge } from '@features/admin/types/badge';
 import type { Campaign } from '@features/admin/types/campaign';
@@ -24,7 +25,6 @@ import {
   type QuestFormInput,
 } from '@features/admin/utils/questSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { axiosApi } from '@lib/api/apiInstance';
 import {
   Add as AddIcon,
   AddPhotoAlternate as AddPhotoAlternateIcon,
@@ -2263,6 +2263,7 @@ export default function QuestFormModal({
 }: QuestFormModalProps): JSX.Element | null {
   const { onGetCampaigns } = useCampaign();
   const { onGetAllBadges } = useBadge();
+  const { onGetAllTiers } = useTier();
   const {
     onGetVouchers,
     onGetVouchersByCampaignId,
@@ -2458,7 +2459,7 @@ export default function QuestFormModal({
       const [badges, vouchers, tiers] = await Promise.all([
         onGetAllBadges(),
         voucherPromise,
-        axiosApi.tierApi.getTiers(),
+        onGetAllTiers(),
       ]);
 
       let resolvedVouchers = vouchers;
@@ -2530,6 +2531,7 @@ export default function QuestFormModal({
     isCampaignVoucherLocked,
     isUpdateMode,
     onGetAllBadges,
+    onGetAllTiers,
     onGetCampaigns,
     onGetVoucherById,
     onGetVouchersByCampaignId,
