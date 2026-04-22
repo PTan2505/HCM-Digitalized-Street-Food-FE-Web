@@ -756,7 +756,7 @@ export default function CamPaignFormModal({
 
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
-                    Hạng thành viên yêu cầu
+                    Yêu cầu hạng quán ít nhất cần có để tham gia chiến dịch
                   </label>
                   <select
                     {...register('requiredTierId', {
