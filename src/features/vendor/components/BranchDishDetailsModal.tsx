@@ -410,7 +410,7 @@ export default function BranchDishDetailsModal({
               disabled={status === 'pending' || isApplying || !isDirty}
               className="bg-primary-600 hover:bg-primary-700 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              {isApplying ? 'Đang thêm món...' : 'Thêm món'}
+              {isApplying ? 'Đang cập nhật...' : 'Cập nhật'}
             </button>
           </div>
 
