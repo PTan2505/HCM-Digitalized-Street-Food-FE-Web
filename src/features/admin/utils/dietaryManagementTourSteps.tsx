@@ -59,9 +59,9 @@ export const getDietaryManagementTourSteps = ({
       placement: 'left',
     },
     {
-      target: `[data-tour-action="${DIETARY_TOUR_ID}:delete"]`,
-      title: 'Xóa chế độ ăn',
-      content: 'Dùng nút này để xóa chế độ ăn khỏi hệ thống.',
+      target: `[data-tour-action="${DIETARY_TOUR_ID}:close"], [data-tour-action="${DIETARY_TOUR_ID}:activate"]`,
+      title: 'Đóng hoặc kích hoạt chế độ ăn',
+      content: 'Dùng nút này để cập nhật trạng thái hoạt động của chế độ ăn.',
       placement: 'left',
     },
   ];

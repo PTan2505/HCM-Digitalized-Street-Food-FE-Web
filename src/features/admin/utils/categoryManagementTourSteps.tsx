@@ -59,9 +59,9 @@ export const getCategoryManagementTourSteps = ({
       placement: 'left',
     },
     {
-      target: `[data-tour-action="${CATEGORY_TOUR_ID}:delete"]`,
-      title: 'Xóa danh mục',
-      content: 'Dùng nút này để xóa danh mục khỏi hệ thống.',
+      target: `[data-tour-action="${CATEGORY_TOUR_ID}:close"], [data-tour-action="${CATEGORY_TOUR_ID}:activate"]`,
+      title: 'Đóng hoặc kích hoạt danh mục',
+      content: 'Dùng nút này để cập nhật trạng thái hoạt động của danh mục.',
       placement: 'left',
     },
   ];

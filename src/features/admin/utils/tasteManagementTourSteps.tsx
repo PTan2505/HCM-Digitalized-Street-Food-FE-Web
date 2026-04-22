@@ -59,9 +59,9 @@ export const getTasteManagementTourSteps = ({
       placement: 'left',
     },
     {
-      target: `[data-tour-action="${TASTE_TOUR_ID}:delete"]`,
-      title: 'Xóa khẩu vị',
-      content: 'Dùng nút này để xóa khẩu vị không còn sử dụng.',
+      target: `[data-tour-action="${TASTE_TOUR_ID}:close"], [data-tour-action="${TASTE_TOUR_ID}:activate"]`,
+      title: 'Đóng hoặc kích hoạt khẩu vị',
+      content: 'Dùng nút này để cập nhật trạng thái hoạt động của khẩu vị.',
       placement: 'left',
     },
   ];

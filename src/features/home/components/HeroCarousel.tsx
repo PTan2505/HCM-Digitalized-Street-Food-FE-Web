@@ -144,7 +144,7 @@ export default function HeroCarousel({
               sx={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                objectFit: 'contain',
                 display: 'block',
                 userSelect: 'none',
                 pointerEvents: 'none',
