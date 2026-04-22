@@ -139,6 +139,13 @@ function getSubtitle(mode: BranchFormMode): {
   };
 }
 
+function normalizeAddressDetail(address: string): string {
+  const trimmedAddress = address.trim();
+  if (!trimmedAddress) return '';
+
+  return trimmedAddress.split(',')[0]?.trim() ?? '';
+}
+
 export default function BranchFormModal({
   isOpen,
   onClose,
@@ -229,6 +236,7 @@ export default function BranchFormModal({
     const selectedDietaryPreferenceIds =
       (form as { dietaryPreferenceIds?: number[] }).dietaryPreferenceIds ?? [];
     const normalizedBranchName = form.branchName?.trim() ?? '';
+    const normalizedAddressDetail = normalizeAddressDetail(form.detailAddress);
 
     setSubmitting(true);
     try {
@@ -238,7 +246,7 @@ export default function BranchFormModal({
           phoneNumber: form.ownerPhone,
           email: form.email,
           ...(normalizedBranchName ? { branchName: normalizedBranchName } : {}),
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -259,7 +267,7 @@ export default function BranchFormModal({
           name: form.branchName,
           phoneNumber: form.ownerPhone,
           email: form.email,
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -283,7 +291,7 @@ export default function BranchFormModal({
           phoneNumber: form.ownerPhone,
           email: form.email,
           ...(normalizedBranchName ? { name: normalizedBranchName } : {}),
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,

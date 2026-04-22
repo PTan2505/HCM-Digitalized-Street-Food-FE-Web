@@ -14,6 +14,7 @@ import feedbackTagReducer from '@slices/feedbackTag';
 import campaignReducer from '@slices/campaign';
 import questReducer from '@slices/quest';
 import settingReducer from '@slices/setting';
+import tierReducer from '@slices/tier';
 import voucherReducer from '@slices/voucher';
 import vendorDashboardReducer from '@slices/vendorDashboard';
 import adminDashboardReducer from '@slices/adminDashboard';
@@ -35,6 +36,7 @@ export const store = configureStore({
     campaign: campaignReducer,
     quest: questReducer,
     setting: settingReducer,
+    tier: tierReducer,
     voucher: voucherReducer,
     vendorDashboard: vendorDashboardReducer,
     adminDashboard: adminDashboardReducer,
