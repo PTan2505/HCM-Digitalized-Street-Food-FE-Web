@@ -23,6 +23,7 @@ import {
 } from '@features/vendor/utils/vendorRegistrationSchema';
 import type { BranchFormData } from '@features/vendor/utils/vendorRegistrationSchema';
 import { useAppSelector } from '@hooks/reduxHooks';
+import { selectUser } from '@slices/auth';
 import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
 import StoreSection from './StoreSection';
 import OwnerInfoSection from './OwnerInfoSection';
@@ -158,6 +159,7 @@ export default function BranchFormModal({
   mode,
   onSuccess,
 }: BranchFormModalProps): JSX.Element {
+  const user = useAppSelector(selectUser);
   const dietaryPreferencesFromStore = useAppSelector(
     selectUserDietaryPreferences
   );
@@ -185,6 +187,7 @@ export default function BranchFormModal({
   const {
     watch,
     setValue,
+    getValues,
     reset,
     trigger,
     formState: { errors, isValid, isDirty },
@@ -208,6 +211,27 @@ export default function BranchFormModal({
       }
     }
   }, [isOpen, mode, onGetAllUserDietaryPreferences, reset]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const loginPhoneNumber = user?.phoneNumber?.trim();
+    if (!loginPhoneNumber) {
+      return;
+    }
+
+    const currentPhoneValue = getValues('ownerPhone')?.trim();
+    if (currentPhoneValue) {
+      return;
+    }
+
+    setValue('ownerPhone', loginPhoneNumber, {
+      shouldValidate: true,
+      shouldDirty: false,
+    });
+  }, [isOpen, user?.phoneNumber, getValues, setValue]);
 
   const handleChange = (field: string, value: unknown): void => {
     setValue(field as keyof BranchFormData, value as never, {
