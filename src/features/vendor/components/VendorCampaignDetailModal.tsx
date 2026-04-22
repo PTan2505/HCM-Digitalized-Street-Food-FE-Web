@@ -263,11 +263,11 @@ export default function VendorCampaignDetailModal({
                         : '-'
                     }
                   />
-                  <div className="h-28 rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
                     <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                       Mô tả
                     </p>
-                    <p className="text-table-text-primary mt-1 text-sm leading-6 whitespace-pre-wrap">
+                    <p className="text-table-text-primary mt-1 max-h-28 overflow-y-auto pr-1 text-sm leading-6 break-words whitespace-pre-wrap">
                       {campaign.description ?? 'Không có mô tả'}
                     </p>
                   </div>

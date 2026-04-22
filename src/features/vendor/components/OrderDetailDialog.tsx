@@ -397,6 +397,26 @@ export const OrderDetailDialog = ({
               </Box>
               <Box className="flex items-center justify-between">
                 <Typography className="text-sm text-emerald-900">
+                  Mã voucher
+                </Typography>
+                <Typography className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                  {detailOrder?.appliedVoucherCode?.trim()
+                    ? detailOrder.appliedVoucherCode.trim()
+                    : '-'}
+                </Typography>
+              </Box>
+              <Box className="flex items-center justify-between">
+                <Typography className="text-sm text-emerald-900">
+                  Tên voucher
+                </Typography>
+                <Typography className="text-right text-sm font-semibold text-emerald-800">
+                  {detailOrder?.appliedVoucherName?.trim()
+                    ? detailOrder.appliedVoucherName.trim()
+                    : '-'}
+                </Typography>
+              </Box>
+              <Box className="flex items-center justify-between">
+                <Typography className="text-sm text-emerald-900">
                   Giảm giá
                 </Typography>
                 <Typography className="text-sm font-semibold text-emerald-800">
