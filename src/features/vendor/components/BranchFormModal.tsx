@@ -143,7 +143,13 @@ function normalizeAddressDetail(address: string): string {
   const trimmedAddress = address.trim();
   if (!trimmedAddress) return '';
 
-  return trimmedAddress.split(',')[0]?.trim() ?? '';
+  // Keep the full detailed address and only remove ward/city part.
+  const wardMatch = trimmedAddress.match(/\s*,?\s*(phường|xã|thị trấn)\b/i);
+  if (!wardMatch?.index) {
+    return trimmedAddress;
+  }
+
+  return trimmedAddress.slice(0, wardMatch.index).replace(/,\s*$/, '').trim();
 }
 
 export default function BranchFormModal({
