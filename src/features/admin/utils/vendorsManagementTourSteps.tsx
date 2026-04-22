@@ -53,15 +53,9 @@ export const getVendorsManagementTourSteps = ({
       placement: 'left',
     },
     {
-      target: `[data-tour-action="${VENDORS_TOUR_ID}:toggle-active"]`,
+      target: `[data-tour-action="${VENDORS_TOUR_ID}:suspend"], [data-tour-action="${VENDORS_TOUR_ID}:reactivate"]`,
       title: 'Tạm ngưng hoặc kích hoạt lại',
       content: 'Dùng nút này để thay đổi trạng thái hoạt động của cửa hàng.',
-      placement: 'left',
-    },
-    {
-      target: `[data-tour-action="${VENDORS_TOUR_ID}:delete"]`,
-      title: 'Xóa cửa hàng',
-      content: 'Dùng nút này để xóa cửa hàng khỏi hệ thống.',
       placement: 'left',
     },
     {

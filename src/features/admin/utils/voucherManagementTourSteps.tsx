@@ -64,11 +64,5 @@ export const getVoucherManagementTourSteps = ({
       content: 'Dùng nút này để cập nhật nội dung voucher.',
       placement: 'left',
     },
-    {
-      target: `[data-tour-action="${VOUCHER_TOUR_ID}:delete"]`,
-      title: 'Xóa voucher',
-      content: 'Dùng nút này để xóa voucher không còn sử dụng.',
-      placement: 'left',
-    },
   ];
 };
