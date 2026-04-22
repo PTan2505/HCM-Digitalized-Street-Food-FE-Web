@@ -2157,9 +2157,9 @@ function TaskRewardFields({
                               className={inputClass(false)}
                               placeholder="1"
                             />
-                            <p className="mt-1 text-[11px] text-gray-500">
+                            {/* <p className="mt-1 text-[11px] text-gray-500">
                               Field ảo chỉ dùng để tính số lượng phát hành.
-                            </p>
+                            </p> */}
                           </div>
                         )}
 
