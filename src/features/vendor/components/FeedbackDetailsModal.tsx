@@ -20,6 +20,25 @@ interface FeedbackDetailsModalProps {
   feedbackId: number | null;
 }
 
+const getFeedbackImageUrl = (image: unknown): string | null => {
+  if (typeof image === 'string') {
+    const trimmed = image.trim();
+    return trimmed === '' ? null : trimmed;
+  }
+
+  if (
+    image &&
+    typeof image === 'object' &&
+    'url' in image &&
+    typeof (image as { url?: unknown }).url === 'string'
+  ) {
+    const trimmed = (image as { url: string }).url.trim();
+    return trimmed === '' ? null : trimmed;
+  }
+
+  return null;
+};
+
 const formatDateTime = (value?: string | null): string => {
   if (!value) return '-';
   const parsed = new Date(value);
@@ -86,6 +105,9 @@ export default function FeedbackDetailsModal({
       : 'Ẩn danh';
   const avatarInitial = displayName.trim().charAt(0).toUpperCase();
   const rating = Math.max(0, Math.min(5, Math.round(feedback?.rating ?? 0)));
+  const feedbackImageUrls = (feedback?.images ?? [])
+    .map((image) => getFeedbackImageUrl(image))
+    .filter((url): url is string => Boolean(url));
 
   const handleSubmitReply = async (): Promise<void> => {
     if (!feedback || !draft.trim()) return;
@@ -232,14 +254,14 @@ export default function FeedbackDetailsModal({
                 )}
 
                 {/* Images */}
-                {feedback.images && feedback.images.length > 0 && (
+                {feedbackImageUrls.length > 0 && (
                   <div className="mt-3">
                     <p className="mb-2 flex items-center gap-1 text-xs font-semibold text-gray-500">
                       <ImageIcon sx={{ fontSize: 14 }} />
-                      Hình ảnh ({feedback.images.length})
+                      Hình ảnh ({feedbackImageUrls.length})
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {feedback.images.map((img, idx) => (
+                      {feedbackImageUrls.map((img, idx) => (
                         <button
                           key={idx}
                           type="button"
