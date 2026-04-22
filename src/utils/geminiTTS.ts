@@ -66,7 +66,7 @@ export const playGeminiTTS = async (text: string): Promise<void> => {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Callirrhoe' },
+            prebuiltVoiceConfig: { voiceName: 'Vindemiatrix' },
           },
         },
       } as Parameters<typeof ai.models.generateContent>[0]['config'],
