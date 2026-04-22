@@ -123,7 +123,6 @@ export default function VendorCampaignVoucherModal({
         await onCreateVoucher(items);
       }
       handleCloseForm();
-      void fetchVouchers();
     } catch (error) {
       console.error('Failed to save voucher', error);
     }
