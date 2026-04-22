@@ -30,6 +30,7 @@ import QuestFormModal from '@features/admin/components/QuestFormModal';
 import QuestParticipantsModal from '@features/admin/components/QuestParticipantsModal';
 import Pagination from '@features/admin/components/Pagination';
 import Table from '@features/admin/components/Table';
+import useCampaign from '@features/admin/hooks/useCampaign';
 import useQuest from '@features/admin/hooks/useQuest';
 import { getQuestManagementTourSteps } from '@features/admin/utils/questManagementTourSteps';
 import { type Quest, QuestTaskType } from '@features/admin/types/quest';
@@ -79,6 +80,7 @@ export default function QuestPage(): JSX.Element {
     onUpdateQuestTasks,
     onPostQuestImage,
   } = useQuest();
+  const { onGetCampaigns } = useCampaign();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -91,6 +93,9 @@ export default function QuestPage(): JSX.Element {
   const [openParticipantsDialog, setOpenParticipantsDialog] = useState(false);
   const [selectedParticipantQuest, setSelectedParticipantQuest] =
     useState<Quest | null>(null);
+  const [campaignUpdateableMap, setCampaignUpdateableMap] = useState<
+    Record<number, boolean>
+  >({});
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
@@ -108,6 +113,26 @@ export default function QuestPage(): JSX.Element {
   useEffect(() => {
     void fetchQuests();
   }, [fetchQuests]);
+
+  const fetchCampaignUpdateability = useCallback(async (): Promise<void> => {
+    try {
+      const response = await onGetCampaigns(1, 200);
+      const nextMap = Object.fromEntries(
+        (response.items ?? []).map((campaign) => [
+          campaign.campaignId,
+          campaign.isUpdateable,
+        ])
+      ) as Record<number, boolean>;
+      setCampaignUpdateableMap(nextMap);
+    } catch (error) {
+      console.error('Failed to fetch campaigns for quest updateability', error);
+      setCampaignUpdateableMap({});
+    }
+  }, [onGetCampaigns]);
+
+  useEffect(() => {
+    void fetchCampaignUpdateability();
+  }, [fetchCampaignUpdateability]);
 
   const handleOpenModal = (quest?: Quest): void => {
     setEditingQuest(quest ?? null);
@@ -231,6 +256,25 @@ export default function QuestPage(): JSX.Element {
     });
   }, [quests.length]);
 
+  const isCampaignTypeQuest = useCallback((row: Quest): boolean => {
+    const isUpgradeQuest = row.tasks.some(
+      (task) => task.type === QuestTaskType.TIER_UP
+    );
+
+    return !isUpgradeQuest && !row.isStandalone;
+  }, []);
+
+  const isCampaignQuestUpdateable = useCallback(
+    (row: Quest): boolean => {
+      if (!isCampaignTypeQuest(row) || row.campaignId === null) {
+        return true;
+      }
+
+      return campaignUpdateableMap[row.campaignId] ?? true;
+    },
+    [campaignUpdateableMap, isCampaignTypeQuest]
+  );
+
   const columns = [
     {
       key: 'title',
@@ -248,6 +292,9 @@ export default function QuestPage(): JSX.Element {
         const isUpgradeQuest = row.tasks.some(
           (task) => task.type === QuestTaskType.TIER_UP
         );
+        const isCampaignQuest = !isUpgradeQuest && !row.isStandalone;
+        const isLockedCampaignQuest =
+          isCampaignQuest && !isCampaignQuestUpdateable(row);
         const questTypeLabel = isUpgradeQuest
           ? 'Nâng hạng'
           : row.isStandalone
@@ -261,7 +308,12 @@ export default function QuestPage(): JSX.Element {
             : 'border-amber-200 bg-amber-50 text-amber-700';
 
         return (
-          <Box>
+          <Box className="flex flex-col gap-1">
+            {isLockedCampaignQuest && (
+              <span className="inline-flex w-fit items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                Đã có cửa hàng tham gia chiến dịch
+              </span>
+            )}
             <span
               className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeStyle}`}
             >
@@ -329,7 +381,7 @@ export default function QuestPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Quest): void => handleOpenModal(row),
-      // show: (row: Quest): boolean => row.campaignId === null,
+      show: (row: Quest): boolean => isCampaignQuestUpdateable(row),
       tooltip: 'Chỉnh sửa nhiệm vụ',
       color: 'primary' as const,
       variant: 'outlined' as const,

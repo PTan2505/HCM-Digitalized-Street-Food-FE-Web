@@ -18,10 +18,12 @@ import {
   Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import type { Campaign } from '@features/admin/types/campaign';
+import type { Tier } from '@features/admin/types/tier';
 import { QuestTaskType } from '@features/admin/types/quest';
 import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 import AppModalHeader from '@components/AppModalHeader';
+import useTier from '@features/admin/hooks/useTier';
 
 type VoucherDraft = {
   name: string;
@@ -213,6 +215,8 @@ export default function CamPaignFormModal({
   campaign,
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
+  const { onGetAllTiers } = useTier();
+  const [tiers, setTiers] = useState<Tier[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
@@ -238,6 +242,7 @@ export default function CamPaignFormModal({
       name: '',
       description: '',
       targetSegment: '',
+      requiredTierId: null,
       registrationStartDate: '',
       registrationEndDate: '',
       startDate: '',
@@ -255,12 +260,39 @@ export default function CamPaignFormModal({
   }, [questBundles]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void (async (): Promise<void> => {
+      try {
+        const response = await onGetAllTiers();
+        const supportedTiers = response.filter((tier) => {
+          const normalizedName = tier.name.trim().toLowerCase();
+
+          return (
+            normalizedName === 'silver' ||
+            normalizedName === 'gold' ||
+            normalizedName === 'diamond'
+          );
+        });
+
+        setTiers(supportedTiers);
+      } catch (error) {
+        console.error('Failed to fetch tiers', error);
+        setTiers([]);
+      }
+    })();
+  }, [isOpen, onGetAllTiers]);
+
+  useEffect(() => {
     if (isOpen) {
       if (campaign) {
         reset({
           name: campaign.name,
           description: campaign.description ?? '',
           targetSegment: campaign.targetSegment ?? '',
+          requiredTierId: campaign.requiredTierId ?? null,
           registrationStartDate: toLocalDatetimeValue(
             campaign.registrationStartDate
           ),
@@ -275,6 +307,7 @@ export default function CamPaignFormModal({
           name: '',
           description: '',
           targetSegment: '',
+          requiredTierId: null,
           registrationStartDate: '',
           registrationEndDate: '',
           startDate: '',
@@ -455,6 +488,7 @@ export default function CamPaignFormModal({
 
     const payload: CampaignFormData = {
       ...data,
+      requiredTierId: data.requiredTierId ?? undefined,
       registrationStartDate: toIsoZulu(data.registrationStartDate) ?? '',
       registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
       startDate: toIsoZulu(data.startDate) ?? '',
@@ -719,6 +753,31 @@ export default function CamPaignFormModal({
                     className={inputClass(false)}
                     placeholder="VD: Học sinh, Sinh viên"
                   />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Yêu cầu hạng quán ít nhất cần có để tham gia chiến dịch
+                  </label>
+                  <select
+                    {...register('requiredTierId', {
+                      setValueAs: (value: string): number | null => {
+                        if (value === '') {
+                          return null;
+                        }
+
+                        return Number(value);
+                      },
+                    })}
+                    className={inputClass(false)}
+                  >
+                    <option value="">Không yêu cầu hạng</option>
+                    {tiers.map((tier) => (
+                      <option key={tier.tierId} value={tier.tierId}>
+                        {tier.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>

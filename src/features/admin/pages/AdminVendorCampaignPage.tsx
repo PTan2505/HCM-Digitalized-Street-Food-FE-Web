@@ -138,15 +138,15 @@ export default function AdminVendorCampaignPage(): JSX.Element {
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
-  const createdFilterOptions: Array<{
-    value: 'all' | 'today' | '7days' | '30days';
-    label: string;
-  }> = [
-    { value: 'all', label: 'Tất cả thời gian' },
-    { value: 'today', label: '24 giờ qua' },
-    { value: '7days', label: '7 ngày qua' },
-    { value: '30days', label: '30 ngày qua' },
-  ];
+  // const createdFilterOptions: Array<{
+  //   value: 'all' | 'today' | '7days' | '30days';
+  //   label: string;
+  // }> = [
+  //   { value: 'all', label: 'Tất cả thời gian' },
+  //   { value: 'today', label: '24 giờ qua' },
+  //   { value: '7days', label: '7 ngày qua' },
+  //   { value: '30days', label: '30 ngày qua' },
+  // ];
 
   const fetchVendors = useCallback(async (): Promise<void> => {
     setIsLoadingVendors(true);
@@ -489,7 +489,7 @@ export default function AdminVendorCampaignPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* <div className="mt-3 flex flex-wrap items-center gap-2">
           {createdFilterOptions.map((option) => (
             <Chip
               key={option.value}
@@ -511,9 +511,9 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               }}
             />
           ))}
-        </div>
+        </div> */}
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        {/* <div className="mt-3 flex flex-wrap gap-2">
           <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700">
             Tổng chiến dịch: {totalCount ?? 0}
           </span>
@@ -525,7 +525,7 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               Cửa hàng: {selectedVendor.name}
             </span>
           )}
-        </div>
+        </div> */}
       </Box>
 
       <Box

@@ -14,6 +14,7 @@ export const CampaignSchema = z
     registrationEndDate: z
       .string()
       .min(1, 'Ngày kết thúc đăng ký không được để trống'),
+    requiredTierId: z.number().int().positive().nullable().optional(),
     startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
     endDate: z.string().min(1, 'Ngày kết thúc không được để trống'),
   })

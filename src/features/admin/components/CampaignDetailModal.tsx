@@ -17,7 +17,9 @@ import {
 } from '@mui/icons-material';
 import AppModalHeader from '@components/AppModalHeader';
 import type { Campaign } from '@features/admin/types/campaign';
+import type { Tier } from '@features/admin/types/tier';
 import type { Voucher } from '@custom-types/voucher';
+import useTier from '@features/admin/hooks/useTier';
 import useVoucher from '@features/admin/hooks/useVoucher';
 
 interface CampaignDetailModalProps {
@@ -217,6 +219,9 @@ export default function CampaignDetailModal({
 }: CampaignDetailModalProps): JSX.Element | null {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [isLoadingTiers, setIsLoadingTiers] = useState(false);
+  const { onGetAllTiers } = useTier();
   const { onGetVouchersByCampaignId } = useVoucher();
 
   useEffect(() => {
@@ -234,6 +239,44 @@ export default function CampaignDetailModal({
       setVouchers([]);
     }
   }, [isOpen, campaign, onGetVouchersByCampaignId]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setTiers([]);
+      setIsLoadingTiers(false);
+      return;
+    }
+
+    const loadTiers = async (): Promise<void> => {
+      setIsLoadingTiers(true);
+
+      try {
+        const response = await onGetAllTiers();
+        setTiers(response);
+      } catch (error) {
+        console.error('Failed to fetch tiers', error);
+        setTiers([]);
+      } finally {
+        setIsLoadingTiers(false);
+      }
+    };
+
+    void loadTiers();
+  }, [isOpen, onGetAllTiers]);
+
+  const requiredTierLabel = ((): string => {
+    if (!campaign?.requiredTierId) {
+      return 'Không yêu cầu';
+    }
+
+    if (isLoadingTiers) {
+      return 'Đang tải...';
+    }
+
+    const tier = tiers.find((item) => item.tierId === campaign.requiredTierId);
+
+    return tier?.name ?? `#${campaign.requiredTierId}`;
+  })();
 
   if (!isOpen) return null;
 
@@ -293,6 +336,7 @@ export default function CampaignDetailModal({
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
                 <div className="space-y-3 lg:col-span-3">
                   <DetailItem label="Tên chiến dịch" value={campaign.name} />
+                  <DetailItem label="Hạng yêu cầu" value={requiredTierLabel} />
                   <DetailItem
                     label="Phân khúc mục tiêu"
                     value={campaign.targetSegment ?? 'Tất cả'}
