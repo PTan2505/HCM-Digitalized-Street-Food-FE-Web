@@ -351,6 +351,39 @@ function BranchPage(): JSX.Element {
     //   ),
     // },
     {
+      key: 'tierName',
+      label: 'Hạng',
+      style: { width: '120px' },
+      render: (value: unknown): React.ReactNode => {
+        if (typeof value !== 'string') return '-';
+        const tierName = value.toLowerCase();
+        let label = value;
+        let colorClass = 'bg-slate-100 text-slate-800';
+
+        if (tierName === 'warning') {
+          label = 'Cảnh báo';
+          colorClass = 'bg-red-100 text-red-800';
+        } else if (tierName === 'silver') {
+          label = 'Bạc';
+          colorClass = 'bg-gray-200 text-gray-800';
+        } else if (tierName === 'gold') {
+          label = 'Vàng';
+          colorClass = 'bg-yellow-100 text-yellow-800';
+        } else if (tierName === 'diamond') {
+          label = 'Kim cương';
+          colorClass = 'bg-blue-100 text-blue-800';
+        }
+
+        return (
+          <Chip
+            label={label}
+            size="small"
+            className={`${colorClass} font-semibold`}
+          />
+        );
+      },
+    },
+    {
       key: 'isActive',
       label: 'Trạng thái',
       style: { width: '140px' },

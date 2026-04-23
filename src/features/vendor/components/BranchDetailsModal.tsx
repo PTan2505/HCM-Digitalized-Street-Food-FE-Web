@@ -164,6 +164,18 @@ export default function BranchDetailsModal({
                 />
                 <InfoField label="Số điện thoại" value={branch.phoneNumber} />
                 <InfoField
+                  label="Hạng chi nhánh"
+                  value={(() => {
+                    if (!branch.tierName) return '-';
+                    const tierName = branch.tierName.toLowerCase();
+                    if (tierName === 'warning') return 'Cảnh báo';
+                    if (tierName === 'silver') return 'Bạc';
+                    if (tierName === 'gold') return 'Vàng';
+                    if (tierName === 'diamond') return 'Kim cương';
+                    return branch.tierName;
+                  })()}
+                />
+                <InfoField
                   label="Đánh giá"
                   value={
                     branch.avgRating
