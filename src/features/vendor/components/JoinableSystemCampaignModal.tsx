@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import { Box, Button, Snackbar, Alert, Tooltip } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {
@@ -20,7 +20,6 @@ import {
   selectCampaignStatus,
   selectJoinableSystemCampaigns,
   selectJoinableSystemCampaignTotalCount,
-  selectVendorCampaigns,
 } from '@slices/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
@@ -116,7 +115,6 @@ export default function JoinableSystemCampaignModal({
     Set<number>
   >(new Set());
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
@@ -214,11 +212,9 @@ export default function JoinableSystemCampaignModal({
         window.location.href = response.payment.paymentUrl;
       } else if (response.branches && response.branches.length > 0) {
         // Successfully joined and no payment link needed, do nothing as Redux state handles UI updates
-      } else {
-        setErrorMsg('Không thể tạo link thanh toán. Vui lòng thử lại.');
       }
-    } catch {
-      setErrorMsg('Đã xảy ra lỗi khi tạo link thanh toán.');
+    } catch (err) {
+      console.error(err);
     } finally {
       setJoiningCampaignIds((prev) => {
         const next = new Set(prev);
@@ -442,17 +438,6 @@ export default function JoinableSystemCampaignModal({
         vendorBranchIds={vendorBranchIds}
         vendorBranches={vendorBranches}
       />
-
-      <Snackbar
-        open={errorMsg !== null}
-        autoHideDuration={4000}
-        onClose={() => setErrorMsg(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={() => setErrorMsg(null)}>
-          {errorMsg}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

@@ -59,9 +59,9 @@ export const getBadgeManagementTourSteps = ({
       placement: 'left',
     },
     {
-      target: `[data-tour-action="${BADGE_TOUR_ID}:delete"]`,
-      title: 'Xóa huy hiệu',
-      content: 'Dùng nút này để xóa huy hiệu đã chọn.',
+      target: `[data-tour-action="${BADGE_TOUR_ID}:close"], [data-tour-action="${BADGE_TOUR_ID}:activate"]`,
+      title: 'Đóng hoặc kích hoạt huy hiệu',
+      content: 'Dùng nút này để cập nhật trạng thái hoạt động của huy hiệu.',
       placement: 'left',
     },
   ];
