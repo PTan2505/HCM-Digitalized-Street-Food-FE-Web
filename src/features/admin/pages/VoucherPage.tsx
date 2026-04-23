@@ -48,13 +48,14 @@ const StatusBadge = ({
   type,
 }: {
   label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
 }): JSX.Element => {
   const colors = {
     success: 'bg-green-100 text-green-700 border-green-200',
     error: 'bg-red-100 text-red-700 border-red-200',
     warning: 'bg-amber-100 text-amber-700 border-amber-200',
     default: 'bg-slate-100 text-slate-700 border-slate-200',
+    info: 'bg-blue-100 text-blue-700 border-blue-200',
   };
   return (
     <span
@@ -79,6 +80,32 @@ const getRemainingQuantity = (voucher: Voucher): number => {
   }
 
   return Math.max(voucher.quantity - (voucher.usedQuantity ?? 0), 0);
+};
+
+const getVoucherScopeBadge = (
+  voucher: Voucher
+): {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
+} => {
+  if (isMarketplaceVoucher(voucher)) {
+    return { label: 'Marketplace', type: 'default' };
+  }
+
+  const remainingQuantity = getRemainingQuantity(voucher);
+  const isUnlimited = isUnlimitedVoucher(voucher, remainingQuantity);
+
+  if (isUnlimited) {
+    return { label: 'Thuộc nhiệm vụ nâng hạng', type: 'success' };
+  }
+
+  const hasEndDate =
+    typeof voucher.endDate === 'string' && voucher.endDate.trim() !== '';
+  if (!hasEndDate) {
+    return { label: 'Thuộc nhiệm vụ độc lập', type: 'info' };
+  }
+
+  return { label: 'Thuộc chiến dịch', type: 'warning' };
 };
 
 export default function VoucherPage(): JSX.Element {
@@ -221,14 +248,10 @@ export default function VoucherPage(): JSX.Element {
     {
       key: 'redeemPoint',
       label: 'Phạm vi',
-      render: (_: unknown, row: Voucher): JSX.Element => (
-        <StatusBadge
-          label={
-            isMarketplaceVoucher(row) ? 'MarketPlace' : 'Voucher chiến dịch'
-          }
-          type={isMarketplaceVoucher(row) ? 'default' : 'warning'}
-        />
-      ),
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const scopeBadge = getVoucherScopeBadge(row);
+        return <StatusBadge label={scopeBadge.label} type={scopeBadge.type} />;
+      },
     },
     // {
     //   key: 'discountValue',

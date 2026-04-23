@@ -9,8 +9,6 @@ import {
   Chip,
   Box,
   CircularProgress,
-  Snackbar,
-  Alert,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Table from '@features/vendor/components/Table';
@@ -57,7 +55,6 @@ export default function VendorCampaignBranchModal({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [joinError, setJoinError] = useState<string | null>(null);
 
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const initialIdSet = useMemo(() => new Set(initialIds), [initialIds]);
@@ -147,7 +144,6 @@ export default function VendorCampaignBranchModal({
       }
 
       setIsSaving(true);
-      setJoinError(null);
       try {
         const response = await onJoinBranchToSystemCampaign(
           campaign.campaignId,
@@ -158,11 +154,9 @@ export default function VendorCampaignBranchModal({
           window.location.href = response.payment.paymentUrl;
         } else if (response.branches && response.branches.length > 0) {
           onClose();
-        } else {
-          setJoinError('Không thể tạo link thanh toán. Vui lòng thử lại.');
         }
-      } catch {
-        setJoinError('Đã xảy ra lỗi khi tham gia chiến dịch.');
+      } catch (err) {
+        console.error(err);
       } finally {
         setIsSaving(false);
       }
@@ -371,18 +365,6 @@ export default function VendorCampaignBranchModal({
           )}
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={joinError !== null}
-        autoHideDuration={4000}
-        onClose={() => setJoinError(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ zIndex: 1600 }}
-      >
-        <Alert severity="error" onClose={() => setJoinError(null)}>
-          {joinError}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

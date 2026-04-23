@@ -104,6 +104,7 @@ export interface CampaignDetailsResponse {
   name: string;
   description: string | null;
   targetSegment: string | null;
+  requiredTierId: number | null;
   startDate: string;
   endDate: string;
   registrationStartDate: string;
