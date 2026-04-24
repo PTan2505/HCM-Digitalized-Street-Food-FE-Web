@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { JSX } from 'react';
@@ -75,6 +75,7 @@ export default function WorkScheduleModal({
 
   // Add form
   const [showAddForm, setShowAddForm] = useState(false);
+  const [addingDay, setAddingDay] = useState<number | null>(null);
   const {
     setValue: setAddValue,
     watch: watchAdd,
@@ -83,9 +84,52 @@ export default function WorkScheduleModal({
   } = useForm<AddWorkScheduleFormData>({
     resolver: zodResolver(AddWorkScheduleSchema),
     mode: 'onChange',
-    defaultValues: { weekdays: [], openTime: '06:00', closeTime: '22:00' },
+    defaultValues: { weekdays: [], openTime: '06:00', closeTime: '17:00' },
   });
   const addForm = watchAdd();
+
+  const handleStartAdd = (day: number) => {
+    setAddingDay(day);
+
+    let defaultOpen = '06:00';
+    let defaultClose = '17:00';
+
+    const daySchedules = schedules.filter((s) => s.weekday === day);
+    if (daySchedules.length > 0) {
+      let maxClose = '00:00';
+      for (const s of daySchedules) {
+        const cTime = s.closeTime.slice(0, 5);
+        if (cTime > maxClose) {
+          maxClose = cTime;
+        }
+      }
+
+      const [hourStr, minStr] = maxClose.split(':');
+      const hour = parseInt(hourStr, 10);
+
+      if (hour < 23) {
+        const openHour = hour + 1;
+        defaultOpen = `${openHour.toString().padStart(2, '0')}:${minStr}`;
+
+        const closeHour = Math.min(23, openHour + 4);
+        defaultClose = `${closeHour.toString().padStart(2, '0')}:${closeHour === 23 ? '59' : minStr}`;
+      } else {
+        defaultOpen = maxClose;
+        defaultClose = '23:59';
+      }
+    }
+
+    resetAdd({
+      weekdays: [day],
+      openTime: defaultOpen,
+      closeTime: defaultClose,
+    });
+  };
+
+  const handleCancelAdd = () => {
+    setAddingDay(null);
+    resetAdd({ weekdays: [], openTime: '06:00', closeTime: '17:00' });
+  };
 
   // Edit form
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -107,19 +151,38 @@ export default function WorkScheduleModal({
   useEffect(() => {
     if (isOpen && branch) {
       void onGetWorkSchedules(branch.branchId);
-      setShowAddForm(false);
+      setAddingDay(null);
       setEditingId(null);
-      resetAdd({ weekdays: [], openTime: '06:00', closeTime: '22:00' });
+      resetAdd({ weekdays: [], openTime: '06:00', closeTime: '17:00' });
     }
   }, [isOpen, branch, onGetWorkSchedules, resetAdd]);
 
-  // Compute which weekdays are already scheduled
-  const scheduledWeekdays = new Set(schedules.map((s) => s.weekday));
+  // Compute available weekdays for adding (allow all days for multiple shifts)
+  const availableWeekdays = WEEKDAY_ORDER;
+  const uniqueDaysCount = new Set(schedules.map((s) => s.weekday)).size;
 
-  // Compute available weekdays for adding (not yet scheduled)
-  const availableWeekdays = WEEKDAY_ORDER.filter(
-    (d) => !scheduledWeekdays.has(d)
-  );
+  // Check for conflicts in Add Form
+  const addFormConflictError = useMemo(() => {
+    if (
+      !addForm.openTime ||
+      !addForm.closeTime ||
+      addForm.weekdays.length === 0
+    )
+      return null;
+
+    // Check against existing schedules
+    for (const day of addForm.weekdays) {
+      const daySchedules = schedules.filter((s) => s.weekday === day);
+      for (const s of daySchedules) {
+        const sOpen = s.openTime.slice(0, 5);
+        const sClose = s.closeTime.slice(0, 5);
+        if (addForm.openTime < sClose && sOpen < addForm.closeTime) {
+          return `Khung giờ bị trùng lặp với ca làm việc hiện tại vào ${WEEKDAY_VI[day] ?? 'ngày đã chọn'}.`;
+        }
+      }
+    }
+    return null;
+  }, [addForm.openTime, addForm.closeTime, addForm.weekdays, schedules]);
 
   const handleToggleWeekday = (day: number): void => {
     const current = addForm.weekdays;
@@ -138,18 +201,30 @@ export default function WorkScheduleModal({
   };
 
   const handleSubmitAdd = async (): Promise<void> => {
-    if (!branch || !isAddValid) return;
+    const isGlobalAdd = showAddForm;
+    const weekdaysToSubmit = isGlobalAdd
+      ? addForm.weekdays
+      : addingDay !== null
+        ? [addingDay]
+        : [];
+
+    if (!branch || !isAddValid || weekdaysToSubmit.length === 0) return;
+
     try {
       await onSubmitWorkSchedule({
         branchId: branch.branchId,
         data: {
-          weekdays: addForm.weekdays,
+          weekdays: weekdaysToSubmit,
           openTime: addForm.openTime,
           closeTime: addForm.closeTime,
         },
       });
-      setShowAddForm(false);
-      resetAdd({ weekdays: [], openTime: '06:00', closeTime: '22:00' });
+      if (isGlobalAdd) {
+        setShowAddForm(false);
+      } else {
+        setAddingDay(null);
+      }
+      resetAdd({ weekdays: [], openTime: '06:00', closeTime: '17:00' });
     } catch {
       // Handle error silently
     }
@@ -221,12 +296,12 @@ export default function WorkScheduleModal({
         >
           <VendorModalHeader
             title="Thời gian hoạt động"
-            subtitle={`${branch.name}${schedules.length > 0 ? ` - ${schedules.length.toString()}/7 ngày` : ''}`}
+            subtitle={`${branch.name}${uniqueDaysCount > 0 ? ` - ${uniqueDaysCount.toString()}/7 ngày` : ''}`}
             icon={<EventBusyIcon />}
             iconTone="branch"
             onClose={onClose}
             rightActions={
-              availableWeekdays.length > 0 && !showAddForm ? (
+              schedules.length === 0 && !showAddForm ? (
                 <Tooltip title="Thêm lịch">
                   <button
                     type="button"
@@ -243,7 +318,7 @@ export default function WorkScheduleModal({
 
           {/* Body */}
           <div className="flex flex-1 flex-col overflow-y-auto px-8 py-6">
-            {/* Add Form */}
+            {/* Global Add Form */}
             {showAddForm && (
               <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/50 p-5">
                 <h3 className="mb-3 text-sm font-bold text-blue-800">
@@ -285,11 +360,6 @@ export default function WorkScheduleModal({
                       );
                     })}
                   </div>
-                  {availableWeekdays.length === 0 && (
-                    <p className="mt-1 text-xs text-amber-600">
-                      Tất cả các ngày đã được lên lịch.
-                    </p>
-                  )}
                 </div>
 
                 {/* Time inputs */}
@@ -350,6 +420,11 @@ export default function WorkScheduleModal({
                 </div>
 
                 {/* Form actions */}
+                {addFormConflictError && (
+                  <div className="mb-4 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
+                    {addFormConflictError}
+                  </div>
+                )}
                 <div className="flex items-center justify-end gap-2">
                   <button
                     type="button"
@@ -359,7 +434,7 @@ export default function WorkScheduleModal({
                       resetAdd({
                         weekdays: [],
                         openTime: '06:00',
-                        closeTime: '22:00',
+                        closeTime: '17:00',
                       });
                     }}
                     disabled={status === 'pending'}
@@ -370,7 +445,12 @@ export default function WorkScheduleModal({
                     type="button"
                     className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
                     onClick={() => void handleSubmitAdd()}
-                    disabled={status === 'pending' || !isAddValid}
+                    disabled={
+                      status === 'pending' ||
+                      !isAddValid ||
+                      !!addFormConflictError ||
+                      addForm.weekdays.length === 0
+                    }
                   >
                     {status === 'pending' ? (
                       <CircularProgress size={16} color="inherit" />
@@ -388,175 +468,352 @@ export default function WorkScheduleModal({
               <div className="flex flex-1 items-center justify-center py-20">
                 <CircularProgress />
               </div>
-            ) : sortedSchedules.length === 0 && !showAddForm ? (
+            ) : schedules.length === 0 && !showAddForm ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20 text-gray-400">
                 <EventBusyIcon sx={{ fontSize: 64, opacity: 0.3 }} />
                 <p className="text-base font-medium">
                   Chưa có thời gian hoạt động
                 </p>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Thêm lịch ngay
+                </button>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {sortedSchedules.map((item) => {
-                  const isEditing = editingId === item.workScheduleId;
-                  const originalOpenTime = item.openTime.slice(0, 5);
-                  const originalCloseTime = item.closeTime.slice(0, 5);
-                  const isEditUnchanged =
-                    editForm.openTime === originalOpenTime &&
-                    editForm.closeTime === originalCloseTime;
+            ) : schedules.length > 0 ? (
+              <div className="space-y-4">
+                {WEEKDAY_ORDER.map((day) => {
+                  const daySchedules = sortedSchedules.filter(
+                    (s) => s.weekday === day
+                  );
+
                   const dayName =
-                    WEEKDAY_VI[item.weekday] ??
-                    WEEKDAY_MAP[item.weekday] ??
-                    item.weekdayName;
+                    WEEKDAY_VI[day] ?? WEEKDAY_MAP[day] ?? 'Không xác định';
 
                   return (
                     <div
-                      key={item.workScheduleId}
-                      className={`flex items-center gap-4 rounded-xl border p-4 transition ${
-                        isEditing
-                          ? 'border-blue-300 bg-blue-50/50'
-                          : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm'
-                      }`}
+                      key={day}
+                      className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                     >
-                      {/* Weekday badge */}
-                      <div className="flex min-w-22.5 items-center justify-center">
-                        <span className="inline-block rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
+                      <div className="flex items-center justify-between border-b border-gray-100 bg-slate-50 px-4 py-2.5">
+                        <span className="text-sm font-bold text-slate-700">
                           {dayName}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => handleStartAdd(day)}
+                          disabled={addingDay !== null || editingId !== null}
+                          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50 disabled:hover:bg-transparent"
+                        >
+                          <AddIcon sx={{ fontSize: 16 }} />
+                          Thêm ca
+                        </button>
                       </div>
+                      <div className="flex flex-col gap-1 p-2">
+                        {daySchedules.length === 0 && addingDay !== day && (
+                          <div className="py-3 text-center text-sm text-gray-400 italic">
+                            Chưa có ca làm việc
+                          </div>
+                        )}
+                        {daySchedules.map((item, index) => {
+                          const isEditing = editingId === item.workScheduleId;
+                          const originalOpenTime = item.openTime.slice(0, 5);
+                          const originalCloseTime = item.closeTime.slice(0, 5);
+                          const isEditUnchanged =
+                            editForm.openTime === originalOpenTime &&
+                            editForm.closeTime === originalCloseTime;
 
-                      {/* Time display or edit inputs */}
-                      {isEditing ? (
-                        <div className="flex flex-1 items-center gap-3">
-                          <input
-                            type="time"
-                            value={editForm.openTime}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditValue('openTime', val, {
-                                shouldValidate: true,
-                              });
-                              if (
-                                editForm.closeTime &&
-                                val >= editForm.closeTime
-                              ) {
-                                setEditValue('closeTime', '', {
-                                  shouldValidate: true,
-                                });
+                          let editConflictError: string | null = null;
+                          if (
+                            isEditing &&
+                            editForm.openTime &&
+                            editForm.closeTime
+                          ) {
+                            for (const s of daySchedules) {
+                              if (s.workScheduleId !== item.workScheduleId) {
+                                const sOpen = s.openTime.slice(0, 5);
+                                const sClose = s.closeTime.slice(0, 5);
+                                if (
+                                  editForm.openTime < sClose &&
+                                  sOpen < editForm.closeTime
+                                ) {
+                                  editConflictError =
+                                    'Khung giờ bị trùng lặp với ca làm việc khác trong ngày.';
+                                  break;
+                                }
                               }
-                            }}
-                            className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
-                              editErrors.openTime
-                                ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
-                                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                            }`}
-                          />
-                          <span className="text-sm text-gray-400">—</span>
-                          <input
-                            type="time"
-                            value={editForm.closeTime}
-                            min={editForm.openTime || undefined}
-                            onChange={(e) =>
-                              setEditValue('closeTime', e.target.value, {
-                                shouldValidate: true,
-                              })
                             }
-                            className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
-                              editErrors.closeTime
-                                ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
-                                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                            }`}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex flex-1 items-center gap-2">
-                          <span className="rounded-md bg-green-50 px-2.5 py-1 text-sm font-semibold text-green-700">
-                            {formatTime(item.openTime)}
-                          </span>
-                          <span className="text-sm text-gray-400">—</span>
-                          <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-semibold text-red-700">
-                            {formatTime(item.closeTime)}
-                          </span>
-                        </div>
-                      )}
+                          }
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-1">
-                        {isEditing ? (
-                          <>
-                            <Tooltip title="Lưu">
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => void handleSaveEdit(item)}
-                                  disabled={
-                                    status === 'pending' ||
-                                    !isEditValid ||
-                                    isEditUnchanged
-                                  }
-                                  sx={{ color: '#16a34a' }}
-                                >
-                                  {status === 'pending' ? (
-                                    <CircularProgress
-                                      size={16}
-                                      sx={{ color: '#16a34a' }}
+                          return (
+                            <div
+                              key={item.workScheduleId}
+                              className="flex flex-col gap-1"
+                            >
+                              <div
+                                className={`flex items-center gap-4 rounded-lg p-3 transition ${
+                                  isEditing
+                                    ? 'bg-blue-50/50'
+                                    : 'hover:bg-gray-50'
+                                }`}
+                              >
+                                {/* Time display or edit inputs */}
+                                {isEditing ? (
+                                  <div className="flex flex-1 items-center gap-3">
+                                    <span className="w-10 text-sm font-semibold text-gray-500">
+                                      Ca {index + 1}
+                                    </span>
+                                    <input
+                                      type="time"
+                                      value={editForm.openTime}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setEditValue('openTime', val, {
+                                          shouldValidate: true,
+                                        });
+                                        if (
+                                          editForm.closeTime &&
+                                          val >= editForm.closeTime
+                                        ) {
+                                          setEditValue('closeTime', '', {
+                                            shouldValidate: true,
+                                          });
+                                        }
+                                      }}
+                                      className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
+                                        editErrors.openTime
+                                          ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
+                                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                                      }`}
                                     />
+                                    <span className="text-sm text-gray-400">
+                                      —
+                                    </span>
+                                    <input
+                                      type="time"
+                                      value={editForm.closeTime}
+                                      min={editForm.openTime || undefined}
+                                      onChange={(e) =>
+                                        setEditValue(
+                                          'closeTime',
+                                          e.target.value,
+                                          {
+                                            shouldValidate: true,
+                                          }
+                                        )
+                                      }
+                                      className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
+                                        editErrors.closeTime
+                                          ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
+                                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                                      }`}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-1 items-center gap-2">
+                                    <span className="w-10 text-sm font-semibold text-gray-500">
+                                      Ca {index + 1}
+                                    </span>
+                                    <span className="rounded-md bg-green-50 px-2.5 py-1 text-sm font-semibold text-green-700">
+                                      {formatTime(item.openTime)}
+                                    </span>
+                                    <span className="text-sm text-gray-400">
+                                      —
+                                    </span>
+                                    <span className="rounded-md bg-red-50 px-2.5 py-1 text-sm font-semibold text-red-700">
+                                      {formatTime(item.closeTime)}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-1">
+                                  {isEditing ? (
+                                    <>
+                                      <Tooltip title="Lưu">
+                                        <span>
+                                          <IconButton
+                                            size="small"
+                                            onClick={() =>
+                                              void handleSaveEdit(item)
+                                            }
+                                            disabled={
+                                              status === 'pending' ||
+                                              !isEditValid ||
+                                              isEditUnchanged ||
+                                              !!editConflictError
+                                            }
+                                            sx={{ color: '#16a34a' }}
+                                          >
+                                            {status === 'pending' ? (
+                                              <CircularProgress
+                                                size={16}
+                                                sx={{ color: '#16a34a' }}
+                                              />
+                                            ) : (
+                                              <SaveIcon fontSize="small" />
+                                            )}
+                                          </IconButton>
+                                        </span>
+                                      </Tooltip>
+                                      <Tooltip title="Hủy">
+                                        <IconButton
+                                          size="small"
+                                          onClick={handleCancelEdit}
+                                          disabled={status === 'pending'}
+                                        >
+                                          <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                    </>
                                   ) : (
-                                    <SaveIcon fontSize="small" />
+                                    <>
+                                      <Tooltip title="Chỉnh sửa giờ">
+                                        <IconButton
+                                          size="small"
+                                          onClick={() => handleStartEdit(item)}
+                                          disabled={editingId !== null}
+                                        >
+                                          <EditIcon fontSize="small" />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title="Xóa">
+                                        <span>
+                                          <IconButton
+                                            size="small"
+                                            onClick={() =>
+                                              setConfirmDeleteId(
+                                                item.workScheduleId
+                                              )
+                                            }
+                                            disabled={
+                                              status === 'pending' ||
+                                              editingId !== null
+                                            }
+                                            sx={{
+                                              color: '#ef4444',
+                                              '&:hover': {
+                                                bgcolor: '#fee2e2',
+                                              },
+                                            }}
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </span>
+                                      </Tooltip>
+                                    </>
                                   )}
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                            <Tooltip title="Hủy">
-                              <IconButton
-                                size="small"
-                                onClick={handleCancelEdit}
-                                disabled={status === 'pending'}
-                              >
-                                <CloseIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        ) : (
-                          <>
-                            <Tooltip title="Chỉnh sửa giờ">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleStartEdit(item)}
-                                disabled={editingId !== null}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Xóa">
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    setConfirmDeleteId(item.workScheduleId)
-                                  }
-                                  disabled={
-                                    status === 'pending' || editingId !== null
-                                  }
-                                  sx={{
-                                    color: '#ef4444',
-                                    '&:hover': {
-                                      bgcolor: '#fee2e2',
-                                    },
+                                </div>
+                              </div>
+                              {isEditing && editConflictError && (
+                                <div className="px-3 pb-2">
+                                  <p className="text-xs font-medium text-red-500">
+                                    {editConflictError}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {addingDay === day && (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-4 rounded-lg bg-blue-50/50 p-3">
+                              <div className="flex flex-1 items-center gap-3">
+                                <span className="w-10 text-sm font-semibold text-gray-500">
+                                  Ca {daySchedules.length + 1}
+                                </span>
+                                <input
+                                  type="time"
+                                  value={addForm.openTime}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setAddValue('openTime', val, {
+                                      shouldValidate: true,
+                                    });
+                                    if (
+                                      addForm.closeTime &&
+                                      val >= addForm.closeTime
+                                    ) {
+                                      setAddValue('closeTime', '', {
+                                        shouldValidate: true,
+                                      });
+                                    }
                                   }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          </>
+                                  className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
+                                    addErrors.openTime
+                                      ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
+                                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                                  }`}
+                                />
+                                <span className="text-sm text-gray-400">—</span>
+                                <input
+                                  type="time"
+                                  value={addForm.closeTime}
+                                  min={addForm.openTime || undefined}
+                                  onChange={(e) =>
+                                    setAddValue('closeTime', e.target.value, {
+                                      shouldValidate: true,
+                                    })
+                                  }
+                                  className={`rounded-lg border px-3 py-1.5 text-sm outline-none focus:ring-2 ${
+                                    addErrors.closeTime
+                                      ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
+                                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                                  }`}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Tooltip title="Lưu">
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => void handleSubmitAdd()}
+                                      disabled={
+                                        status === 'pending' ||
+                                        !isAddValid ||
+                                        !!addFormConflictError
+                                      }
+                                      sx={{ color: '#16a34a' }}
+                                    >
+                                      {status === 'pending' ? (
+                                        <CircularProgress
+                                          size={16}
+                                          sx={{ color: '#16a34a' }}
+                                        />
+                                      ) : (
+                                        <SaveIcon fontSize="small" />
+                                      )}
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                                <Tooltip title="Hủy">
+                                  <IconButton
+                                    size="small"
+                                    onClick={handleCancelAdd}
+                                    disabled={status === 'pending'}
+                                  >
+                                    <CloseIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </div>
+                            </div>
+                            {addFormConflictError && (
+                              <div className="px-3 pb-2">
+                                <p className="text-xs font-medium text-red-500">
+                                  {addFormConflictError}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
