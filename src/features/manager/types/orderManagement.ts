@@ -21,6 +21,8 @@ export interface ManagerOrder {
   table: string | null;
   note: string | null;
   paymentMethod: string | null;
+  appliedVoucherCode?: string | null;
+  appliedVoucherName?: string | null;
   totalAmount: number;
   discountAmount: number | null;
   finalAmount: number;

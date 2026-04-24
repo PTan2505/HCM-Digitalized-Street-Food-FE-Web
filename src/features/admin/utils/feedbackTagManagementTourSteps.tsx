@@ -59,9 +59,10 @@ export const getFeedbackTagManagementTourSteps = ({
       placement: 'left',
     },
     {
-      target: `[data-tour-action="${FEEDBACK_TAG_TOUR_ID}:delete"]`,
-      title: 'Xóa tag phản hồi',
-      content: 'Dùng nút này để xóa tag phản hồi không còn dùng.',
+      target: `[data-tour-action="${FEEDBACK_TAG_TOUR_ID}:close"], [data-tour-action="${FEEDBACK_TAG_TOUR_ID}:activate"]`,
+      title: 'Đóng hoặc kích hoạt tag phản hồi',
+      content:
+        'Dùng nút này để cập nhật trạng thái hoạt động của tag phản hồi.',
       placement: 'left',
     },
   ];

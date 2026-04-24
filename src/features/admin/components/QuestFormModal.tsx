@@ -6,6 +6,7 @@ import type {
 } from '@custom-types/voucher';
 import useBadge from '@features/admin/hooks/useBadge';
 import useCampaign from '@features/admin/hooks/useCampaign';
+import useTier from '@features/admin/hooks/useTier';
 import useVoucher from '@features/admin/hooks/useVoucher';
 import type { Badge } from '@features/admin/types/badge';
 import type { Campaign } from '@features/admin/types/campaign';
@@ -24,7 +25,6 @@ import {
   type QuestFormInput,
 } from '@features/admin/utils/questSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { axiosApi } from '@lib/api/apiInstance';
 import {
   Add as AddIcon,
   AddPhotoAlternate as AddPhotoAlternateIcon,
@@ -63,7 +63,7 @@ import {
 
 type QuestScope = 'standalone' | 'campaign' | 'upgrade';
 
-const ALLOWED_TIER_TARGET_NAMES = new Set(['gold', 'diamond', 'silver']);
+const ALLOWED_TIER_TARGET_NAMES = new Set(['gold', 'diamond']);
 
 const QUEST_SCOPE_LABELS: Record<QuestScope, string> = {
   standalone: 'Độc lập',
@@ -319,16 +319,26 @@ const defaultVoucherDraft = (): VoucherDraft => ({
 const createVoucherDraftFromVoucher = (
   voucher: Voucher,
   quantityFallback: number
-): VoucherDraft => ({
-  name: voucher.name,
-  voucherCode: voucher.voucherCode,
-  type: voucher.type,
-  description: voucher.description ?? '',
-  discountValue: voucher.discountValue,
-  maxDiscountValue: voucher.maxDiscountValue,
-  minAmountRequired: voucher.minAmountRequired,
-  quantity: Number.isNaN(quantityFallback) ? 1 : Math.max(1, quantityFallback),
-});
+): VoucherDraft => {
+  const voucherQuantity = Number(voucher.quantity);
+  const resolvedQuantity =
+    !Number.isNaN(voucherQuantity) && voucherQuantity > 0
+      ? voucherQuantity
+      : quantityFallback;
+
+  return {
+    name: voucher.name,
+    voucherCode: voucher.voucherCode,
+    type: voucher.type,
+    description: voucher.description ?? '',
+    discountValue: voucher.discountValue,
+    maxDiscountValue: voucher.maxDiscountValue,
+    minAmountRequired: voucher.minAmountRequired,
+    quantity: Number.isNaN(resolvedQuantity)
+      ? 1
+      : Math.max(1, resolvedQuantity),
+  };
+};
 
 const toVoucherPayload = (
   draft: VoucherDraft,
@@ -359,7 +369,7 @@ const defaultValues: QuestFormInput = {
   title: '',
   description: null,
   imageUrl: null,
-  isActive: true,
+  isActive: false,
   requiresEnrollment: true,
   isStandalone: true,
   campaignId: null,
@@ -615,6 +625,24 @@ function TaskRewardFields({
                 selectedVoucherRemainInfo.maxQuantity === null));
           const voucherDraft =
             rewardVoucherDraftMap[rewardIndexKey] ?? defaultVoucherDraft();
+          const isVoucherUpdateMode =
+            !isCreateMode && rewardVoucherMode === 'update';
+          const voucherIssuedQuantityFromDraft = Math.max(
+            0,
+            Number(voucherDraft.quantity) || 0
+          );
+          const effectiveVoucherRemainLimit =
+            rewardType === QuestRewardType.VOUCHER &&
+            isVoucherUpdateMode &&
+            questScope !== 'upgrade'
+              ? voucherIssuedQuantityFromDraft
+              : voucherRemainLimit;
+          const effectiveVoucherRemainText =
+            rewardType === QuestRewardType.VOUCHER &&
+            isVoucherUpdateMode &&
+            questScope !== 'upgrade'
+              ? String(voucherIssuedQuantityFromDraft)
+              : voucherRemainText;
           const markVoucherDraftChanged = (): void => {
             if (!isCreateMode && rewardVoucherMode === 'update') {
               setHasVoucherDraftChanges(true);
@@ -1798,9 +1826,9 @@ function TaskRewardFields({
                   <label className="mb-1 block text-xs font-semibold text-gray-700">
                     Số lượng thưởng
                     {rewardType === QuestRewardType.VOUCHER &&
-                    voucherRemainText ? (
+                    effectiveVoucherRemainText ? (
                       <span className="ml-1 text-[11px] font-normal text-gray-500">
-                        (Tồn: {voucherRemainText})
+                        (Tồn: {effectiveVoucherRemainText})
                       </span>
                     ) : null}
                   </label>
@@ -1809,14 +1837,14 @@ function TaskRewardFields({
                     min={1}
                     max={
                       rewardType === QuestRewardType.VOUCHER &&
-                      typeof voucherRemainLimit === 'number' &&
+                      typeof effectiveVoucherRemainLimit === 'number' &&
                       !(
                         isCreateMode &&
                         (questScope === 'standalone' ||
                           questScope === 'upgrade') &&
                         rewardVoucherMode === 'create'
                       )
-                        ? voucherRemainLimit
+                        ? effectiveVoucherRemainLimit
                         : undefined
                     }
                     value={currentRewardQuantity ?? ''}
@@ -1855,7 +1883,7 @@ function TaskRewardFields({
                       let nextQuantity = Math.max(1, Number(rawValue));
                       if (
                         rewardType === QuestRewardType.VOUCHER &&
-                        typeof voucherRemainLimit === 'number' &&
+                        typeof effectiveVoucherRemainLimit === 'number' &&
                         !(
                           isCreateMode &&
                           (questScope === 'standalone' ||
@@ -1865,7 +1893,7 @@ function TaskRewardFields({
                       ) {
                         nextQuantity = Math.min(
                           nextQuantity,
-                          voucherRemainLimit
+                          effectiveVoucherRemainLimit
                         );
                       }
 
@@ -2157,9 +2185,9 @@ function TaskRewardFields({
                               className={inputClass(false)}
                               placeholder="1"
                             />
-                            <p className="mt-1 text-[11px] text-gray-500">
+                            {/* <p className="mt-1 text-[11px] text-gray-500">
                               Field ảo chỉ dùng để tính số lượng phát hành.
-                            </p>
+                            </p> */}
                           </div>
                         )}
 
@@ -2172,16 +2200,68 @@ function TaskRewardFields({
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={formatNumberWithDots(issuedVoucherQuantity)}
-                            disabled
+                            value={formatNumberWithDots(
+                              rewardVoucherMode === 'update'
+                                ? voucherDraft.quantity
+                                : issuedVoucherQuantity
+                            )}
+                            onChange={(event) => {
+                              if (
+                                isReadOnly ||
+                                rewardVoucherMode !== 'update'
+                              ) {
+                                return;
+                              }
+
+                              const nextIssuedQuantity = parseNumberInput(
+                                event.target.value
+                              );
+                              const sanitizedIssuedQuantity = Number.isNaN(
+                                nextIssuedQuantity
+                              )
+                                ? 0
+                                : Math.max(0, nextIssuedQuantity);
+
+                              markVoucherDraftChanged();
+                              setRewardVoucherDraftMap((prev) => ({
+                                ...prev,
+                                [rewardIndexKey]: {
+                                  ...voucherDraft,
+                                  quantity: sanitizedIssuedQuantity,
+                                },
+                              }));
+
+                              const rewardQuantityRaw =
+                                currentRewardQuantity ?? 0;
+                              const rewardQuantityValue =
+                                Number(rewardQuantityRaw);
+                              if (
+                                !Number.isNaN(rewardQuantityValue) &&
+                                rewardQuantityValue > sanitizedIssuedQuantity
+                              ) {
+                                setValue(
+                                  `tasks.${taskIndex}.rewards.${rewardIndex}.quantity`,
+                                  sanitizedIssuedQuantity,
+                                  {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  }
+                                );
+                              }
+                            }}
+                            disabled={
+                              isReadOnly || rewardVoucherMode !== 'update'
+                            }
                             className={inputClass(false)}
                             placeholder="0"
                           />
                           <p className="mt-1 text-[11px] text-gray-500">
-                            {questScope === 'standalone' &&
-                            rewardVoucherMode === 'create'
-                              ? 'Tự tính theo công thức: Số lượng x Số người kỳ vọng tham gia.'
-                              : 'Tự đồng bộ theo Số lượng phần thưởng để tránh lệch dữ liệu.'}
+                            {rewardVoucherMode === 'update'
+                              ? 'Số lượng phát hành phải lớn hơn hoặc bằng số lượng phần thưởng để tránh lệch dữ liệu.'
+                              : questScope === 'standalone' &&
+                                  rewardVoucherMode === 'create'
+                                ? 'Tự tính theo công thức: Số lượng x Số người kỳ vọng tham gia.'
+                                : 'Tự đồng bộ theo Số lượng phần thưởng để tránh lệch dữ liệu.'}
                           </p>
                         </div>
                       )}
@@ -2263,6 +2343,7 @@ export default function QuestFormModal({
 }: QuestFormModalProps): JSX.Element | null {
   const { onGetCampaigns } = useCampaign();
   const { onGetAllBadges } = useBadge();
+  const { onGetAllTiers } = useTier();
   const {
     onGetVouchers,
     onGetVouchersByCampaignId,
@@ -2458,7 +2539,7 @@ export default function QuestFormModal({
       const [badges, vouchers, tiers] = await Promise.all([
         onGetAllBadges(),
         voucherPromise,
-        axiosApi.tierApi.getTiers(),
+        onGetAllTiers(),
       ]);
 
       let resolvedVouchers = vouchers;
@@ -2530,6 +2611,7 @@ export default function QuestFormModal({
     isCampaignVoucherLocked,
     isUpdateMode,
     onGetAllBadges,
+    onGetAllTiers,
     onGetCampaigns,
     onGetVoucherById,
     onGetVouchersByCampaignId,
@@ -2582,7 +2664,7 @@ export default function QuestFormModal({
         title: quest.title,
         description: quest.description,
         imageUrl: quest.imageUrl,
-        isActive: true,
+        isActive: quest.isActive ?? true,
         requiresEnrollment: inferredScope !== 'upgrade',
         isStandalone: inferredScope !== 'campaign',
         campaignId: inferredScope === 'campaign' ? quest.campaignId : null,
@@ -2893,7 +2975,14 @@ export default function QuestFormModal({
           continue;
         }
 
-        const remain = voucherRemainMap.get(reward.rewardValue);
+        const rewardModeKey = `${task.taskIndex}-${reward.rewardIndex}`;
+        const draftForReward =
+          rewardVoucherDraftMap[rewardModeKey] ?? defaultVoucherDraft();
+        const isVoucherUpdateMode =
+          rewardVoucherModeMap[rewardModeKey] === 'update';
+        const remain = isVoucherUpdateMode
+          ? Math.max(0, Number(draftForReward.quantity) || 0)
+          : voucherRemainMap.get(reward.rewardValue);
         const rewardQuantity = reward.quantity ?? 0;
         if (
           typeof remain === 'number' &&
@@ -2901,7 +2990,9 @@ export default function QuestFormModal({
           rewardQuantity > remain
         ) {
           throw new Error(
-            `Số lượng voucher ở nhiệm vụ con ${task.taskIndex + 1} không được vượt quá tồn (${remain}).`
+            isVoucherUpdateMode
+              ? `Số lượng voucher ở nhiệm vụ con ${task.taskIndex + 1} không được vượt quá số lượng phát hành (${remain}).`
+              : `Số lượng voucher ở nhiệm vụ con ${task.taskIndex + 1} không được vượt quá tồn (${remain}).`
           );
         }
       }
@@ -2974,6 +3065,9 @@ export default function QuestFormModal({
                   expectedParticipantCount
                 )
               : (reward.quantity ?? 0);
+          const issuedVoucherQuantityForUpdate = isUpgrade
+            ? -1
+            : Math.max(0, Number(voucherDraft.quantity) || 0);
 
           if (
             voucherDraft.name.trim().length === 0 ||
@@ -2982,7 +3076,10 @@ export default function QuestFormModal({
             (voucherDraft.type === 'PERCENT' &&
               voucherDraft.discountValue > 100) ||
             voucherDraft.minAmountRequired < 0 ||
-            (!isUpgrade && issuedVoucherQuantity <= 0) ||
+            (!isUpgrade &&
+              (voucherMode === 'update'
+                ? issuedVoucherQuantityForUpdate <= 0
+                : issuedVoucherQuantity <= 0)) ||
             (voucherDraft.type === 'PERCENT' &&
               (voucherDraft.maxDiscountValue === null ||
                 voucherDraft.maxDiscountValue <= 0)) ||
@@ -3005,7 +3102,7 @@ export default function QuestFormModal({
             const selectedVoucher = voucherById.get(reward.rewardValue);
             const updatePayload = toVoucherPayload(
               voucherDraft,
-              issuedVoucherQuantity,
+              issuedVoucherQuantityForUpdate,
               selectedVoucher?.campaignId ?? campaignIdForNewVoucher,
               selectedVoucher?.startDate ??
                 forcedCampaignStartDate ??
@@ -3074,7 +3171,7 @@ export default function QuestFormModal({
         title: data.title,
         description: data.description,
         imageUrl: data.imageUrl,
-        isActive: true,
+        isActive: data.isActive,
         isStandalone: !isCampaign,
         campaignId: isCampaign ? data.campaignId : null,
         tasks: normalizedTasks.map((task) => ({

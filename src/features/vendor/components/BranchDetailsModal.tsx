@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import type { Branch } from '@features/vendor/types/vendor';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import PaymentIcon from '@mui/icons-material/Payment';
-import { Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import usePayment from '@features/vendor/hooks/usePayment';
 import PaymentBenefitsModal from '@features/vendor/components/PaymentBenefitsModal';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
@@ -70,7 +70,6 @@ export default function BranchDetailsModal({
 }: BranchDetailsModalProps): JSX.Element | null {
   const { onCreatePaymentLink } = usePayment();
   const [paying, setPaying] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showBenefitsModal, setShowBenefitsModal] = useState(false);
 
   if (!isOpen || !branch) return null;
@@ -81,11 +80,9 @@ export default function BranchDetailsModal({
       const res = await onCreatePaymentLink({ branchId: branch.branchId });
       if (res.success && res.paymentUrl) {
         window.location.href = res.paymentUrl;
-      } else {
-        setErrorMsg('Không thể tạo link thanh toán. Vui lòng thử lại.');
       }
-    } catch {
-      setErrorMsg('Đã xảy ra lỗi khi tạo link thanh toán.');
+    } catch (error) {
+      console.error(error);
     } finally {
       setPaying(false);
     }
@@ -117,7 +114,7 @@ export default function BranchDetailsModal({
     return 'default';
   };
 
-  const managerDisplayName = (() => {
+  const managerDisplayName = ((): string => {
     if (managerName && managerName.trim().length > 0) {
       return managerName;
     }
@@ -166,6 +163,18 @@ export default function BranchDetailsModal({
                   value={managerDisplayName}
                 />
                 <InfoField label="Số điện thoại" value={branch.phoneNumber} />
+                <InfoField
+                  label="Hạng chi nhánh"
+                  value={(() => {
+                    if (!branch.tierName) return '-';
+                    const tierName = branch.tierName.toLowerCase();
+                    if (tierName === 'warning') return 'Cảnh báo';
+                    if (tierName === 'silver') return 'Bạc';
+                    if (tierName === 'gold') return 'Vàng';
+                    if (tierName === 'diamond') return 'Kim cương';
+                    return branch.tierName;
+                  })()}
+                />
                 <InfoField
                   label="Đánh giá"
                   value={
@@ -362,17 +371,6 @@ export default function BranchDetailsModal({
           </button>
         </div>
       </div>
-
-      <Snackbar
-        open={errorMsg !== null}
-        autoHideDuration={4000}
-        onClose={() => setErrorMsg(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={() => setErrorMsg(null)}>
-          {errorMsg}
-        </Alert>
-      </Snackbar>
 
       {showBenefitsModal && (
         <PaymentBenefitsModal

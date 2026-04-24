@@ -1,5 +1,7 @@
 import type { VendorDetail } from '@features/admin/types/vendor';
+import type { VendorBranch } from '@features/admin/types/vendor';
 import {
+  Comment as CommentIcon,
   Email as EmailIcon,
   LocationOn as LocationOnIcon,
   Phone as PhoneIcon,
@@ -11,7 +13,6 @@ import {
   CardContent,
   Chip,
   Dialog,
-  DialogActions,
   DialogContent,
   Divider,
   Rating,
@@ -19,8 +20,10 @@ import {
 } from '@mui/material';
 import BranchLocationPreviewMap from '@features/admin/components/BranchLocationPreviewMap';
 import type { JSX } from 'react';
+import { useState } from 'react';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AppModalHeader from '@components/AppModalHeader';
+import BranchFeedbackModal from '@features/admin/components/BranchFeedbackModal';
 
 interface VendorDetailModalProps {
   open: boolean;
@@ -33,6 +36,10 @@ export default function VendorDetailModal({
   onClose,
   vendorDetail,
 }: VendorDetailModalProps): JSX.Element {
+  const [feedbackBranch, setFeedbackBranch] = useState<VendorBranch | null>(
+    null
+  );
+
   const formatDateTime = (dateValue?: string | null): string => {
     if (!dateValue) {
       return '-';
@@ -215,6 +222,15 @@ export default function VendorDetailModal({
                         Chi nhánh #{index + 1}: {branch.name}
                       </Typography>
                       <Box className="flex items-center gap-2">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="info"
+                          startIcon={<CommentIcon fontSize="small" />}
+                          onClick={() => setFeedbackBranch(branch)}
+                        >
+                          Xem feedback
+                        </Button>
                         {branch.tierName && (
                           <Chip
                             label={`Tier ${branch.tierName}`}
@@ -437,6 +453,12 @@ export default function VendorDetailModal({
           Đóng
         </Button>
       </DialogActions> */}
+
+      <BranchFeedbackModal
+        open={Boolean(feedbackBranch)}
+        onClose={() => setFeedbackBranch(null)}
+        branch={feedbackBranch}
+      />
     </Dialog>
   );
 }

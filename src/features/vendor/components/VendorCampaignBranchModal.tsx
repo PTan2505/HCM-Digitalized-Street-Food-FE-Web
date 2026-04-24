@@ -33,6 +33,7 @@ export default function VendorCampaignBranchModal({
   const {
     onGetBranchesOfACampaign,
     onGetVendorBranchesOfACampaign,
+    onJoinBranchToSystemCampaign,
     onAddBranchesToACampaign,
     onRemoveBranchesFromACampaign,
   } = useVendorCampaign();
@@ -41,8 +42,13 @@ export default function VendorCampaignBranchModal({
     () =>
       branches.filter(
         (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+        // (branch) => branch.isSubscribed
       ),
     [branches]
+  );
+  const subscribedBranchIdSet = useMemo(
+    () => new Set(subscribedBranches.map((branch) => branch.branchId)),
+    [subscribedBranches]
   );
 
   const [initialIds, setInitialIds] = useState<number[]>([]);
@@ -52,6 +58,15 @@ export default function VendorCampaignBranchModal({
 
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const initialIdSet = useMemo(() => new Set(initialIds), [initialIds]);
+  const isSystemCampaign = campaign?.isSystemCampaign === true;
+  const selectableSystemBranchesCount = useMemo(() => {
+    return subscribedBranches.filter(
+      (branch) => !initialIdSet.has(branch.branchId)
+    ).length;
+  }, [initialIdSet, subscribedBranches]);
+  const selectedSystemJoinIds = useMemo(() => {
+    return selectedIds.filter((id) => !initialIdSet.has(id));
+  }, [initialIdSet, selectedIds]);
 
   const isDirty = useMemo(() => {
     if (selectedIds.length !== initialIds.length) return true;
@@ -66,8 +81,11 @@ export default function VendorCampaignBranchModal({
         ? await onGetBranchesOfACampaign(campaign.campaignId)
         : await onGetVendorBranchesOfACampaign(campaign.campaignId);
       const fetchedBranchIds = res.items?.map((item) => item.branchId) ?? [];
-      setInitialIds(fetchedBranchIds);
-      setSelectedIds(fetchedBranchIds);
+      const vendorBranchIds = fetchedBranchIds.filter((id) =>
+        subscribedBranchIdSet.has(id)
+      );
+      setInitialIds(vendorBranchIds);
+      setSelectedIds(vendorBranchIds);
     } catch (err) {
       console.error(err);
       setInitialIds([]);
@@ -75,7 +93,12 @@ export default function VendorCampaignBranchModal({
     } finally {
       setIsLoading(false);
     }
-  }, [campaign, onGetBranchesOfACampaign, onGetVendorBranchesOfACampaign]);
+  }, [
+    campaign,
+    onGetBranchesOfACampaign,
+    onGetVendorBranchesOfACampaign,
+    subscribedBranchIdSet,
+  ]);
 
   useEffect(() => {
     if (isOpen && campaign) {
@@ -87,7 +110,19 @@ export default function VendorCampaignBranchModal({
   }, [isOpen, campaign, fetchBranches]);
 
   const handleToggle = (branchId: number): void => {
-    if (campaign?.isSystemCampaign) return;
+    if (isSystemCampaign) {
+      if (initialIdSet.has(branchId)) {
+        return;
+      }
+
+      setSelectedIds((prev) =>
+        prev.includes(branchId)
+          ? prev.filter((id) => id !== branchId)
+          : [...prev, branchId]
+      );
+      return;
+    }
+
     setSelectedIds((prev) => {
       if (prev.includes(branchId)) {
         if (prev.length === 1) {
@@ -101,7 +136,36 @@ export default function VendorCampaignBranchModal({
   };
 
   const handleSave = async (): Promise<void> => {
-    if (!campaign || !isDirty || isSaving) return;
+    if (!campaign || isSaving) return;
+
+    if (isSystemCampaign) {
+      if (selectedSystemJoinIds.length === 0) {
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        const response = await onJoinBranchToSystemCampaign(
+          campaign.campaignId,
+          selectedSystemJoinIds
+        );
+
+        if (response.payment?.paymentUrl) {
+          window.location.href = response.payment.paymentUrl;
+        } else if (response.branches && response.branches.length > 0) {
+          onClose();
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSaving(false);
+      }
+
+      return;
+    }
+
+    if (!isDirty) return;
+
     setIsSaving(true);
     try {
       const addedIds = selectedIds.filter((id) => !initialIdSet.has(id));
@@ -137,7 +201,11 @@ export default function VendorCampaignBranchModal({
         <Checkbox
           checked={selectedIdSet.has(row.branchId)}
           onChange={() => handleToggle(row.branchId)}
-          disabled={campaign?.isSystemCampaign}
+          disabled={
+            (isSystemCampaign && initialIdSet.has(row.branchId)) ||
+            isSaving ||
+            isLoading
+          }
           size="small"
           sx={{
             color: '#d1d5db',
@@ -175,9 +243,18 @@ export default function VendorCampaignBranchModal({
       style: { width: '150px' },
       render: (_: unknown, row: Branch): React.ReactNode => {
         const isSelected = selectedIdSet.has(row.branchId);
+        const isInitiallyJoined = initialIdSet.has(row.branchId);
+        const isPendingJoin =
+          isSystemCampaign && isSelected && !isInitiallyJoined;
         return (
           <Chip
-            label={isSelected ? 'Đang tham gia' : 'Chưa tham gia'}
+            label={
+              isSelected
+                ? isPendingJoin
+                  ? 'Sắp tham gia'
+                  : 'Đang tham gia'
+                : 'Chưa tham gia'
+            }
             size="small"
             className={
               isSelected
@@ -191,80 +268,103 @@ export default function VendorCampaignBranchModal({
   ];
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          maxHeight: '85vh',
-        },
-      }}
-    >
-      <VendorModalHeader
-        title="Quản lý chi nhánh của chiến dịch"
-        subtitle={campaign?.name ?? ''}
-        icon={<StorefrontIcon />}
-        iconTone="campaign"
+    <>
+      <Dialog
+        open={isOpen}
         onClose={onClose}
-      />
-      <DialogContent dividers sx={{ p: 4 }}>
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">
-              Chiến dịch:{' '}
-              <span className="font-semibold text-gray-800">
-                {campaign?.name}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <div className="mb-4 flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-            Tổng chi nhánh: {subscribedBranches.length}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            Đang tham gia: {selectedIds.length}
-          </span>
-        </div>
-
-        <Table
-          columns={columns}
-          data={subscribedBranches}
-          rowKey="branchId"
-          loading={isLoading}
-          emptyMessage="Không có chi nhánh khả dụng (chưa đăng ký gói)"
-          maxHeight="calc(85vh - 280px)"
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            maxHeight: '85vh',
+          },
+        }}
+      >
+        <VendorModalHeader
+          title="Quản lý chi nhánh của chiến dịch"
+          subtitle={campaign?.name ?? ''}
+          icon={<StorefrontIcon />}
+          iconTone="campaign"
+          onClose={onClose}
         />
-      </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} color="inherit">
-          {campaign?.isSystemCampaign ? 'Đóng' : 'Hủy'}
-        </Button>
-        {!campaign?.isSystemCampaign && (
-          <Button
-            onClick={() => void handleSave()}
-            variant="contained"
-            disabled={!isDirty || isSaving || isLoading}
-            startIcon={
-              isSaving ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : undefined
-            }
-            className={
-              !isDirty || isSaving || isLoading
-                ? 'bg-gray-300 text-gray-500'
-                : 'bg-primary-600 hover:bg-primary-700 text-white'
-            }
-          >
-            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+        <DialogContent dividers sx={{ p: 4 }}>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">
+                Chiến dịch:{' '}
+                <span className="font-semibold text-gray-800">
+                  {campaign?.name}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+              Tổng chi nhánh: {subscribedBranches.length}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+              Đang tham gia: {selectedIds.length}
+            </span>
+          </div>
+
+          <Table
+            columns={columns}
+            data={subscribedBranches}
+            rowKey="branchId"
+            loading={isLoading}
+            emptyMessage="Không có chi nhánh khả dụng (chưa đăng ký gói)"
+            maxHeight="calc(85vh - 280px)"
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={onClose} color="inherit">
+            {campaign?.isSystemCampaign ? 'Đóng' : 'Hủy'}
           </Button>
-        )}
-      </DialogActions>
-    </Dialog>
+          {!campaign?.isSystemCampaign && (
+            <Button
+              onClick={() => void handleSave()}
+              variant="contained"
+              disabled={!isDirty || isSaving || isLoading}
+              startIcon={
+                isSaving ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : undefined
+              }
+              className={
+                !isDirty || isSaving || isLoading
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-primary-600 hover:bg-primary-700 text-white'
+              }
+            >
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            </Button>
+          )}
+          {campaign?.isSystemCampaign && selectableSystemBranchesCount > 0 && (
+            <Button
+              onClick={() => void handleSave()}
+              variant="contained"
+              disabled={
+                selectedSystemJoinIds.length === 0 || isSaving || isLoading
+              }
+              startIcon={
+                isSaving ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : undefined
+              }
+              className={
+                selectedSystemJoinIds.length === 0 || isSaving || isLoading
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-primary-600 hover:bg-primary-700 text-white'
+              }
+            >
+              {isSaving ? 'Đang tham gia...' : 'Tham gia'}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

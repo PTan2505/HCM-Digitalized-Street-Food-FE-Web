@@ -583,9 +583,10 @@ export default function VoucherFormModal({
   }, [isOpen]);
 
   const handleSingleSubmit = async (data: VoucherFormData): Promise<void> => {
+    const isCreateMode = voucher === null;
     const payload: VoucherCreate = {
       ...data,
-      isActive: true,
+      isActive: isCreateMode ? true : data.isActive,
       type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? null,

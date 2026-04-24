@@ -16,6 +16,7 @@ export interface Voucher {
   expiredDate: string | null;
   isActive: boolean;
   campaignId: number | null;
+  isIndependentQuest?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
 }

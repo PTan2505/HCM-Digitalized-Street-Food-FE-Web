@@ -18,10 +18,12 @@ import {
   Campaign as CampaignIcon,
 } from '@mui/icons-material';
 import type { Campaign } from '@features/admin/types/campaign';
+import type { Tier } from '@features/admin/types/tier';
 import { QuestTaskType } from '@features/admin/types/quest';
 import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
 import AppModalHeader from '@components/AppModalHeader';
+import useTier from '@features/admin/hooks/useTier';
 
 type VoucherDraft = {
   name: string;
@@ -213,9 +215,12 @@ export default function CamPaignFormModal({
   campaign,
   status,
 }: CamPaignFormModalProps): React.JSX.Element | null {
+  const { onGetAllTiers } = useTier();
+  const [tiers, setTiers] = useState<Tier[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [questBundles, setQuestBundles] = useState<CampaignQuestBundleDraft[]>([
     defaultQuestBundleDraft(),
   ]);
@@ -237,6 +242,7 @@ export default function CamPaignFormModal({
       name: '',
       description: '',
       targetSegment: '',
+      requiredTierId: null,
       registrationStartDate: '',
       registrationEndDate: '',
       startDate: '',
@@ -254,12 +260,39 @@ export default function CamPaignFormModal({
   }, [questBundles]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void (async (): Promise<void> => {
+      try {
+        const response = await onGetAllTiers();
+        const supportedTiers = response.filter((tier) => {
+          const normalizedName = tier.name.trim().toLowerCase();
+
+          return (
+            normalizedName === 'silver' ||
+            normalizedName === 'gold' ||
+            normalizedName === 'diamond'
+          );
+        });
+
+        setTiers(supportedTiers);
+      } catch (error) {
+        console.error('Failed to fetch tiers', error);
+        setTiers([]);
+      }
+    })();
+  }, [isOpen, onGetAllTiers]);
+
+  useEffect(() => {
     if (isOpen) {
       if (campaign) {
         reset({
           name: campaign.name,
           description: campaign.description ?? '',
           targetSegment: campaign.targetSegment ?? '',
+          requiredTierId: campaign.requiredTierId ?? null,
           registrationStartDate: toLocalDatetimeValue(
             campaign.registrationStartDate
           ),
@@ -274,6 +307,7 @@ export default function CamPaignFormModal({
           name: '',
           description: '',
           targetSegment: '',
+          requiredTierId: null,
           registrationStartDate: '',
           registrationEndDate: '',
           startDate: '',
@@ -287,6 +321,7 @@ export default function CamPaignFormModal({
       setImageFile(null);
       setImagePreviewUrl(null);
       setIsImageRemoved(false);
+      setImageError(null);
       setQuestBundles([defaultQuestBundleDraft()]);
       setQuestError(null);
       if (fileInputRef.current) {
@@ -346,6 +381,14 @@ export default function CamPaignFormModal({
   }, [campaign, startDate, endDate, setValue]);
 
   const handleFormSubmit = async (data: CampaignFormData): Promise<void> => {
+    const hasBannerImage =
+      imageFile !== null || (!isImageRemoved && Boolean(campaign?.imageUrl));
+    if (!hasBannerImage) {
+      setImageError('Ảnh banner chiến dịch không được để trống');
+      return;
+    }
+    setImageError(null);
+
     if (!campaign) {
       for (
         let questIndex = 0;
@@ -445,6 +488,7 @@ export default function CamPaignFormModal({
 
     const payload: CampaignFormData = {
       ...data,
+      requiredTierId: data.requiredTierId ?? undefined,
       registrationStartDate: toIsoZulu(data.registrationStartDate) ?? '',
       registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
       startDate: toIsoZulu(data.startDate) ?? '',
@@ -486,6 +530,7 @@ export default function CamPaignFormModal({
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
     setIsImageRemoved(false);
+    setImageError(null);
   };
 
   const handleClearSelectedImage = (): void => {
@@ -495,6 +540,7 @@ export default function CamPaignFormModal({
     setImageFile(null);
     setImagePreviewUrl(null);
     setIsImageRemoved(true);
+    setImageError('Ảnh banner chiến dịch không được để trống');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -708,6 +754,31 @@ export default function CamPaignFormModal({
                     placeholder="VD: Học sinh, Sinh viên"
                   />
                 </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Yêu cầu hạng quán ít nhất cần có để tham gia chiến dịch
+                  </label>
+                  <select
+                    {...register('requiredTierId', {
+                      setValueAs: (value: string): number | null => {
+                        if (value === '') {
+                          return null;
+                        }
+
+                        return Number(value);
+                      },
+                    })}
+                    className={inputClass(false)}
+                  >
+                    <option value="">Không yêu cầu hạng</option>
+                    {tiers.map((tier) => (
+                      <option key={tier.tierId} value={tier.tierId}>
+                        {tier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -719,19 +790,25 @@ export default function CamPaignFormModal({
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
-                    Mô tả
+                    Mô tả <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     {...register('description')}
                     rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                    className={`${inputClass(!!errors.description)} resize-none`}
                     placeholder="Nhập mô tả chiến dịch"
                   />
+                  {errors.description && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.description.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Ảnh banner chiến dịch
+                    Ảnh banner chiến dịch{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
                     {displayImageUrl ? (
@@ -803,6 +880,11 @@ export default function CamPaignFormModal({
                     <p className="text-center text-xs text-gray-500">
                       Định dạng hỗ trợ: JPG, PNG, WEBP.
                     </p>
+                    {imageError && (
+                      <p className="text-center text-xs text-red-500">
+                        {imageError}
+                      </p>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"

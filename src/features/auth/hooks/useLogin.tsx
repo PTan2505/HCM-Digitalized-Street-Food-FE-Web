@@ -30,6 +30,7 @@ import { resetQuestState } from '@slices/quest';
 import { resetAdminDashboardState } from '@slices/adminDashboard';
 import { resetVendorDashboardState } from '@slices/vendorDashboard';
 import { resetSettingState } from '@slices/setting';
+import { resetTierState } from '@slices/tier';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -97,6 +98,7 @@ export default function useLogin(): {
     dispatch(resetAdminDashboardState());
     dispatch(resetVendorDashboardState());
     dispatch(resetSettingState());
+    dispatch(resetTierState());
     navigate(ROUTES.LOGIN);
   }
   return {

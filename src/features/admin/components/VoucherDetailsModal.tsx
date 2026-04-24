@@ -33,6 +33,19 @@ const formatCurrency = (value: number): string =>
     value
   );
 
+const getRemainingQuantity = (voucher: Voucher): number => {
+  if (typeof voucher.remain === 'number' && !Number.isNaN(voucher.remain)) {
+    return Math.max(voucher.remain, 0);
+  }
+
+  return Math.max(voucher.quantity - (voucher.usedQuantity ?? 0), 0);
+};
+
+const isUnlimitedVoucher = (
+  voucher: Voucher,
+  remainingQuantity: number
+): boolean => remainingQuantity === 0 && voucher.quantity < 0;
+
 const formatDiscountText = (voucher: Voucher): string => {
   if (voucher.type === 'PERCENT') {
     const maxDiscountText = voucher.maxDiscountValue
@@ -65,8 +78,9 @@ export default function VoucherDetailsModal({
         ?.name ?? 'voucher này thuộc chiến dịch của vendor')
     : null;
 
-  const remainQuantity =
-    voucher.remain ?? Math.max(voucher.quantity - voucher.usedQuantity, 0);
+  const remainQuantity = getRemainingQuantity(voucher);
+  const unlimited = isUnlimitedVoucher(voucher, remainQuantity);
+
   const usagePercent =
     voucher.quantity > 0
       ? Math.min((voucher.usedQuantity / voucher.quantity) * 100, 100)
@@ -187,14 +201,17 @@ export default function VoucherDetailsModal({
                   Còn lại / Tổng
                 </p>
                 <p className="text-table-text-primary mt-1 text-sm font-semibold">
-                  {remainQuantity} / {voucher.quantity}
+                  {unlimited
+                    ? 'Vô hạn'
+                    : `${remainQuantity} / ${voucher.quantity}`}
                 </p>
               </div>
             </div>
 
             <div className="mt-3">
               <p className="text-table-text-secondary text-xs">
-                Đã dùng {voucher.usedQuantity} ({Math.round(usagePercent)}%)
+                Đã dùng {voucher.usedQuantity}
+                {!unlimited && ` (${Math.round(usagePercent)}%)`}
               </p>
             </div>
           </div>
@@ -225,7 +242,10 @@ export default function VoucherDetailsModal({
               label="Ngày tạo (Hệ thống)"
               value={formatVNDatetime(voucher.createdAt ?? null)}
             />
-            <DetailItem label="Số lượng phát hành" value={voucher.quantity} />
+            <DetailItem
+              label="Số lượng phát hành"
+              value={unlimited ? 'Vô hạn' : voucher.quantity}
+            />
             <DetailItem label="Đã sử dụng" value={voucher.usedQuantity} />
           </div>
 

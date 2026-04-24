@@ -2,10 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
 import { Dialog, DialogContent, Box, Button, Chip } from '@mui/material';
 import {
-  Add as AddIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
@@ -131,15 +129,9 @@ export default function CampaignVoucherModal({
         await onCreateVoucher(items);
       }
       handleCloseForm();
-      void fetchVouchers();
     } catch (error) {
       console.error('Failed to save voucher', error);
     }
-  };
-
-  const handleDelete = (voucher: Voucher): void => {
-    setDeletingVoucher(voucher);
-    setOpenDeleteDialog(true);
   };
 
   const handleConfirmDelete = async (): Promise<void> => {

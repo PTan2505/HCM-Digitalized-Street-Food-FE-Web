@@ -4,8 +4,6 @@ import SidebarContent, {
 import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
-import OnboardingMissingBranchDishModal from '@features/vendor/components/OnboardingMissingBranchDishModal';
-import useDish from '@features/vendor/hooks/useDish';
 import useVendor from '@features/vendor/hooks/useVendor';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 import {
@@ -13,7 +11,6 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Storefront as BuildingStorefrontIcon,
-  Receipt as ClipboardDocumentListIcon,
   Description as DocumentTextIcon,
   Close as XMarkIcon,
   LocationOn as MapPinIcon,
@@ -23,9 +20,8 @@ import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
 import { selectUser } from '@slices/auth';
 import { selectBranchScheduleMap, selectMyVendor } from '@slices/vendor';
-import { selectBranchDishCountMap } from '@slices/dish';
 import type { JSX } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const userBase = ROUTES.USER.BASE;
@@ -62,26 +58,22 @@ const navigation = [
 ];
 
 function UserLayout(): JSX.Element {
-  type PendingOnboardingModal = 'branch' | 'branchDish' | null;
+  type PendingOnboardingModal = 'branch' | null;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
-  const [isBranchDishModalOpen, setIsBranchDishModalOpen] = useState(false);
   const [isInitialCheckDone, setIsInitialCheckDone] = useState(false);
   const [pendingOnboardingModal, setPendingOnboardingModal] =
     useState<PendingOnboardingModal>(null);
-  const hasShownBranchDishModalRef = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { onLogout } = useLogin();
   const { onGetMyVendor, onGetWorkSchedules } = useVendor();
-  const { onGetDishesByBranch } = useDish();
   const user = useAppSelector(selectUser);
   const myVendor = useAppSelector(selectMyVendor);
   const branchScheduleMap = useAppSelector(selectBranchScheduleMap);
-  const branchDishCountMap = useAppSelector(selectBranchDishCountMap);
 
   const userBranchPath = `${userBase}/${userPaths.BRANCH}`;
 
@@ -90,11 +82,6 @@ function UserLayout(): JSX.Element {
       (myVendor?.branches ?? []).filter(
         (branch) => branch.licenseStatus === 'Accept'
       ),
-    [myVendor]
-  );
-
-  const subscribedBranches = useMemo(
-    () => (myVendor?.branches ?? []).filter((branch) => branch.isSubscribed),
     [myVendor]
   );
 
@@ -108,32 +95,17 @@ function UserLayout(): JSX.Element {
     [isInitialCheckDone, acceptedBranches, branchScheduleMap]
   );
 
-  const missingBranchDishBranches = useMemo(
-    () =>
-      isInitialCheckDone
-        ? subscribedBranches.filter(
-            (branch) =>
-              branchDishCountMap[branch.branchId] !== undefined &&
-              branchDishCountMap[branch.branchId] === 0
-          )
-        : [],
-    [isInitialCheckDone, subscribedBranches, branchDishCountMap]
-  );
-
   const isBranchScheduleMissing = missingScheduleBranches.length > 0;
-  const isBranchDishMissing = missingBranchDishBranches.length > 0;
 
   const filteredNavigation = navigation.map((item) => {
     if (item.href === userBranchPath) {
-      const hasBadge = isBranchScheduleMissing || isBranchDishMissing;
+      const hasBadge = isBranchScheduleMissing;
       return {
         ...item,
         badgeText: hasBadge ? 'Cập nhật' : undefined,
         onClick: (): void => {
           if (isBranchScheduleMissing) {
             setPendingOnboardingModal('branch');
-          } else if (isBranchDishMissing) {
-            setPendingOnboardingModal('branchDish');
           }
         },
       };
@@ -164,28 +136,8 @@ function UserLayout(): JSX.Element {
     ) {
       setIsBranchModalOpen(true);
       setPendingOnboardingModal(null);
-      return;
-    }
-
-    if (
-      pendingOnboardingModal === 'branchDish' &&
-      location.pathname === userBranchPath
-    ) {
-      setIsBranchDishModalOpen(true);
-      setPendingOnboardingModal(null);
     }
   }, [location.pathname, pendingOnboardingModal, userBranchPath]);
-
-  useEffect(() => {
-    if (
-      isInitialCheckDone &&
-      isBranchDishMissing &&
-      !hasShownBranchDishModalRef.current
-    ) {
-      setIsBranchDishModalOpen(true);
-      hasShownBranchDishModalRef.current = true;
-    }
-  }, [isInitialCheckDone, isBranchDishMissing]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -198,43 +150,19 @@ function UserLayout(): JSX.Element {
         const accepted = (vendor.branches ?? []).filter(
           (b) => b.licenseStatus === 'Accept'
         );
-        const subscribed = (vendor.branches ?? []).filter(
-          (b) => b.isSubscribed
-        );
 
-        await Promise.all([
-          (async (): Promise<void> => {
-            await Promise.all(
-              accepted.map(async (branch) => {
-                try {
-                  await onGetWorkSchedules(branch.branchId);
-                } catch (error) {
-                  console.error(
-                    `Error checking work schedules for branch ${branch.branchId}:`,
-                    error
-                  );
-                }
-              })
-            );
-          })(),
-          (async (): Promise<void> => {
-            await Promise.all(
-              subscribed.map(async (branch) => {
-                try {
-                  await onGetDishesByBranch({
-                    branchId: branch.branchId,
-                    params: { pageNumber: 1, pageSize: 5 },
-                  });
-                } catch (error) {
-                  console.error(
-                    `Error checking dishes for branch ${branch.branchId}:`,
-                    error
-                  );
-                }
-              })
-            );
-          })(),
-        ]);
+        await Promise.all(
+          accepted.map(async (branch) => {
+            try {
+              await onGetWorkSchedules(branch.branchId);
+            } catch (error) {
+              console.error(
+                `Error checking work schedules for branch ${branch.branchId}:`,
+                error
+              );
+            }
+          })
+        );
 
         if (!isCancelled) setIsInitialCheckDone(true);
       } catch (error) {
@@ -372,11 +300,6 @@ function UserLayout(): JSX.Element {
         open={isBranchModalOpen}
         missingBranches={missingScheduleBranches}
         onClose={() => setIsBranchModalOpen(false)}
-      />
-      <OnboardingMissingBranchDishModal
-        open={isBranchDishModalOpen}
-        missingBranches={missingBranchDishBranches}
-        onClose={() => setIsBranchDishModalOpen(false)}
       />
       <UpdateUserProfileModal
         isOpen={isProfileModalOpen}

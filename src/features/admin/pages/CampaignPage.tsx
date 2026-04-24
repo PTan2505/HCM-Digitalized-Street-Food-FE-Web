@@ -286,7 +286,7 @@ export default function CampaignPage(): JSX.Element {
                     ? null
                     : questBundle.description,
                 imageUrl: null,
-                isActive: true,
+                isActive: false,
                 requiresEnrollment: true,
                 isStandalone: false,
                 campaignId: createdCampaign.campaignId,
@@ -454,9 +454,16 @@ export default function CampaignPage(): JSX.Element {
     {
       key: 'name',
       label: 'Tên chiến dịch',
-      render: (value: unknown): JSX.Element => (
-        <Box className="font-semibold text-[var(--color-table-text-primary)]">
-          {typeof value === 'string' ? value : String(value)}
+      render: (value: unknown, row: Campaign): JSX.Element => (
+        <Box className="flex flex-col gap-1">
+          {!row.isUpdateable && (
+            <span className="inline-flex w-fit items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+              Đã có cửa hàng tham gia
+            </span>
+          )}
+          <Box className="font-semibold text-[var(--color-table-text-primary)]">
+            {typeof value === 'string' ? value : String(value)}
+          </Box>
         </Box>
       ),
     },

@@ -23,6 +23,7 @@ import {
 } from '@features/vendor/utils/vendorRegistrationSchema';
 import type { BranchFormData } from '@features/vendor/utils/vendorRegistrationSchema';
 import { useAppSelector } from '@hooks/reduxHooks';
+import { selectUser } from '@slices/auth';
 import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
 import StoreSection from './StoreSection';
 import OwnerInfoSection from './OwnerInfoSection';
@@ -139,12 +140,26 @@ function getSubtitle(mode: BranchFormMode): {
   };
 }
 
+function normalizeAddressDetail(address: string): string {
+  const trimmedAddress = address.trim();
+  if (!trimmedAddress) return '';
+
+  // Keep the full detailed address and only remove ward/city part.
+  const wardMatch = trimmedAddress.match(/\s*,?\s*(phường|xã|thị trấn)\b/i);
+  if (!wardMatch?.index) {
+    return trimmedAddress;
+  }
+
+  return trimmedAddress.slice(0, wardMatch.index).replace(/,\s*$/, '').trim();
+}
+
 export default function BranchFormModal({
   isOpen,
   onClose,
   mode,
   onSuccess,
 }: BranchFormModalProps): JSX.Element {
+  const user = useAppSelector(selectUser);
   const dietaryPreferencesFromStore = useAppSelector(
     selectUserDietaryPreferences
   );
@@ -172,6 +187,7 @@ export default function BranchFormModal({
   const {
     watch,
     setValue,
+    getValues,
     reset,
     trigger,
     formState: { errors, isValid, isDirty },
@@ -195,6 +211,27 @@ export default function BranchFormModal({
       }
     }
   }, [isOpen, mode, onGetAllUserDietaryPreferences, reset]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const loginPhoneNumber = user?.phoneNumber?.trim();
+    if (!loginPhoneNumber) {
+      return;
+    }
+
+    const currentPhoneValue = getValues('ownerPhone')?.trim();
+    if (currentPhoneValue) {
+      return;
+    }
+
+    setValue('ownerPhone', loginPhoneNumber, {
+      shouldValidate: true,
+      shouldDirty: false,
+    });
+  }, [isOpen, user?.phoneNumber, getValues, setValue]);
 
   const handleChange = (field: string, value: unknown): void => {
     setValue(field as keyof BranchFormData, value as never, {
@@ -229,6 +266,7 @@ export default function BranchFormModal({
     const selectedDietaryPreferenceIds =
       (form as { dietaryPreferenceIds?: number[] }).dietaryPreferenceIds ?? [];
     const normalizedBranchName = form.branchName?.trim() ?? '';
+    const normalizedAddressDetail = normalizeAddressDetail(form.detailAddress);
 
     setSubmitting(true);
     try {
@@ -238,7 +276,7 @@ export default function BranchFormModal({
           phoneNumber: form.ownerPhone,
           email: form.email,
           ...(normalizedBranchName ? { branchName: normalizedBranchName } : {}),
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -259,7 +297,7 @@ export default function BranchFormModal({
           name: form.branchName,
           phoneNumber: form.ownerPhone,
           email: form.email,
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -283,7 +321,7 @@ export default function BranchFormModal({
           phoneNumber: form.ownerPhone,
           email: form.email,
           ...(normalizedBranchName ? { name: normalizedBranchName } : {}),
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,

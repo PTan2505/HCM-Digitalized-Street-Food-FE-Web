@@ -56,15 +56,10 @@ export const getCampaignOverviewTourSteps = ({
       spotlightPadding: 6,
     },
     {
-      target: `[data-tour-action="${ADMIN_CAMPAIGN_TOUR_ID}:detail"]`,
-      title: 'Xem chi tiết',
-      content: 'Mở trang chi tiết để kiểm tra cấu hình chiến dịch.',
-      placement: 'left',
-    },
-    {
-      target: `[data-tour-action="${ADMIN_CAMPAIGN_TOUR_ID}:voucher"]`,
-      title: 'Quản lý voucher',
-      content: 'Quản lý voucher gắn với từng chiến dịch ngay tại đây.',
+      target: `[data-tour-action-trigger="${ADMIN_CAMPAIGN_TOUR_ID}"]`,
+      title: 'Menu thao tác chiến dịch',
+      content:
+        'Nhấn vào nút này để mở các thao tác chi tiết cho từng chiến dịch.',
       placement: 'left',
     },
   ];
