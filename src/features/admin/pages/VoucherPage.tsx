@@ -250,7 +250,14 @@ export default function VoucherPage(): JSX.Element {
       label: 'Phạm vi',
       render: (_: unknown, row: Voucher): JSX.Element => {
         const scopeBadge = getVoucherScopeBadge(row);
-        return <StatusBadge label={scopeBadge.label} type={scopeBadge.type} />;
+        return (
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge label={scopeBadge.label} type={scopeBadge.type} />
+            {isMarketplaceVoucher(row) && row.isIndependentQuest === true && (
+              <StatusBadge label="Thuộc nhiệm vụ độc lập" type="info" />
+            )}
+          </div>
+        );
       },
     },
     // {
