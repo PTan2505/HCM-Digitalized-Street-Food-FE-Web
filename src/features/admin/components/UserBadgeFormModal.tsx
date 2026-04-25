@@ -41,6 +41,11 @@ export default function UserBadgeFormModal({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [removingBadge, setRemovingBadge] = useState<Badge | null>(null);
 
+  const formatDateTime = (dateValue?: string | null): string => {
+    if (!dateValue) return '-';
+    return new Date(dateValue).toLocaleString('vi-VN', { hour12: false });
+  };
+
   const handleClose = (): void => {
     setSelectedBadgeId(null);
     onClose();
@@ -82,7 +87,7 @@ export default function UserBadgeFormModal({
       onClick={handleClose}
     >
       <div
-        className="mx-4 w-full max-w-2xl rounded-lg bg-white shadow-xl"
+        className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <AppModalHeader
@@ -94,13 +99,13 @@ export default function UserBadgeFormModal({
         />
 
         {/* Modal Content */}
-        <div className="px-6 py-4">
+        <div className="flex-1 px-6 py-4">
           {/* Current Badges */}
           <div className="mb-6">
             <h3 className="text-table-text-primary mb-3 text-sm font-semibold">
               Huy hiệu hiện tại ({user.badges.length})
             </h3>
-            <div className="space-y-2">
+            <div className="max-h-[30vh] space-y-2 overflow-y-auto pr-2">
               {user.badges.length === 0 ? (
                 <p className="text-table-text-secondary text-sm italic">
                   Người dùng chưa có huy hiệu nào
@@ -123,7 +128,7 @@ export default function UserBadgeFormModal({
                         </div>
                         {badge.earnedAt && (
                           <div className="text-table-text-secondary text-xs">
-                            Nhận ngày: {badge.earnedAt}
+                            Nhận ngày: {formatDateTime(badge.earnedAt)}
                           </div>
                         )}
                       </div>
@@ -146,7 +151,7 @@ export default function UserBadgeFormModal({
             <h3 className="text-table-text-primary mb-3 text-sm font-semibold">
               Thêm huy hiệu mới
             </h3>
-            <div className="space-y-2">
+            <div className="max-h-[35vh] space-y-2 overflow-y-auto pr-2">
               {filteredBadges.map((badge) => (
                 <label
                   key={badge.badgeId}
