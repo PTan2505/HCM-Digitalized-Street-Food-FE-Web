@@ -330,6 +330,14 @@ export default function CampaignDetailModal({
                     label="Kết thúc chiến dịch"
                     value={formatVNDatetime(campaign.endDate)}
                   />
+                  <DetailItem
+                    label="Số lượng chi nhánh dự kiến"
+                    value={String(campaign.expectedBranchJoin ?? 0)}
+                  />
+                  <DetailItem
+                    label="Phí tham gia"
+                    value={formatCurrency(campaign.joinFee ?? 0)}
+                  />
                 </div>
               </div>
 
