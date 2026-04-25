@@ -44,8 +44,6 @@ export type GetWorkScheduleResponse = GetWorkScheduleItem[];
 export interface DayOff {
   startDate: string;
   endDate: string;
-  startTime: string | null;
-  endTime: string | null;
 }
 
 export interface DayOffResponse {
@@ -53,8 +51,6 @@ export interface DayOffResponse {
   branchId: number;
   startDate: string;
   endDate: string;
-  startTime: string | null;
-  endTime: string | null;
   branch?: null;
 }
 
