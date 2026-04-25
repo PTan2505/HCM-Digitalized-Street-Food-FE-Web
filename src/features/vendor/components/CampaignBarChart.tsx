@@ -103,9 +103,9 @@ export default function CampaignBarChart({
                   border: '1px solid #F3F4F6',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
-                formatter={(value: number, name: string, props: any) => {
+                formatter={(value, name) => {
                   if (name === 'Doanh thu')
-                    return [formatCurrency(value), name];
+                    return [formatCurrency(Number(value) || 0), String(name)];
                   return [value, name];
                 }}
               />
