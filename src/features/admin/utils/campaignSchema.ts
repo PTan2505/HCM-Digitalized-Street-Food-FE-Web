@@ -15,8 +15,15 @@ export const CampaignSchema = z
       .string()
       .min(1, 'Ngày kết thúc đăng ký không được để trống'),
     requiredTierId: z.number().int().positive().nullable().optional(),
-    expectedBranchJoin: z.number().int().positive().nullable().optional(),
-    joinFee: z.number().int().min(0, 'Phí tham gia không được nhỏ hơn 0'),
+    expectedBranchJoin: z
+      .number()
+      .int()
+      .min(0, 'Số lượng chi nhánh không được nhỏ hơn 0')
+      .nullable(),
+    joinFee: z
+      .number()
+      .int()
+      .min(10000, 'Phí tham gia không được nhỏ hơn 10.000 VNĐ'),
     startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
     endDate: z.string().min(1, 'Ngày kết thúc không được để trống'),
   })

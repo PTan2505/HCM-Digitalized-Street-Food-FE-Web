@@ -245,7 +245,7 @@ export default function CamPaignFormModal({
       targetSegment: '',
       requiredTierId: null,
       expectedBranchJoin: null,
-      joinFee: 0,
+      joinFee: 10000,
       registrationStartDate: '',
       registrationEndDate: '',
       startDate: '',
@@ -297,7 +297,7 @@ export default function CamPaignFormModal({
           targetSegment: campaign.targetSegment ?? '',
           requiredTierId: campaign.requiredTierId ?? null,
           expectedBranchJoin: campaign.expectedBranchJoin ?? null,
-          joinFee: campaign.joinFee ?? 0,
+          joinFee: campaign.joinFee ?? 10000,
           registrationStartDate: toLocalDatetimeValue(
             campaign.registrationStartDate
           ),
@@ -314,7 +314,7 @@ export default function CamPaignFormModal({
           targetSegment: '',
           requiredTierId: null,
           expectedBranchJoin: null,
-          joinFee: 0,
+          joinFee: 10000,
           registrationStartDate: '',
           registrationEndDate: '',
           startDate: '',
@@ -496,7 +496,7 @@ export default function CamPaignFormModal({
     const payload: CampaignFormData = {
       ...data,
       requiredTierId: data.requiredTierId ?? undefined,
-      expectedBranchJoin: data.expectedBranchJoin ?? undefined,
+      expectedBranchJoin: data.expectedBranchJoin ?? 0,
       joinFee: data.joinFee,
       registrationStartDate: toIsoZulu(data.registrationStartDate) ?? '',
       registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
@@ -795,7 +795,7 @@ export default function CamPaignFormModal({
                   </label>
                   <input
                     type="number"
-                    min={1}
+                    min={0}
                     {...register('expectedBranchJoin', {
                       setValueAs: (value: string): number | null => {
                         if (value === '') return null;
@@ -818,6 +818,9 @@ export default function CamPaignFormModal({
                     <span className="ml-1 text-xs font-normal text-gray-500">
                       (VNĐ)
                     </span>
+                    <span className="ml-2 text-xs font-medium text-amber-600">
+                      (Tối thiểu 10.000đ)
+                    </span>
                   </label>
                   <Controller
                     control={control}
@@ -830,6 +833,12 @@ export default function CamPaignFormModal({
                         value={formatNumberWithDots(field.value)}
                         onChange={(e) => {
                           field.onChange(parseNumberInput(e.target.value));
+                        }}
+                        onBlur={() => {
+                          if (field.value < 10000) {
+                            field.onChange(10000);
+                          }
+                          field.onBlur();
                         }}
                       />
                     )}
