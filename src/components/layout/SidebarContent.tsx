@@ -9,7 +9,16 @@ import logoImage from '@assets/lowca-logo.png';
 import unionLogo from '@assets/logos/Union.png';
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { Avatar, Box, Tooltip, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Tooltip,
+  Typography,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+} from '@mui/material';
 
 export interface NavigationItem {
   name: string;
@@ -51,6 +60,25 @@ const SidebarContent = ({
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {}
   );
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const handleDropdownClick = (
+    event: React.MouseEvent<HTMLElement>,
+    itemName: string
+  ) => {
+    if (collapsed) {
+      setAnchorEl(event.currentTarget);
+      setActiveDropdown(itemName);
+    } else {
+      toggleGroup(itemName);
+    }
+  };
+
+  const handleCloseDropdown = () => {
+    setAnchorEl(null);
+    setActiveDropdown(null);
+  };
 
   const isPathActive = (href?: string): boolean =>
     Boolean(href && location.pathname === href);
@@ -126,14 +154,16 @@ const SidebarContent = ({
               return (
                 <Box key={item.name} className="mb-1">
                   <Tooltip
-                    title={collapsed ? item.name : ''}
+                    title={
+                      collapsed && activeDropdown !== item.name ? item.name : ''
+                    }
                     placement="right"
                     disableHoverListener={!collapsed}
                   >
                     <Box
                       component="button"
                       type="button"
-                      onClick={() => toggleGroup(item.name)}
+                      onClick={(e) => handleDropdownClick(e, item.name)}
                       className={`flex w-full cursor-pointer items-center overflow-hidden rounded-lg border-none px-3 py-3 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
                         isChildActive
                           ? 'bg-moderator-active-bg text-moderator-active-text hover:bg-moderator-active-bg hover:text-moderator-active-text shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
@@ -164,6 +194,59 @@ const SidebarContent = ({
                       )}
                     </Box>
                   </Tooltip>
+
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={collapsed && activeDropdown === item.name}
+                    onClose={handleCloseDropdown}
+                    anchorOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }}
+                    PaperProps={{
+                      className:
+                        'ml-2 bg-white rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.1)] min-w-[200px]',
+                      sx: { overflow: 'visible' },
+                    }}
+                  >
+                    {item.children?.map((child) => {
+                      const isChildItemActive = isPathActive(child.href);
+                      return (
+                        <MenuItem
+                          key={child.name}
+                          component={Link}
+                          to={child.href ?? '#'}
+                          onClick={() => {
+                            onNavigateItemClick?.();
+                            handleCloseDropdown();
+                          }}
+                          className={`mx-2 my-1 flex cursor-pointer items-center overflow-hidden rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-in-out ${
+                            isChildItemActive
+                              ? 'bg-moderator-active-bg text-moderator-active-text shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
+                              : 'text-moderator-text-primary hover:bg-moderator-hover-bg hover:text-moderator-hover-text bg-transparent shadow-none'
+                          }`}
+                        >
+                          <ListItemIcon className="mr-3 min-w-0 text-inherit">
+                            <child.icon
+                              className="h-5 w-5"
+                              style={{ color: 'inherit' }}
+                            />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={child.name}
+                            primaryTypographyProps={{
+                              className:
+                                'text-[0.85rem] font-medium font-(--font-nunito) whitespace-nowrap',
+                            }}
+                          />
+                        </MenuItem>
+                      );
+                    })}
+                  </Menu>
 
                   {!collapsed && isExpanded && (
                     <Box className="mt-1 ml-8 space-y-1">

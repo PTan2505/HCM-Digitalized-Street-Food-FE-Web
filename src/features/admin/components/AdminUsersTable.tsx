@@ -5,6 +5,7 @@ import type {
   UserRoleFilter,
 } from '@features/admin/types/userManagement';
 import type { JSX } from 'react';
+import { Chip } from '@mui/material';
 
 interface AdminUsersTableProps {
   users: AdminUserItem[];
@@ -99,10 +100,47 @@ export default function AdminUsersTable({
         //   label: 'Vai trò',
         //   render: (value) => mapRoleLabel(value as string | number | null),
         // },
+        ...(roleFilter === 'user'
+          ? [
+              {
+                key: 'tierName',
+                label: 'Hạng',
+                style: { width: '120px' },
+                render: (value: unknown): React.ReactNode => {
+                  if (typeof value !== 'string') return '-';
+                  const tierName = value.toLowerCase();
+                  let label = value;
+                  let colorClass = 'bg-slate-100 text-slate-800';
+
+                  if (tierName === 'warning') {
+                    label = 'Cảnh báo';
+                    colorClass = 'bg-red-100 text-red-800';
+                  } else if (tierName === 'silver') {
+                    label = 'Bạc';
+                    colorClass = 'bg-gray-200 text-gray-800';
+                  } else if (tierName === 'gold') {
+                    label = 'Vàng';
+                    colorClass = 'bg-yellow-100 text-yellow-800';
+                  } else if (tierName === 'diamond') {
+                    label = 'Kim cương';
+                    colorClass = 'bg-blue-100 text-blue-800';
+                  }
+
+                  return (
+                    <Chip
+                      label={label}
+                      size="small"
+                      className={`${colorClass} font-semibold`}
+                    />
+                  );
+                },
+              },
+            ]
+          : []),
         {
           key: 'status',
           label: 'Trạng thái',
-          render: (_value, row): JSX.Element => {
+          render: (_value: unknown, row: AdminUserItem): JSX.Element => {
             return <UserStatusBadge isBanned={isUserBanned(row)} />;
           },
         },

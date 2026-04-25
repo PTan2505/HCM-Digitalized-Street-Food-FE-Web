@@ -14,6 +14,8 @@ export interface Campaign {
   updatedAt: string | null;
   isSystemCampaign: boolean;
   requiredTierId?: number | null;
+  expectedBranchJoin?: number | null;
+  joinFee: number;
   imageUrl?: string | null;
   isUpdateable: boolean;
 }
@@ -25,6 +27,8 @@ export interface CampaignCreate {
   registrationStartDate: string | null;
   registrationEndDate: string | null;
   requiredTierId?: number | null;
+  expectedBranchJoin?: number | null;
+  joinFee: number;
   startDate: string;
   endDate: string;
 }
@@ -36,6 +40,8 @@ export interface CampaignUpdate {
   registrationStartDate: string | null;
   registrationEndDate: string | null;
   requiredTierId?: number | null;
+  expectedBranchJoin?: number | null;
+  joinFee: number;
   startDate: string;
   endDate: string;
 }

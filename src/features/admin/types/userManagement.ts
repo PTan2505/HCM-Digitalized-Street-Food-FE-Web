@@ -24,6 +24,7 @@ export interface AdminUserItem {
   banned?: boolean | null;
   isBlocked?: boolean | null;
   status?: string | null;
+  tierName?: string | null;
 }
 
 export interface GetUsersResponse {

@@ -286,7 +286,7 @@ export default function CampaignPage(): JSX.Element {
                     ? null
                     : questBundle.description,
                 imageUrl: null,
-                isActive: false,
+                isActive: true,
                 requiresEnrollment: true,
                 isStandalone: false,
                 campaignId: createdCampaign.campaignId,
