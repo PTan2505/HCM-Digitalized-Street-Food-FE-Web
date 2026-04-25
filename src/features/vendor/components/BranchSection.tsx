@@ -92,8 +92,6 @@ export default function BranchSection({
         dayOffData={{
           startDate: branch.closedDates,
           endDate: branch.closedDates,
-          startTime: null,
-          endTime: null,
         }}
         onWorkScheduleChange={(data: WorkSchedule) => {
           handleFieldChange(
