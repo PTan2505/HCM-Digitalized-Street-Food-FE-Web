@@ -22,6 +22,7 @@ import {
   LocalOffer as LocalOfferIcon,
   Settings as SettingsIcon,
   Verified as VerifiedIcon,
+  AccountBalanceWallet as AccountBalanceWalletIcon,
 } from '@mui/icons-material';
 import FoodBankIcon from '@mui/icons-material/FoodBank';
 import { Box, IconButton, Typography } from '@mui/material';
@@ -150,6 +151,11 @@ const navigation: NavigationItem[] = [
     name: 'Quản lý nhiệm vụ',
     href: `${adminBase}/${adminPaths.QUEST}`,
     icon: AssignmentIcon,
+  },
+  {
+    name: 'Lịch sử rút tiền',
+    href: `${adminBase}/${adminPaths.PAYOUT}`,
+    icon: AccountBalanceWalletIcon,
   },
   {
     name: 'Cấu hình hệ thống',

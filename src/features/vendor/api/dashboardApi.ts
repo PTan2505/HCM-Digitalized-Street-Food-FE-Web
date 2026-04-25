@@ -2,6 +2,7 @@ import type {
   VendorDashboardRevenue,
   VendorDashboardVoucher,
   VendorDashboardDishes,
+  VendorDashboardCampaigns,
 } from '@features/vendor/types/dashboard';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -34,6 +35,17 @@ export class DashboardApi {
   async getDishes(): Promise<VendorDashboardDishes> {
     const res = await this.apiClient.get<VendorDashboardDishes>({
       url: apiUrl.vendorDashboard.getDishes,
+    });
+    return res.data;
+  }
+
+  async getCampaigns(params: {
+    fromDate: string;
+    toDate: string;
+  }): Promise<VendorDashboardCampaigns> {
+    const res = await this.apiClient.get<VendorDashboardCampaigns>({
+      url: apiUrl.vendorDashboard.getCampaigns,
+      params,
     });
     return res.data;
   }

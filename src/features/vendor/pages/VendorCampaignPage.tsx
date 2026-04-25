@@ -269,15 +269,15 @@ export default function VendorCampaignPage(): JSX.Element {
         </Box>
       ),
     },
-    {
-      key: 'targetSegment',
-      label: 'Phân khúc',
-      render: (value: unknown): JSX.Element => (
-        <Box className="text-table-text-primary">
-          {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
-        </Box>
-      ),
-    },
+    // {
+    //   key: 'targetSegment',
+    //   label: 'Phân khúc',
+    //   render: (value: unknown): JSX.Element => (
+    //     <Box className="text-table-text-primary">
+    //       {typeof value === 'string' && value.trim().length > 0 ? value : '-'}
+    //     </Box>
+    //   ),
+    // },
     // {
     //   key: 'isActive',
     //   label: 'Hoạt động',

@@ -3,6 +3,7 @@ export type NotificationType =
   | 'NewOrder'
   | 'BranchVerificationStatus'
   | 'SystemCampaignCreated'
+  | 'CampaignCancelledRefund'
   | (string & {});
 
 export interface NotificationDto {

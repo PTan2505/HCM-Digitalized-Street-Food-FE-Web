@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -235,6 +235,7 @@ export default function CamPaignFormModal({
     reset,
     watch,
     setValue,
+    control,
     formState: { errors, isDirty },
   } = useForm<CampaignFormData>({
     resolver: zodResolver(CampaignSchema),
@@ -243,6 +244,8 @@ export default function CamPaignFormModal({
       description: '',
       targetSegment: '',
       requiredTierId: null,
+      expectedBranchJoin: null,
+      joinFee: 10000,
       registrationStartDate: '',
       registrationEndDate: '',
       startDate: '',
@@ -293,6 +296,8 @@ export default function CamPaignFormModal({
           description: campaign.description ?? '',
           targetSegment: campaign.targetSegment ?? '',
           requiredTierId: campaign.requiredTierId ?? null,
+          expectedBranchJoin: campaign.expectedBranchJoin ?? null,
+          joinFee: campaign.joinFee ?? 10000,
           registrationStartDate: toLocalDatetimeValue(
             campaign.registrationStartDate
           ),
@@ -308,6 +313,8 @@ export default function CamPaignFormModal({
           description: '',
           targetSegment: '',
           requiredTierId: null,
+          expectedBranchJoin: null,
+          joinFee: 10000,
           registrationStartDate: '',
           registrationEndDate: '',
           startDate: '',
@@ -489,6 +496,8 @@ export default function CamPaignFormModal({
     const payload: CampaignFormData = {
       ...data,
       requiredTierId: data.requiredTierId ?? undefined,
+      expectedBranchJoin: data.expectedBranchJoin ?? 0,
+      joinFee: data.joinFee,
       registrationStartDate: toIsoZulu(data.registrationStartDate) ?? '',
       registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
       startDate: toIsoZulu(data.startDate) ?? '',
@@ -744,7 +753,7 @@ export default function CamPaignFormModal({
                   )}
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
                     Phân khúc mục tiêu
                   </label>
@@ -753,7 +762,7 @@ export default function CamPaignFormModal({
                     className={inputClass(false)}
                     placeholder="VD: Học sinh, Sinh viên"
                   />
-                </div>
+                </div> */}
 
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -778,6 +787,67 @@ export default function CamPaignFormModal({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Số lượng chi nhánh dự kiến tham gia
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    {...register('expectedBranchJoin', {
+                      setValueAs: (value: string): number | null => {
+                        if (value === '') return null;
+                        return Number(value);
+                      },
+                    })}
+                    className={inputClass(!!errors.expectedBranchJoin)}
+                    placeholder="Không bắt buộc"
+                  />
+                  {errors.expectedBranchJoin && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.expectedBranchJoin.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Phí tham gia <span className="text-red-500">*</span>
+                    <span className="ml-1 text-xs font-normal text-gray-500">
+                      (VNĐ)
+                    </span>
+                    <span className="ml-2 text-xs font-medium text-amber-600">
+                      (Tối thiểu 10.000đ)
+                    </span>
+                  </label>
+                  <Controller
+                    control={control}
+                    name="joinFee"
+                    render={({ field }) => (
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={inputClass(!!errors.joinFee)}
+                        value={formatNumberWithDots(field.value)}
+                        onChange={(e) => {
+                          field.onChange(parseNumberInput(e.target.value));
+                        }}
+                        onBlur={() => {
+                          if (field.value < 10000) {
+                            field.onChange(10000);
+                          }
+                          field.onBlur();
+                        }}
+                      />
+                    )}
+                  />
+                  {errors.joinFee && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.joinFee.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

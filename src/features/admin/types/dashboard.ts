@@ -7,6 +7,7 @@ export interface GetUserSignUps {
   fromDate: string;
   toDate: string;
   totalSignupCount: number;
+  signupGrowthRate: number | null;
   dailySignups: DailySignups[];
 }
 
@@ -21,6 +22,8 @@ export interface GetMoney {
   toDate: string;
   totalBranchRegistrationAmount: number;
   totalSystemCampaignAmount: number;
+  branchRegistrationGrowthRate: number | null;
+  systemCampaignGrowthRate: number | null;
   dailyAmounts: DailyAmount[];
 }
 
@@ -29,11 +32,19 @@ export interface DailyCompensation {
   compensationAmount: number;
 }
 
+export interface VendorCompensation {
+  vendorId: number;
+  vendorName: string;
+  compensationAmount: number;
+}
+
 export interface GetCompensation {
   fromDate: string;
   toDate: string;
   totalCompensationAmount: number;
+  compensationGrowthRate: number | null;
   dailyCompensations: DailyCompensation[];
+  compensationByVendors: VendorCompensation[];
 }
 
 export interface DailyConversions {
@@ -45,5 +56,6 @@ export interface GetConversions {
   fromDate: string;
   toDate: string;
   totalConversionCount: number;
+  conversionGrowthRate: number | null;
   dailyConversions: DailyConversions[];
 }

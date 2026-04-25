@@ -182,13 +182,14 @@ export const useNotifications = (
       setIsConnected(true);
       setConnectionError(null);
 
-      // Handle incoming real-time notifications (NewFeedback, NewOrder, BranchVerificationStatus, SystemCampaignCreated)
+      // Handle incoming real-time notifications (NewFeedback, NewOrder, BranchVerificationStatus, SystemCampaignCreated, CampaignCancelledRefund)
       const handler = (data: NotificationDto): void => {
         if (
           data.type !== 'NewFeedback' &&
           data.type !== 'NewOrder' &&
           data.type !== 'BranchVerificationStatus' &&
-          data.type !== 'SystemCampaignCreated'
+          data.type !== 'SystemCampaignCreated' &&
+          data.type !== 'CampaignCancelledRefund'
         )
           return;
 

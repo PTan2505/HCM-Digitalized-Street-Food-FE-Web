@@ -22,6 +22,7 @@ import AdminQuestPage from '@features/admin/pages/QuestPage';
 import AdminSettingPage from '@features/admin/pages/SettingPage';
 import AdminVoucherPage from '@features/admin/pages/VoucherPage';
 import AdminVendorVerificationPage from '@features/admin/pages/VendorVerificationPage';
+import PaymentPayoutPage from '@features/admin/pages/PaymentPayoutPage';
 import AdminDashboardPage from '@features/admin/pages/DashboardPage';
 import LoginPage from '@features/auth/pages/LoginPage';
 import ModeratorCashoutPage from '@features/moderator/pages/CashoutPage';
@@ -338,6 +339,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN.PATHS.VERIFICATION,
             element: <AdminVendorVerificationPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PATHS.PAYOUT,
+            element: <PaymentPayoutPage />,
           },
         ],
       },

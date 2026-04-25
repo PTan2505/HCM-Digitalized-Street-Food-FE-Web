@@ -31,3 +31,17 @@ export interface TopDishes {
   dishName: string;
   totalQuantityOrdered: number;
 }
+
+export interface VendorDashboardCampaigns {
+  totalCampaigns: number;
+  totalCampaignOrders: number;
+  totalCampaignRevenue: number;
+  campaigns: CampaignStat[];
+}
+
+export interface CampaignStat {
+  campaignId: number;
+  campaignName: string;
+  orderCount: number;
+  revenue: number;
+}
