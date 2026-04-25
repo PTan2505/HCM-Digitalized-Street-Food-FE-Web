@@ -28,6 +28,7 @@ import { DashboardApi } from '@features/vendor/api/dashboardApi';
 import { AdminDashboardApi } from '@features/admin/api/dashboardApi';
 import { BranchAdminApi } from '@features/admin/api/branchApi';
 import { TierApi } from '@features/admin/api/tierApi';
+import { AdminPaymentApi } from '@features/admin/api/paymentApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -63,4 +64,5 @@ export const axiosApi = {
   adminDashboardApi: new AdminDashboardApi(axiosClient),
   branchAdminApi: new BranchAdminApi(axiosClient),
   tierApi: new TierApi(axiosClient),
+  adminPaymentApi: new AdminPaymentApi(axiosClient),
 };

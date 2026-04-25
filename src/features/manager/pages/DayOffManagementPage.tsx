@@ -11,7 +11,7 @@ import {
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectDayOffs, selectVendorStatus } from '@slices/vendor';
 import AddIcon from '@mui/icons-material/Add';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -34,19 +34,20 @@ import {
   type EventData,
 } from 'react-joyride';
 
-const formatDate = (dateStr: string): string => {
-  const [y, m, d] = dateStr.split('T')[0].split('-');
-  return `${d}/${m}/${y}`;
+/** Format "YYYY-MM-DDTHH:mm" → "DD/MM/YYYY HH:mm" */
+const formatDateTime = (iso: string): string => {
+  const [datePart, timePart] = iso.split('T');
+  if (!datePart) return iso;
+  const [y, m, d] = datePart.split('-');
+  const time = timePart ? timePart.slice(0, 5) : '';
+  return time ? `${d}/${m}/${y} ${time}` : `${d}/${m}/${y}`;
 };
 
-const formatTime = (time: string | null): string => {
-  if (!time) return '';
-  return time.slice(0, 5);
+const getLocalDatetimeNow = (): string => {
+  const now = new Date();
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 };
-
-const getToday = (): string => new Date().toISOString().split('T')[0];
-
-const toRFC3339 = (dateStr: string): string => `${dateStr}T00:00:00Z`;
 
 const expandRange = (startIso: string, endIso: string): string[] => {
   const dates: string[] = [];
@@ -88,11 +89,8 @@ export default function DayOffManagementPage(): JSX.Element {
     resolver: zodResolver(AddDayOffSchema),
     mode: 'onChange',
     defaultValues: {
-      startDate: getToday(),
-      endDate: getToday(),
-      isAllDay: true,
-      startTime: null,
-      endTime: null,
+      startDate: getLocalDatetimeNow(),
+      endDate: getLocalDatetimeNow(),
     },
   });
 
@@ -134,27 +132,10 @@ export default function DayOffManagementPage(): JSX.Element {
     return [...dayOffs].sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [dayOffs]);
 
-  const getNextAvailableDate = (): string => {
-    if (dayOffs.length === 0) return getToday();
-
-    const maxEndDate = dayOffs.reduce((max, current) => {
-      const endDate = current.endDate.split('T')[0];
-      return endDate > max ? endDate : max;
-    }, getToday());
-
-    const next = new Date(maxEndDate + 'T00:00:00Z');
-    next.setUTCDate(next.getUTCDate() + 1);
-
-    return next.toISOString().split('T')[0];
-  };
-
-  const resetAddForm = (date: string = getToday()): void => {
+  const resetAddForm = (): void => {
     reset({
-      startDate: date,
-      endDate: date,
-      isAllDay: true,
-      startTime: null,
-      endTime: null,
+      startDate: getLocalDatetimeNow(),
+      endDate: getLocalDatetimeNow(),
     });
     clearErrors();
   };
@@ -180,7 +161,7 @@ export default function DayOffManagementPage(): JSX.Element {
   }, [onGetManagerMyBranch, onGetDayOffs]);
 
   const openAddForm = (): void => {
-    resetAddForm(getNextAvailableDate());
+    resetAddForm();
     setShowAddForm(true);
   };
 
@@ -208,10 +189,8 @@ export default function DayOffManagementPage(): JSX.Element {
       await onSubmitDayOff({
         branchId,
         data: {
-          startDate: toRFC3339(addForm.startDate),
-          endDate: toRFC3339(addForm.endDate),
-          startTime: addForm.isAllDay ? null : (addForm.startTime ?? null),
-          endTime: addForm.isAllDay ? null : (addForm.endTime ?? null),
+          startDate: addForm.startDate,
+          endDate: addForm.endDate,
         },
       });
 
@@ -252,16 +231,13 @@ export default function DayOffManagementPage(): JSX.Element {
           theme="amber"
           onStartDateChange={(value) => {
             setValue('startDate', value, { shouldValidate: true });
-
-            if (addForm.endDate && value > addForm.endDate) {
+            if (addForm.endDate && value >= addForm.endDate) {
               setValue('endDate', value, { shouldValidate: true });
             }
-
             const endDate =
-              value > (addForm.endDate ?? '')
+              value >= (addForm.endDate ?? '')
                 ? value
                 : (addForm.endDate ?? value);
-
             if (hasRangeOverlap(value, endDate)) {
               setError('startDate', {
                 message: 'Khoảng ngày này trùng với đợt nghỉ đã có!',
@@ -275,7 +251,6 @@ export default function DayOffManagementPage(): JSX.Element {
           }}
           onEndDateChange={(value) => {
             setValue('endDate', value, { shouldValidate: true });
-
             if (value && addForm.startDate) {
               if (hasRangeOverlap(addForm.startDate, value)) {
                 setError('startDate', {
@@ -288,35 +263,6 @@ export default function DayOffManagementPage(): JSX.Element {
                 clearErrors(['startDate', 'endDate']);
               }
             }
-          }}
-          onIsAllDayChange={(checked) => {
-            setValue('isAllDay', checked, {
-              shouldValidate: true,
-            });
-
-            if (checked) {
-              setValue('startTime', null, { shouldValidate: true });
-              setValue('endTime', null, { shouldValidate: true });
-            }
-          }}
-          onStartTimeChange={(value) => {
-            setValue('startTime', value || null, {
-              shouldValidate: true,
-            });
-            if (
-              addForm.startDate === addForm.endDate &&
-              addForm.endTime &&
-              value >= addForm.endTime
-            ) {
-              setValue('endTime', null, {
-                shouldValidate: true,
-              });
-            }
-          }}
-          onEndTimeChange={(value) => {
-            setValue('endTime', value || null, {
-              shouldValidate: true,
-            });
           }}
         />
 
@@ -486,11 +432,6 @@ export default function DayOffManagementPage(): JSX.Element {
           ) : (
             <div className="space-y-2" data-tour="manager-dayoff-list">
               {sortedDayOffs.map((item) => {
-                const isSingleDay =
-                  item.startDate.split('T')[0] === item.endDate.split('T')[0];
-                const hasTime =
-                  item.startTime !== null || item.endTime !== null;
-
                 return (
                   <div
                     key={item.dayOffId}
@@ -498,30 +439,16 @@ export default function DayOffManagementPage(): JSX.Element {
                   >
                     <div className="flex items-center gap-4">
                       <div className="flex flex-1 flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
-                          {formatDate(item.startDate)}
+                        <span className="flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                          <CalendarMonthIcon sx={{ fontSize: 14 }} />
+                          {formatDateTime(item.startDate)}
                         </span>
 
-                        {!isSingleDay && (
-                          <>
-                            <span className="text-sm text-gray-400">-</span>
-                            <span className="rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
-                              {formatDate(item.endDate)}
-                            </span>
-                          </>
-                        )}
-
-                        {hasTime ? (
-                          <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                            <AccessTimeIcon sx={{ fontSize: 12 }} />
-                            {formatTime(item.startTime)} -{' '}
-                            {formatTime(item.endTime)}
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-                            Cả ngày
-                          </span>
-                        )}
+                        <span className="text-sm text-gray-400">—</span>
+                        <span className="flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                          <CalendarMonthIcon sx={{ fontSize: 14 }} />
+                          {formatDateTime(item.endDate)}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-1">

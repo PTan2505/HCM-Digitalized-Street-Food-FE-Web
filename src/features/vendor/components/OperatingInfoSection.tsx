@@ -51,8 +51,6 @@ export default function OperatingInfoSection({
     dayOffData ?? {
       startDate: '',
       endDate: '',
-      startTime: null,
-      endTime: null,
     }
   );
 
@@ -222,8 +220,6 @@ export default function OperatingInfoSection({
       const apiData = {
         startDate: formatDateForAPI(dayOff.startDate),
         endDate: formatDateForAPI(dayOff.endDate),
-        startTime: dayOff.startTime,
-        endTime: dayOff.endTime,
       };
 
       await onSubmitDayOff({
@@ -235,8 +231,6 @@ export default function OperatingInfoSection({
       setDayOff({
         startDate: '',
         endDate: '',
-        startTime: null,
-        endTime: null,
       });
     } catch (error) {
       console.error('Failed to submit day off:', error);
@@ -382,38 +376,6 @@ export default function OperatingInfoSection({
               Định dạng: ngày/tháng/năm (VD: 31/12/2024)
             </p>
           </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Giờ bắt đầu (tùy chọn)
-            </label>
-            <input
-              type="time"
-              value={dayOff.startTime ?? ''}
-              onChange={(e) =>
-                setDayOff((prev) => ({
-                  ...prev,
-                  startTime: e.target.value || null,
-                }))
-              }
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
-            />
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Giờ kết thúc (tùy chọn)
-            </label>
-            <input
-              type="time"
-              value={dayOff.endTime ?? ''}
-              onChange={(e) =>
-                setDayOff((prev) => ({
-                  ...prev,
-                  endTime: e.target.value || null,
-                }))
-              }
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white"
-            />
-          </div>
         </div>
 
         {!formMode && (
@@ -425,10 +387,6 @@ export default function OperatingInfoSection({
             Thêm ngày nghỉ
           </button>
         )}
-
-        <p className="mt-3 text-xs text-gray-500">
-          Nếu không chọn giờ, cửa hàng sẽ nghỉ cả ngày
-        </p>
       </div>
     </div>
   );

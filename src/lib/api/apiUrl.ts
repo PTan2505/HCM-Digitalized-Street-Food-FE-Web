@@ -129,6 +129,7 @@ export const apiUrl = {
     confirmPayment: '/Payment/confirm',
     getVendorBalance: '/Payment/vendor/balance',
     vendorRequestTransfer: '/Payment/vendor/transfer',
+    getPaymentPayout: '/Payment/payouts',
   },
   dish: {
     CreateOrGetDishesOfAVendor: (vendorId: number): string =>
@@ -232,6 +233,7 @@ export const apiUrl = {
     getRevenue: '/VendorDashboard/revenue',
     getVouchers: '/VendorDashboard/vouchers',
     getDishes: '/VendorDashboard/dishes',
+    getCampaigns: '/VendorDashboard/campaigns',
   },
   adminDashboard: {
     getUserSignUps: '/AdminDashboard/user-signups',

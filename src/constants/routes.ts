@@ -70,6 +70,7 @@ export const ROUTES = {
       SETTING: 'setting',
       VOUCHER: 'voucher',
       VERIFICATION: 'verification',
+      PAYOUT: 'payout',
     },
   },
 

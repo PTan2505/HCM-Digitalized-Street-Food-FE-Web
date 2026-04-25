@@ -3,6 +3,7 @@ import type {
   VendorDashboardRevenue,
   VendorDashboardVoucher,
   VendorDashboardDishes,
+  VendorDashboardCampaigns,
 } from '@features/vendor/types/dashboard';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -17,6 +18,7 @@ export interface VendorDashboardState {
   revenue: VendorDashboardRevenue | null;
   vouchers: VendorDashboardVoucher | null;
   dishes: VendorDashboardDishes | null;
+  campaigns: VendorDashboardCampaigns | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -25,6 +27,7 @@ const initialState: VendorDashboardState = {
   revenue: null,
   vouchers: null,
   dishes: null,
+  campaigns: null,
   status: 'idle',
   error: null,
 };
@@ -76,9 +79,28 @@ export const getDishes = createAppAsyncThunk(
   }
 );
 
+export const getCampaigns = createAppAsyncThunk(
+  'vendorDashboard/getCampaigns',
+  async (
+    payload: {
+      fromDate: string;
+      toDate: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: VendorDashboardCampaigns =
+        await axiosApi.dashboardApi.getCampaigns(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────
 
-const allThunks = [getRevenue, getVouchers, getDishes] as const;
+const allThunks = [getRevenue, getVouchers, getDishes, getCampaigns] as const;
 
 export const vendorDashboardSlice = createSlice({
   name: 'vendorDashboard',
@@ -96,6 +118,9 @@ export const vendorDashboardSlice = createSlice({
       })
       .addCase(getDishes.fulfilled, (state, action) => {
         state.dishes = action.payload;
+      })
+      .addCase(getCampaigns.fulfilled, (state, action) => {
+        state.campaigns = action.payload;
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';
@@ -137,3 +162,7 @@ export const selectVendorDashboardVouchers = (
 export const selectVendorDashboardDishes = (
   state: RootState
 ): VendorDashboardDishes | null => state.vendorDashboard.dishes;
+
+export const selectVendorDashboardCampaigns = (
+  state: RootState
+): VendorDashboardCampaigns | null => state.vendorDashboard.campaigns;
