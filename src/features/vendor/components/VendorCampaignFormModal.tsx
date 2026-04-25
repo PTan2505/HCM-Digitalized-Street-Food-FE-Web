@@ -426,7 +426,7 @@ export default function VendorCampaignFormModal({
                   )}
                 </div>
 
-                <div>
+                {/* <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
                     Phân khúc mục tiêu
                   </label>
@@ -435,7 +435,7 @@ export default function VendorCampaignFormModal({
                     className={inputClass(false)}
                     placeholder="VD: Học sinh, Sinh viên"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
