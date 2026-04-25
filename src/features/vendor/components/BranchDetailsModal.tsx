@@ -32,7 +32,7 @@ const InfoField = ({
     <span className="text-[11px] font-bold tracking-wider text-[var(--color-table-text-secondary)] uppercase opacity-80">
       {label}
     </span>
-    <span className="text-sm font-semibold text-[var(--color-table-text-primary)]">
+    <span className="truncate text-sm font-semibold text-[var(--color-table-text-primary)]">
       {value ?? '-'}
     </span>
   </div>
@@ -132,7 +132,7 @@ export default function BranchDetailsModal({
       onClick={onClose}
     >
       <div
-        className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <VendorModalHeader
