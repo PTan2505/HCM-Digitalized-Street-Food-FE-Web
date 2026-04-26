@@ -9,6 +9,8 @@ import {
   Typography,
   Button,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -108,7 +110,7 @@ export default function DishFormModal({
       description: '',
       categoryId: 0,
       tasteIds: [],
-      // dietaryIds: [],
+      isSignature: false,
     },
   });
 
@@ -138,7 +140,7 @@ export default function DishFormModal({
         description: editingDish.description ?? '',
         categoryId: editingDish.categoryId,
         tasteIds: tasteIds,
-        // dietaryIds: dietaryIds,
+        isSignature: editingDish.isSignature ?? false,
       });
 
       setImagePreview(editingDish.imageUrl);
@@ -151,7 +153,7 @@ export default function DishFormModal({
         description: '',
         categoryId: 0,
         tasteIds: [],
-        // dietaryIds: [],
+        isSignature: false,
       });
       setImageFile(null);
       setImagePreview('');
@@ -183,9 +185,9 @@ export default function DishFormModal({
         Description: data.description ? data.description.trim() : '',
         CategoryId: data.categoryId,
         TasteIds: data.tasteIds,
-        // DietaryPreferenceIds: data.dietaryIds,
         DietaryPreferenceIds: [],
         IsActive: isEditMode && editingDish ? editingDish.isActive : true,
+        IsSignature: data.isSignature,
         ...(imageFile ? { imageFile } : {}),
       };
 
@@ -302,6 +304,30 @@ export default function DishFormModal({
                         </p>
                       )}
                     </>
+                  )}
+                />
+              </Box>
+
+              {/* Is Signature */}
+              <Box>
+                <Controller
+                  name="isSignature"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        <span className="text-sm font-semibold text-gray-700">
+                          Món ăn đặc trưng (Signature)
+                        </span>
+                      }
+                    />
                   )}
                 />
               </Box>

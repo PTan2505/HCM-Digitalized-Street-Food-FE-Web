@@ -4,6 +4,7 @@ export interface CreateOrUpdateDishRequest {
   DietaryPreferenceIds?: number[];
   imageFile?: File;
   IsActive: boolean;
+  IsSignature: boolean;
   Name: string;
   Price: number;
   TasteIds: number[];
@@ -25,6 +26,8 @@ export interface CreateOrUpdateDishResponse {
   imageUrl: string;
   isSoldOut: boolean;
   isActive: boolean;
+  isSignature: boolean;
+  isBestSeller: boolean;
   createdAt: string;
   updatedAt?: string;
   vendorId: number;
