@@ -474,12 +474,12 @@ export default function WorkScheduleModal({
                 <p className="text-base font-medium">
                   Chưa có thời gian hoạt động
                 </p>
-                <button
+                {/* <button
                   onClick={() => setShowAddForm(true)}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                 >
                   Thêm lịch ngay
-                </button>
+                </button> */}
               </div>
             ) : schedules.length > 0 ? (
               <div className="space-y-4">

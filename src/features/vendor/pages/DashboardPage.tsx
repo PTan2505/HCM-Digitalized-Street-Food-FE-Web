@@ -218,15 +218,17 @@ export default function DashboardPage(): React.JSX.Element {
             <RevenueLineChart data={revenue?.dailyRevenues ?? []} />
           </div>
 
+          {/* Top Dishes */}
+          <div className="w-full">
+            <DishBarChart data={dishes?.topDishes ?? []} />
+          </div>
+
           {/* Grouped analytics */}
           <div className="grid grid-cols-1 gap-6 pb-12 lg:grid-cols-2">
             <div className="lg:col-span-1">
               <CampaignBarChart data={campaigns?.campaigns ?? []} />
             </div>
             <div className="lg:col-span-1">
-              <DishBarChart data={dishes?.topDishes ?? []} />
-            </div>
-            <div className="lg:col-span-2">
               <VoucherBarChart data={vouchers?.voucherUsages ?? []} />
             </div>
           </div>
