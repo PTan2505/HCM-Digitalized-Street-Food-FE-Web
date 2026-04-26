@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Avatar, Box, Chip } from '@mui/material';
+import { Avatar, Box, Chip, Tooltip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   PauseCircleOutline as PauseCircleOutlineIcon,
   Replay as ReplayIcon,
   HelpOutline as HelpOutlineIcon,
+  Star as StarIcon,
+  Whatshot as FireIcon,
 } from '@mui/icons-material';
 import {
   type Controls,
@@ -160,6 +162,7 @@ export default function DishPage(): JSX.Element {
           TasteIds: tasteIds,
           DietaryPreferenceIds: [],
           IsActive: !dish.isActive,
+          IsSignature: dish.isSignature,
         },
       });
     } catch (error) {
@@ -241,11 +244,45 @@ export default function DishPage(): JSX.Element {
     {
       key: 'name',
       label: 'Tên món',
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-semibold">
-          {String(value)}
-        </Box>
-      ),
+      render: (
+        value: unknown,
+        row: CreateOrUpdateDishResponse
+      ): React.ReactNode => {
+        let nameColorClass = 'text-table-text-primary';
+        if (row.isBestSeller) {
+          nameColorClass = 'text-red-600 font-bold';
+        } else if (row.isSignature) {
+          nameColorClass = 'text-amber-600 font-bold';
+        }
+
+        return (
+          <Box
+            className={`flex items-center gap-1.5 ${nameColorClass} font-semibold`}
+          >
+            <span>{String(value)}</span>
+            <Box className="flex items-center gap-0.5">
+              {row.isSignature && (
+                <Tooltip
+                  title="Món ăn đặc trưng (Signature)"
+                  placement="top"
+                  arrow
+                >
+                  <StarIcon className="text-amber-500" sx={{ fontSize: 18 }} />
+                </Tooltip>
+              )}
+              {row.isBestSeller && (
+                <Tooltip
+                  title="Bán chạy nhất (Best Seller)"
+                  placement="top"
+                  arrow
+                >
+                  <FireIcon className="text-red-500" sx={{ fontSize: 18 }} />
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+        );
+      },
     },
     {
       key: 'price',

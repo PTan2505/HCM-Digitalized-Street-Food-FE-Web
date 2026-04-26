@@ -8,9 +8,7 @@ export const DishSchema = z.object({
   description: z.string().optional(),
   categoryId: z.number().min(1, 'Vui lòng chọn danh mục'),
   tasteIds: z.array(z.number()).min(1, 'Vui lòng chọn ít nhất một hương vị'),
-  // dietaryIds: z
-  //   .array(z.number())
-  //   .min(1, 'Vui lòng chọn ít nhất một chế độ ăn'),
+  isSignature: z.boolean(),
 });
 
 export type DishFormData = z.infer<typeof DishSchema>;
