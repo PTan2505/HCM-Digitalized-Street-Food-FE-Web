@@ -46,6 +46,35 @@ const isUnlimitedVoucher = (
   remainingQuantity: number
 ): boolean => remainingQuantity === 0 && voucher.quantity < 0;
 
+const isMarketplaceVoucher = (voucher: Voucher): boolean =>
+  (voucher.redeemPoint ?? 0) > 0;
+
+const getVoucherScopeBadge = (
+  voucher: Voucher
+): {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
+} => {
+  if (isMarketplaceVoucher(voucher)) {
+    return { label: 'Marketplace', type: 'default' };
+  }
+
+  const remainingQuantity = getRemainingQuantity(voucher);
+  const isUnlimited = isUnlimitedVoucher(voucher, remainingQuantity);
+
+  if (isUnlimited) {
+    return { label: 'Thuộc nhiệm vụ nâng hạng', type: 'success' };
+  }
+
+  const hasEndDate =
+    typeof voucher.endDate === 'string' && voucher.endDate.trim() !== '';
+  if (!hasEndDate) {
+    return { label: 'Thuộc nhiệm vụ độc lập', type: 'info' };
+  }
+
+  return { label: 'Thuộc chiến dịch', type: 'warning' };
+};
+
 const formatDiscountText = (voucher: Voucher): string => {
   if (voucher.type === 'PERCENT') {
     const maxDiscountText = voucher.maxDiscountValue
@@ -91,13 +120,14 @@ export default function VoucherDetailsModal({
     type,
   }: {
     label: string;
-    type: 'success' | 'error' | 'info' | 'default';
+    type: 'success' | 'error' | 'info' | 'default' | 'warning';
   }): JSX.Element => {
     const colors = {
       success: 'bg-green-100 text-green-700 border-green-200',
       error: 'bg-red-100 text-red-700 border-red-200',
       info: 'bg-blue-100 text-blue-700 border-blue-200',
       default: 'bg-slate-100 text-slate-700 border-slate-200',
+      warning: 'bg-amber-100 text-amber-700 border-amber-200',
     };
 
     return (
@@ -154,14 +184,25 @@ export default function VoucherDetailsModal({
                 label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
                 type={voucher.isActive ? 'success' : 'error'}
               />
-              {/* <Chip
-                label={
-                  campaignName ? `Chiến dịch: ${campaignName}` : 'MarketPlace'
-                }
-                size="small"
-                color={campaignName ? 'info' : 'secondary'}
-                variant={campaignName ? 'outlined' : 'filled'}
-              /> */}
+              {campaignName ? (
+                <Chip
+                  label={`Chiến dịch: ${campaignName}`}
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                />
+              ) : (
+                <>
+                  <TagBadge
+                    label={getVoucherScopeBadge(voucher).label}
+                    type={getVoucherScopeBadge(voucher).type}
+                  />
+                  {isMarketplaceVoucher(voucher) &&
+                    voucher.isIndependentQuest === true && (
+                      <TagBadge label="Thuộc nhiệm vụ độc lập" type="info" />
+                    )}
+                </>
+              )}
             </div>
 
             <div

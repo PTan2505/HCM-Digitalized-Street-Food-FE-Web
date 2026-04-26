@@ -348,7 +348,8 @@ export default function VoucherPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenModal(row),
-      show: (row: Voucher): boolean => isMarketplaceVoucher(row),
+      show: (row: Voucher): boolean =>
+        isMarketplaceVoucher(row) && row.isIndependentQuest !== true,
       tooltip: 'Chỉnh sửa voucher',
       color: 'primary' as const,
       variant: 'outlined' as const,

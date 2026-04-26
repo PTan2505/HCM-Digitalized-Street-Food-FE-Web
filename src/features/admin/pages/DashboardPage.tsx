@@ -225,25 +225,53 @@ export default function DashboardPage(): React.JSX.Element {
                       {formatCurrency(totalRevenue)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                      Đăng ký chi nhánh
-                    </span>
-                    <span className="text-sm font-bold text-emerald-600">
-                      {formatCurrency(
-                        money?.totalBranchRegistrationAmount ?? 0
-                      )}
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                        Đăng ký chi nhánh
+                      </span>
+                      <span className="text-sm font-bold text-emerald-600">
+                        {formatCurrency(
+                          money?.totalBranchRegistrationAmount ?? 0
+                        )}
+                      </span>
+                    </div>
+                    {money?.branchRegistrationGrowthRate != null && (
+                      <span
+                        className={`text-right text-xs font-medium ${
+                          money.branchRegistrationGrowthRate >= 0
+                            ? 'text-emerald-600'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {money.branchRegistrationGrowthRate > 0 ? '+' : ''}
+                        {money.branchRegistrationGrowthRate}% so với kỳ trước
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
-                      <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                      Chiến dịch hệ thống
-                    </span>
-                    <span className="text-sm font-bold text-amber-600">
-                      {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                        Chiến dịch hệ thống
+                      </span>
+                      <span className="text-sm font-bold text-amber-600">
+                        {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
+                      </span>
+                    </div>
+                    {money?.systemCampaignGrowthRate != null && (
+                      <span
+                        className={`text-right text-xs font-medium ${
+                          money.systemCampaignGrowthRate >= 0
+                            ? 'text-amber-600'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {money.systemCampaignGrowthRate > 0 ? '+' : ''}
+                        {money.systemCampaignGrowthRate}% so với kỳ trước
+                      </span>
+                    )}
                   </div>
                 </div>
               }
@@ -280,11 +308,11 @@ export default function DashboardPage(): React.JSX.Element {
                     [
                       makeTrend(
                         money?.branchRegistrationGrowthRate ?? null,
-                        'Từ đăng ký chi nhánh'
+                        'Đối với đăng ký chi nhánh'
                       ),
                       makeTrend(
                         money?.systemCampaignGrowthRate ?? null,
-                        'Từ chiến dịch hệ thống'
+                        'Đối với chiến dịch hệ thống'
                       ),
                     ].filter(Boolean) as {
                       value: number;
