@@ -249,6 +249,22 @@ export default function VendorCampaignDetailModal({
                     label="Kết thúc chiến dịch"
                     value={formatVNDatetime(campaign.endDate)}
                   />
+                  {campaign.isSystemCampaign && (
+                    <>
+                      <DetailItem
+                        label="Ngày bắt đầu đăng ký"
+                        value={formatVNDatetime(
+                          campaign.registrationStartDate ?? null
+                        )}
+                      />
+                      <DetailItem
+                        label="Ngày kết thúc đăng ký"
+                        value={formatVNDatetime(
+                          campaign.registrationEndDate ?? null
+                        )}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -317,21 +333,6 @@ export default function VendorCampaignDetailModal({
                     )}
                   </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <DetailItem
-                  label="Tạo lúc"
-                  value={formatVNDatetime(campaign.createdAt)}
-                />
-                <DetailItem
-                  label="Cập nhật lần cuối"
-                  value={
-                    campaign.updatedAt
-                      ? formatVNDatetime(campaign.updatedAt)
-                      : 'Chưa cập nhật'
-                  }
-                />
               </div>
 
               {/* ── Vouchers ── */}

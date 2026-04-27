@@ -516,6 +516,7 @@ function BranchPage(): JSX.Element {
         setManagerBranch(branch);
       },
       color: 'info' as const,
+      show: (branch: Branch): boolean => branch.isSubscribed,
     },
     // {
     //   label: <CampaignIcon fontSize="small" />,
