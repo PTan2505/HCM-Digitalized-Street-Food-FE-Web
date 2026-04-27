@@ -405,7 +405,7 @@ export default function CampaignDetailModal({
                 </div>
               </div>
 
-              <Box className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* <Box className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                     Tạo lúc
@@ -424,7 +424,7 @@ export default function CampaignDetailModal({
                       : 'Chưa cập nhật'}
                   </p>
                 </div>
-              </Box>
+              </Box> */}
 
               {/* ── Vouchers ── */}
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
