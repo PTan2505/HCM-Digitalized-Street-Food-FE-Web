@@ -286,9 +286,25 @@ function BranchPage(): JSX.Element {
     {
       key: 'name',
       label: 'Tên chi nhánh',
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-semibold">
-          {String(value)}
+      render: (value: unknown, row: Branch): React.ReactNode => (
+        <Box className="text-table-text-primary flex items-center gap-1.5 font-semibold">
+          <span>{String(value)}</span>
+          <Box className="flex items-center gap-0.5">
+            <MuiTooltip
+              title={row.isActive ? 'Đang hoạt động' : 'Đã đóng'}
+              placement="top"
+              arrow
+            >
+              {row.isActive ? (
+                <CheckCircleOutlineIcon
+                  className="text-green-500"
+                  sx={{ fontSize: 18 }}
+                />
+              ) : (
+                <BlockIcon className="text-red-500" sx={{ fontSize: 18 }} />
+              )}
+            </MuiTooltip>
+          </Box>
         </Box>
       ),
     },
@@ -383,25 +399,7 @@ function BranchPage(): JSX.Element {
         );
       },
     },
-    {
-      key: 'isActive',
-      label: 'Trạng thái',
-      style: { width: '140px' },
-      render: (value: unknown): React.ReactNode => {
-        const isActive = Boolean(value);
-        return (
-          <Chip
-            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
-            size="small"
-            className={
-              isActive
-                ? 'bg-green-100 font-semibold text-green-800'
-                : 'bg-red-100 font-semibold text-red-800'
-            }
-          />
-        );
-      },
-    },
+
     {
       key: 'isSubscribed',
       label: 'Tình trạng đăng ký',
