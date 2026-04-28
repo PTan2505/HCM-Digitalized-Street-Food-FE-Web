@@ -7,6 +7,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import PaymentIcon from '@mui/icons-material/Payment';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface PaymentBenefitsModalProps {
@@ -142,6 +143,24 @@ export default function PaymentBenefitsModal({
                     <Typography className="text-table-text-secondary text-sm leading-relaxed">
                       Cho phép khách hàng xem menu, đặt món và thanh toán trực
                       tiếp qua ứng dụng Lowca.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                  <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                    <ManageAccountsIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h4"
+                      className="text-table-text-primary mb-1 text-base font-bold"
+                    >
+                      Quản Lý Chi Nhánh
+                    </Typography>
+                    <Typography className="text-table-text-secondary text-sm leading-relaxed">
+                      Được quyền thay đổi và cập nhật người quản lý của chi
+                      nhánh để tối ưu hóa việc vận hành.
                     </Typography>
                   </Box>
                 </Box>

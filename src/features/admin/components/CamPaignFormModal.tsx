@@ -768,42 +768,51 @@ export default function CamPaignFormModal({
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
                     Yêu cầu hạng quán ít nhất cần có để tham gia chiến dịch
                   </label>
-                  <select
-                    {...register('requiredTierId', {
-                      setValueAs: (value: string): number | null => {
-                        if (value === '') {
-                          return null;
-                        }
-
-                        return Number(value);
-                      },
-                    })}
-                    className={inputClass(false)}
-                  >
-                    <option value="">Không yêu cầu hạng</option>
-                    {tiers.map((tier) => (
-                      <option key={tier.tierId} value={tier.tierId}>
-                        {tier.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    control={control}
+                    name="requiredTierId"
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          field.onChange(val === '' ? null : Number(val));
+                        }}
+                        className={inputClass(!!errors.requiredTierId)}
+                      >
+                        <option value="">Không yêu cầu hạng</option>
+                        {tiers.map((tier) => (
+                          <option key={tier.tierId} value={tier.tierId}>
+                            {tier.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  />
                 </div>
 
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
                     Số lượng chi nhánh dự kiến tham gia
                   </label>
-                  <input
-                    type="number"
-                    min={0}
-                    {...register('expectedBranchJoin', {
-                      setValueAs: (value: string): number | null => {
-                        if (value === '') return null;
-                        return Number(value);
-                      },
-                    })}
-                    className={inputClass(!!errors.expectedBranchJoin)}
-                    placeholder="Không bắt buộc"
+                  <Controller
+                    control={control}
+                    name="expectedBranchJoin"
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="number"
+                        min={0}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          field.onChange(val === '' ? null : Number(val));
+                        }}
+                        className={inputClass(!!errors.expectedBranchJoin)}
+                        placeholder="Không bắt buộc"
+                      />
+                    )}
                   />
                   {errors.expectedBranchJoin && (
                     <p className="mt-1 text-xs text-red-500">
