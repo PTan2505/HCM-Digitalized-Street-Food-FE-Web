@@ -391,10 +391,6 @@ export default function NotificationBell({
                       width: '100%',
                       fontSize: '0.78rem',
                       color: '#6b7280',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
                       whiteSpace: 'normal',
                       lineHeight: 1.5,
                     }}
