@@ -159,7 +159,8 @@ export default function PaymentBenefitsModal({
                       Quản Lý Chi Nhánh
                     </Typography>
                     <Typography className="text-table-text-secondary text-sm leading-relaxed">
-                      Được quyền thay đổi và cập nhật người quản lý của chi nhánh để tối ưu hóa việc vận hành.
+                      Được quyền thay đổi và cập nhật người quản lý của chi
+                      nhánh để tối ưu hóa việc vận hành.
                     </Typography>
                   </Box>
                 </Box>
