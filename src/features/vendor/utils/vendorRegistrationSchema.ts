@@ -60,9 +60,14 @@ export const AddBranchSchema = z.object({
     .max(100, 'Tên chi nhánh không được vượt quá 100 ký tự!'),
 });
 
-// Schema for editBranch mode — same as base
+// Schema for editBranch mode — same as addBranch
 export const EditBranchSchema = z.object({
   ...baseFields,
+  branchName: z
+    .string()
+    .nonempty('Vui lòng nhập tên chi nhánh!')
+    .min(3, 'Tên chi nhánh phải có ít nhất 3 ký tự!')
+    .max(100, 'Tên chi nhánh không được vượt quá 100 ký tự!'),
 });
 
 export type CreateVendorFormData = z.infer<typeof CreateVendorSchema>;

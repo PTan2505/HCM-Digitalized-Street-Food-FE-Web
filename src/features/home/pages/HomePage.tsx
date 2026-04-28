@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Container, Grid, Typography } from '@mui/material';
 import lightLogo from '../../../assets/ios-light.png';
+import LowcaQR from '../../../assets/LowcaQR.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
@@ -24,6 +25,8 @@ export default function HomePage(): JSX.Element {
   const activeBranches = useAppSelector(selectActiveBranches);
   const navigate = useNavigate();
   const [carouselSlides, setCarouselSlides] = useState<HeroSlide[]>([]);
+  const downloadLink =
+    'https://drive.google.com/file/d/1a7EL-MoxaaYxjIE890ElxiXTx8snLZ0E/view?usp=drive_link';
 
   const topFinalScoreBranches = useMemo(() => {
     return [...activeBranches]
@@ -233,6 +236,32 @@ export default function HomePage(): JSX.Element {
           className="absolute right-[8%] bottom-0 z-0 h-auto w-72 object-contain"
           data-aos="fade-left"
         />
+      </Box>
+
+      <Box className="fixed right-4 bottom-4 z-40">
+        <Box className="flex flex-col items-center gap-2 rounded-2xl border border-white/60 bg-white/90 p-3 shadow-lg backdrop-blur">
+          <a
+            href={downloadLink}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Tai ung dung Lowca"
+            className="block"
+          >
+            <img
+              src={LowcaQR}
+              alt="QR tai ung dung Lowca"
+              className="h-24 w-24 rounded-lg object-contain"
+            />
+          </a>
+          <a
+            href={downloadLink}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary-700 text-sm font-semibold hover:underline"
+          >
+            Tải App Ngay
+          </a>
+        </Box>
       </Box>
 
       <Footer />

@@ -93,22 +93,8 @@ export default function StoreSection({
                 : 'border-gray-200 bg-gray-50 hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white'
           }`}
         />
-        {errors?.branchName ? (
+        {errors?.branchName && (
           <p className="mt-1 text-xs text-red-500">{errors.branchName}</p>
-        ) : (
-          <div className="mt-2 space-y-1 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-            <p>
-              Có thể để trống — nếu không điền, hệ thống sẽ tự động lấy tên cửa
-              hàng ở trên cộng thêm chữ số theo thứ tự.
-            </p>
-            <p>
-              <strong>
-                Ví dụ, nếu tên cửa hàng là ABC thì tên chi nhánh khi hiển thị
-                phía người dùng sẽ là ABC 1 trong trường hợp bạn để trống trường
-                này
-              </strong>
-            </p>
-          </div>
         )}
       </div>
 

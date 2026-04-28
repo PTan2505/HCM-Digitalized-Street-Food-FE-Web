@@ -320,7 +320,7 @@ export default function BranchFormModal({
         const payload: VendorRegistrationRequest = {
           phoneNumber: form.ownerPhone,
           email: form.email,
-          ...(normalizedBranchName ? { name: normalizedBranchName } : {}),
+          name: form.branchName,
           addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
@@ -534,10 +534,10 @@ export default function BranchFormModal({
               onChange={handleChange}
               onLocationChange={handleLocationChange}
               errors={storeErrors}
+              branchNameRequired={mode.type !== 'createVendor'}
               {...(mode.type === 'addBranch'
                 ? {
                     sectionTitle: '2. Thông tin chi nhánh',
-                    branchNameRequired: true,
                   }
                 : {})}
             />
