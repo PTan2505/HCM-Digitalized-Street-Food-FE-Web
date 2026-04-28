@@ -12,9 +12,14 @@ import {
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Table from '@features/vendor/components/Table';
-import type { VendorCampaign } from '@features/vendor/types/campaign';
+import type {
+  VendorCampaign,
+  CampaignDetailsResponse,
+} from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
+import useTier from '@features/admin/hooks/useTier';
+import type { Tier } from '@features/admin/types/tier';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface VendorCampaignBranchModalProps {
@@ -36,13 +41,15 @@ export default function VendorCampaignBranchModal({
     onJoinBranchToSystemCampaign,
     onAddBranchesToACampaign,
     onRemoveBranchesFromACampaign,
+    onGetSystemCampaignDetails,
   } = useVendorCampaign();
+  const { onGetAllTiers } = useTier();
 
   const subscribedBranches = useMemo(
     () =>
       branches.filter(
-        (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
-        // (branch) => branch.isSubscribed
+        // (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+        (branch) => branch.isSubscribed
       ),
     [branches]
   );
@@ -55,15 +62,46 @@ export default function VendorCampaignBranchModal({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [details, setDetails] = useState<CampaignDetailsResponse | null>(null);
+  const [tiers, setTiers] = useState<Tier[]>([]);
 
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const initialIdSet = useMemo(() => new Set(initialIds), [initialIds]);
   const isSystemCampaign = campaign?.isSystemCampaign === true;
+
+  const eligibleBranches = useMemo(() => {
+    if (!isSystemCampaign || !details?.requiredTierId || tiers.length === 0) {
+      return subscribedBranches;
+    }
+    const requiredTier = tiers.find((t) => t.tierId === details.requiredTierId);
+    if (!requiredTier) return subscribedBranches;
+
+    return subscribedBranches.filter((branch) => {
+      if (initialIdSet.has(branch.branchId)) return true;
+      const branchTier = tiers.find((t) => t.tierId === branch.tierId);
+      if (!branchTier) return false;
+      return branchTier.weight >= requiredTier.weight;
+    });
+  }, [
+    subscribedBranches,
+    isSystemCampaign,
+    details?.requiredTierId,
+    tiers,
+    initialIdSet,
+  ]);
+
+  const requiredTierLabel = useMemo((): string => {
+    if (!isSystemCampaign) return '';
+    if (!details?.requiredTierId) return 'Không yêu cầu';
+    const tier = tiers.find((item) => item.tierId === details.requiredTierId);
+    return tier?.name ?? `#${details.requiredTierId}`;
+  }, [isSystemCampaign, details?.requiredTierId, tiers]);
+
   const selectableSystemBranchesCount = useMemo(() => {
-    return subscribedBranches.filter(
+    return eligibleBranches.filter(
       (branch) => !initialIdSet.has(branch.branchId)
     ).length;
-  }, [initialIdSet, subscribedBranches]);
+  }, [initialIdSet, eligibleBranches]);
   const selectedSystemJoinIds = useMemo(() => {
     return selectedIds.filter((id) => !initialIdSet.has(id));
   }, [initialIdSet, selectedIds]);
@@ -77,9 +115,18 @@ export default function VendorCampaignBranchModal({
     if (!campaign) return;
     setIsLoading(true);
     try {
-      const res = campaign.isSystemCampaign
-        ? await onGetBranchesOfACampaign(campaign.campaignId)
-        : await onGetVendorBranchesOfACampaign(campaign.campaignId);
+      const [res, detailsRes, tiersRes] = await Promise.all([
+        campaign.isSystemCampaign
+          ? onGetBranchesOfACampaign(campaign.campaignId)
+          : onGetVendorBranchesOfACampaign(campaign.campaignId),
+        campaign.isSystemCampaign
+          ? onGetSystemCampaignDetails(campaign.campaignId)
+          : Promise.resolve(null),
+        onGetAllTiers().catch(() => []),
+      ]);
+      setDetails(detailsRes);
+      setTiers(tiersRes);
+
       const fetchedBranchIds = res.items?.map((item) => item.branchId) ?? [];
       const vendorBranchIds = fetchedBranchIds.filter((id) =>
         subscribedBranchIdSet.has(id)
@@ -90,6 +137,7 @@ export default function VendorCampaignBranchModal({
       console.error(err);
       setInitialIds([]);
       setSelectedIds([]);
+      setDetails(null);
     } finally {
       setIsLoading(false);
     }
@@ -97,6 +145,8 @@ export default function VendorCampaignBranchModal({
     campaign,
     onGetBranchesOfACampaign,
     onGetVendorBranchesOfACampaign,
+    onGetSystemCampaignDetails,
+    onGetAllTiers,
     subscribedBranchIdSet,
   ]);
 
@@ -106,6 +156,7 @@ export default function VendorCampaignBranchModal({
     } else {
       setInitialIds([]);
       setSelectedIds([]);
+      setDetails(null);
     }
   }, [isOpen, campaign, fetchBranches]);
 
@@ -288,21 +339,31 @@ export default function VendorCampaignBranchModal({
           onClose={onClose}
         />
         <DialogContent dividers sx={{ p: 4 }}>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
+          <div className="mb-4 flex flex-col gap-1">
+            <p className="text-sm text-gray-600">
+              Chiến dịch:{' '}
+              <span className="font-semibold text-gray-800">
+                {campaign?.name}
+              </span>
+            </p>
+            {isSystemCampaign && (
               <p className="text-sm text-gray-600">
-                Chiến dịch:{' '}
+                Yêu cầu hạng quán:{' '}
                 <span className="font-semibold text-gray-800">
-                  {campaign?.name}
+                  {isLoading ? (
+                    <CircularProgress size={12} sx={{ ml: 1 }} />
+                  ) : (
+                    requiredTierLabel
+                  )}
                 </span>
               </p>
-            </div>
+            )}
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-              Tổng chi nhánh: {subscribedBranches.length}
+              Tổng chi nhánh: {eligibleBranches.length}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
               <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -312,10 +373,14 @@ export default function VendorCampaignBranchModal({
 
           <Table
             columns={columns}
-            data={subscribedBranches}
+            data={eligibleBranches}
             rowKey="branchId"
             loading={isLoading}
-            emptyMessage="Không có chi nhánh khả dụng (chưa đăng ký gói)"
+            emptyMessage={
+              isSystemCampaign && details?.requiredTierId
+                ? `Không có chi nhánh đạt yêu cầu từ hạng ${requiredTierLabel} trở lên`
+                : 'Không có chi nhánh khả dụng (chưa đăng ký gói)'
+            }
             maxHeight="calc(85vh - 280px)"
           />
         </DialogContent>
