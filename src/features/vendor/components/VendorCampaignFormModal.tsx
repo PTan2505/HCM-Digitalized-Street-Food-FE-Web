@@ -139,8 +139,8 @@ export default function VendorCampaignFormModal({
   const subscribedBranches = useMemo(
     () =>
       branches.filter(
-        (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
-        // (branch) => branch.isSubscribed
+        // (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+        (branch) => branch.isSubscribed
       ),
     [branches]
   );
