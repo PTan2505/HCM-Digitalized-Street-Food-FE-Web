@@ -174,6 +174,19 @@ export default function BranchDishDetailsModal({
     });
   };
 
+  const handleToggleAllSelection = (select: boolean): void => {
+    const dishIdsOnPage = vendorDishes.map((d) => d.dishId);
+    setSelectedDishIds((prev) => {
+      const newSet = new Set(prev);
+      if (select) {
+        dishIdsOnPage.forEach((id) => newSet.add(id));
+      } else {
+        dishIdsOnPage.forEach((id) => newSet.delete(id));
+      }
+      return Array.from(newSet);
+    });
+  };
+
   // ─── Apply all selection changes in batch ───────────────────
   const handleApply = async (): Promise<void> => {
     if (!branchId || !isDirty || isApplying) {
@@ -227,11 +240,28 @@ export default function BranchDishDetailsModal({
   };
 
   // ─── Columns configuration ──────────────────────────────────
+  const isAllSelectedOnPage =
+    vendorDishes.length > 0 &&
+    vendorDishes.every((dish) => selectedDishIdSet.has(dish.dishId));
+  const isIndeterminate =
+    vendorDishes.length > 0 &&
+    vendorDishes.some((dish) => selectedDishIdSet.has(dish.dishId)) &&
+    !isAllSelectedOnPage;
+
   const columns = [
     {
       key: 'checkbox',
-      label: '',
-      style: { width: '48px', textAlign: 'center' as const },
+      label: (
+        <button
+          type="button"
+          onClick={() => handleToggleAllSelection(!isAllSelectedOnPage)}
+          disabled={isApplying || vendorDishes.length === 0}
+          className="text-primary-600 hover:text-primary-700 text-[11px] font-bold whitespace-nowrap disabled:cursor-not-allowed disabled:text-gray-400"
+        >
+          {isAllSelectedOnPage ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+        </button>
+      ),
+      style: { width: '100px', textAlign: 'center' as const },
       render: (
         _: unknown,
         dish: CreateOrUpdateDishResponse
@@ -386,7 +416,7 @@ export default function BranchDishDetailsModal({
         {/* ─── Modal Content ────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {/* Summary badges */}
-          <div className="mb-5 flex flex-wrap gap-3">
+          {/* <div className="mb-5 flex flex-wrap gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
               Tổng: {vendorDishes.length} món trên trang
@@ -399,7 +429,7 @@ export default function BranchDishDetailsModal({
               <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
               Đang chọn: {selectedDishIds.length} món
             </span>
-          </div>
+          </div> */}
 
           {/* ─── Filter Section ─────────────────────────────── */}
           <DishFilterSection onFilterChange={handleFilterChange} />

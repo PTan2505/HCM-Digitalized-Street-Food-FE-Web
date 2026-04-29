@@ -21,7 +21,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 interface Column<T> {
   key: string;
-  label: string;
+  label: React.ReactNode;
   render?: (value: unknown, row: T, index?: number) => React.ReactNode;
   style?: React.CSSProperties;
 }
