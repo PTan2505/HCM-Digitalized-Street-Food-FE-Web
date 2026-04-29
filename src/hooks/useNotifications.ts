@@ -195,7 +195,8 @@ export const useNotifications = (
 
         void (async (): Promise<void> => {
           console.log('📬 New notification:', data);
-          await Promise.resolve(playNotificationSound(data.type, data.message));
+          // await Promise.resolve(playNotificationSound(data.type, data.message));
+          playNotificationSound(data.type, data.message).catch(console.error);
           toast.info(CustomNotification, {
             data: {
               title: data.title,
