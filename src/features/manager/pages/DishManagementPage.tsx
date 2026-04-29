@@ -180,6 +180,21 @@ export default function DishManagementPage(): JSX.Element {
     });
   };
 
+  const handleToggleAllSelection = (
+    dishIds: number[],
+    select: boolean
+  ): void => {
+    setSelectedDishIds((prev) => {
+      const newSet = new Set(prev);
+      if (select) {
+        dishIds.forEach((id) => newSet.add(id));
+      } else {
+        dishIds.forEach((id) => newSet.delete(id));
+      }
+      return Array.from(newSet);
+    });
+  };
+
   const handleApply = async (): Promise<void> => {
     if (!branchId || !isDirty || isApplying) {
       return;
@@ -327,11 +342,11 @@ export default function DishManagementPage(): JSX.Element {
                 Chi nhánh {branch.name}
               </h2>
             </div>
-            <ManagerDishSummaryBadges
+            {/* <ManagerDishSummaryBadges
               totalOnPage={vendorDishes.length}
               assignedCount={assignedCount}
               selectedCount={selectedDishIds.length}
-            />
+            /> */}
           </div>
 
           <div data-tour="manager-dish-filter">
@@ -364,6 +379,7 @@ export default function DishManagementPage(): JSX.Element {
               loading={isListLoading}
               tourId="manager-dish"
               onToggleSelection={handleCheckboxToggle}
+              onToggleAllSelection={handleToggleAllSelection}
               onToggleAvailability={(dishId, currentSoldOut) => {
                 void handleToggleAvailability(dishId, currentSoldOut);
               }}
