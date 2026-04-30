@@ -7,7 +7,10 @@ import type { NotificationDto } from '@custom-types/notification';
 import { playNotificationSound } from '@utils/notificationSound';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import { addNewOrder } from '@slices/order';
-import { updateBranchVerificationStatusRealtime } from '@slices/vendor';
+import {
+  getMyVendor,
+  updateBranchVerificationStatusRealtime,
+} from '@slices/vendor';
 import { loadUserFromStorage, selectUser } from '@slices/auth';
 import { ROLES } from '@constants/role';
 import { tokenManagement } from '@utils/tokenManagement';
@@ -229,6 +232,9 @@ export const useNotifications = (
                 rejectReason: parsed.rejectReason,
               })
             );
+
+            // Fetch the updated vendor details to get properties like tierName
+            void dispatch(getMyVendor());
 
             if (parsed.status === 'Accept') {
               await refreshAccessTokenOnVerifiedBranch();
