@@ -178,7 +178,9 @@ function VendorLayout(): JSX.Element {
     () =>
       isInitialCheckDone
         ? acceptedBranches.filter(
-            (branch) => branchScheduleMap[branch.branchId] === false
+            (branch) =>
+              branch.isActive !== false &&
+              branchScheduleMap[branch.branchId] === false
           )
         : [],
     [isInitialCheckDone, acceptedBranches, branchScheduleMap]
@@ -190,6 +192,7 @@ function VendorLayout(): JSX.Element {
       isInitialCheckDone
         ? subscribedBranches.filter(
             (branch) =>
+              branch.isActive !== false &&
               branchDishCountMap[branch.branchId] !== undefined &&
               branchDishCountMap[branch.branchId] === 0
           )
