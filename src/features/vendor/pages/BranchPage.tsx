@@ -95,7 +95,9 @@ function BranchPage(): JSX.Element {
     Record<number, string>
   >({});
   const [payingBranchId, setPayingBranchId] = useState<number | null>(null);
-  const [benefitsModalBranch, setBenefitsModalBranch] = useState<Branch | null>(null);
+  const [benefitsModalBranch, setBenefitsModalBranch] = useState<Branch | null>(
+    null
+  );
   const requestedManagerIdsRef = useRef<Set<number>>(new Set());
   const [showOnboardingGuide, setShowOnboardingGuide] = useState(() => {
     return (

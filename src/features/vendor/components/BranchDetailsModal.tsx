@@ -254,15 +254,15 @@ export default function BranchDetailsModal({
                       Gói đăng ký
                     </span>
                     {!branch.isSubscribed && showPayment && (
-                        <button
-                          type="button"
-                          onClick={() => setShowBenefitsModal(true)}
-                          disabled={paying}
-                          className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Xem quyền lợi khi đăng ký gói
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowBenefitsModal(true)}
+                        disabled={paying}
+                        className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Xem quyền lợi khi đăng ký gói
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {branch.isSubscribed &&
