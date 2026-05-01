@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import type { Branch } from '@features/vendor/types/vendor';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import PaymentIcon from '@mui/icons-material/Payment';
-import { Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import usePayment from '@features/vendor/hooks/usePayment';
 import PaymentBenefitsModal from '@features/vendor/components/PaymentBenefitsModal';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
@@ -32,7 +32,7 @@ const InfoField = ({
     <span className="text-[11px] font-bold tracking-wider text-[var(--color-table-text-secondary)] uppercase opacity-80">
       {label}
     </span>
-    <span className="text-sm font-semibold text-[var(--color-table-text-primary)]">
+    <span className="truncate text-sm font-semibold text-[var(--color-table-text-primary)]">
       {value ?? '-'}
     </span>
   </div>
@@ -70,7 +70,6 @@ export default function BranchDetailsModal({
 }: BranchDetailsModalProps): JSX.Element | null {
   const { onCreatePaymentLink } = usePayment();
   const [paying, setPaying] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showBenefitsModal, setShowBenefitsModal] = useState(false);
 
   if (!isOpen || !branch) return null;
@@ -81,11 +80,9 @@ export default function BranchDetailsModal({
       const res = await onCreatePaymentLink({ branchId: branch.branchId });
       if (res.success && res.paymentUrl) {
         window.location.href = res.paymentUrl;
-      } else {
-        setErrorMsg('Không thể tạo link thanh toán. Vui lòng thử lại.');
       }
-    } catch {
-      setErrorMsg('Đã xảy ra lỗi khi tạo link thanh toán.');
+    } catch (error) {
+      console.error(error);
     } finally {
       setPaying(false);
     }
@@ -117,7 +114,7 @@ export default function BranchDetailsModal({
     return 'default';
   };
 
-  const managerDisplayName = (() => {
+  const managerDisplayName = ((): string => {
     if (managerName && managerName.trim().length > 0) {
       return managerName;
     }
@@ -135,7 +132,7 @@ export default function BranchDetailsModal({
       onClick={onClose}
     >
       <div
-        className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <VendorModalHeader
@@ -166,6 +163,18 @@ export default function BranchDetailsModal({
                   value={managerDisplayName}
                 />
                 <InfoField label="Số điện thoại" value={branch.phoneNumber} />
+                <InfoField
+                  label="Hạng chi nhánh"
+                  value={(() => {
+                    if (!branch.tierName) return '-';
+                    const tierName = branch.tierName.toLowerCase();
+                    if (tierName === 'warning') return 'Cảnh báo';
+                    if (tierName === 'silver') return 'Bạc';
+                    if (tierName === 'gold') return 'Vàng';
+                    if (tierName === 'diamond') return 'Kim cương';
+                    return branch.tierName;
+                  })()}
+                />
                 <InfoField
                   label="Đánh giá"
                   value={
@@ -244,20 +253,16 @@ export default function BranchDetailsModal({
                     <span className="text-sm font-medium text-gray-600">
                       Gói đăng ký
                     </span>
-                    {!branch.isSubscribed &&
-                      branch.isVerified &&
-                      branch.licenseStatus === 'Accept' &&
-                      showPayment &&
-                      !hasAnySubscribedBranch && (
-                        <button
-                          type="button"
-                          onClick={() => setShowBenefitsModal(true)}
-                          disabled={paying}
-                          className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Xem quyền lợi khi đăng ký gói
-                        </button>
-                      )}
+                    {!branch.isSubscribed && showPayment && (
+                      <button
+                        type="button"
+                        onClick={() => setShowBenefitsModal(true)}
+                        disabled={paying}
+                        className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Xem quyền lợi khi đăng ký gói
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {branch.isSubscribed &&
@@ -328,31 +333,7 @@ export default function BranchDetailsModal({
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-5">
-          <div>
-            {!branch.isSubscribed &&
-              branch.isVerified &&
-              branch.licenseStatus === 'Accept' &&
-              showPayment &&
-              hasAnySubscribedBranch && (
-                <Button
-                  onClick={() => void executePayment()}
-                  type="button"
-                  disabled={paying}
-                  variant="outlined"
-                  color="primary"
-                  startIcon={
-                    paying ? (
-                      <CircularProgress size={14} color="inherit" />
-                    ) : (
-                      <PaymentIcon fontSize="small" />
-                    )
-                  }
-                >
-                  Thanh toán
-                </Button>
-              )}
-          </div>
+        <div className="flex items-center justify-end border-t border-gray-100 bg-gray-50/50 px-8 py-5">
           <button
             onClick={onClose}
             type="button"
@@ -362,17 +343,6 @@ export default function BranchDetailsModal({
           </button>
         </div>
       </div>
-
-      <Snackbar
-        open={errorMsg !== null}
-        autoHideDuration={4000}
-        onClose={() => setErrorMsg(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={() => setErrorMsg(null)}>
-          {errorMsg}
-        </Alert>
-      </Snackbar>
 
       {showBenefitsModal && (
         <PaymentBenefitsModal

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
 import {
   Avatar,
@@ -9,6 +9,8 @@ import {
   Typography,
   Button,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -35,6 +37,16 @@ import { selectCategories } from '@slices/category';
 import { selectTastes } from '@slices/taste';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 // import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
+
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
+};
 
 interface DishFormModalProps {
   isOpen: boolean;
@@ -63,8 +75,16 @@ export default function DishFormModal({
   onUpdateDish,
   onSuccess,
 }: DishFormModalProps): JSX.Element | null {
-  const categories = useAppSelector(selectCategories);
-  const tastes = useAppSelector(selectTastes);
+  const categoriesFromStore = useAppSelector(selectCategories);
+  const tastesFromStore = useAppSelector(selectTastes);
+  const categories = useMemo(
+    () => categoriesFromStore.filter((category) => category.isActive !== false),
+    [categoriesFromStore]
+  );
+  const tastes = useMemo(
+    () => tastesFromStore.filter((taste) => taste.isActive !== false),
+    [tastesFromStore]
+  );
   // const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
 
   const { onGetAllCategories } = useCategory();
@@ -90,8 +110,7 @@ export default function DishFormModal({
       description: '',
       categoryId: 0,
       tasteIds: [],
-      // dietaryIds: [],
-      isActive: true,
+      isSignature: false,
     },
   });
 
@@ -105,7 +124,7 @@ export default function DishFormModal({
 
   useEffect(() => {
     if (isOpen && isEditMode && editingDish) {
-      const tasteIds = tastes
+      const tasteIds = tastesFromStore
         .filter((t: Taste) => editingDish.tasteNames.includes(t.name))
         .map((t: Taste) => t.tasteId);
 
@@ -121,8 +140,7 @@ export default function DishFormModal({
         description: editingDish.description ?? '',
         categoryId: editingDish.categoryId,
         tasteIds: tasteIds,
-        // dietaryIds: dietaryIds,
-        isActive: editingDish.isActive,
+        isSignature: editingDish.isSignature ?? false,
       });
 
       setImagePreview(editingDish.imageUrl);
@@ -135,14 +153,13 @@ export default function DishFormModal({
         description: '',
         categoryId: 0,
         tasteIds: [],
-        // dietaryIds: [],
-        isActive: true,
+        isSignature: false,
       });
       setImageFile(null);
       setImagePreview('');
       setImageError('');
     }
-  }, [isOpen, isEditMode, editingDish, tastes, reset]);
+  }, [isOpen, isEditMode, editingDish, tastesFromStore, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
@@ -168,10 +185,10 @@ export default function DishFormModal({
         Description: data.description ? data.description.trim() : '',
         CategoryId: data.categoryId,
         TasteIds: data.tasteIds,
-        // DietaryPreferenceIds: data.dietaryIds,
         DietaryPreferenceIds: [],
-        IsActive: data.isActive,
-        imageFile: imageFile as File,
+        IsActive: isEditMode && editingDish ? editingDish.isActive : true,
+        IsSignature: data.isSignature,
+        ...(imageFile ? { imageFile } : {}),
       };
 
       if (isEditMode && editingDish) {
@@ -261,17 +278,25 @@ export default function DishFormModal({
                   render={({ field }) => (
                     <>
                       <input
-                        {...field}
-                        type="number"
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        value={field.value === 0 ? '' : field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        type="text"
+                        inputMode="numeric"
+                        onChange={(e) =>
+                          field.onChange(parseNumberInput(e.target.value))
+                        }
+                        value={
+                          field.value === 0
+                            ? ''
+                            : formatNumberWithDots(field.value)
+                        }
                         className={`focus:ring-primary-500 w-full rounded-xl border px-4 py-2.5 transition-all outline-none ${
                           errors.price
                             ? 'border-red-500 bg-white focus:border-red-500 focus:ring-2'
                             : 'focus:border-primary-500 border-gray-200 hover:border-gray-300'
                         }`}
-                        placeholder="Ví dụ: 50000"
-                        min="0"
+                        placeholder="Ví dụ: 50.000"
                       />
                       {errors.price && (
                         <p className="mt-1 text-xs text-red-500">
@@ -279,6 +304,30 @@ export default function DishFormModal({
                         </p>
                       )}
                     </>
+                  )}
+                />
+              </Box>
+
+              {/* Is Signature */}
+              <Box>
+                <Controller
+                  name="isSignature"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        <span className="text-sm font-semibold text-gray-700">
+                          Món ăn đặc trưng (Signature)
+                        </span>
+                      }
+                    />
                   )}
                 />
               </Box>
@@ -309,51 +358,6 @@ export default function DishFormModal({
                         </p>
                       )}
                     </>
-                  )}
-                />
-              </Box>
-
-              {/* Trạng thái */}
-              <Box>
-                <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                  Trạng thái kinh doanh
-                </label>
-                <Controller
-                  name="isActive"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value ? 1 : 0}
-                      onChange={(e) =>
-                        field.onChange(Number(e.target.value) === 1)
-                      }
-                      fullWidth
-                      className="rounded-xl bg-white"
-                      sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#e5e7eb',
-                          borderRadius: '0.75rem',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#d1d5db',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'var(--color-primary-500)',
-                          borderWidth: '1px',
-                        },
-                      }}
-                    >
-                      <MenuItem value={1}>
-                        <span className="font-medium text-green-700">
-                          Đang bán
-                        </span>
-                      </MenuItem>
-                      <MenuItem value={0}>
-                        <span className="font-medium text-red-700">
-                          Ngừng bán
-                        </span>
-                      </MenuItem>
-                    </Select>
                   )}
                 />
               </Box>

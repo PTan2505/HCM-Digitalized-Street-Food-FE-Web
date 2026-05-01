@@ -1,6 +1,5 @@
 export interface Campaign {
   campaignId: number;
-  createdByBranchId: number | null;
   createdByVendorId: number | null;
   name: string;
   description: string | null;
@@ -10,10 +9,15 @@ export interface Campaign {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  isRegisterable: boolean;
   createdAt: string;
   updatedAt: string | null;
   isSystemCampaign: boolean;
+  requiredTierId?: number | null;
+  expectedBranchJoin?: number | null;
+  joinFee: number;
   imageUrl?: string | null;
+  isUpdateable: boolean;
 }
 
 export interface CampaignCreate {
@@ -22,9 +26,11 @@ export interface CampaignCreate {
   targetSegment: string | null;
   registrationStartDate: string | null;
   registrationEndDate: string | null;
+  requiredTierId?: number | null;
+  expectedBranchJoin?: number | null;
+  joinFee: number;
   startDate: string;
   endDate: string;
-  isActive: boolean;
 }
 
 export interface CampaignUpdate {
@@ -33,9 +39,11 @@ export interface CampaignUpdate {
   targetSegment: string | null;
   registrationStartDate: string | null;
   registrationEndDate: string | null;
+  requiredTierId?: number | null;
+  expectedBranchJoin?: number | null;
+  joinFee: number;
   startDate: string;
   endDate: string;
-  isActive: boolean;
 }
 
 export interface CampaignListResponse {
@@ -50,3 +58,25 @@ export interface PostCampaignImage {
 export type PostCampaignImageResponse = string;
 
 export type GetCampaignImageResponse = string;
+
+export interface CampaignBranch {
+  branchId: number;
+  vendorId: number;
+  name: string;
+  phoneNumber: string | null;
+  email: string | null;
+  addressDetail: string;
+  tierName: string | null;
+  avgRating: number;
+  isActive: boolean;
+}
+
+export interface CampaignBranchListResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: CampaignBranch[];
+}

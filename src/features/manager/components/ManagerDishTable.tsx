@@ -11,7 +11,9 @@ interface ManagerDishTableProps {
   actionLoading: Set<number>;
   isApplying: boolean;
   loading: boolean;
+  tourId?: string;
   onToggleSelection: (dishId: number) => void;
+  onToggleAllSelection?: (dishIds: number[], select: boolean) => void;
   onToggleAvailability: (dishId: number, currentSoldOut: boolean) => void;
 }
 
@@ -22,14 +24,40 @@ export default function ManagerDishTable({
   actionLoading,
   isApplying,
   loading,
+  tourId,
   onToggleSelection,
+  onToggleAllSelection,
   onToggleAvailability,
 }: ManagerDishTableProps): JSX.Element {
+  const isAllSelectedOnPage =
+    dishes.length > 0 &&
+    dishes.every((dish) => selectedDishIdSet.has(dish.dishId));
+  const isIndeterminate =
+    dishes.length > 0 &&
+    dishes.some((dish) => selectedDishIdSet.has(dish.dishId)) &&
+    !isAllSelectedOnPage;
+
   const columns = [
     {
       key: 'checkbox',
-      label: '',
-      style: { width: '48px', textAlign: 'center' as const },
+      label: (
+        <button
+          type="button"
+          onClick={() => {
+            if (onToggleAllSelection) {
+              onToggleAllSelection(
+                dishes.map((d) => d.dishId),
+                !isAllSelectedOnPage
+              );
+            }
+          }}
+          disabled={isApplying || dishes.length === 0}
+          className="text-primary-600 hover:text-primary-700 text-[11px] font-bold whitespace-nowrap disabled:cursor-not-allowed disabled:text-gray-400"
+        >
+          {isAllSelectedOnPage ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+        </button>
+      ),
+      style: { width: '100px', textAlign: 'center' as const },
       render: (_: unknown, dish: CreateOrUpdateDishResponse): ReactNode => {
         const isSelected = selectedDishIdSet.has(dish.dishId);
 
@@ -155,6 +183,7 @@ export default function ManagerDishTable({
       data={dishes}
       rowKey="dishId"
       loading={loading}
+      tourId={tourId}
       emptyMessage={
         <span>Không tìm thấy món ăn phù hợp với từ khóa tìm kiếm.</span>
       }

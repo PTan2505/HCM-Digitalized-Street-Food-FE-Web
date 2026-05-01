@@ -175,6 +175,14 @@ export default function OrderDetailsModal({
                     </span>
                   </div>
                 </div>
+                {order.note?.trim() ? (
+                  <div className="mt-3 rounded-lg border border-gray-200/60 bg-white px-3 py-2.5">
+                    <p className="mb-0.5 text-xs font-bold tracking-wide text-gray-500 uppercase">
+                      Ghi chú
+                    </p>
+                    <p className="text-sm text-gray-700">{order.note.trim()}</p>
+                  </div>
+                ) : null}
               </div>
 
               {/* ── Danh sách món ────────────────────────────────── */}
@@ -216,6 +224,22 @@ export default function OrderDetailsModal({
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Tổng tiền món:</span>
                     <span>{formatCurrencyVnd(order.totalAmount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Mã voucher:</span>
+                    <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                      {order.appliedVoucherCode?.trim()
+                        ? order.appliedVoucherCode.trim()
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-3 text-sm text-gray-600">
+                    <span>Tên voucher:</span>
+                    <span className="text-right font-medium text-gray-700">
+                      {order.appliedVoucherName?.trim()
+                        ? order.appliedVoucherName.trim()
+                        : '-'}
+                    </span>
                   </div>
                   {order.discountAmount && order.discountAmount > 0 ? (
                     <div className="flex justify-between text-sm text-green-600">

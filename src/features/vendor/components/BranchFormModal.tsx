@@ -1,4 +1,4 @@
-import { useState, useEffect, type JSX } from 'react';
+import { useState, useEffect, useMemo, type JSX } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import {
 } from '@features/vendor/utils/vendorRegistrationSchema';
 import type { BranchFormData } from '@features/vendor/utils/vendorRegistrationSchema';
 import { useAppSelector } from '@hooks/reduxHooks';
+import { selectUser } from '@slices/auth';
 import { selectUserDietaryPreferences } from '@slices/userPreferenceDietary';
 import StoreSection from './StoreSection';
 import OwnerInfoSection from './OwnerInfoSection';
@@ -139,13 +140,36 @@ function getSubtitle(mode: BranchFormMode): {
   };
 }
 
+function normalizeAddressDetail(address: string): string {
+  const trimmedAddress = address.trim();
+  if (!trimmedAddress) return '';
+
+  // Keep the full detailed address and only remove ward/city part.
+  const wardMatch = trimmedAddress.match(/\s*,?\s*(phường|xã|thị trấn)\b/i);
+  if (!wardMatch?.index) {
+    return trimmedAddress;
+  }
+
+  return trimmedAddress.slice(0, wardMatch.index).replace(/,\s*$/, '').trim();
+}
+
 export default function BranchFormModal({
   isOpen,
   onClose,
   mode,
   onSuccess,
 }: BranchFormModalProps): JSX.Element {
-  const dietaryPreferences = useAppSelector(selectUserDietaryPreferences);
+  const user = useAppSelector(selectUser);
+  const dietaryPreferencesFromStore = useAppSelector(
+    selectUserDietaryPreferences
+  );
+  const dietaryPreferences = useMemo(
+    () =>
+      dietaryPreferencesFromStore.filter(
+        (dietaryPreference) => dietaryPreference.isActive !== false
+      ),
+    [dietaryPreferencesFromStore]
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [licenseImages, setLicenseImages] = useState<File[]>([]);
@@ -163,6 +187,7 @@ export default function BranchFormModal({
   const {
     watch,
     setValue,
+    getValues,
     reset,
     trigger,
     formState: { errors, isValid, isDirty },
@@ -186,6 +211,27 @@ export default function BranchFormModal({
       }
     }
   }, [isOpen, mode, onGetAllUserDietaryPreferences, reset]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const loginPhoneNumber = user?.phoneNumber?.trim();
+    if (!loginPhoneNumber) {
+      return;
+    }
+
+    const currentPhoneValue = getValues('ownerPhone')?.trim();
+    if (currentPhoneValue) {
+      return;
+    }
+
+    setValue('ownerPhone', loginPhoneNumber, {
+      shouldValidate: true,
+      shouldDirty: false,
+    });
+  }, [isOpen, user?.phoneNumber, getValues, setValue]);
 
   const handleChange = (field: string, value: unknown): void => {
     setValue(field as keyof BranchFormData, value as never, {
@@ -219,6 +265,8 @@ export default function BranchFormModal({
 
     const selectedDietaryPreferenceIds =
       (form as { dietaryPreferenceIds?: number[] }).dietaryPreferenceIds ?? [];
+    const normalizedBranchName = form.branchName?.trim() ?? '';
+    const normalizedAddressDetail = normalizeAddressDetail(form.detailAddress);
 
     setSubmitting(true);
     try {
@@ -227,8 +275,8 @@ export default function BranchFormModal({
           name: (form as { ownerName?: string }).ownerName ?? '',
           phoneNumber: form.ownerPhone,
           email: form.email,
-          branchName: form.branchName,
-          addressDetail: form.detailAddress,
+          ...(normalizedBranchName ? { branchName: normalizedBranchName } : {}),
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -249,7 +297,7 @@ export default function BranchFormModal({
           name: form.branchName,
           phoneNumber: form.ownerPhone,
           email: form.email,
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -273,7 +321,7 @@ export default function BranchFormModal({
           phoneNumber: form.ownerPhone,
           email: form.email,
           name: form.branchName,
-          addressDetail: form.detailAddress,
+          addressDetail: normalizedAddressDetail,
           ward: form.ward ?? 'Thành phố Hồ Chí Minh',
           city: form.city ?? 'Thành phố Hồ Chí Minh',
           lat: form.latitude ?? 0,
@@ -347,7 +395,7 @@ export default function BranchFormModal({
             {mode.type === 'createVendor' && (
               <div className="mb-12">
                 <h2 className="mb-6 text-lg font-semibold text-gray-800">
-                  2. Chế độ ăn của cửa hàng
+                  2. Cửa hàng của bạn phù hợp với chế độ ăn nào?
                 </h2>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Chọn chế độ ăn <span className="text-red-500">*</span>
@@ -486,10 +534,10 @@ export default function BranchFormModal({
               onChange={handleChange}
               onLocationChange={handleLocationChange}
               errors={storeErrors}
+              branchNameRequired={mode.type !== 'createVendor'}
               {...(mode.type === 'addBranch'
                 ? {
                     sectionTitle: '2. Thông tin chi nhánh',
-                    branchNameRequired: true,
                   }
                 : {})}
             />

@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Box } from '@mui/material';
+import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
+  Block as BlockIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
 import {
@@ -155,6 +156,25 @@ export default function TastePage(): JSX.Element {
         </Box>
       ),
     },
+    {
+      key: 'isActive',
+      label: 'Trạng thái',
+      style: { width: '140px' },
+      render: (value: unknown): React.ReactNode => {
+        const isActive = Boolean(value);
+        return (
+          <Chip
+            label={isActive ? 'Đang hoạt động' : 'Đã đóng'}
+            size="small"
+            className={
+              isActive
+                ? 'bg-green-100 font-semibold text-green-800'
+                : 'bg-red-100 font-semibold text-red-800'
+            }
+          />
+        );
+      },
+    },
   ];
 
   const actions = [
@@ -167,12 +187,22 @@ export default function TastePage(): JSX.Element {
       variant: 'outlined' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
+      id: 'close',
+      label: <BlockIcon fontSize="small" />,
       onClick: (row: Taste): void => handleDelete(row),
-      tooltip: 'Xóa khẩu vị',
-      color: 'error' as const,
+      tooltip: 'Đóng khẩu vị',
+      color: 'warning' as const,
       variant: 'outlined' as const,
+      show: (row: Taste): boolean => row.isActive ?? false,
+    },
+    {
+      id: 'activate',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
+      onClick: (row: Taste): void => handleDelete(row),
+      tooltip: 'Kích hoạt khẩu vị',
+      color: 'success' as const,
+      variant: 'outlined' as const,
+      show: (row: Taste): boolean => !(row.isActive ?? false),
     },
   ];
 
@@ -268,11 +298,18 @@ export default function TastePage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa khẩu vị"
+        title={
+          deletingTaste?.isActive
+            ? 'Xác nhận đóng khẩu vị'
+            : 'Xác nhận kích hoạt khẩu vị'
+        }
+        confirmButtonLabel={deletingTaste?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingTaste?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa khẩu vị &quot;{deletingTaste?.name}&quot;?
-            Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingTaste?.isActive ? 'đóng' : 'kích hoạt'} khẩu vị &quot;
+            {deletingTaste?.name}&quot;?
           </>
         }
       />

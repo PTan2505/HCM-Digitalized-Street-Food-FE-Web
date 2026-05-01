@@ -28,8 +28,8 @@ import {
   ShoppingCart as QueueListIcon,
   LocationOn as MapPinIcon,
   Campaign as CampaignIcon,
-  Public as PublicIcon,
   Group as UserGroupIcon,
+  BarChart as ChartBarIcon,
 } from '@mui/icons-material';
 import { ROUTES } from '@constants/routes';
 import { ROLES } from '@constants/role';
@@ -57,60 +57,41 @@ const navigation = [
   {
     name: 'Dashboard',
     href: `${vendorBase}/${vendorPaths.DASHBOARD}`,
-    icon: HomeIcon,
-    isForVendor: true,
+    icon: ChartBarIcon,
   },
   {
     name: 'Chi nhánh',
     href: `${vendorBase}/${vendorPaths.BRANCH}`,
     icon: BuildingStorefrontIcon,
-    isForVendor: false,
   },
   {
     name: 'Quản lý món ăn',
     href: `${vendorBase}/${vendorPaths.DISH}`,
     icon: ShoppingBagIcon,
-    isForVendor: true,
   },
   {
     name: 'Quản lý đơn hàng',
     href: `${vendorBase}/${vendorPaths.ORDER}`,
     icon: QueueListIcon,
-    isForVendor: true,
   },
   {
-    name: 'Chế độ ăn',
+    name: 'Chế độ ăn của cửa hàng',
     href: `${vendorBase}/${vendorPaths.DIETARY}`,
-    icon: UserGroupIcon,
-    isForVendor: true,
+    icon: ShoppingBagIcon,
   },
   {
     name: 'Xác nhận sở hữu quán',
     href: `${vendorBase}/${vendorPaths.GHOST_PIN}`,
     icon: MapPinIcon,
-    isForVendor: false,
   },
   {
     name: 'Quản lý chiến dịch',
+    href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
     icon: CampaignIcon,
-    isForVendor: true,
-    children: [
-      {
-        name: 'Cửa hàng',
-        href: `${vendorBase}/${vendorPaths.CAMPAIGN}`,
-        icon: BuildingStorefrontIcon,
-      },
-      {
-        name: 'Hệ thống',
-        href: `${vendorBase}/${vendorPaths.CAMPAIGN_SYSTEM}`,
-        icon: PublicIcon,
-      },
-    ],
   },
   {
     name: 'Lịch sử',
     icon: DocumentTextIcon,
-    isForVendor: false,
     children: [
       {
         name: 'Lịch sử đăng ký',
@@ -197,7 +178,9 @@ function VendorLayout(): JSX.Element {
     () =>
       isInitialCheckDone
         ? acceptedBranches.filter(
-            (branch) => branchScheduleMap[branch.branchId] === false
+            (branch) =>
+              branch.isActive !== false &&
+              branchScheduleMap[branch.branchId] === false
           )
         : [],
     [isInitialCheckDone, acceptedBranches, branchScheduleMap]
@@ -209,6 +192,7 @@ function VendorLayout(): JSX.Element {
       isInitialCheckDone
         ? subscribedBranches.filter(
             (branch) =>
+              branch.isActive !== false &&
               branchDishCountMap[branch.branchId] !== undefined &&
               branchDishCountMap[branch.branchId] === 0
           )
@@ -221,68 +205,55 @@ function VendorLayout(): JSX.Element {
   const isBranchScheduleMissing = missingScheduleBranches.length > 0;
 
   const vendorBranchPath = `${vendorBase}/${vendorPaths.BRANCH}`;
-  const vendorDietaryPath = `${vendorBase}/${vendorPaths.DIETARY}`;
   const vendorDishPath = `${vendorBase}/${vendorPaths.DISH}`;
+  const vendorDietaryPath = `${vendorBase}/${vendorPaths.DIETARY}`;
 
-  const filteredNavigation = navigation
-    .filter((item) => !item.isForVendor || isVendor)
-    .map((item) => {
-      if (item.href === vendorBranchPath) {
-        const hasBadge = isBranchScheduleMissing || isBranchDishMissing;
-        return {
-          ...item,
-          badgeText: hasBadge ? 'Cập nhật' : undefined,
-          onClick: (): void => {
-            if (isBranchScheduleMissing) {
-              setPendingOnboardingModal('branch');
-            } else if (isBranchDishMissing) {
-              setPendingOnboardingModal('branchDish');
-            }
-          },
-        };
-      }
+  const filteredNavigation = navigation.map((item) => {
+    if (item.href === vendorBranchPath) {
+      const hasBadge = isBranchScheduleMissing || isBranchDishMissing;
+      return {
+        ...item,
+        badgeText: hasBadge ? 'Cập nhật' : undefined,
+        onClick: (): void => {
+          if (isBranchScheduleMissing) {
+            setPendingOnboardingModal('branch');
+          } else if (isBranchDishMissing) {
+            setPendingOnboardingModal('branchDish');
+          }
+        },
+      };
+    }
 
-      if (item.name === 'Lịch sử') {
-        if (!isVendor) {
-          return {
-            name: 'Lịch sử đăng ký',
-            href: `${vendorBase}/${vendorPaths.REGISTRATION_HISTORY}`,
-            icon: DocumentTextIcon,
-          };
-        }
+    if (item.href !== vendorDietaryPath) {
+      if (item.href !== vendorDishPath) {
         return item;
-      }
-
-      if (item.href !== vendorDietaryPath) {
-        if (item.href !== vendorDishPath) {
-          return item;
-        }
-
-        return {
-          ...item,
-          badgeText: isDishMissing ? 'Mới' : undefined,
-          onClick: (): void => {
-            if (!isDishMissing) {
-              return;
-            }
-
-            setPendingOnboardingModal('dish');
-          },
-        };
       }
 
       return {
         ...item,
-        badgeText: isDietaryMissing ? 'Mới' : undefined,
+        badgeText: isDishMissing ? 'Mới' : undefined,
         onClick: (): void => {
-          if (!isDietaryMissing) {
+          if (!isDishMissing) {
             return;
           }
 
-          setPendingOnboardingModal('dietary');
+          setPendingOnboardingModal('dish');
         },
       };
-    });
+    }
+
+    return {
+      ...item,
+      badgeText: isDietaryMissing ? 'Mới' : undefined,
+      onClick: (): void => {
+        if (!isDietaryMissing) {
+          return;
+        }
+
+        setPendingOnboardingModal('dietary');
+      },
+    };
+  });
 
   const pageTitle = useMemo(() => {
     const directMatch = filteredNavigation.find(
@@ -411,7 +382,7 @@ function VendorLayout(): JSX.Element {
           // Fetch dishes để cập nhật vendorDishesPagination vào store
           onGetDishesOfAVendor({
             vendorId: vendor.vendorId,
-            params: { pageNumber: 1, pageSize: 1 },
+            params: { pageNumber: 1, pageSize: 5 },
           }),
           // Fetch dietary preferences để cập nhật myVendorDietaryPreferences vào store
           onGetDietaryPreferencesOfMyVendor({ vendorId: vendor.vendorId }),
@@ -439,7 +410,7 @@ function VendorLayout(): JSX.Element {
                 try {
                   await onGetDishesByBranch({
                     branchId: branch.branchId,
-                    params: { pageNumber: 1, pageSize: 1 },
+                    params: { pageNumber: 1, pageSize: 5 },
                   });
                 } catch (error) {
                   console.error(
@@ -536,7 +507,6 @@ function VendorLayout(): JSX.Element {
             collapsed={false}
             navigation={filteredNavigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/vendor/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
@@ -555,7 +525,6 @@ function VendorLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={filteredNavigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/vendor/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
           onUserInfoClick={() => setIsProfileModalOpen(true)}

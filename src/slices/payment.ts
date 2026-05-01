@@ -1,4 +1,5 @@
 import type { RootState } from '@app/store';
+import type { PaymentPayoutResponse } from '@features/admin/types/payment';
 import type {
   CreatePaymentLinkRequest,
   CreatePaymentLinkResponse,
@@ -30,6 +31,7 @@ export interface PaymentState {
   paymentSuccess: GetPaymentSuccessResponse | null;
   paymentCancel: GetPaymentCancelResponse | null;
   accountBalance: GetVendorBalanceResponse | null;
+  payouts: PaymentPayoutResponse | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -42,6 +44,7 @@ const initialState: PaymentState = {
   paymentSuccess: null,
   paymentCancel: null,
   accountBalance: null,
+  payouts: null,
   status: 'idle',
   error: null,
 };
@@ -153,6 +156,24 @@ export const vendorRequestTransfer = createAppAsyncThunk(
   }
 );
 
+export const getPaymentPayout = createAppAsyncThunk(
+  'payment/getPaymentPayout',
+  async (
+    params: { pageNumber: number; pageSize: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.adminPaymentApi.getPaymentPayout(
+        params.pageNumber,
+        params.pageSize
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const paymentSlice = createSlice({
   name: 'payment',
   initialState,
@@ -183,6 +204,9 @@ export const paymentSlice = createSlice({
       .addCase(getVendorBalance.fulfilled, (state, action) => {
         state.accountBalance = action.payload;
       })
+      .addCase(getPaymentPayout.fulfilled, (state, action) => {
+        state.payouts = action.payload;
+      })
       .addCase(vendorRequestTransfer.fulfilled, (state, action) => {
         state.accountBalance = {
           balance: action.payload.currentVendorBalance,
@@ -205,6 +229,7 @@ export const paymentSlice = createSlice({
           getPaymentSuccess,
           getPaymentCancel,
           getVendorBalance,
+          getPaymentPayout,
           vendorRequestTransfer
         ),
         (state) => {
@@ -221,6 +246,7 @@ export const paymentSlice = createSlice({
           getPaymentSuccess,
           getPaymentCancel,
           getVendorBalance,
+          getPaymentPayout,
           vendorRequestTransfer
         ),
         (state) => {
@@ -237,6 +263,7 @@ export const paymentSlice = createSlice({
           getPaymentSuccess,
           getPaymentCancel,
           getVendorBalance,
+          getPaymentPayout,
           vendorRequestTransfer
         ),
         (state, action) => {
@@ -284,3 +311,7 @@ export const selectPaymentCancel = (
 export const selectVendorAccountBalance = (
   state: RootState
 ): GetVendorBalanceResponse | null => state.payment.accountBalance;
+
+export const selectPaymentPayouts = (
+  state: RootState
+): PaymentPayoutResponse | null => state.payment.payouts;

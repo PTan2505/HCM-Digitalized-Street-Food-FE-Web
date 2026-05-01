@@ -7,6 +7,7 @@ import AdminSignupsChart from '@features/admin/components/AdminSignupsChart';
 import AdminMoneyChart from '@features/admin/components/AdminMoneyChart';
 import AdminCompensationChart from '@features/admin/components/AdminCompensationChart';
 import AdminConversionsChart from '@features/admin/components/AdminConversionsChart';
+import CompensationDetailModal from '@features/admin/components/CompensationDetailModal';
 
 export default function DashboardPage(): React.JSX.Element {
   const {
@@ -90,6 +91,8 @@ export default function DashboardPage(): React.JSX.Element {
     });
   };
 
+  const [showCompensationDetail, setShowCompensationDetail] = useState(false);
+
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -100,6 +103,14 @@ export default function DashboardPage(): React.JSX.Element {
   const totalRevenue =
     (money?.totalBranchRegistrationAmount ?? 0) +
     (money?.totalSystemCampaignAmount ?? 0);
+
+  const makeTrend = (
+    rate: number | null,
+    label?: string
+  ): { value: number; isPositive: boolean; label?: string } | undefined => {
+    if (rate === null) return undefined;
+    return { value: Math.abs(rate), isPositive: rate >= 0, label };
+  };
 
   const isInitialLoading =
     status === 'pending' &&
@@ -202,7 +213,7 @@ export default function DashboardPage(): React.JSX.Element {
           )}
 
           {/* Cards metrics */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Tooltip
               title={
                 <div className="flex min-w-[220px] flex-col gap-1.5 p-1.5">
@@ -214,25 +225,53 @@ export default function DashboardPage(): React.JSX.Element {
                       {formatCurrency(totalRevenue)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                      Đăng ký chi nhánh
-                    </span>
-                    <span className="text-sm font-bold text-emerald-600">
-                      {formatCurrency(
-                        money?.totalBranchRegistrationAmount ?? 0
-                      )}
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                        Đăng ký chi nhánh
+                      </span>
+                      <span className="text-sm font-bold text-emerald-600">
+                        {formatCurrency(
+                          money?.totalBranchRegistrationAmount ?? 0
+                        )}
+                      </span>
+                    </div>
+                    {money?.branchRegistrationGrowthRate != null && (
+                      <span
+                        className={`text-right text-xs font-medium ${
+                          money.branchRegistrationGrowthRate >= 0
+                            ? 'text-emerald-600'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {money.branchRegistrationGrowthRate > 0 ? '+' : ''}
+                        {money.branchRegistrationGrowthRate}% so với kỳ trước
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
-                      <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                      Chiến dịch hệ thống
-                    </span>
-                    <span className="text-sm font-bold text-amber-600">
-                      {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                        Chiến dịch hệ thống
+                      </span>
+                      <span className="text-sm font-bold text-amber-600">
+                        {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
+                      </span>
+                    </div>
+                    {money?.systemCampaignGrowthRate != null && (
+                      <span
+                        className={`text-right text-xs font-medium ${
+                          money.systemCampaignGrowthRate >= 0
+                            ? 'text-amber-600'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {money.systemCampaignGrowthRate > 0 ? '+' : ''}
+                        {money.systemCampaignGrowthRate}% so với kỳ trước
+                      </span>
+                    )}
                   </div>
                 </div>
               }
@@ -260,28 +299,54 @@ export default function DashboardPage(): React.JSX.Element {
                 },
               }}
             >
-              <div className="cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="h-full cursor-pointer transition-transform hover:scale-[1.02]">
                 <SummaryCard
                   title="Tổng doanh thu"
                   value={formatCurrency(totalRevenue)}
                   icon={DollarSign}
+                  trends={
+                    [
+                      makeTrend(
+                        money?.branchRegistrationGrowthRate ?? null,
+                        'Đối với đăng ký chi nhánh'
+                      ),
+                      makeTrend(
+                        money?.systemCampaignGrowthRate ?? null,
+                        'Đối với chiến dịch hệ thống'
+                      ),
+                    ].filter(Boolean) as {
+                      value: number;
+                      isPositive: boolean;
+                      label?: string;
+                    }[]
+                  }
                 />
               </div>
             </Tooltip>
-            <SummaryCard
-              title="Tổng chi phí bồi thường"
-              value={formatCurrency(compensation?.totalCompensationAmount ?? 0)}
-              icon={AlertCircle}
-            />
+            <div
+              className="cursor-pointer transition-transform hover:scale-[1.02]"
+              onClick={() => setShowCompensationDetail(true)}
+            >
+              <SummaryCard
+                title="Chi phí bồi thường"
+                value={formatCurrency(
+                  compensation?.totalCompensationAmount ?? 0
+                )}
+                icon={AlertCircle}
+                trend={makeTrend(compensation?.compensationGrowthRate ?? null)}
+              />
+            </div>
             <SummaryCard
               title="Người dùng đăng ký"
               value={userSignUps?.totalSignupCount ?? 0}
               icon={Users}
+              trend={makeTrend(userSignUps?.signupGrowthRate ?? null)}
             />
             <SummaryCard
               title="Chuyển đổi người bán"
               value={conversions?.totalConversionCount ?? 0}
               icon={UserCheck}
+              trend={makeTrend(conversions?.conversionGrowthRate ?? null)}
             />
           </div>
 
@@ -300,6 +365,11 @@ export default function DashboardPage(): React.JSX.Element {
           </div>
         </div>
       )}
+      <CompensationDetailModal
+        open={showCompensationDetail}
+        onClose={() => setShowCompensationDetail(false)}
+        data={compensation?.compensationByVendors ?? []}
+      />
     </div>
   );
 }

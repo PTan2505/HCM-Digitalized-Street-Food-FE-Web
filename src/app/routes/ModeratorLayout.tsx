@@ -20,6 +20,9 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import UpdateUserProfileModal from '@features/user/components/UpdateUserProfileModal';
 
+const moderatorBase = ROUTES.MODERATOR.BASE;
+const moderatorPaths = ROUTES.MODERATOR.PATHS;
+
 const navigation = [
   // {
   //   name: 'Dashboard',
@@ -28,35 +31,34 @@ const navigation = [
   // },
   {
     name: 'Quán Ăn Chờ Duyệt',
-    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`,
+    href: `${moderatorBase}/${moderatorPaths.VERIFICATION_VENDOR}`,
     icon: StorefrontIcon,
   },
   {
     name: 'Quán reviewer chia sẻ',
-    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`,
+    href: `${moderatorBase}/${moderatorPaths.VERIFICATION_GHOST_PIN}`,
     icon: LocationOnIcon,
   },
   {
     name: 'Yêu cầu sở hữu quán',
-    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST}`,
+    href: `${moderatorBase}/${moderatorPaths.VERIFICATION_OWNERSHIP_REQUEST}`,
     icon: FactCheckIcon,
   },
   {
-    name: 'Xem thông tin chi nhánh',
-    href: `${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.BRANCH}`,
+    name: 'Lịch sử chi nhánh',
+    href: `${moderatorBase}/${moderatorPaths.BRANCH}`,
     icon: StorefrontIcon,
   },
 ];
 
 const titleByPath: Record<string, string> = {
-  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_GHOST_PIN}`]:
+  [`${moderatorBase}/${moderatorPaths.VERIFICATION_GHOST_PIN}`]:
     'Xác minh - Quán reviewer chia sẻ',
-  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_VENDOR}`]:
+  [`${moderatorBase}/${moderatorPaths.VERIFICATION_VENDOR}`]:
     'Xác minh - Quán ăn chờ duyệt',
-  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.VERIFICATION_OWNERSHIP_REQUEST}`]:
+  [`${moderatorBase}/${moderatorPaths.VERIFICATION_OWNERSHIP_REQUEST}`]:
     'Xác minh - Yêu cầu sở hữu quán',
-  [`${ROUTES.MODERATOR.BASE}/${ROUTES.MODERATOR.PATHS.BRANCH}`]:
-    'Xem thông tin chi nhánh',
+  [`${moderatorBase}/${moderatorPaths.BRANCH}`]: 'Xem thông tin chi nhánh',
 };
 
 function ModeratorLayout(): JSX.Element {
@@ -71,7 +73,7 @@ function ModeratorLayout(): JSX.Element {
   const user = useAppSelector(selectUser);
 
   const handleLogoClick = (): void => {
-    navigate('/moderator');
+    navigate(moderatorBase);
   };
 
   const sidebarUserInfo = {
@@ -112,7 +114,6 @@ function ModeratorLayout(): JSX.Element {
             collapsed={false}
             navigation={navigation}
             userInfo={sidebarUserInfo}
-            settingsPath="/moderator/settings"
             onLogout={onLogout}
             onLogoClick={handleLogoClick}
             onNavigateItemClick={() => setSidebarOpen(false)}
@@ -131,7 +132,6 @@ function ModeratorLayout(): JSX.Element {
           collapsed={sidebarCollapsed}
           navigation={navigation}
           userInfo={sidebarUserInfo}
-          settingsPath="/moderator/settings"
           onLogout={onLogout}
           onLogoClick={handleLogoClick}
           onUserInfoClick={() => setIsProfileModalOpen(true)}
@@ -179,7 +179,7 @@ function ModeratorLayout(): JSX.Element {
             </Box>
 
             <Box className="flex items-center gap-4">
-              <NotificationBell />
+              {/* <NotificationBell /> */}
             </Box>
           </Box>
         </Box>

@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
+import {
+  DollarSign,
+  ShoppingBag,
+  TrendingUp,
+  Megaphone,
+  Target,
+  ShoppingCart,
+} from 'lucide-react';
 import useDashboard from '@features/vendor/hooks/useDashboard';
 import SummaryCard from '@features/vendor/components/SummaryCard';
 import RevenueLineChart from '@features/vendor/components/RevenueLineChart';
 import DishBarChart from '@features/vendor/components/DishBarChart';
 import VoucherBarChart from '@features/vendor/components/VoucherBarChart';
+import CampaignBarChart from '@features/vendor/components/CampaignBarChart';
 
 export default function DashboardPage(): React.JSX.Element {
   const {
     revenue,
     vouchers,
     dishes,
+    campaigns,
     onGetRevenue,
     onGetVouchers,
     onGetDishes,
+    onGetCampaigns,
     status,
   } = useDashboard();
 
@@ -36,15 +46,17 @@ export default function DashboardPage(): React.JSX.Element {
   );
 
   useEffect(() => {
-    // Re-fetch revenue based on selected dates
-    onGetRevenue({
+    const params = {
       fromDate: dateRange.fromDate,
       toDate: dateRange.toDate,
-    });
+    };
+    // Re-fetch revenue based on selected dates
+    onGetRevenue(params);
+    onGetCampaigns(params);
     // Fetch dishes and vouchers
     onGetVouchers();
     onGetDishes();
-  }, [dateRange, onGetDishes, onGetRevenue, onGetVouchers]);
+  }, [dateRange, onGetDishes, onGetRevenue, onGetVouchers, onGetCampaigns]);
 
   const handleFilterApply = (): void => {
     const start = new Date(startDateInput);
@@ -178,8 +190,7 @@ export default function DashboardPage(): React.JSX.Element {
             </div>
           )}
 
-          {/* Cards metrics */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             <SummaryCard
               title="Tổng doanh thu"
               value={formatCurrency(revenue?.totalRevenue ?? 0)}
@@ -191,9 +202,14 @@ export default function DashboardPage(): React.JSX.Element {
               icon={ShoppingBag}
             />
             <SummaryCard
-              title="Món ăn bán ra"
-              value={totalDishesSold}
-              icon={TrendingUp}
+              title="Doanh thu chiến dịch"
+              value={formatCurrency(campaigns?.totalCampaignRevenue ?? 0)}
+              icon={Megaphone}
+            />
+            <SummaryCard
+              title="Đơn hàng từ chiến dịch"
+              value={campaigns?.totalCampaignOrders ?? 0}
+              icon={ShoppingCart}
             />
           </div>
 
@@ -202,10 +218,19 @@ export default function DashboardPage(): React.JSX.Element {
             <RevenueLineChart data={revenue?.dailyRevenues ?? []} />
           </div>
 
+          {/* Top Dishes */}
+          <div className="w-full">
+            <DishBarChart data={dishes?.topDishes ?? []} />
+          </div>
+
           {/* Grouped analytics */}
           <div className="grid grid-cols-1 gap-6 pb-12 lg:grid-cols-2">
-            <DishBarChart data={dishes?.topDishes ?? []} />
-            <VoucherBarChart data={vouchers?.voucherUsages ?? []} />
+            <div className="lg:col-span-1">
+              <CampaignBarChart data={campaigns?.campaigns ?? []} />
+            </div>
+            <div className="lg:col-span-1">
+              <VoucherBarChart data={vouchers?.voucherUsages ?? []} />
+            </div>
           </div>
         </div>
       )}

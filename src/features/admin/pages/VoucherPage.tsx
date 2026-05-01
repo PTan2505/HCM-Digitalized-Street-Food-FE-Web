@@ -4,7 +4,6 @@ import { Box, Chip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   HelpOutline as HelpOutlineIcon,
 } from '@mui/icons-material';
@@ -49,13 +48,14 @@ const StatusBadge = ({
   type,
 }: {
   label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
 }): JSX.Element => {
   const colors = {
     success: 'bg-green-100 text-green-700 border-green-200',
     error: 'bg-red-100 text-red-700 border-red-200',
     warning: 'bg-amber-100 text-amber-700 border-amber-200',
     default: 'bg-slate-100 text-slate-700 border-slate-200',
+    info: 'bg-blue-100 text-blue-700 border-blue-200',
   };
   return (
     <span
@@ -64,6 +64,48 @@ const StatusBadge = ({
       {label}
     </span>
   );
+};
+
+const isMarketplaceVoucher = (voucher: Voucher): boolean =>
+  (voucher.redeemPoint ?? 0) > 0;
+
+const isUnlimitedVoucher = (
+  voucher: Voucher,
+  remainingQuantity: number
+): boolean => remainingQuantity === 0 && voucher.quantity < 0;
+
+const getRemainingQuantity = (voucher: Voucher): number => {
+  if (typeof voucher.remain === 'number' && !Number.isNaN(voucher.remain)) {
+    return Math.max(voucher.remain, 0);
+  }
+
+  return Math.max(voucher.quantity - (voucher.usedQuantity ?? 0), 0);
+};
+
+const getVoucherScopeBadge = (
+  voucher: Voucher
+): {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
+} => {
+  if (isMarketplaceVoucher(voucher)) {
+    return { label: 'Marketplace', type: 'default' };
+  }
+
+  const remainingQuantity = getRemainingQuantity(voucher);
+  const isUnlimited = isUnlimitedVoucher(voucher, remainingQuantity);
+
+  if (isUnlimited) {
+    return { label: 'Thuộc nhiệm vụ nâng hạng', type: 'success' };
+  }
+
+  const hasEndDate =
+    typeof voucher.endDate === 'string' && voucher.endDate.trim() !== '';
+  if (!hasEndDate) {
+    return { label: 'Thuộc nhiệm vụ độc lập', type: 'info' };
+  }
+
+  return { label: 'Thuộc chiến dịch', type: 'warning' };
 };
 
 export default function VoucherPage(): JSX.Element {
@@ -85,7 +127,7 @@ export default function VoucherPage(): JSX.Element {
 
   const fetchVouchers = useCallback(async (): Promise<void> => {
     try {
-      await onGetVouchers();
+      await onGetVouchers({ isSystemVoucher: true });
     } catch (err) {
       console.error('Failed to fetch vouchers', err);
     }
@@ -130,11 +172,6 @@ export default function VoucherPage(): JSX.Element {
     } catch (err) {
       console.error('Failed to save voucher', err);
     }
-  };
-
-  const handleDelete = (voucher: Voucher): void => {
-    setDeletingVoucher(voucher);
-    setOpenDeleteDialog(true);
   };
 
   const handleConfirmDelete = async (): Promise<void> => {
@@ -208,6 +245,21 @@ export default function VoucherPage(): JSX.Element {
         />
       ),
     },
+    {
+      key: 'redeemPoint',
+      label: 'Phạm vi',
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const scopeBadge = getVoucherScopeBadge(row);
+        return (
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge label={scopeBadge.label} type={scopeBadge.type} />
+            {isMarketplaceVoucher(row) && row.isIndependentQuest === true && (
+              <StatusBadge label="Thuộc nhiệm vụ độc lập" type="info" />
+            )}
+          </div>
+        );
+      },
+    },
     // {
     //   key: 'discountValue',
     //   label: 'Giá trị giảm',
@@ -237,14 +289,12 @@ export default function VoucherPage(): JSX.Element {
       key: 'availableQuantity',
       label: 'Số lượng còn lại',
       render: (_: unknown, row: Voucher): JSX.Element => {
-        const remainingQuantity = Math.max(
-          row.quantity - (row.usedQuantity ?? 0),
-          0
-        );
+        const remainingQuantity = getRemainingQuantity(row);
+        const unlimited = isUnlimitedVoucher(row, remainingQuantity);
 
         return (
           <span className="text-table-text-primary text-sm font-medium">
-            {remainingQuantity}
+            {unlimited ? 'Vô hạn' : remainingQuantity}
           </span>
         );
       },
@@ -252,11 +302,16 @@ export default function VoucherPage(): JSX.Element {
     {
       key: 'quantity',
       label: 'Số lượng',
-      render: (value: unknown): JSX.Element => (
-        <span className="text-table-text-primary text-sm font-medium">
-          {value as number}
-        </span>
-      ),
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const remainingQuantity = getRemainingQuantity(row);
+        const unlimited = isUnlimitedVoucher(row, remainingQuantity);
+
+        return (
+          <span className="text-table-text-primary text-sm font-medium">
+            {unlimited ? 'Vô hạn' : row.quantity}
+          </span>
+        );
+      },
     },
     {
       key: 'startDate',
@@ -293,20 +348,22 @@ export default function VoucherPage(): JSX.Element {
       id: 'edit',
       label: <EditIcon fontSize="small" />,
       onClick: (row: Voucher): void => handleOpenModal(row),
+      show: (row: Voucher): boolean =>
+        isMarketplaceVoucher(row) && row.isIndependentQuest !== true,
       tooltip: 'Chỉnh sửa voucher',
       color: 'primary' as const,
       variant: 'outlined' as const,
     },
-    {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      onClick: (row: Voucher): void => {
-        void handleDelete(row);
-      },
-      tooltip: 'Xóa voucher',
-      color: 'error' as const,
-      variant: 'outlined' as const,
-    },
+    // {
+    //   id: 'delete',
+    //   label: <DeleteIcon fontSize="small" />,
+    //   onClick: (row: Voucher): void => {
+    //     void handleDelete(row);
+    //   },
+    //   tooltip: 'Xóa voucher',
+    //   color: 'error' as const,
+    //   variant: 'outlined' as const,
+    // },
   ];
 
   return (

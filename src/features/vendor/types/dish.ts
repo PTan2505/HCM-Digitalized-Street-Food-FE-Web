@@ -2,8 +2,9 @@ export interface CreateOrUpdateDishRequest {
   CategoryId: number;
   Description: string;
   DietaryPreferenceIds?: number[];
-  imageFile: File;
+  imageFile?: File;
   IsActive: boolean;
+  IsSignature: boolean;
   Name: string;
   Price: number;
   TasteIds: number[];
@@ -25,6 +26,8 @@ export interface CreateOrUpdateDishResponse {
   imageUrl: string;
   isSoldOut: boolean;
   isActive: boolean;
+  isSignature: boolean;
+  isBestSeller: boolean;
   createdAt: string;
   updatedAt?: string;
   vendorId: number;

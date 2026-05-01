@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Avatar, Box, Chip } from '@mui/material';
-import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
+import { Avatar, Box, Chip, Tooltip } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
+  PauseCircleOutline as PauseCircleOutlineIcon,
+  Replay as ReplayIcon,
   HelpOutline as HelpOutlineIcon,
+  Star as StarIcon,
+  Whatshot as FireIcon,
 } from '@mui/icons-material';
 import {
   type Controls,
@@ -19,18 +21,22 @@ import Table from '@features/vendor/components/Table';
 import Pagination from '@features/vendor/components/Pagination';
 import DishFormModal from '@features/vendor/components/DishFormModal';
 import DishFilterSection from '@features/vendor/components/DishFilterSection';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import type { DishFilterValues } from '@features/vendor/components/DishFilterSection';
 import type { CreateOrUpdateDishResponse } from '@features/vendor/types/dish';
 import useDish from '@features/vendor/hooks/useDish';
 import useVendor from '@features/vendor/hooks/useVendor';
+import useTaste from '@features/admin/hooks/useTaste';
 import { useAppSelector } from '@hooks/reduxHooks';
 import {
   selectVendorDishes,
   selectVendorDishesPagination,
   selectDishStatus,
 } from '@slices/dish';
+import { selectTastes } from '@slices/taste';
 import { selectMyVendor } from '@slices/vendor';
 import { getDishManagementTourSteps } from '@features/vendor/utils/dishManagementTourSteps';
+import type { Taste } from '@features/admin/types/taste';
 
 const StatusBadge = ({
   label,
@@ -59,16 +65,17 @@ export default function DishPage(): JSX.Element {
   const dishes = useAppSelector(selectVendorDishes);
   const pagination = useAppSelector(selectVendorDishesPagination);
   const status = useAppSelector(selectDishStatus);
+  const tastes = useAppSelector(selectTastes);
 
   const { onGetMyVendor } = useVendor();
-  const { onCreateDish, onUpdateDish, onDeleteDish, onGetDishesOfAVendor } =
-    useDish();
+  const { onGetAllTastes } = useTaste();
+  const { onCreateDish, onUpdateDish, onGetDishesOfAVendor } = useDish();
 
   const [openFormModal, setOpenFormModal] = useState(false);
   const [editingDish, setEditingDish] =
     useState<CreateOrUpdateDishResponse | null>(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deletingDish, setDeletingDish] =
+  const [openDeactivateDialog, setOpenDeactivateDialog] = useState(false);
+  const [deactivatingDish, setDeactivatingDish] =
     useState<CreateOrUpdateDishResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
@@ -82,7 +89,8 @@ export default function DishPage(): JSX.Element {
   // Fetch vendor info on mount
   useEffect(() => {
     void onGetMyVendor();
-  }, [onGetMyVendor]);
+    void onGetAllTastes();
+  }, [onGetMyVendor, onGetAllTastes]);
 
   // Fetch dishes whenever vendorId / page / filters change
   useEffect(() => {
@@ -128,26 +136,57 @@ export default function DishPage(): JSX.Element {
     setPageNumber(1); // Reset về trang 1 khi đổi filter
   };
 
-  const handleDelete = (dish: CreateOrUpdateDishResponse): void => {
-    setDeletingDish(dish);
-    setOpenDeleteDialog(true);
-  };
+  const handleToggleSellingStatus = async (
+    dish: CreateOrUpdateDishResponse
+  ): Promise<void> => {
+    const tasteIds = dish.tasteNames
+      .map((tasteName) => {
+        const taste = tastes.find((t: Taste) => t.name === tasteName);
+        return taste?.tasteId;
+      })
+      .filter((tasteId): tasteId is number => tasteId !== undefined);
 
-  const handleConfirmDelete = async (): Promise<void> => {
-    if (deletingDish) {
-      try {
-        await onDeleteDish(deletingDish.dishId);
-        setOpenDeleteDialog(false);
-        setDeletingDish(null);
-      } catch (error) {
-        console.error('Failed to delete dish:', error);
-      }
+    if (tasteIds.length === 0) {
+      console.error('Cannot toggle dish status because tasteIds are missing');
+      return;
+    }
+
+    try {
+      await onUpdateDish({
+        dishId: dish.dishId,
+        data: {
+          Name: dish.name,
+          Price: dish.price,
+          Description: dish.description ?? '',
+          CategoryId: dish.categoryId,
+          TasteIds: tasteIds,
+          DietaryPreferenceIds: [],
+          IsActive: !dish.isActive,
+          IsSignature: dish.isSignature,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to toggle dish selling status:', error);
     }
   };
 
-  const handleCancelDelete = (): void => {
-    setOpenDeleteDialog(false);
-    setDeletingDish(null);
+  const handleOpenDeactivateDialog = (
+    dish: CreateOrUpdateDishResponse
+  ): void => {
+    setDeactivatingDish(dish);
+    setOpenDeactivateDialog(true);
+  };
+
+  const handleCloseDeactivateDialog = (): void => {
+    setOpenDeactivateDialog(false);
+    setDeactivatingDish(null);
+  };
+
+  const handleConfirmDeactivate = async (): Promise<void> => {
+    if (!deactivatingDish) return;
+
+    await handleToggleSellingStatus(deactivatingDish);
+    handleCloseDeactivateDialog();
   };
 
   const handlePageChange = (page: number): void => {
@@ -205,11 +244,45 @@ export default function DishPage(): JSX.Element {
     {
       key: 'name',
       label: 'Tên món',
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-semibold">
-          {String(value)}
-        </Box>
-      ),
+      render: (
+        value: unknown,
+        row: CreateOrUpdateDishResponse
+      ): React.ReactNode => {
+        let nameColorClass = 'text-table-text-primary';
+        if (row.isBestSeller) {
+          nameColorClass = 'text-red-600 font-bold';
+        } else if (row.isSignature) {
+          nameColorClass = 'text-amber-600 font-bold';
+        }
+
+        return (
+          <Box
+            className={`flex items-center gap-1.5 ${nameColorClass} font-semibold`}
+          >
+            <span>{String(value)}</span>
+            <Box className="flex items-center gap-0.5">
+              {row.isSignature && (
+                <Tooltip
+                  title="Món ăn đặc trưng (Signature)"
+                  placement="top"
+                  arrow
+                >
+                  <StarIcon className="text-amber-500" sx={{ fontSize: 18 }} />
+                </Tooltip>
+              )}
+              {row.isBestSeller && (
+                <Tooltip
+                  title="Bán chạy nhất (Best Seller)"
+                  placement="top"
+                  arrow
+                >
+                  <FireIcon className="text-red-500" sx={{ fontSize: 18 }} />
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+        );
+      },
     },
     {
       key: 'price',
@@ -283,11 +356,24 @@ export default function DishPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      menuLabel: 'Xóa món',
-      onClick: (row: CreateOrUpdateDishResponse): void => handleDelete(row),
-      color: 'error' as const,
+      id: 'deactivate',
+      label: <PauseCircleOutlineIcon fontSize="small" />,
+      menuLabel: 'Ngừng bán',
+      onClick: (row: CreateOrUpdateDishResponse): void => {
+        handleOpenDeactivateDialog(row);
+      },
+      color: 'warning' as const,
+      show: (row: CreateOrUpdateDishResponse): boolean => row.isActive,
+    },
+    {
+      id: 'reactivate',
+      label: <ReplayIcon fontSize="small" />,
+      menuLabel: 'Bán lại',
+      onClick: (row: CreateOrUpdateDishResponse): void => {
+        void handleToggleSellingStatus(row);
+      },
+      color: 'success' as const,
+      show: (row: CreateOrUpdateDishResponse): boolean => !row.isActive,
     },
   ];
 
@@ -376,10 +462,10 @@ export default function DishPage(): JSX.Element {
       {/* Pagination */}
       <div data-tour="dish-pagination">
         <Pagination
-          currentPage={pagination.currentPage}
+          currentPage={pageNumber}
           totalPages={pagination.totalPages}
           totalCount={pagination.totalCount}
-          pageSize={pagination.pageSize}
+          pageSize={pageSize}
           hasPrevious={pagination.hasPrevious}
           hasNext={pagination.hasNext}
           onPageChange={handlePageChange}
@@ -400,14 +486,18 @@ export default function DishPage(): JSX.Element {
       />
 
       <DeleteConfirmationDialog
-        open={openDeleteDialog}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa món ăn"
+        open={openDeactivateDialog}
+        onClose={handleCloseDeactivateDialog}
+        onConfirm={() => {
+          void handleConfirmDeactivate();
+        }}
+        title="Xác nhận ngừng bán món"
+        confirmButtonLabel="Ngừng bán"
+        confirmButtonColor="warning"
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa món &quot;{deletingDish?.name}&quot;? Hành
-            động này không thể hoàn tác.
+            Bạn có chắc chắn muốn ngừng bán món &quot;
+            {deactivatingDish?.name ?? ''}&quot;?
           </>
         }
       />

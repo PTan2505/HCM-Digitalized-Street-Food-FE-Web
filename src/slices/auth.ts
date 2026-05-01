@@ -1,5 +1,6 @@
 import type { RootState } from '@app/store';
 import type { User } from '@custom-types/user';
+import type { VerifyOtpProfileResponse } from '@features/user/api/profileApi';
 import type {
   LoginWithFacebookRequest,
   LoginWithGoogleRequest,
@@ -29,15 +30,21 @@ const initialState: AuthState = {
   error: null,
 };
 
+type VerifiableField = 'email' | 'phoneNumber';
+
 export const userLoginWithGoogle = createAppAsyncThunk(
   'auth/loginWithGoogle',
   async (payload: LoginWithGoogleRequest, { rejectWithValue }) => {
     try {
-      const { user, token } = await axiosApi.loginApi.loginWithGoogle({
-        accessToken: payload.accessToken,
-      });
+      const { user, token, refreshToken } =
+        await axiosApi.loginApi.loginWithGoogle({
+          accessToken: payload.accessToken,
+        });
 
-      tokenManagement.setTokens({ newAccessToken: token });
+      tokenManagement.setTokens({
+        newAccessToken: token,
+        newRefreshToken: refreshToken,
+      });
 
       return user;
     } catch (error) {
@@ -50,11 +57,15 @@ export const userLoginWithFacebook = createAppAsyncThunk(
   'auth/loginWithFacebook',
   async (payload: LoginWithFacebookRequest, { rejectWithValue }) => {
     try {
-      const { user, token } = await axiosApi.loginApi.loginWithFacebook({
-        accessToken: payload.accessToken,
-      });
+      const { user, token, refreshToken } =
+        await axiosApi.loginApi.loginWithFacebook({
+          accessToken: payload.accessToken,
+        });
 
-      tokenManagement.setTokens({ newAccessToken: token });
+      tokenManagement.setTokens({
+        newAccessToken: token,
+        newRefreshToken: refreshToken,
+      });
 
       return user;
     } catch (error) {
@@ -95,11 +106,15 @@ export const verifyPhoneNumber = createAppAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const { user, token } = await axiosApi.loginApi.verifyPhoneNumber({
-        phoneNumber: payload.phoneNumber,
-        otp: payload.otp,
+      const { user, token, refreshToken } =
+        await axiosApi.loginApi.verifyPhoneNumber({
+          phoneNumber: payload.phoneNumber,
+          otp: payload.otp,
+        });
+      tokenManagement.setTokens({
+        newAccessToken: token,
+        newRefreshToken: refreshToken,
       });
-      tokenManagement.setTokens({ newAccessToken: token });
 
       return user;
     } catch (error) {
@@ -112,7 +127,10 @@ export const verifyPhoneNumber = createAppAsyncThunk(
 export const loadUserFromStorage = createAppAsyncThunk(
   'user/loadUserFromStorage',
   async () => {
-    if (!tokenManagement.getAccessToken()) {
+    const accessToken = tokenManagement.getAccessToken();
+    const refreshToken = tokenManagement.getRefreshToken();
+
+    if (!accessToken && !refreshToken) {
       tokenManagement.clearTokens();
       return null;
     }
@@ -140,6 +158,40 @@ export const markUserInfoSetup = createAppAsyncThunk(
     try {
       await axiosApi.userProfileApi.markUserInfoSetup();
       return;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const requestContactVerification = createAppAsyncThunk(
+  'user/requestContactVerification',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response =
+        await axiosApi.userProfileApi.requestContactVerification();
+      console.log('contactVerification response:', response);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const verifyProfileOTP = createAppAsyncThunk(
+  'user/verifyProfileOTP',
+  async (
+    payload: { otp: string; field: VerifiableField },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosApi.userProfileApi.verifyOTPProfile(
+        payload.otp
+      );
+      return {
+        response,
+        requestedField: payload.field,
+      };
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -180,6 +232,31 @@ export const authSlice = createSlice({
       })
       .addCase(markUserInfoSetup.fulfilled, (state) => {
         if (state.value) state.value.userInfoSetup = true;
+      })
+      .addCase(verifyProfileOTP.fulfilled, (state, action) => {
+        if (!state.value) {
+          return;
+        }
+
+        const payload = action.payload as {
+          response: VerifyOtpProfileResponse;
+          requestedField: VerifiableField;
+        };
+
+        const channel = payload.response.channel;
+        const verifiedField: VerifiableField =
+          channel === 'email'
+            ? 'email'
+            : channel === 'phone' || channel === 'phoneNumber'
+              ? 'phoneNumber'
+              : payload.requestedField;
+
+        if (verifiedField === 'email') {
+          state.value.emailVerified = true;
+          return;
+        }
+
+        state.value.phoneNumberVerified = true;
       })
       // Matcher: Gom tất cả các case đang chạy (pending)
       .addMatcher(isPending, (state) => {

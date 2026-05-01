@@ -19,6 +19,11 @@ export interface FeedbackUser {
   avatar: string | null;
 }
 
+export interface FeedbackImage {
+  id: number;
+  url: string;
+}
+
 export interface VendorReply {
   id?: number;
   content?: string;
@@ -35,7 +40,7 @@ export interface RawBranchFeedbackResponse {
   comment: string;
   createdAt: string;
   updatedAt: string | null;
-  images?: string[];
+  images?: Array<string | FeedbackImage>;
   tags?: FeedbackTag[];
   upVotes?: number;
   downVotes?: number;
@@ -87,7 +92,7 @@ export interface GetFeedbackDetailsResponse {
   comment: string;
   createdAt: string;
   updatedAt: string | null;
-  images: string[] | null;
+  images: Array<string | FeedbackImage> | null;
   tags: FeedbackTag[] | null;
   upVotes: number;
   downVotes: number;

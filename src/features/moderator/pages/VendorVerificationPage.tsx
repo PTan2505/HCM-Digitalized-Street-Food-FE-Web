@@ -1,9 +1,9 @@
-import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
 import Pagination from '@features/moderator/components/Pagination';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
-import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
-import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetailsModal';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetailsModal';
 import useBranch from '@features/moderator/hooks/useBranch';
 import type {
   BranchRegisterRequest,
@@ -24,12 +24,11 @@ import {
   selectPendingRegistrationsPagination,
 } from '@slices/branch';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 
-const VERIFICATION_TYPE_BY_PATH: Record<string, PendingRegistrationType> = {
-  'ghost-pin': 0,
-  vendor: 1,
-  'ownership-request': 2,
+type VendorVerificationPageProps = {
+  pendingType: PendingRegistrationType;
+  pageTitle?: string;
+  hiddenColumnKeys?: string[];
 };
 
 const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
@@ -38,11 +37,46 @@ const TITLE_BY_PENDING_TYPE: Record<PendingRegistrationType, string> = {
   2: 'Xác minh - Yêu cầu sở hữu quán',
 };
 
-export default function VendorVerificationPage(): React.JSX.Element {
+const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string
+> = {
+  0: 'Chi tiết quán reviewer chia sẻ',
+  1: 'Chi tiết đơn đăng ký quán ăn',
+  2: 'Chi tiết yêu cầu sở hữu quán',
+};
+
+const toDisplayText = (value: unknown): string => {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+    return trimmedValue === '' ? '-' : trimmedValue;
+  }
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  ) {
+    return `${value}`;
+  }
+  return '-';
+};
+
+const formatDisplayDateTime = (value: unknown): string => {
+  if (typeof value !== 'string' || value.trim() === '') return '-';
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) return '-';
+  return parsedDate.toLocaleString('vi-VN');
+};
+
+export default function VendorVerificationPage({
+  pendingType,
+  pageTitle,
+  hiddenColumnKeys = [],
+}: VendorVerificationPageProps): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
   const status = useAppSelector(selectBranchStatus);
-  const location = useLocation();
   const {
     onGetPendingRegistrations,
     onVerifyBranchRegistration,
@@ -51,7 +85,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [pendingType, setPendingType] = useState<PendingRegistrationType>(1);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
@@ -74,13 +107,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
       }
     >
   >({});
-
-  useEffect(() => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const typeSegment = pathSegments[pathSegments.length - 1];
-    const routeType = VERIFICATION_TYPE_BY_PATH[typeSegment];
-    setPendingType(routeType ?? 1);
-  }, [location.pathname]);
 
   useEffect(() => {
     void onGetPendingRegistrations({ pageNumber, pageSize, type: pendingType });
@@ -138,15 +164,33 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setPageNumber(1);
   }, []);
 
-  const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
+  const verifyRegistration = async (
+    registration: BranchRegisterRequest
+  ): Promise<boolean> => {
     try {
-      const registration = row as unknown as BranchRegisterRequest;
+      if (registration.branchId === null) return false;
       await onVerifyBranchRegistration({
         branchId: registration.branchId,
         data: { branchId: registration.branchId },
       });
+      return true;
     } catch (error) {
       console.error('Failed to verify:', error);
+      return false;
+    }
+  };
+
+  const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
+    const registration = row as unknown as BranchRegisterRequest;
+    await verifyRegistration(registration);
+  };
+
+  const handleVerifyFromModal = async (
+    registration: BranchRegisterRequest
+  ): Promise<void> => {
+    const isVerified = await verifyRegistration(registration);
+    if (isVerified) {
+      handleCloseDetailsModal();
     }
   };
 
@@ -185,6 +229,12 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setRejectModalOpen(true);
   };
 
+  const handleRejectFromModal = (registration: BranchRegisterRequest): void => {
+    setSelectedRegistration(registration);
+    setDetailsModalOpen(false);
+    setRejectModalOpen(true);
+  };
+
   const handleCloseRejectModal = (): void => {
     setRejectModalOpen(false);
     setSelectedRegistration(null);
@@ -192,6 +242,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const handleConfirmReject = async (reason: string): Promise<void> => {
     if (!selectedRegistration) return;
+    if (selectedRegistration.branchId === null) return;
     try {
       await onRejectBranchRegistration({
         branchId: selectedRegistration.branchId,
@@ -219,7 +270,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (_: unknown, row: Record<string, unknown>): string => {
         const branch = row.branch as { vendorId: number } | undefined;
         if (!branch) return '-';
-        return vendorDetails[branch.vendorId]?.name ?? '...';
+        return toDisplayText(vendorDetails[branch.vendorId]?.name);
       },
     },
     {
@@ -228,32 +279,104 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (_: unknown, row: Record<string, unknown>): string => {
         const branch = row.branch as { vendorId: number } | undefined;
         if (!branch) return '-';
-        // const owner = vendorDetails[branch.vendorId]?.vendorOwner;
-        // if (!owner) return '...';
-        // return `${owner.firstName} ${owner.lastName}`.trim();
-        return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
+        return toDisplayText(vendorDetails[branch.vendorId]?.vendorOwnerName);
       },
     },
+    ...(pendingType === 0
+      ? [
+          {
+            key: 'branch.userShareName',
+            label: 'Tên người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return toDisplayText(
+                registration.branch.userShareName ?? registration.userShareName
+              );
+            },
+          },
+          {
+            key: 'branch.userShareEmail',
+            label: 'Email người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return toDisplayText(
+                registration.branch.userShareEmail ??
+                  registration.userShareEmail
+              );
+            },
+          },
+          {
+            key: 'branch.userSharePhone',
+            label: 'SĐT người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return toDisplayText(
+                registration.branch.userSharePhone ??
+                  registration.userSharePhone
+              );
+            },
+          },
+        ]
+      : []),
+    ...(pendingType === 2
+      ? [
+          {
+            key: 'branch.vendorUserName',
+            label: 'Tên người yêu cầu sở hữu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return toDisplayText(
+                registration.branch.vendorUserName ??
+                  registration.vendorUserName
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserEmail',
+            label: 'Email người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return toDisplayText(
+                registration.branch.vendorUserEmail ??
+                  registration.vendorUserEmail
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserPhone',
+            label: 'SĐT người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return toDisplayText(
+                registration.branch.vendorUserPhone ??
+                  registration.vendorUserPhone
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: 'branch.name',
       label: 'Tên chi nhánh',
       className: 'font-medium',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'branch.email',
       label: 'Email',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'branch.phoneNumber',
       label: 'Số điện thoại',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
-      render: (value: unknown): string =>
-        new Date(value as string).toLocaleString('vi-VN'),
+      render: (value: unknown): string => formatDisplayDateTime(value),
     },
-  ];
+  ].filter((column) => !hiddenColumnKeys.includes(column.key));
 
   const actions = [
     {
@@ -335,7 +458,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   return (
     <div className="font-(--font-nunito)">
       <h1 className="text-table-text-primary mb-6 text-2xl font-bold">
-        {TITLE_BY_PENDING_TYPE[pendingType]}
+        {pageTitle ?? TITLE_BY_PENDING_TYPE[pendingType]}
       </h1>
 
       {/* Table */}
@@ -366,6 +489,9 @@ export default function VendorVerificationPage(): React.JSX.Element {
         isOpen={detailsModalOpen}
         onClose={handleCloseDetailsModal}
         registration={selectedRegistration}
+        title={DETAILS_MODAL_TITLE_BY_PENDING_TYPE[pendingType]}
+        onVerify={handleVerifyFromModal}
+        onReject={handleRejectFromModal}
         vendorDetail={
           selectedRegistration
             ? (vendorDetails[selectedRegistration.branch.vendorId] ?? null)

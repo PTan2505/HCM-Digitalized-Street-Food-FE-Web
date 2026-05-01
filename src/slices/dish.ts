@@ -295,7 +295,7 @@ export const dishSlice = createSlice({
       })
       .addCase(assignDishToBranch.fulfilled, (state, action) => {
         if (action.payload) {
-          const { dishIds } = action.payload;
+          const { dishIds, branchId } = action.payload;
           dishIds.forEach((dishId) => {
             const alreadyInBranch = state.branchDishes.some(
               (d) => d.dishId === dishId
@@ -308,17 +308,28 @@ export const dishSlice = createSlice({
               }
             }
           });
+
+          // Cập nhật reactive branchDishCountMap để VendorLayout ẩn/hiện badge ngay
+          const currentCount = state.branchDishCountMap[branchId] ?? 0;
+          state.branchDishCountMap[branchId] = currentCount + dishIds.length;
         }
       })
       .addCase(unassignDishToBranch.fulfilled, (state, action) => {
         if (action.payload) {
-          const { dishIds } = action.payload;
+          const { dishIds, branchId } = action.payload;
           state.branchDishes = state.branchDishes.filter(
             (d) => !dishIds.includes(d.dishId)
           );
           state.branchDishesPagination.totalCount = Math.max(
             0,
             state.branchDishesPagination.totalCount - dishIds.length
+          );
+
+          // Cập nhật reactive branchDishCountMap để VendorLayout ẩn/hiện badge ngay
+          const currentCount = state.branchDishCountMap[branchId] ?? 0;
+          state.branchDishCountMap[branchId] = Math.max(
+            0,
+            currentCount - dishIds.length
           );
         }
       })

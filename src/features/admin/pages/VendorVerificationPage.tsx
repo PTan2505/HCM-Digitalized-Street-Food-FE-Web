@@ -1,10 +1,10 @@
-import BranchImagesDetails from '@features/moderator/components/BranchImagesDetails';
+import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
 import Pagination from '@features/moderator/components/Pagination';
 import PendingTypeFilterSection from '@features/moderator/components/PendingTypeFilterSection';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
-import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetails';
-import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetails';
+import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetailsModal';
+import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetailsModal';
 import useBranch from '@features/moderator/hooks/useBranch';
 import type {
   BranchRegisterRequest,
@@ -25,6 +25,43 @@ import {
   selectPendingRegistrationsPagination,
 } from '@slices/branch';
 import React, { useCallback, useEffect, useState } from 'react';
+import {
+  type Controls,
+  EVENTS,
+  Joyride,
+  STATUS,
+  type EventData,
+} from 'react-joyride';
+import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+import { getVendorVerificationTourSteps } from '@features/admin/utils/vendorVerificationTourSteps';
+
+const HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string[]
+> = {
+  0: [
+    'branch.vendorId',
+    'branch.vendorOwnerName',
+    'branch.email',
+    'branch.phoneNumber',
+  ],
+  1: [],
+  2: [
+    'branch.vendorId',
+    'branch.vendorOwnerName',
+    'branch.email',
+    'branch.phoneNumber',
+  ],
+};
+
+const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
+  PendingRegistrationType,
+  string
+> = {
+  0: 'Chi tiết quán reviewer chia sẻ',
+  1: 'Chi tiết đơn đăng ký quán ăn',
+  2: 'Chi tiết yêu cầu sở hữu quán',
+};
 
 export default function VendorVerificationPage(): React.JSX.Element {
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
@@ -45,6 +82,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [imagesModalOpen, setImagesModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
   const [vendorDetails, setVendorDetails] = useState<
     Record<
       number,
@@ -126,15 +165,33 @@ export default function VendorVerificationPage(): React.JSX.Element {
     []
   );
 
-  const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
+  const verifyRegistration = async (
+    registration: BranchRegisterRequest
+  ): Promise<boolean> => {
     try {
-      const registration = row as unknown as BranchRegisterRequest;
+      if (registration.branchId === null) return false;
       await onVerifyBranchRegistration({
         branchId: registration.branchId,
         data: { branchId: registration.branchId },
       });
+      return true;
     } catch (error) {
       console.error('Failed to verify:', error);
+      return false;
+    }
+  };
+
+  const handleVerify = async (row: Record<string, unknown>): Promise<void> => {
+    const registration = row as unknown as BranchRegisterRequest;
+    await verifyRegistration(registration);
+  };
+
+  const handleVerifyFromModal = async (
+    registration: BranchRegisterRequest
+  ): Promise<void> => {
+    const isVerified = await verifyRegistration(registration);
+    if (isVerified) {
+      handleCloseDetailsModal();
     }
   };
 
@@ -173,6 +230,12 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setRejectModalOpen(true);
   };
 
+  const handleRejectFromModal = (registration: BranchRegisterRequest): void => {
+    setSelectedRegistration(registration);
+    setDetailsModalOpen(false);
+    setRejectModalOpen(true);
+  };
+
   const handleCloseRejectModal = (): void => {
     setRejectModalOpen(false);
     setSelectedRegistration(null);
@@ -180,6 +243,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const handleConfirmReject = async (reason: string): Promise<void> => {
     if (!selectedRegistration) return;
+    if (selectedRegistration.branchId === null) return;
     try {
       await onRejectBranchRegistration({
         branchId: selectedRegistration.branchId,
@@ -190,6 +254,8 @@ export default function VendorVerificationPage(): React.JSX.Element {
       console.error('Failed to reject:', error);
     }
   };
+
+  const hiddenColumnKeys = HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE[pendingType];
 
   const columns = [
     {
@@ -222,6 +288,86 @@ export default function VendorVerificationPage(): React.JSX.Element {
         return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
       },
     },
+    ...(pendingType === 0
+      ? [
+          {
+            key: 'branch.userShareName',
+            label: 'Tên người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userShareName ??
+                registration.userShareName ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.userShareEmail',
+            label: 'Email người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userShareEmail ??
+                registration.userShareEmail ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.userSharePhone',
+            label: 'SĐT người chia sẻ',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.userSharePhone ??
+                registration.userSharePhone ??
+                '-'
+              );
+            },
+          },
+        ]
+      : []),
+    ...(pendingType === 2
+      ? [
+          {
+            key: 'branch.vendorUserName',
+            label: 'Tên người yêu cầu sở hữu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserName ??
+                registration.vendorUserName ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserEmail',
+            label: 'Email người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserEmail ??
+                registration.vendorUserEmail ??
+                '-'
+              );
+            },
+          },
+          {
+            key: 'branch.vendorUserPhone',
+            label: 'SĐT người yêu cầu',
+            render: (_: unknown, row: Record<string, unknown>): string => {
+              const registration = row as unknown as BranchRegisterRequest;
+              return (
+                registration.branch.vendorUserPhone ??
+                registration.vendorUserPhone ??
+                '-'
+              );
+            },
+          },
+        ]
+      : []),
     {
       key: 'branch.name',
       label: 'Tên chi nhánh',
@@ -241,7 +387,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-  ];
+  ].filter((column) => !hiddenColumnKeys.includes(column.key));
 
   const actions = [
     {
@@ -320,14 +466,74 @@ export default function VendorVerificationPage(): React.JSX.Element {
     },
   ];
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
   return (
     <div className="font-(--font-nunito)">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={getVendorVerificationTourSteps({
+          hasRows: pendingRegistrations.length > 0,
+        })}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-vendor-verification-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Xác minh người bán
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Xác minh
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn xác minh người bán"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Quản lý và xử lý các yêu cầu đăng ký chi nhánh
           </p>
@@ -335,39 +541,48 @@ export default function VendorVerificationPage(): React.JSX.Element {
       </div>
 
       {/* Table */}
-      <PendingTypeFilterSection
-        value={pendingType}
-        onFilterChange={handlePendingTypeChange}
-      />
+      <div data-tour="admin-vendor-verification-filter">
+        <PendingTypeFilterSection
+          value={pendingType}
+          onFilterChange={handlePendingTypeChange}
+        />
+      </div>
 
       {/* Table */}
-      <Table
-        columns={columns}
-        data={pendingRegistrations as unknown as Record<string, unknown>[]}
-        loading={status === 'pending'}
-        rowKey="branchRequestId"
-        actions={actions}
-        emptyMessage="Chưa có yêu cầu xác minh nào"
-        loadingMessage="Đang tải danh sách..."
-      />
+      <div data-tour="admin-vendor-verification-table">
+        <Table
+          columns={columns}
+          data={pendingRegistrations as unknown as Record<string, unknown>[]}
+          loading={status === 'pending'}
+          rowKey="branchRequestId"
+          actions={actions}
+          emptyMessage="Chưa có yêu cầu xác minh nào"
+          loadingMessage="Đang tải danh sách..."
+        />
+      </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        totalCount={pagination.totalCount}
-        pageSize={pagination.pageSize}
-        hasPrevious={pagination.hasPrevious}
-        hasNext={pagination.hasNext}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div data-tour="admin-vendor-verification-pagination">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.pageSize}
+          hasPrevious={pagination.hasPrevious}
+          hasNext={pagination.hasNext}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
 
       {/* Details Modal */}
       <VendorRegistrationDetails
         isOpen={detailsModalOpen}
         onClose={handleCloseDetailsModal}
         registration={selectedRegistration}
+        title={DETAILS_MODAL_TITLE_BY_PENDING_TYPE[pendingType]}
+        onVerify={handleVerifyFromModal}
+        onReject={handleRejectFromModal}
         vendorDetail={
           selectedRegistration
             ? (vendorDetails[selectedRegistration.branch.vendorId] ?? null)

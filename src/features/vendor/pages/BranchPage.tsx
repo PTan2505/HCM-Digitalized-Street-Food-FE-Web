@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Box, IconButton, Tooltip as MuiTooltip } from '@mui/material';
+import { Box, Chip, IconButton, Tooltip as MuiTooltip } from '@mui/material';
 import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -11,7 +11,8 @@ import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import PaymentIcon from '@mui/icons-material/Payment';
@@ -31,6 +32,7 @@ import usePayment from '@features/vendor/hooks/usePayment';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
+import PaymentBenefitsModal from '@features/vendor/components/PaymentBenefitsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
@@ -93,6 +95,9 @@ function BranchPage(): JSX.Element {
     Record<number, string>
   >({});
   const [payingBranchId, setPayingBranchId] = useState<number | null>(null);
+  const [benefitsModalBranch, setBenefitsModalBranch] = useState<Branch | null>(
+    null
+  );
   const requestedManagerIdsRef = useRef<Set<number>>(new Set());
   const [showOnboardingGuide, setShowOnboardingGuide] = useState(() => {
     return (
@@ -213,12 +218,7 @@ function BranchPage(): JSX.Element {
   const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
 
   const canRegisterPackage = (branch: Branch): boolean => {
-    return (
-      !branch.isSubscribed &&
-      branch.isVerified &&
-      branch.licenseStatus === 'Accept' &&
-      hasAnySubscribedBranch
-    );
+    return !branch.isSubscribed;
   };
 
   const handleRegisterPackagePayment = async (
@@ -285,9 +285,25 @@ function BranchPage(): JSX.Element {
     {
       key: 'name',
       label: 'Tên chi nhánh',
-      render: (value: unknown): React.ReactNode => (
-        <Box className="text-table-text-primary font-semibold">
-          {String(value)}
+      render: (value: unknown, row: Branch): React.ReactNode => (
+        <Box className="text-table-text-primary flex items-center gap-1.5 font-semibold">
+          <span>{String(value)}</span>
+          <Box className="flex items-center gap-0.5">
+            <MuiTooltip
+              title={row.isActive ? 'Đang hoạt động' : 'Đã đóng'}
+              placement="top"
+              arrow
+            >
+              {row.isActive ? (
+                <CheckCircleOutlineIcon
+                  className="text-green-500"
+                  sx={{ fontSize: 18 }}
+                />
+              ) : (
+                <BlockIcon className="text-red-500" sx={{ fontSize: 18 }} />
+              )}
+            </MuiTooltip>
+          </Box>
         </Box>
       ),
     },
@@ -350,6 +366,40 @@ function BranchPage(): JSX.Element {
     //   ),
     // },
     {
+      key: 'tierName',
+      label: 'Hạng',
+      style: { width: '120px' },
+      render: (value: unknown): React.ReactNode => {
+        if (typeof value !== 'string') return '-';
+        const tierName = value.toLowerCase();
+        let label = value;
+        let colorClass = 'bg-slate-100 text-slate-800';
+
+        if (tierName === 'warning') {
+          label = 'Cảnh báo';
+          colorClass = 'bg-red-100 text-red-800';
+        } else if (tierName === 'silver') {
+          label = 'Bạc';
+          colorClass = 'bg-gray-200 text-gray-800';
+        } else if (tierName === 'gold') {
+          label = 'Vàng';
+          colorClass = 'bg-yellow-100 text-yellow-800';
+        } else if (tierName === 'diamond') {
+          label = 'Kim cương';
+          colorClass = 'bg-blue-100 text-blue-800';
+        }
+
+        return (
+          <Chip
+            label={label}
+            size="small"
+            className={`${colorClass} font-semibold`}
+          />
+        );
+      },
+    },
+
+    {
       key: 'isSubscribed',
       label: 'Tình trạng đăng ký',
       style: { width: '120px' },
@@ -399,13 +449,24 @@ function BranchPage(): JSX.Element {
       color: 'primary' as const,
     },
     {
-      id: 'delete',
-      label: <DeleteIcon fontSize="small" />,
-      menuLabel: 'Xóa chi nhánh',
+      id: 'close',
+      label: <BlockIcon fontSize="small" />,
+      menuLabel: 'Đóng chi nhánh',
       onClick: (branch: Branch): void => {
         handleDeleteBranch(branch);
       },
-      color: 'error' as const,
+      color: 'warning' as const,
+      show: (branch: Branch): boolean => branch.isActive,
+    },
+    {
+      id: 'activate',
+      label: <CheckCircleOutlineIcon fontSize="small" />,
+      menuLabel: 'Kích hoạt chi nhánh',
+      onClick: (branch: Branch): void => {
+        handleDeleteBranch(branch);
+      },
+      color: 'success' as const,
+      show: (branch: Branch): boolean => !branch.isActive,
     },
     {
       id: 'images',
@@ -442,7 +503,7 @@ function BranchPage(): JSX.Element {
         setDishBranch(branch);
       },
       color: 'primary' as const,
-      show: (branch: Branch): boolean => branch.isSubscribed,
+      // show: (branch: Branch): boolean => branch.isSubscribed,
     },
     {
       id: 'manager',
@@ -452,6 +513,7 @@ function BranchPage(): JSX.Element {
         setManagerBranch(branch);
       },
       color: 'info' as const,
+      show: (branch: Branch): boolean => branch.isSubscribed,
     },
     // {
     //   label: <CampaignIcon fontSize="small" />,
@@ -467,7 +529,7 @@ function BranchPage(): JSX.Element {
       id: 'payment',
       menuLabel: 'Thanh toán đăng ký gói',
       onClick: (branch: Branch): void => {
-        void handleRegisterPackagePayment(branch);
+        setBenefitsModalBranch(branch);
       },
       color: 'success' as const,
       show: (branch: Branch): boolean => canRegisterPackage(branch),
@@ -639,6 +701,17 @@ function BranchPage(): JSX.Element {
         showPayment={true}
       />
 
+      <PaymentBenefitsModal
+        isOpen={benefitsModalBranch !== null}
+        onClose={() => setBenefitsModalBranch(null)}
+        onContinue={() => {
+          if (benefitsModalBranch) {
+            void handleRegisterPackagePayment(benefitsModalBranch);
+          }
+        }}
+        isPaying={payingBranchId !== null}
+      />
+
       <BranchFormModal
         isOpen={formModalOpen}
         onClose={() => setFormModalOpen(false)}
@@ -702,11 +775,18 @@ function BranchPage(): JSX.Element {
         open={openDeleteDialog}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa chi nhánh"
+        title={
+          deletingBranch?.isActive
+            ? 'Xác nhận đóng chi nhánh'
+            : 'Xác nhận kích hoạt chi nhánh'
+        }
+        confirmButtonLabel={deletingBranch?.isActive ? 'Đóng' : 'Kích hoạt'}
+        confirmButtonColor={deletingBranch?.isActive ? 'warning' : 'success'}
         confirmationMessage={
           <>
-            Bạn có chắc chắn muốn xóa chi nhánh &quot;{deletingBranch?.name}
-            &quot;? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn{' '}
+            {deletingBranch?.isActive ? 'đóng' : 'kích hoạt'} chi nhánh &quot;
+            {deletingBranch?.name}&quot;?
           </>
         }
       />

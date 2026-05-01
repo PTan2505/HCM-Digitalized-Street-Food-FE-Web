@@ -35,6 +35,7 @@ interface VoucherFormModalProps {
   campaignStartDate?: string | null;
   campaignEndDate?: string | null;
   campaignName?: string | null;
+  disableCancel?: boolean;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -99,6 +100,7 @@ const makeDefaultEntry = (
 // ── Chuyển VoucherFormData → VoucherCreate ──────────────────────────────────
 const toPayload = (data: VoucherFormData): VoucherCreate => ({
   ...data,
+  isActive: true,
   type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
   startDate: toIsoZulu(data.startDate) ?? '',
   endDate: toIsoZulu(data.endDate) ?? '',
@@ -430,39 +432,6 @@ function VoucherEntry({
             placeholder="Nhập mô tả voucher (không bắt buộc)"
           />
         </div>
-
-        {/* isActive toggle */}
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
-          <div>
-            <p className="text-sm font-semibold text-gray-700">
-              Kích hoạt voucher
-            </p>
-            <p className="text-xs text-gray-500">
-              Voucher sẽ hiển thị và có thể sử dụng ngay
-            </p>
-          </div>
-          <Controller
-            control={control}
-            name={`entries.${index}.isActive`}
-            render={({ field }) => (
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onChange={field.onChange}
-                  className="peer sr-only"
-                />
-                <div
-                  className="peer h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                  style={{
-                    backgroundColor: field.value ? '#8bcf3f' : '#d1d5db',
-                    transition: 'background-color 0.2s',
-                  }}
-                />
-              </label>
-            )}
-          />
-        </div>
       </div>
     </div>
   );
@@ -481,8 +450,10 @@ export default function VoucherFormModal({
   campaignStartDate,
   campaignEndDate,
   campaignName,
+  disableCancel = false,
 }: VoucherFormModalProps): React.JSX.Element | null {
   const openedFromCampaign = fixedCampaignId !== undefined;
+  const isCampaignUpdateMode = openedFromCampaign && voucher !== null;
 
   // ── Derived fixed dates ─────────────────────────────────────────────────
   const fixedStartDate = campaignStartDate
@@ -514,7 +485,6 @@ export default function VoucherFormModal({
   });
 
   const singleWatchedType = singleForm.watch('type');
-  const singleWatchedIsActive = singleForm.watch('isActive');
 
   type DiscountMemory = {
     discountValue: number;
@@ -547,7 +517,7 @@ export default function VoucherFormModal({
   }, [singleWatchedType]);
 
   useEffect(() => {
-    if (!isOpen || openedFromCampaign) return;
+    if (!isOpen || (openedFromCampaign && !isCampaignUpdateMode)) return;
     typeMemory.current = {
       AMOUNT: {
         discountValue:
@@ -604,11 +574,30 @@ export default function VoucherFormModal({
   const handleSingleSubmit = async (data: VoucherFormData): Promise<void> => {
     const payload: VoucherCreate = {
       ...data,
+      isActive: true,
       type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
       expiredDate: null,
       redeemPoint: data.redeemPoint ?? 0,
+      description: data.description ?? null,
+      maxDiscountValue:
+        data.type === 'AMOUNT' ? null : (data.maxDiscountValue ?? null),
+    };
+    await onSubmit(payload);
+  };
+
+  const handleCampaignUpdateSubmit = async (
+    data: VoucherFormData
+  ): Promise<void> => {
+    const payload: VoucherCreate = {
+      ...data,
+      type: data.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+      startDate: toIsoZulu(data.startDate) ?? '',
+      endDate: toIsoZulu(data.endDate) ?? '',
+      expiredDate: null,
+      redeemPoint: data.redeemPoint ?? 0,
+      campaignId: fixedCampaignId ?? voucher?.campaignId ?? null,
       description: data.description ?? null,
       maxDiscountValue:
         data.type === 'AMOUNT' ? null : (data.maxDiscountValue ?? null),
@@ -667,11 +656,11 @@ export default function VoucherFormModal({
   if (!isOpen) return null;
 
   // ── Render: MULTI MODE ─────────────────────────────────────────────────
-  if (openedFromCampaign) {
+  if (openedFromCampaign && !isCampaignUpdateMode) {
     return (
       <Dialog
         open={isOpen}
-        onClose={onClose}
+        onClose={disableCancel ? undefined : onClose}
         maxWidth="md"
         fullWidth
         scroll="paper"
@@ -693,7 +682,7 @@ export default function VoucherFormModal({
           subtitle={campaignName ?? voucher?.name ?? ''}
           icon={<LocalOfferIcon />}
           iconTone="voucher"
-          onClose={onClose}
+          onClose={disableCancel ? undefined : onClose}
         />
 
         <form onSubmit={multiForm.handleSubmit(handleMultiSubmit)}>
@@ -746,9 +735,11 @@ export default function VoucherFormModal({
               {fields.length} voucher sẽ được tạo
             </span>
             <div className="flex gap-2">
-              <Button onClick={onClose} color="inherit">
-                Hủy
-              </Button>
+              {!disableCancel && (
+                <Button onClick={onClose} color="inherit">
+                  Hủy
+                </Button>
+              )}
               <Button
                 type="submit"
                 variant="contained"
@@ -771,7 +762,7 @@ export default function VoucherFormModal({
   return (
     <Dialog
       open={isOpen}
-      onClose={onClose}
+      onClose={disableCancel ? undefined : onClose}
       maxWidth="md"
       fullWidth
       scroll="paper"
@@ -785,14 +776,24 @@ export default function VoucherFormModal({
       }}
     >
       <VendorModalHeader
-        title={voucher ? 'Cập nhật voucher' : 'Thêm voucher mới'}
+        title={
+          isCampaignUpdateMode
+            ? `Cập nhật voucher: ${voucher.name}`
+            : voucher
+              ? 'Cập nhật voucher'
+              : 'Thêm voucher mới'
+        }
         subtitle={voucher?.name ?? ''}
         icon={<LocalOfferIcon />}
         iconTone="voucher"
-        onClose={onClose}
+        onClose={disableCancel ? undefined : onClose}
       />
 
-      <form onSubmit={singleForm.handleSubmit(handleSingleSubmit)}>
+      <form
+        onSubmit={singleForm.handleSubmit(
+          isCampaignUpdateMode ? handleCampaignUpdateSubmit : handleSingleSubmit
+        )}
+      >
         <DialogContent
           dividers
           sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 150px)' }}
@@ -975,7 +976,9 @@ export default function VoucherFormModal({
             {/* ── SECTION 3: Số lượng & Thời hiệu lực ── */}
             <div>
               {sectionLabel('Số lượng & Thời hiệu lực')}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div
+                className={`grid grid-cols-1 gap-4 ${isCampaignUpdateMode ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
+              >
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-gray-700">
                     Số lượng phát hành <span className="text-red-500">*</span>
@@ -1004,6 +1007,51 @@ export default function VoucherFormModal({
                     </p>
                   )}
                 </div>
+
+                {isCampaignUpdateMode && (
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Thời gian hiệu lực
+                    </label>
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5">
+                      <span className="text-xs text-gray-500">Từ</span>
+                      <span
+                        className="rounded-md px-2.5 py-1 text-sm font-semibold"
+                        style={{
+                          background: '#f3fde8',
+                          color: '#4a7a18',
+                          outline: '1px solid #b8e07a',
+                        }}
+                      >
+                        {singleForm.watch('startDate')
+                          ? singleForm.watch('startDate').replace('T', ' ')
+                          : fixedStartDate
+                            ? fixedStartDate.replace('T', ' ')
+                            : '—'}
+                      </span>
+                      <span className="text-xs text-gray-500">đến</span>
+                      <span
+                        className="rounded-md px-2.5 py-1 text-sm font-semibold"
+                        style={{
+                          background: '#f3fde8',
+                          color: '#4a7a18',
+                          outline: '1px solid #b8e07a',
+                        }}
+                      >
+                        {singleForm.watch('endDate')
+                          ? singleForm.watch('endDate').replace('T', ' ')
+                          : fixedEndDate
+                            ? fixedEndDate.replace('T', ' ')
+                            : '—'}
+                      </span>
+                    </div>
+                    <input
+                      type="hidden"
+                      {...singleForm.register('startDate')}
+                    />
+                    <input type="hidden" {...singleForm.register('endDate')} />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1025,42 +1073,38 @@ export default function VoucherFormModal({
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">
-                      Kích hoạt voucher
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Voucher sẽ hiển thị và có thể sử dụng ngay khi được kích
-                      hoạt
-                    </p>
+                {voucher && (
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        Kích hoạt voucher
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Voucher sẽ hiển thị và có thể sử dụng ngay khi được kích
+                        hoạt
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        {...singleForm.register('isActive')}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-[#d1d5db] peer-checked:bg-[#8bcf3f] after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full" />
+                    </label>
                   </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input
-                      type="checkbox"
-                      {...singleForm.register('isActive')}
-                      className="peer sr-only"
-                    />
-                    <div
-                      className="peer h-6 w-11 rounded-full after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"
-                      style={{
-                        backgroundColor: singleWatchedIsActive
-                          ? '#8bcf3f'
-                          : '#d1d5db',
-                        transition: 'background-color 0.2s',
-                      }}
-                    />
-                  </label>
-                </div>
+                )}
               </div>
             </div>
           </div>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 1 }}>
-          <Button onClick={onClose} color="inherit">
-            Hủy
-          </Button>
+          {!disableCancel && (
+            <Button onClick={onClose} color="inherit">
+              Hủy
+            </Button>
+          )}
           <Button
             type="submit"
             variant="contained"

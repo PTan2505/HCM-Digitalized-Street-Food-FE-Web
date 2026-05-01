@@ -10,6 +10,7 @@ import { BranchApi } from '@features/moderator/api/branchApi';
 import { TasteApi } from '@features/admin/api/tasteApi';
 import { PaymentApi } from '@features/vendor/api/paymentApi';
 import { HomeBranchApi } from '@features/home/api/homeBranchApi';
+import { HomeCampaignApi } from '@features/home/api/homeCampaignApi';
 import { DishApi } from '@features/vendor/api/dishApi';
 import { FeedbackApi } from '@features/vendor/api/feedbackApi';
 import { OrderManagementApi } from '@features/manager/api/orderManagementApi';
@@ -26,6 +27,8 @@ import { UserAdminApi } from '@features/admin/api/userAdminApi';
 import { DashboardApi } from '@features/vendor/api/dashboardApi';
 import { AdminDashboardApi } from '@features/admin/api/dashboardApi';
 import { BranchAdminApi } from '@features/admin/api/branchApi';
+import { TierApi } from '@features/admin/api/tierApi';
+import { AdminPaymentApi } from '@features/admin/api/paymentApi';
 import ApiClient from '@lib/api/apiClient';
 
 const axiosService = new AxiosApiService();
@@ -43,6 +46,7 @@ export const axiosApi = {
   tasteApi: new TasteApi(axiosClient),
   paymentApi: new PaymentApi(axiosClient),
   homeBranchApi: new HomeBranchApi(axiosClient),
+  homeCampaignApi: new HomeCampaignApi(axiosClient),
   dishApi: new DishApi(axiosClient),
   feedbackApi: new FeedbackApi(axiosClient),
   orderApi: new OrderApi(axiosClient),
@@ -59,4 +63,6 @@ export const axiosApi = {
   dashboardApi: new DashboardApi(axiosClient),
   adminDashboardApi: new AdminDashboardApi(axiosClient),
   branchAdminApi: new BranchAdminApi(axiosClient),
+  tierApi: new TierApi(axiosClient),
+  adminPaymentApi: new AdminPaymentApi(axiosClient),
 };

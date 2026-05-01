@@ -7,6 +7,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import PaymentIcon from '@mui/icons-material/Payment';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface PaymentBenefitsModalProps {
@@ -148,6 +149,24 @@ export default function PaymentBenefitsModal({
 
                 <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                    <ManageAccountsIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h4"
+                      className="text-table-text-primary mb-1 text-base font-bold"
+                    >
+                      Quản Lý Chi Nhánh
+                    </Typography>
+                    <Typography className="text-table-text-secondary text-sm leading-relaxed">
+                      Được quyền thay đổi và cập nhật người quản lý của chi
+                      nhánh để tối ưu hóa việc vận hành.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+                  <Box className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
                     <MenuBookIcon fontSize="small" />
                   </Box>
                   <Box>
@@ -162,7 +181,7 @@ export default function PaymentBenefitsModal({
                       thực khách dễ dàng tìm kiếm và xem trước món ngon của bạn.
                     </Typography>
                   </Box>
-                </Box>
+                </Box> */}
 
                 {/* <Box className="flex items-start gap-4 rounded-lg border border-gray-200/60 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                   <Box className="mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
@@ -184,26 +203,27 @@ export default function PaymentBenefitsModal({
               </Box>
             </Box>
 
-            {/* Quyền lợi khác */}
-            {/* <Box className="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+            {/* Lưu ý quan trọng */}
+            <Box className="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
               <Typography
                 variant="h3"
                 className="mb-2 flex items-center gap-2 text-sm font-bold tracking-wider text-amber-700 uppercase"
               >
                 <Box
                   component="span"
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200 pb-[1px] text-xs"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200 pb-[1px] text-xs font-bold"
                 >
-                  ✨
+                  !
                 </Box>
-                Và Nhiều Quyền Lợi Khác
+                Lưu ý về thời hạn gói
               </Typography>
               <Typography className="pl-7 text-sm leading-relaxed font-medium text-amber-800/80">
-                Hiển thị huy hiệu đối tác chính thức, ưu tiên gợi ý trên bản đồ,
-                hỗ trợ kỹ thuật CSKH 24/7 và các quyền lợi đặc quyền cập nhật
-                liên tục.
+                Gói đăng ký có thời hạn là{' '}
+                <span className="font-bold text-amber-900">30 ngày</span>. Hệ
+                thống sẽ tự động hiển thị cảnh báo đối với những chi nhánh có
+                gói đăng ký sắp hết hạn.
               </Typography>
-            </Box> */}
+            </Box>
           </Box>
         </Box>
 

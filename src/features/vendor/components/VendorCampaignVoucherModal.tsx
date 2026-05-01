@@ -5,7 +5,6 @@ import {
   Add as AddIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import Table from '@features/vendor/components/Table';
@@ -124,16 +123,15 @@ export default function VendorCampaignVoucherModal({
         await onCreateVoucher(items);
       }
       handleCloseForm();
-      void fetchVouchers();
     } catch (error) {
       console.error('Failed to save voucher', error);
     }
   };
 
-  const handleDelete = (voucher: Voucher): void => {
-    setDeletingVoucher(voucher);
-    setOpenDeleteDialog(true);
-  };
+  // const handleDelete = (voucher: Voucher): void => {
+  //   setDeletingVoucher(voucher);
+  //   setOpenDeleteDialog(true);
+  // };
 
   const handleConfirmDelete = async (): Promise<void> => {
     if (deletingVoucher) {
@@ -262,7 +260,7 @@ export default function VendorCampaignVoucherModal({
           >
             <EditIcon fontSize="small" />
           </Button>
-          <Button
+          {/* <Button
             size="small"
             color="error"
             variant="outlined"
@@ -272,7 +270,7 @@ export default function VendorCampaignVoucherModal({
             }}
           >
             <DeleteIcon fontSize="small" />
-          </Button>
+          </Button> */}
         </Box>
       ),
     },

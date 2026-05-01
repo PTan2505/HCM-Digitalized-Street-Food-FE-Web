@@ -14,6 +14,9 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import { useNotificationContext } from '@contexts/NotificationContext';
 
 interface NotificationBellProps {
@@ -238,21 +241,45 @@ export default function NotificationBell({
                       ? '#fff'
                       : notification.type === 'NewFeedback'
                         ? `color-mix(in srgb, ${theme.palette.warning.main} 8%, transparent)`
-                        : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
+                        : notification.type === 'BranchVerificationStatus'
+                          ? `color-mix(in srgb, ${theme.palette.info.main} 8%, transparent)`
+                          : notification.type === 'SystemCampaignCreated'
+                            ? `color-mix(in srgb, ${theme.palette.success.main} 8%, transparent)`
+                            : notification.type === 'CampaignCancelledRefund'
+                              ? `color-mix(in srgb, ${theme.palette.error.main} 8%, transparent)`
+                              : 'color-mix(in srgb, var(--color-primary-500) 8%, transparent)',
                     borderLeft: notification.isRead
                       ? '3px solid transparent'
                       : notification.type === 'NewFeedback'
                         ? `3px solid ${theme.palette.warning.main}`
-                        : '3px solid var(--color-primary-500)',
+                        : notification.type === 'BranchVerificationStatus'
+                          ? `3px solid ${theme.palette.info.main}`
+                          : notification.type === 'SystemCampaignCreated'
+                            ? `3px solid ${theme.palette.success.main}`
+                            : notification.type === 'CampaignCancelledRefund'
+                              ? `3px solid ${theme.palette.error.main}`
+                              : '3px solid var(--color-primary-500)',
                     transition: 'background 0.18s ease',
                     '&:hover': {
                       background: notification.isRead
                         ? notification.type === 'NewFeedback'
                           ? `color-mix(in srgb, ${theme.palette.warning.main} 6%, transparent)`
-                          : 'var(--color-primary-50)'
+                          : notification.type === 'BranchVerificationStatus'
+                            ? `color-mix(in srgb, ${theme.palette.info.main} 6%, transparent)`
+                            : notification.type === 'SystemCampaignCreated'
+                              ? `color-mix(in srgb, ${theme.palette.success.main} 6%, transparent)`
+                              : notification.type === 'CampaignCancelledRefund'
+                                ? `color-mix(in srgb, ${theme.palette.error.main} 6%, transparent)`
+                                : 'var(--color-primary-50)'
                         : notification.type === 'NewFeedback'
                           ? `color-mix(in srgb, ${theme.palette.warning.main} 15%, transparent)`
-                          : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
+                          : notification.type === 'BranchVerificationStatus'
+                            ? `color-mix(in srgb, ${theme.palette.info.main} 15%, transparent)`
+                            : notification.type === 'SystemCampaignCreated'
+                              ? `color-mix(in srgb, ${theme.palette.success.main} 15%, transparent)`
+                              : notification.type === 'CampaignCancelledRefund'
+                                ? `color-mix(in srgb, ${theme.palette.error.main} 15%, transparent)`
+                                : 'color-mix(in srgb, var(--color-primary-500) 15%, transparent)',
                     },
                   })}
                 >
@@ -296,6 +323,30 @@ export default function NotificationBell({
                           color="warning"
                         />
                       )}
+                      {notification.type === 'BranchVerificationStatus' && (
+                        <Chip
+                          icon={<FactCheckIcon />}
+                          label="Trạng thái xác minh chi nhánh"
+                          variant="outlined"
+                          color="info"
+                        />
+                      )}
+                      {notification.type === 'SystemCampaignCreated' && (
+                        <Chip
+                          icon={<CampaignIcon />}
+                          label="Chiến dịch hệ thống mới"
+                          variant="outlined"
+                          color="success"
+                        />
+                      )}
+                      {notification.type === 'CampaignCancelledRefund' && (
+                        <Chip
+                          icon={<MoneyOffIcon />}
+                          label="Hoàn tiền chiến dịch"
+                          variant="outlined"
+                          color="error"
+                        />
+                      )}
                     </Box>
                     {!notification.isRead && (
                       <Box
@@ -308,11 +359,25 @@ export default function NotificationBell({
                           background:
                             notification.type === 'NewFeedback'
                               ? theme.palette.warning.main
-                              : 'var(--color-primary-500)',
+                              : notification.type === 'BranchVerificationStatus'
+                                ? theme.palette.info.main
+                                : notification.type === 'SystemCampaignCreated'
+                                  ? theme.palette.success.main
+                                  : notification.type ===
+                                      'CampaignCancelledRefund'
+                                    ? theme.palette.error.main
+                                    : 'var(--color-primary-500)',
                           boxShadow:
                             notification.type === 'NewFeedback'
                               ? `0 0 0 2px color-mix(in srgb, ${theme.palette.warning.main} 35%, transparent)`
-                              : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
+                              : notification.type === 'BranchVerificationStatus'
+                                ? `0 0 0 2px color-mix(in srgb, ${theme.palette.info.main} 35%, transparent)`
+                                : notification.type === 'SystemCampaignCreated'
+                                  ? `0 0 0 2px color-mix(in srgb, ${theme.palette.success.main} 35%, transparent)`
+                                  : notification.type ===
+                                      'CampaignCancelledRefund'
+                                    ? `0 0 0 2px color-mix(in srgb, ${theme.palette.error.main} 35%, transparent)`
+                                    : '0 0 0 2px color-mix(in srgb, var(--color-primary-500) 35%, transparent)',
                         })}
                       />
                     )}
@@ -326,10 +391,6 @@ export default function NotificationBell({
                       width: '100%',
                       fontSize: '0.78rem',
                       color: '#6b7280',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
                       whiteSpace: 'normal',
                       lineHeight: 1.5,
                     }}

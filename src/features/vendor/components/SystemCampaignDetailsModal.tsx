@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Chip,
-  Snackbar,
-  Alert,
-} from '@mui/material';
+import { Box, Button, CircularProgress, Chip } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import {
   CalendarToday as CalendarTodayIcon,
@@ -17,8 +10,10 @@ import type { CampaignDetailsResponse } from '@features/vendor/types/campaign';
 import type { Branch } from '@features/vendor/types/vendor';
 import useVendorCampaign from '@features/vendor/hooks/useVendorCampaign';
 import useVoucher from '@features/admin/hooks/useVoucher';
+import useTier from '@features/admin/hooks/useTier';
 import type { Voucher } from '@custom-types/voucher';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
+import type { Tier } from '@features/admin/types/tier';
 
 interface SystemCampaignDetailsModalProps {
   isOpen: boolean;
@@ -125,6 +120,7 @@ export default function SystemCampaignDetailsModal({
   const { onGetSystemCampaignDetails, onJoinBranchToSystemCampaign } =
     useVendorCampaign();
   const { onGetVouchersByCampaignId } = useVoucher();
+  const { onGetAllTiers } = useTier();
 
   const [details, setDetails] = useState<CampaignDetailsResponse | null>(null);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
@@ -132,7 +128,8 @@ export default function SystemCampaignDetailsModal({
   const [error, setError] = useState<string | null>(null);
   const [selectedBranchIds, setSelectedBranchIds] = useState<number[]>([]);
   const [isJoining, setIsJoining] = useState(false);
-  const [joinError, setJoinError] = useState<string | null>(null);
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [isLoadingTiers, setIsLoadingTiers] = useState(false);
 
   useEffect(() => {
     if (!isOpen || campaignId === null) return;
@@ -141,7 +138,6 @@ export default function SystemCampaignDetailsModal({
       setIsLoading(true);
       setError(null);
       setSelectedBranchIds([]);
-      setJoinError(null);
       setVouchers([]);
       try {
         const [campaignResponse, voucherResponse] = await Promise.all([
@@ -166,6 +162,42 @@ export default function SystemCampaignDetailsModal({
     onGetVouchersByCampaignId,
   ]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setTiers([]);
+      setIsLoadingTiers(false);
+      return;
+    }
+
+    const loadTiers = async (): Promise<void> => {
+      setIsLoadingTiers(true);
+      try {
+        const response = await onGetAllTiers();
+        setTiers(response);
+      } catch (loadError) {
+        console.error('Failed to fetch tiers', loadError);
+        setTiers([]);
+      } finally {
+        setIsLoadingTiers(false);
+      }
+    };
+
+    void loadTiers();
+  }, [isOpen, onGetAllTiers]);
+
+  const requiredTierLabel = useMemo((): string => {
+    if (!details?.requiredTierId) {
+      return 'Không yêu cầu';
+    }
+
+    if (isLoadingTiers) {
+      return 'Đang tải...';
+    }
+
+    const tier = tiers.find((item) => item.tierId === details.requiredTierId);
+    return tier?.name ?? `#${details.requiredTierId}`;
+  }, [details?.requiredTierId, isLoadingTiers, tiers]);
+
   const joinableBranches = useMemo(() => {
     if (!details) return [] as Branch[];
     const myBranchSet = new Set(vendorBranchIds);
@@ -185,7 +217,6 @@ export default function SystemCampaignDetailsModal({
   const handleJoin = async (): Promise<void> => {
     if (selectedBranchIds.length === 0 || campaignId === null) return;
     setIsJoining(true);
-    setJoinError(null);
     try {
       const response = await onJoinBranchToSystemCampaign(
         campaignId,
@@ -195,11 +226,9 @@ export default function SystemCampaignDetailsModal({
         window.location.href = response.payment.paymentUrl;
       } else if (response.branches && response.branches.length > 0) {
         onClose();
-      } else {
-        setJoinError('Không thể tạo link thanh toán. Vui lòng thử lại.');
       }
-    } catch {
-      setJoinError('Đã xảy ra lỗi khi tham gia chiến dịch.');
+    } catch (joinErr) {
+      console.error(joinErr);
     } finally {
       setIsJoining(false);
     }
@@ -333,7 +362,10 @@ export default function SystemCampaignDetailsModal({
             )}
           </div>
           {joinableBranches.length === 0 ? (
-            <p className="text-sm text-gray-500">Không có chi nhánh phù hợp.</p>
+            <p className="text-sm text-gray-500">
+              Không có chi nhánh đạt yêu cầu từ hạng {requiredTierLabel} trở lên
+              để tham gia.
+            </p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {joinableBranches.map((branch) => {
@@ -404,18 +436,6 @@ export default function SystemCampaignDetailsModal({
           </div>
         </div>
       </div>
-
-      <Snackbar
-        open={joinError !== null}
-        autoHideDuration={4000}
-        onClose={() => setJoinError(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        sx={{ zIndex: 1600 }}
-      >
-        <Alert severity="error" onClose={() => setJoinError(null)}>
-          {joinError}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

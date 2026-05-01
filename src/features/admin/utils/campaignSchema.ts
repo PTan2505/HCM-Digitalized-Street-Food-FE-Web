@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const CampaignSchema = z
   .object({
     name: z.string().min(1, 'Tên chiến dịch không được để trống'),
-    description: z.string().nullable(),
+    description: z
+      .string()
+      .trim()
+      .min(1, 'Mô tả chiến dịch không được để trống'),
     targetSegment: z.string().nullable(),
     registrationStartDate: z
       .string()
@@ -11,9 +14,18 @@ export const CampaignSchema = z
     registrationEndDate: z
       .string()
       .min(1, 'Ngày kết thúc đăng ký không được để trống'),
+    requiredTierId: z.number().int().positive().nullable().optional(),
+    expectedBranchJoin: z
+      .number()
+      .int()
+      .min(0, 'Số lượng chi nhánh không được nhỏ hơn 0')
+      .nullable(),
+    joinFee: z
+      .number()
+      .int()
+      .min(10000, 'Phí tham gia không được nhỏ hơn 10.000 VNĐ'),
     startDate: z.string().min(1, 'Ngày bắt đầu không được để trống'),
     endDate: z.string().min(1, 'Ngày kết thúc không được để trống'),
-    isActive: z.boolean(),
   })
   .superRefine((data, ctx) => {
     const {

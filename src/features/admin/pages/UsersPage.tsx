@@ -452,19 +452,32 @@ export default function UsersPage(): JSX.Element {
       />
 
       <div
-        className="mb-6 flex items-start gap-2"
+        className="mb-6 flex items-center justify-between"
         data-tour="users-page-header"
       >
-        <h1 className="text-2xl font-bold">{pageTitle}</h1>
-        <button
-          type="button"
-          onClick={startUsersTour}
-          aria-label="Mở hướng dẫn quản lý người dùng"
-          title="Hướng dẫn"
-          className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
-        >
-          <HelpOutlineIcon sx={{ fontSize: 18 }} />
-        </button>
+        <div>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              {pageTitle}
+            </h1>
+            <button
+              type="button"
+              onClick={startUsersTour}
+              aria-label="Mở hướng dẫn quản lý người dùng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+          <p className="text-table-text-secondary text-sm">
+            {roleFilter === 'vendor'
+              ? 'Quản lý thông tin và trạng thái của các đối tác'
+              : roleFilter === 'system'
+                ? 'Quản lý tài khoản quản trị hệ thống'
+                : 'Quản lý thông tin, hạng và trạng thái của khách hàng'}
+          </p>
+        </div>
       </div>
 
       <Box

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
+  Add as AddIcon,
   Delete as DeleteIcon,
   Campaign as CampaignIcon,
 } from '@mui/icons-material';
@@ -22,7 +23,7 @@ import type { Branch } from '@features/vendor/types/vendor';
 import { VendorCampaignSchema } from '@features/vendor/utils/campaignSchema';
 import type { VendorCampaignFormData } from '@features/vendor/utils/campaignSchema';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
-import useVoucher from '@features/vendor/hooks/useVoucher';
+import type { VoucherCreate } from '@custom-types/voucher';
 
 interface VendorCampaignFormModalProps {
   isOpen: boolean;
@@ -30,13 +31,28 @@ interface VendorCampaignFormModalProps {
   onSubmit: (
     data: VendorCampaignFormData,
     imageFile: File | null,
-    isImageRemoved?: boolean
+    isImageRemoved?: boolean,
+    vouchers?: VoucherCreate[]
   ) => Promise<void>;
   campaign: VendorCampaign | null;
   branches?: Branch[];
   hideApplyScope?: boolean;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
 }
+
+type InlineVoucherForm = {
+  name: string;
+  voucherCode: string;
+  type: 'AMOUNT' | 'PERCENT';
+  description: string;
+  discountValue: number;
+  maxDiscountValue: number | null;
+  minAmountRequired: number;
+  quantity: number;
+  isActive: boolean;
+};
+
+type InlineVoucherErrors = Partial<Record<keyof InlineVoucherForm, string>>;
 
 /** Get the current datetime in VN timezone formatted as YYYY-MM-DDTHH:mm */
 const getTodayMinVN = (): string => {
@@ -87,6 +103,28 @@ const toIsoZulu = (localStr: string | null): string | null => {
   return date.toISOString();
 };
 
+const formatNumberWithDots = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseNumberInput = (value: string): number => {
+  const normalized = value.replace(/\./g, '').replace(/[^0-9]/g, '');
+  return normalized === '' ? 0 : Number(normalized);
+};
+
+const defaultInlineVoucher = (): InlineVoucherForm => ({
+  name: '',
+  voucherCode: '',
+  type: 'AMOUNT',
+  description: '',
+  discountValue: 0,
+  maxDiscountValue: null,
+  minAmountRequired: 0,
+  quantity: 0,
+  isActive: true,
+});
+
 export default function VendorCampaignFormModal({
   isOpen,
   onClose,
@@ -97,12 +135,12 @@ export default function VendorCampaignFormModal({
   status,
 }: VendorCampaignFormModalProps): React.JSX.Element | null {
   const isEditMode = campaign !== null;
-  const { onGetVouchersByCampaignId } = useVoucher();
 
   const subscribedBranches = useMemo(
     () =>
       branches.filter(
-        (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+        // (branch) => branch.isSubscribed && branch.tierName !== 'Warning'
+        (branch) => branch.isSubscribed
       ),
     [branches]
   );
@@ -122,7 +160,6 @@ export default function VendorCampaignFormModal({
       targetSegment: '',
       startDate: '',
       endDate: '',
-      isActive: true,
       branchIds: null,
     },
   });
@@ -133,8 +170,13 @@ export default function VendorCampaignFormModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
-  const [hasExistingVouchers, setHasExistingVouchers] = useState(false);
-  const [isCheckingVouchers, setIsCheckingVouchers] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [inlineVouchers, setInlineVouchers] = useState<InlineVoucherForm[]>([
+    defaultInlineVoucher(),
+  ]);
+  const [inlineVoucherErrors, setInlineVoucherErrors] = useState<
+    InlineVoucherErrors[]
+  >([{}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -146,7 +188,6 @@ export default function VendorCampaignFormModal({
           targetSegment: campaign.targetSegment ?? '',
           startDate: toLocalDatetimeValue(campaign.startDate),
           endDate: toLocalDatetimeValue(campaign.endDate),
-          isActive: campaign.isActive,
           branchIds: campaign.branchIds ?? null,
         });
       } else {
@@ -156,13 +197,15 @@ export default function VendorCampaignFormModal({
           targetSegment: '',
           startDate: '',
           endDate: '',
-          isActive: true,
           branchIds: null,
         });
       }
       setImageFile(null);
       setImagePreviewUrl(null);
       setIsImageRemoved(false);
+      setImageError(null);
+      setInlineVouchers([defaultInlineVoucher()]);
+      setInlineVoucherErrors([{}]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -177,42 +220,6 @@ export default function VendorCampaignFormModal({
     };
   }, [imagePreviewUrl]);
 
-  useEffect(() => {
-    if (!isOpen || !campaign) {
-      setHasExistingVouchers(false);
-      setIsCheckingVouchers(false);
-      return;
-    }
-
-    let isCancelled = false;
-
-    const checkVoucherExists = async (): Promise<void> => {
-      setIsCheckingVouchers(true);
-
-      try {
-        const vouchers = await onGetVouchersByCampaignId(campaign.campaignId);
-        if (!isCancelled) {
-          setHasExistingVouchers(vouchers.length > 0);
-        }
-      } catch {
-        if (!isCancelled) {
-          // Fallback safe mode: allow editing when voucher check fails.
-          setHasExistingVouchers(false);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsCheckingVouchers(false);
-        }
-      }
-    };
-
-    void checkVoucherExists();
-
-    return (): void => {
-      isCancelled = true;
-    };
-  }, [isOpen, campaign, onGetVouchersByCampaignId]);
-
   // Cascade-reset only applies in CREATE mode (edit mode allows free editing)
   useEffect(() => {
     if (campaign) return;
@@ -226,13 +233,75 @@ export default function VendorCampaignFormModal({
   const handleFormSubmit = async (
     data: VendorCampaignFormData
   ): Promise<void> => {
+    const hasBannerImage =
+      imageFile !== null || (!isImageRemoved && Boolean(campaign?.imageUrl));
+    if (!hasBannerImage) {
+      setImageError('Ảnh banner chiến dịch không được để trống');
+      return;
+    }
+    setImageError(null);
+
+    let vouchers: VoucherCreate[] | undefined;
+
+    if (!isEditMode) {
+      const nextErrors: InlineVoucherErrors[] = inlineVouchers.map(
+        (voucher) => {
+          const voucherErrors: InlineVoucherErrors = {};
+
+          if (voucher.name.trim() === '') {
+            voucherErrors.name = 'Tên voucher không được để trống';
+          }
+          if (voucher.voucherCode.trim() === '') {
+            voucherErrors.voucherCode = 'Mã voucher không được để trống';
+          }
+          if (voucher.discountValue < 0) {
+            voucherErrors.discountValue = 'Giá trị giảm phải >= 0';
+          }
+          if (voucher.type === 'PERCENT' && voucher.discountValue > 100) {
+            voucherErrors.discountValue = 'Giảm theo % không được vượt quá 100';
+          }
+          if (voucher.minAmountRequired < 0) {
+            voucherErrors.minAmountRequired = 'Đơn tối thiểu phải >= 0';
+          }
+          if (voucher.quantity < 0) {
+            voucherErrors.quantity = 'Số lượng phải >= 0';
+          }
+
+          return voucherErrors;
+        }
+      );
+
+      setInlineVoucherErrors(nextErrors);
+
+      if (nextErrors.some((error) => Object.keys(error).length > 0)) {
+        return;
+      }
+
+      vouchers = inlineVouchers.map((voucher) => ({
+        name: voucher.name.trim(),
+        voucherCode: voucher.voucherCode.trim(),
+        type: voucher.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+        description: voucher.description.trim() || null,
+        discountValue: voucher.discountValue,
+        maxDiscountValue:
+          voucher.type === 'PERCENT' ? voucher.maxDiscountValue : null,
+        minAmountRequired: voucher.minAmountRequired,
+        quantity: voucher.quantity,
+        redeemPoint: 0,
+        startDate: toIsoZulu(data.startDate) ?? '',
+        endDate: toIsoZulu(data.endDate),
+        expiredDate: null,
+        isActive: true,
+        campaignId: null,
+      }));
+    }
+
     const payload: VendorCampaignFormData = {
       ...data,
       startDate: toIsoZulu(data.startDate) ?? '',
       endDate: toIsoZulu(data.endDate) ?? '',
-      isActive: data.isActive,
     };
-    await onSubmit(payload, imageFile, isImageRemoved);
+    await onSubmit(payload, imageFile, isImageRemoved, vouchers);
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -245,6 +314,7 @@ export default function VendorCampaignFormModal({
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
     setIsImageRemoved(false);
+    setImageError(null);
   };
 
   const handleClearSelectedImage = (): void => {
@@ -254,6 +324,7 @@ export default function VendorCampaignFormModal({
     setImageFile(null);
     setImagePreviewUrl(null);
     setIsImageRemoved(true);
+    setImageError('Ảnh banner chiến dịch không được để trống');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -282,9 +353,26 @@ export default function VendorCampaignFormModal({
     </p>
   );
 
-  const isCampaignActiveLocked = isEditMode && campaign?.isActive === true;
-  const isCampaignScheduleLocked =
-    isEditMode && (isCheckingVouchers || hasExistingVouchers);
+  const updateInlineVoucher = (
+    index: number,
+    updater: (voucher: InlineVoucherForm) => InlineVoucherForm
+  ): void => {
+    setInlineVouchers((prev) =>
+      prev.map((voucher, voucherIndex) =>
+        voucherIndex === index ? updater(voucher) : voucher
+      )
+    );
+  };
+
+  const addInlineVoucher = (): void => {
+    setInlineVouchers((prev) => [...prev, defaultInlineVoucher()]);
+    setInlineVoucherErrors((prev) => [...prev, {}]);
+  };
+
+  const removeInlineVoucher = (index: number): void => {
+    setInlineVouchers((prev) => prev.filter((_, i) => i !== index));
+    setInlineVoucherErrors((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <Dialog
@@ -318,168 +406,164 @@ export default function VendorCampaignFormModal({
           }}
         >
           <div className="flex flex-col gap-6">
-            {isCampaignActiveLocked && (
-              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                Chiến dịch đang hoạt động nên không thể chỉnh sửa.
-              </p>
-            )}
+            {/* ── SECTION 1: Thông tin cơ bản ── */}
+            <div>
+              {sectionLabel('Thông tin cơ bản')}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Tên chiến dịch <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register('name')}
+                    className={inputClass(!!errors.name)}
+                    placeholder="Nhập tên chiến dịch"
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
 
-            <input
-              type="checkbox"
-              className="hidden"
-              {...register('isActive')}
-            />
+                {/* <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Phân khúc mục tiêu
+                  </label>
+                  <input
+                    {...register('targetSegment')}
+                    className={inputClass(false)}
+                    placeholder="VD: Học sinh, Sinh viên"
+                  />
+                </div> */}
+              </div>
+            </div>
 
-            <fieldset
-              className="m-0 min-w-0 border-0 p-0"
-              disabled={isCampaignActiveLocked}
-            >
-              {/* ── SECTION 1: Thông tin cơ bản ── */}
-              <div>
-                {sectionLabel('Thông tin cơ bản')}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Tên chiến dịch <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      {...register('name')}
-                      className={inputClass(!!errors.name)}
-                      placeholder="Nhập tên chiến dịch"
-                    />
-                    {errors.name && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.name.message}
+            <hr className="border-gray-100" />
+
+            {/* ── SECTION 2: Nội dung & Hình ảnh ── */}
+            <div>
+              {sectionLabel('Nội dung & Hình ảnh')}
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Mô tả <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    {...register('description')}
+                    rows={3}
+                    className={`${inputClass(!!errors.description)} resize-none`}
+                    placeholder="Nhập mô tả chiến dịch"
+                  />
+                  {errors.description && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.description.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Ảnh banner chiến dịch{' '}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    {displayImageUrl ? (
+                      <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition-colors">
+                        <img
+                          src={displayImageUrl}
+                          alt="Campaign"
+                          className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
+                        />
+
+                        <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
+                          <Tooltip title="Đổi ảnh khác" arrow>
+                            <IconButton
+                              onClick={() => fileInputRef.current?.click()}
+                              sx={{
+                                bgcolor: 'rgba(255,255,255,0.95)',
+                                color: 'var(--color-primary-600)',
+                                '&:hover': {
+                                  bgcolor: 'white',
+                                  transform: 'scale(1.1)',
+                                },
+                                transition: 'all 0.2s',
+                                width: 44,
+                                height: 44,
+                              }}
+                            >
+                              <AddPhotoAlternateIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Xoá ảnh hiện tại" arrow>
+                            <IconButton
+                              onClick={handleClearSelectedImage}
+                              sx={{
+                                bgcolor: 'rgba(255,255,255,0.95)',
+                                color: '#ef4444',
+                                '&:hover': {
+                                  bgcolor: '#fee2e2',
+                                  color: '#b91c1c',
+                                  transform: 'scale(1.1)',
+                                },
+                                transition: 'all 0.2s',
+                                width: 44,
+                                height: 44,
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <div className="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors hover:group-hover:text-amber-600">
+                          <AddPhotoAlternateIcon fontSize="medium" />
+                        </div>
+                        <div className="mt-3 text-center">
+                          <p className="text-sm font-semibold text-gray-700">
+                            Nhấn để tải ảnh lên
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Kích thước khuyên dùng: 1200x675 (16:9)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-center text-xs text-gray-500">
+                      Định dạng hỗ trợ: JPG, PNG, WEBP.
+                    </p>
+                    {imageError && (
+                      <p className="text-center text-xs text-red-500">
+                        {imageError}
                       </p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Phân khúc mục tiêu
-                    </label>
                     <input
-                      {...register('targetSegment')}
-                      className={inputClass(false)}
-                      placeholder="VD: Học sinh, Sinh viên"
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
                     />
                   </div>
                 </div>
               </div>
+            </div>
 
-              <hr className="border-gray-100" />
+            <hr className="border-gray-100" />
 
-              {/* ── SECTION 2: Nội dung & Hình ảnh ── */}
-              <div>
-                {sectionLabel('Nội dung & Hình ảnh')}
-                <div className="flex flex-col gap-4">
+            {/* ── SECTION 3: Chi nhánh áp dụng ── */}
+            {!isEditMode &&
+              !hideApplyScope &&
+              subscribedBranches.length > 0 && (
+                <>
                   <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Mô tả
-                    </label>
-                    <textarea
-                      {...register('description')}
-                      rows={3}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
-                      placeholder="Nhập mô tả chiến dịch"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                      Ảnh banner chiến dịch
-                    </label>
-                    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                      {displayImageUrl ? (
-                        <div className="group hover:border-primary-400 relative flex min-h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm transition-colors">
-                          <img
-                            src={displayImageUrl}
-                            alt="Campaign"
-                            className="h-40 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.02] group-hover:brightness-95"
-                          />
-
-                          <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[1px] transition-all duration-300 group-hover:opacity-100">
-                            <Tooltip title="Đổi ảnh khác" arrow>
-                              <IconButton
-                                onClick={() => fileInputRef.current?.click()}
-                                sx={{
-                                  bgcolor: 'rgba(255,255,255,0.95)',
-                                  color: 'var(--color-primary-600)',
-                                  '&:hover': {
-                                    bgcolor: 'white',
-                                    transform: 'scale(1.1)',
-                                  },
-                                  transition: 'all 0.2s',
-                                  width: 44,
-                                  height: 44,
-                                }}
-                              >
-                                <AddPhotoAlternateIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Xoá ảnh hiện tại" arrow>
-                              <IconButton
-                                onClick={handleClearSelectedImage}
-                                sx={{
-                                  bgcolor: 'rgba(255,255,255,0.95)',
-                                  color: '#ef4444',
-                                  '&:hover': {
-                                    bgcolor: '#fee2e2',
-                                    color: '#b91c1c',
-                                    transform: 'scale(1.1)',
-                                  },
-                                  transition: 'all 0.2s',
-                                  width: 44,
-                                  height: 44,
-                                }}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className="hover:border-primary-400 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50/50"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <div className="flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 p-4 text-gray-400 shadow-sm transition-colors hover:group-hover:text-amber-600">
-                            <AddPhotoAlternateIcon fontSize="medium" />
-                          </div>
-                          <div className="mt-3 text-center">
-                            <p className="text-sm font-semibold text-gray-700">
-                              Nhấn để tải ảnh lên
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Kích thước khuyên dùng: 1200x675 (16:9)
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      <p className="text-center text-xs text-gray-500">
-                        Định dạng hỗ trợ: JPG, PNG, WEBP.
-                      </p>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <hr className="border-gray-100" />
-
-              {/* ── SECTION 3: Chi nhánh áp dụng ── */}
-              {!isEditMode &&
-                !hideApplyScope &&
-                subscribedBranches.length > 0 && (
-                  <>
-                    <div>
-                      {sectionLabel('Chi nhánh áp dụng')}
+                    {sectionLabel('Chi nhánh áp dụng')}
+                    <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 sm:p-5">
                       <div className="mb-2 flex items-center justify-between">
                         <p className="text-xs font-normal text-red-500 italic">
                           (Phải chọn ít nhất 1 chi nhánh)
@@ -561,60 +645,348 @@ export default function VendorCampaignFormModal({
                         </p>
                       )}
                     </div>
-                    <hr className="border-gray-100" />
-                  </>
-                )}
-
-              {/* ── SECTION 4: Thời gian chiến dịch ── */}
-              <div>
-                {sectionLabel('Thời gian chiến dịch')}
-                {isEditMode && hasExistingVouchers && (
-                  <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                    Campaign đã có voucher nên không thể chỉnh sửa thời gian tổ
-                    chức.
-                  </p>
-                )}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Ngày bắt đầu chiến dịch{' '}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="datetime-local"
-                      {...register('startDate')}
-                      min={getTodayMinVN()}
-                      disabled={isCampaignScheduleLocked}
-                      className={`${inputClass(!!errors.startDate)} ${isCampaignScheduleLocked ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
-                    />
-                    {errors.startDate && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.startDate.message}
-                      </p>
-                    )}
                   </div>
+                  <hr className="border-gray-100" />
+                </>
+              )}
 
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-gray-700">
-                      Ngày kết thúc chiến dịch{' '}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="datetime-local"
-                      {...register('endDate')}
-                      disabled={!startDate || isCampaignScheduleLocked}
-                      min={startDate || getTodayMinVN()}
-                      className={`${inputClass(!!errors.endDate)} ${!startDate || isCampaignScheduleLocked ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
-                    />
-                    {errors.endDate && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.endDate.message}
-                      </p>
-                    )}
-                  </div>
+            {/* ── SECTION 4: Thời gian chiến dịch ── */}
+            <div>
+              {sectionLabel('Thời gian chiến dịch')}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Ngày bắt đầu chiến dịch{' '}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    {...register('startDate')}
+                    min={
+                      isEditMode &&
+                      campaign?.startDate &&
+                      toLocalDatetimeValue(campaign.startDate) < getTodayMinVN()
+                        ? toLocalDatetimeValue(campaign.startDate)
+                        : getTodayMinVN()
+                    }
+                    className={inputClass(!!errors.startDate)}
+                  />
+                  {errors.startDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.startDate.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Ngày kết thúc chiến dịch{' '}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    {...register('endDate')}
+                    disabled={!startDate}
+                    min={startDate || getTodayMinVN()}
+                    className={`${inputClass(!!errors.endDate)} ${!startDate ? 'cursor-not-allowed bg-gray-100 text-gray-500' : ''}`}
+                  />
+                  {errors.endDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.endDate.message}
+                    </p>
+                  )}
                 </div>
               </div>
-            </fieldset>
+            </div>
+
+            {!isEditMode && (
+              <>
+                <hr className="border-gray-100" />
+
+                {/* ── SECTION 5: Voucher khởi tạo cùng campaign ── */}
+                <div>
+                  {sectionLabel('Voucher khởi tạo cùng chiến dịch')}
+
+                  <div className="space-y-4">
+                    {inlineVouchers.map((voucher, index) => {
+                      const voucherErrors = inlineVoucherErrors[index] ?? {};
+                      const canRemove = inlineVouchers.length > 1;
+
+                      return (
+                        <div
+                          key={index}
+                          className="rounded-xl border border-gray-100 bg-gray-50/60 p-4"
+                        >
+                          <div className="mb-4 flex items-center justify-between">
+                            <p className="text-sm font-semibold text-gray-700">
+                              Voucher {index + 1}
+                            </p>
+                            {canRemove && (
+                              <button
+                                type="button"
+                                onClick={() => removeInlineVoucher(index)}
+                                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                              >
+                                <DeleteIcon sx={{ fontSize: 14 }} />
+                                Xóa
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                Tên voucher{' '}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                value={voucher.name}
+                                onChange={(event) => {
+                                  updateInlineVoucher(index, (prev) => ({
+                                    ...prev,
+                                    name: event.target.value,
+                                  }));
+                                }}
+                                className={inputClass(!!voucherErrors.name)}
+                                placeholder="Nhập tên voucher"
+                              />
+                              {voucherErrors.name && (
+                                <p className="mt-1 text-xs text-red-500">
+                                  {voucherErrors.name}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                Mã voucher{' '}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                value={voucher.voucherCode}
+                                onChange={(event) => {
+                                  updateInlineVoucher(index, (prev) => ({
+                                    ...prev,
+                                    voucherCode: event.target.value,
+                                  }));
+                                }}
+                                className={inputClass(
+                                  !!voucherErrors.voucherCode
+                                )}
+                                placeholder="VD: SUMMER2026"
+                              />
+                              {voucherErrors.voucherCode && (
+                                <p className="mt-1 text-xs text-red-500">
+                                  {voucherErrors.voucherCode}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                Loại giảm giá{' '}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <select
+                                value={voucher.type}
+                                onChange={(event) => {
+                                  const nextType = event.target.value as
+                                    | 'AMOUNT'
+                                    | 'PERCENT';
+                                  updateInlineVoucher(index, (prev) => ({
+                                    ...prev,
+                                    type: nextType,
+                                    maxDiscountValue:
+                                      nextType === 'AMOUNT'
+                                        ? null
+                                        : prev.maxDiscountValue,
+                                  }));
+                                }}
+                                className={inputClass(false)}
+                              >
+                                <option value="AMOUNT">
+                                  Giảm theo số tiền
+                                </option>
+                                <option value="PERCENT">Giảm theo %</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                Giá trị giảm{' '}
+                                <span className="text-red-500">*</span>
+                                <span className="ml-1 text-xs font-normal text-gray-500">
+                                  {voucher.type === 'PERCENT' ? '(%)' : '(VNĐ)'}
+                                </span>
+                              </label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={
+                                  voucher.type === 'PERCENT'
+                                    ? String(voucher.discountValue)
+                                    : formatNumberWithDots(
+                                        voucher.discountValue
+                                      )
+                                }
+                                onChange={(event) => {
+                                  const next =
+                                    voucher.type === 'PERCENT'
+                                      ? Math.min(
+                                          Number(
+                                            event.target.value.replace(
+                                              /[^0-9]/g,
+                                              ''
+                                            )
+                                          ),
+                                          100
+                                        )
+                                      : parseNumberInput(event.target.value);
+                                  updateInlineVoucher(index, (prev) => ({
+                                    ...prev,
+                                    discountValue: Number.isNaN(next)
+                                      ? 0
+                                      : next,
+                                  }));
+                                }}
+                                className={inputClass(
+                                  !!voucherErrors.discountValue
+                                )}
+                                placeholder="0"
+                              />
+                              {voucherErrors.discountValue && (
+                                <p className="mt-1 text-xs text-red-500">
+                                  {voucherErrors.discountValue}
+                                </p>
+                              )}
+                            </div>
+
+                            {voucher.type === 'PERCENT' && (
+                              <div>
+                                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                  Giảm tối đa{' '}
+                                  <span className="text-xs font-normal text-gray-500">
+                                    (VNĐ, tùy chọn)
+                                  </span>
+                                </label>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  value={formatNumberWithDots(
+                                    voucher.maxDiscountValue
+                                  )}
+                                  onChange={(event) => {
+                                    const rawValue = event.target.value;
+                                    updateInlineVoucher(index, (prev) => ({
+                                      ...prev,
+                                      maxDiscountValue:
+                                        rawValue === ''
+                                          ? null
+                                          : parseNumberInput(rawValue),
+                                    }));
+                                  }}
+                                  className={inputClass(false)}
+                                  placeholder="Không giới hạn"
+                                />
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                Đơn hàng tối thiểu{' '}
+                                <span className="text-xs font-normal text-gray-500">
+                                  (VNĐ)
+                                </span>{' '}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={formatNumberWithDots(
+                                  voucher.minAmountRequired
+                                )}
+                                onChange={(event) => {
+                                  updateInlineVoucher(index, (prev) => ({
+                                    ...prev,
+                                    minAmountRequired: parseNumberInput(
+                                      event.target.value
+                                    ),
+                                  }));
+                                }}
+                                className={inputClass(
+                                  !!voucherErrors.minAmountRequired
+                                )}
+                                placeholder="0"
+                              />
+                              {voucherErrors.minAmountRequired && (
+                                <p className="mt-1 text-xs text-red-500">
+                                  {voucherErrors.minAmountRequired}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">
+                                Số lượng phát hành{' '}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={formatNumberWithDots(voucher.quantity)}
+                                onChange={(event) => {
+                                  updateInlineVoucher(index, (prev) => ({
+                                    ...prev,
+                                    quantity: parseNumberInput(
+                                      event.target.value
+                                    ),
+                                  }));
+                                }}
+                                className={inputClass(!!voucherErrors.quantity)}
+                                placeholder="0"
+                              />
+                              {voucherErrors.quantity && (
+                                <p className="mt-1 text-xs text-red-500">
+                                  {voucherErrors.quantity}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="mt-4">
+                            <label className="mb-1 block text-sm font-semibold text-gray-700">
+                              Mô tả voucher
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={voucher.description}
+                              onChange={(event) => {
+                                updateInlineVoucher(index, (prev) => ({
+                                  ...prev,
+                                  description: event.target.value,
+                                }));
+                              }}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-amber-200"
+                              placeholder="Nhập mô tả voucher (không bắt buộc)"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={addInlineVoucher}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm font-semibold text-gray-500 transition-colors hover:border-[#8bcf3f] hover:bg-[#f3fde8] hover:text-[#4a7a18]"
+                    >
+                      <AddIcon sx={{ fontSize: 18 }} />
+                      Thêm voucher khác
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 1 }}>
@@ -626,7 +998,6 @@ export default function VendorCampaignFormModal({
             variant="contained"
             color="primary"
             disabled={
-              isCampaignActiveLocked ||
               status === 'pending' ||
               (isEditMode && !isDirty && !hasImageChanged)
             }

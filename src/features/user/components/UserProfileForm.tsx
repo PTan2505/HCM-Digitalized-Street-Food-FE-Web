@@ -6,14 +6,19 @@ import useProfile from '@features/user/hooks/useProfile';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppSelector } from '@hooks/reduxHooks';
+import { BadgeCheck, CircleAlert } from 'lucide-react';
+import { MuiOtpInput } from 'mui-one-time-password-input';
 import { selectUser } from '@slices/auth';
-import { type JSX } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@constants/routes';
 import type { z } from 'zod';
 
 type UpdateProfileFormData = z.infer<typeof UpdateProfileSchema>;
+type VerifiableField = 'email' | 'phoneNumber';
+
+const OTP_TIMEOUT_SECONDS = 6 * 60;
 
 export interface UserProfileFormProps {
   onSuccess?: () => void;
@@ -29,7 +34,68 @@ export default function UserProfileForm({
   const user = useAppSelector(selectUser);
   const navigate = useNavigate();
   const { onLogout } = useLogin();
-  const { updateUserProfile } = useProfile();
+  const {
+    updateUserProfile,
+    requestProfileContactVerification,
+    verifyProfileContactOTP,
+  } = useProfile();
+  const [activeVerificationField, setActiveVerificationField] =
+    useState<VerifiableField | null>(null);
+  const [isRequestingField, setIsRequestingField] =
+    useState<VerifiableField | null>(null);
+  const [isVerifyingField, setIsVerifyingField] =
+    useState<VerifiableField | null>(null);
+  const [otpValue, setOtpValue] = useState<Record<VerifiableField, string>>({
+    email: '',
+    phoneNumber: '',
+  });
+  const [countdown, setCountdown] = useState<Record<VerifiableField, number>>({
+    email: 0,
+    phoneNumber: 0,
+  });
+  const [otpErrors, setOtpErrors] = useState<Record<VerifiableField, string>>({
+    email: '',
+    phoneNumber: '',
+  });
+  const [verifiedState, setVerifiedState] = useState<
+    Record<VerifiableField, boolean>
+  >({
+    email: Boolean(user?.emailVerified),
+    phoneNumber: Boolean(user?.phoneNumberVerified),
+  });
+
+  useEffect(() => {
+    setVerifiedState({
+      email: Boolean(user?.emailVerified),
+      phoneNumber: Boolean(user?.phoneNumberVerified),
+    });
+  }, [user?.emailVerified, user?.phoneNumberVerified]);
+
+  useEffect(() => {
+    if (!isModal) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => ({
+        email: prev.email > 0 ? prev.email - 1 : 0,
+        phoneNumber: prev.phoneNumber > 0 ? prev.phoneNumber - 1 : 0,
+      }));
+    }, 1000);
+
+    return (): void => {
+      clearInterval(timer);
+    };
+  }, [isModal]);
+
+  const canVerifyEmail = useMemo(
+    () => isModal && Boolean(user?.email) && !verifiedState.email,
+    [isModal, user?.email, verifiedState.email]
+  );
+  const canVerifyPhone = useMemo(
+    () => isModal && Boolean(user?.phoneNumber) && !verifiedState.phoneNumber,
+    [isModal, user?.phoneNumber, verifiedState.phoneNumber]
+  );
 
   const {
     register,
@@ -53,7 +119,7 @@ export default function UserProfileForm({
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate(`${ROUTES.VENDOR.BASE}/${ROUTES.VENDOR.PATHS.BRANCH}`, {
+        navigate(`${ROUTES.USER.BASE}/${ROUTES.USER.PATHS.BRANCH}`, {
           state: { fromEditProfile: true },
         });
       }
@@ -71,6 +137,71 @@ export default function UserProfileForm({
           }
         });
       }
+    }
+  };
+
+  const formatCountdown = (seconds: number): string => {
+    const minute = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, '0');
+    const second = (seconds % 60).toString().padStart(2, '0');
+    return `${minute}:${second}`;
+  };
+
+  const requestVerificationCode = async (
+    field: VerifiableField
+  ): Promise<void> => {
+    setOtpErrors((prev) => ({ ...prev, [field]: '' }));
+    setIsRequestingField(field);
+
+    try {
+      await requestProfileContactVerification();
+      setActiveVerificationField(field);
+      setOtpValue((prev) => ({ ...prev, [field]: '' }));
+      setCountdown((prev) => ({ ...prev, [field]: OTP_TIMEOUT_SECONDS }));
+    } catch (error) {
+      const apiError = error as APIErrorResponse;
+      setOtpErrors((prev) => ({
+        ...prev,
+        [field]: apiError.message ?? 'Không thể gửi mã OTP. Vui lòng thử lại.',
+      }));
+    } finally {
+      setIsRequestingField(null);
+    }
+  };
+
+  const verifyOtp = async (field: VerifiableField): Promise<void> => {
+    if (otpValue[field].length < 6) {
+      setOtpErrors((prev) => ({
+        ...prev,
+        [field]: 'Vui lòng nhập đủ 6 số OTP.',
+      }));
+      return;
+    }
+
+    setOtpErrors((prev) => ({ ...prev, [field]: '' }));
+    setIsVerifyingField(field);
+
+    try {
+      await verifyProfileContactOTP({
+        otp: otpValue[field],
+        field,
+      });
+
+      setVerifiedState((prev) => ({ ...prev, [field]: true }));
+      setActiveVerificationField((current) =>
+        current === field ? null : current
+      );
+      setCountdown((prev) => ({ ...prev, [field]: 0 }));
+      setOtpValue((prev) => ({ ...prev, [field]: '' }));
+    } catch (error) {
+      const apiError = error as APIErrorResponse;
+      setOtpErrors((prev) => ({
+        ...prev,
+        [field]: apiError.message ?? 'Mã OTP không hợp lệ. Vui lòng thử lại.',
+      }));
+    } finally {
+      setIsVerifyingField(null);
     }
   };
 
@@ -131,16 +262,112 @@ export default function UserProfileForm({
 
           {/* Email */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Email
+            <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span>Email</span>
+              {isModal && verifiedState.email && (
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-emerald-100 px-2 text-xs font-semibold text-emerald-700">
+                  <BadgeCheck size={14} />
+                  Đã xác thực
+                </span>
+              )}
+              {canVerifyEmail && (
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-700">
+                  <CircleAlert size={14} />
+                  Chưa xác thực
+                </span>
+              )}
             </label>
-            <input
-              type="email"
-              placeholder="Nhập email"
-              {...register('email')}
-              disabled={!!user?.email}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:hover:border-gray-200 disabled:hover:bg-gray-100"
-            />
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="Nhập email"
+                {...register('email')}
+                disabled={!!user?.email}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-32 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:hover:border-gray-200 disabled:hover:bg-gray-100"
+              />
+              {canVerifyEmail && (
+                <button
+                  type="button"
+                  onClick={() => requestVerificationCode('email')}
+                  disabled={isRequestingField === 'email'}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg bg-[#06AA4C] px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-[#058f40] disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  {isRequestingField === 'email' ? 'Đang gửi...' : 'Xác thực'}
+                </button>
+              )}
+            </div>
+            {activeVerificationField === 'email' && canVerifyEmail && (
+              <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <p className="mb-3 text-xs font-medium text-emerald-700">
+                  Nhập mã OTP gửi về email để hoàn tất xác thực.
+                </p>
+                <MuiOtpInput
+                  value={otpValue.email}
+                  length={6}
+                  onChange={(value) => {
+                    setOtpValue((prev) => ({ ...prev, email: value }));
+                    if (otpErrors.email) {
+                      setOtpErrors((prev) => ({ ...prev, email: '' }));
+                    }
+                  }}
+                  TextFieldsProps={(index) => ({
+                    placeholder: '-',
+                    className: otpValue.email[index] ? 'is-filled' : '',
+                  })}
+                  sx={{
+                    gap: '8px',
+                    '& .MuiInputBase-root.MuiOutlinedInput-root': {
+                      width: '44px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      border: '1px solid #9ccfb0',
+                      backgroundColor: '#ffffff',
+                    },
+                    '& .MuiInputBase-root.MuiOutlinedInput-root.Mui-focused': {
+                      borderColor: '#06AA4C',
+                      boxShadow: '0 0 0 2px rgba(6,170,76,0.18)',
+                    },
+                    '& .MuiInputBase-input': {
+                      p: 0,
+                      fontWeight: 700,
+                      color: '#065f46',
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      border: 'none',
+                    },
+                  }}
+                />
+                {otpErrors.email && (
+                  <p className="mt-2 text-xs font-medium text-red-500">
+                    {otpErrors.email}
+                  </p>
+                )}
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => verifyOtp('email')}
+                    disabled={isVerifyingField === 'email'}
+                    className="rounded-lg bg-[#06AA4C] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#058f40] disabled:cursor-not-allowed disabled:bg-gray-300"
+                  >
+                    {isVerifyingField === 'email'
+                      ? 'Đang xác thực...'
+                      : 'Xác thực OTP'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => requestVerificationCode('email')}
+                    disabled={
+                      countdown.email > 0 || isRequestingField === 'email'
+                    }
+                    className="text-xs font-semibold text-emerald-700 underline underline-offset-2 disabled:cursor-not-allowed disabled:text-gray-400"
+                  >
+                    {countdown.email > 0
+                      ? `Gửi lại sau ${formatCountdown(countdown.email)}`
+                      : 'Gửi lại mã'}
+                  </button>
+                </div>
+              </div>
+            )}
             {/* <p className="mt-2 text-xs text-gray-500">
               Email không thể thay đổi
             </p> */}
@@ -188,22 +415,121 @@ export default function UserProfileForm({
 
           {/* Phone Number */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Số điện thoại
+            <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span>Số điện thoại</span>
+              {isModal && verifiedState.phoneNumber && (
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-emerald-100 px-2 text-xs font-semibold text-emerald-700">
+                  <BadgeCheck size={14} />
+                  Đã xác thực
+                </span>
+              )}
+              {canVerifyPhone && (
+                <span className="inline-flex h-6 items-center gap-1 rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-700">
+                  <CircleAlert size={14} />
+                  Chưa xác thực
+                </span>
+              )}
             </label>
-            <input
-              type="tel"
-              placeholder="Nhập số điện thoại"
-              {...register('phoneNumber')}
-              disabled={!!user?.phoneNumber}
-              className={`w-full rounded-xl border bg-gray-50 px-4 py-3 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:hover:border-gray-200 disabled:hover:bg-gray-100 ${
-                errors.phoneNumber ? 'border-red-500' : 'border-gray-200'
-              }`}
-            />
+            <div className="relative">
+              <input
+                type="tel"
+                placeholder="Nhập số điện thoại"
+                {...register('phoneNumber')}
+                disabled={!!user?.phoneNumber}
+                className={`w-full rounded-xl border bg-gray-50 px-4 py-3 pr-32 transition-all duration-200 outline-none hover:border-gray-400 hover:bg-white focus:border-2 focus:border-[#06AA4C] focus:bg-white disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:hover:border-gray-200 disabled:hover:bg-gray-100 ${
+                  errors.phoneNumber ? 'border-red-500' : 'border-gray-200'
+                }`}
+              />
+              {canVerifyPhone && (
+                <button
+                  type="button"
+                  onClick={() => requestVerificationCode('phoneNumber')}
+                  disabled={isRequestingField === 'phoneNumber'}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg bg-[#06AA4C] px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-[#058f40] disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  {isRequestingField === 'phoneNumber'
+                    ? 'Đang gửi...'
+                    : 'Xác thực'}
+                </button>
+              )}
+            </div>
             {errors.phoneNumber && (
               <p className="mt-1 text-sm text-red-500">
                 {errors.phoneNumber.message}
               </p>
+            )}
+            {activeVerificationField === 'phoneNumber' && canVerifyPhone && (
+              <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <p className="mb-3 text-xs font-medium text-emerald-700">
+                  Nhập mã OTP gửi về số điện thoại để hoàn tất xác thực.
+                </p>
+                <MuiOtpInput
+                  value={otpValue.phoneNumber}
+                  length={6}
+                  onChange={(value) => {
+                    setOtpValue((prev) => ({ ...prev, phoneNumber: value }));
+                    if (otpErrors.phoneNumber) {
+                      setOtpErrors((prev) => ({ ...prev, phoneNumber: '' }));
+                    }
+                  }}
+                  TextFieldsProps={(index) => ({
+                    placeholder: '-',
+                    className: otpValue.phoneNumber[index] ? 'is-filled' : '',
+                  })}
+                  sx={{
+                    gap: '8px',
+                    '& .MuiInputBase-root.MuiOutlinedInput-root': {
+                      width: '44px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      border: '1px solid #9ccfb0',
+                      backgroundColor: '#ffffff',
+                    },
+                    '& .MuiInputBase-root.MuiOutlinedInput-root.Mui-focused': {
+                      borderColor: '#06AA4C',
+                      boxShadow: '0 0 0 2px rgba(6,170,76,0.18)',
+                    },
+                    '& .MuiInputBase-input': {
+                      p: 0,
+                      fontWeight: 700,
+                      color: '#065f46',
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      border: 'none',
+                    },
+                  }}
+                />
+                {otpErrors.phoneNumber && (
+                  <p className="mt-2 text-xs font-medium text-red-500">
+                    {otpErrors.phoneNumber}
+                  </p>
+                )}
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => verifyOtp('phoneNumber')}
+                    disabled={isVerifyingField === 'phoneNumber'}
+                    className="rounded-lg bg-[#06AA4C] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#058f40] disabled:cursor-not-allowed disabled:bg-gray-300"
+                  >
+                    {isVerifyingField === 'phoneNumber'
+                      ? 'Đang xác thực...'
+                      : 'Xác thực OTP'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => requestVerificationCode('phoneNumber')}
+                    disabled={
+                      countdown.phoneNumber > 0 ||
+                      isRequestingField === 'phoneNumber'
+                    }
+                    className="text-xs font-semibold text-emerald-700 underline underline-offset-2 disabled:cursor-not-allowed disabled:text-gray-400"
+                  >
+                    {countdown.phoneNumber > 0
+                      ? `Gửi lại sau ${formatCountdown(countdown.phoneNumber)}`
+                      : 'Gửi lại mã'}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

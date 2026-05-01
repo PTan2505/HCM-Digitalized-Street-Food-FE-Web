@@ -18,19 +18,21 @@ const orderHowl = new Howl({
 export const playNotificationSound = (
   type?: string,
   message?: string
-): void => {
-  try {
-    if (type === 'NewOrder') {
-      orderHowl.play();
-    } else {
-      feedbackHowl.play();
-    }
-  } catch (error) {
-    console.warn('Could not play notification sound:', error);
-  }
+): Promise<void> => {
+  // try {
+  //   if (type === 'NewOrder') {
+  //     orderHowl.play();
+  //   } else {
+  //     feedbackHowl.play();
+  //   }
+  // } catch (error) {
+  //   console.warn('Could not play notification sound:', error);
+  // }
 
   // Đọc nội dung thông báo bằng Gemini TTS
   if (message) {
-    void playGeminiTTS(message);
+    return playGeminiTTS(message);
   }
+
+  return Promise.resolve();
 };

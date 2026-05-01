@@ -5,13 +5,16 @@ export const apiUrl = {
     phoneVerify: '/Auth/phone-verify',
     login: '/Auth/login',
     googleLogin: '/Auth/google-login',
-    profile: '/Auth/profile',
+    profile: '/User/profile',
     register: '/Auth/register',
     verifyRegistration: '/Auth/verify-registration',
     resendRegistrationOTP: '/Auth/resend-registration-otp',
     forgetPassword: '/Auth/forget-password',
     resetPassword: '/Auth/reset-password',
     resendForgetPasswordOTP: '/Auth/resend-forget-password-otp',
+    contactVerification: '/Auth/contact-verification',
+    verifyOTPProfile: '/User/profile/verify-otp',
+    refreshToken: '/Auth/refresh-token',
   },
   // dietaryPreference: {
   //   getAll: '/DietaryPreference',
@@ -123,9 +126,10 @@ export const apiUrl = {
     getPaymentHistory: '/Payment/history',
     getPaymentSuccess: '/Payment/success',
     getPaymentCancel: '/Payment/cancel',
-    confirmPayment: '/Payment/confirm/',
+    confirmPayment: '/Payment/confirm',
     getVendorBalance: '/Payment/vendor/balance',
     vendorRequestTransfer: '/Payment/vendor/transfer',
+    getPaymentPayout: '/Payment/payouts',
   },
   dish: {
     CreateOrGetDishesOfAVendor: (vendorId: number): string =>
@@ -170,11 +174,13 @@ export const apiUrl = {
       `/order/vendor/orders/${orderId}/complete`,
     getVendorOrders: 'order/vendor/orders',
     getOrderDetails: (orderId: number): string => `/order/${orderId}`,
+    updateOrder: (orderId: number): string => `/Order/${orderId}`,
   },
   manager: {
     getMyBranch: '/Branch/manager/my-branch',
   },
   campaign: {
+    GetPublicCampaigns: '/Campaign/public',
     GetOrPostSystemCampaign: '/Campaign/system',
     GetOrPostVendorCampaign: '/Campaign/vendor',
     GetCampaignDetail: (campaignId: number): string =>
@@ -194,6 +200,8 @@ export const apiUrl = {
       `/Campaign/${campaignId}/image`,
     GetBranchesOfACampaign: (campaignId: number): string =>
       `/Campaign/system/${campaignId}/branches`,
+    GetVendorBranchesOfACampaign: (campaignId: number): string =>
+      `/Campaign/vendor/${campaignId}/branches`,
     AddBranchesToACampaign: (campaignId: number): string =>
       `/Campaign/vendor/${campaignId}/branches/add`,
     RemoveBranchesFromACampaign: (campaignId: number): string =>
@@ -202,7 +210,12 @@ export const apiUrl = {
   quest: {
     getOrPostQuest: '/Quest',
     updateOrDeleteQuest: (questId: number): string => `/Quest/${questId}`,
+    updateQuestTasks: (questId: number): string => `/Quest/${questId}/tasks`,
     postQuestImage: (questId: number): string => `/Quest/${questId}/image`,
+    getUserQuestTasks: '/Quest/user-quest-tasks',
+  },
+  tier: {
+    getAllTiers: '/Tier',
   },
   setting: {
     getSettings: '/Setting',
@@ -220,6 +233,7 @@ export const apiUrl = {
     getRevenue: '/VendorDashboard/revenue',
     getVouchers: '/VendorDashboard/vouchers',
     getDishes: '/VendorDashboard/dishes',
+    getCampaigns: '/VendorDashboard/campaigns',
   },
   adminDashboard: {
     getUserSignUps: '/AdminDashboard/user-signups',

@@ -1,3 +1,34 @@
+import Pagination from '@features/admin/components/Pagination';
+import Table from '@features/admin/components/Table';
+import useVendor from '@features/admin/hooks/useVendor';
+import type { AdminVendor } from '@features/admin/types/vendor';
+import { getAdminVendorCampaignTourSteps } from '@features/admin/utils/adminVendorCampaignTourSteps';
+import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
+import {
+  FilterAltOff as FilterAltOffIcon,
+  HelpOutline as HelpOutlineIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from '@mui/material';
+import {
+  getVendorCampaigns,
+  selectCampaignStatus,
+  selectVendorCampaigns,
+  selectVendorCampaignTotalCount,
+} from '@slices/campaign';
+import type { JSX } from 'react';
 import {
   useCallback,
   useDeferredValue,
@@ -5,39 +36,16 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type { JSX } from 'react';
 import {
-  Box,
-  Chip,
-  Autocomplete,
-  TextField,
-  Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  FilterAltOff as FilterAltOffIcon,
-} from '@mui/icons-material';
-import Table from '@features/admin/components/Table';
-import Pagination from '@features/admin/components/Pagination';
-import useVendor from '@features/admin/hooks/useVendor';
-import type { AdminVendor } from '@features/admin/types/vendor';
-import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
-import {
-  getVendorCampaigns,
-  selectCampaignStatus,
-  selectVendorCampaigns,
-  selectVendorCampaignTotalCount,
-} from '@slices/campaign';
+  EVENTS,
+  Joyride,
+  STATUS,
+  type Controls,
+  type EventData,
+} from 'react-joyride';
 
 interface AdminVendorCampaignRow {
   campaignId: number;
-  createdByBranchId: number | null;
   createdByVendorId: number | null;
   createdAt: string;
   name: string;
@@ -63,24 +71,44 @@ const formatVNDatetime = (isoStr: string | null): string => {
 };
 
 const StatusBadge = ({
-  label,
-  type,
+  startDate,
+  endDate,
 }: {
-  label: string;
-  type: 'success' | 'error' | 'warning' | 'default';
+  startDate: string | null;
+  endDate: string | null;
 }): JSX.Element => {
-  const colors = {
-    success: 'bg-green-100 text-green-700 border-green-200',
-    error: 'bg-red-100 text-red-700 border-red-200',
-    warning: 'bg-amber-100 text-amber-700 border-amber-200',
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-  };
+  const now = new Date();
+  const start = startDate ? new Date(startDate) : null;
+  const end = endDate ? new Date(endDate) : null;
+
+  const hasValidStart = start !== null && !Number.isNaN(start.getTime());
+  const hasValidEnd = end !== null && !Number.isNaN(end.getTime());
+
+  const status = !hasValidStart
+    ? {
+        label: 'Chưa diễn ra',
+        tone: 'bg-sky-100 text-sky-700 border-sky-200',
+      }
+    : now < start
+      ? {
+          label: 'Chưa diễn ra',
+          tone: 'bg-sky-100 text-sky-700 border-sky-200',
+        }
+      : hasValidEnd && now > end
+        ? {
+            label: 'Đã kết thúc',
+            tone: 'bg-slate-100 text-slate-700 border-slate-200',
+          }
+        : {
+            label: 'Đang hoạt động',
+            tone: 'bg-green-100 text-green-700 border-green-200',
+          };
 
   return (
     <span
-      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colors[type]}`}
+      className={`inline-flex min-w-25 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${status.tone}`}
     >
-      {label}
+      {status.label}
     </span>
   );
 };
@@ -107,16 +135,18 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     'all' | 'today' | '7days' | '30days'
   >('all');
   const deferredCampaignKeyword = useDeferredValue(campaignKeyword);
+  const [isTourRunning, setIsTourRunning] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
-  const createdFilterOptions: Array<{
-    value: 'all' | 'today' | '7days' | '30days';
-    label: string;
-  }> = [
-    { value: 'all', label: 'Tất cả thời gian' },
-    { value: 'today', label: '24 giờ qua' },
-    { value: '7days', label: '7 ngày qua' },
-    { value: '30days', label: '30 ngày qua' },
-  ];
+  // const createdFilterOptions: Array<{
+  //   value: 'all' | 'today' | '7days' | '30days';
+  //   label: string;
+  // }> = [
+  //   { value: 'all', label: 'Tất cả thời gian' },
+  //   { value: 'today', label: '24 giờ qua' },
+  //   { value: '7days', label: '7 ngày qua' },
+  //   { value: '30days', label: '30 ngày qua' },
+  // ];
 
   const fetchVendors = useCallback(async (): Promise<void> => {
     setIsLoadingVendors(true);
@@ -234,18 +264,10 @@ export default function AdminVendorCampaignPage(): JSX.Element {
       key: 'creator',
       label: 'Nguồn tạo',
       render: (_: unknown, row: AdminVendorCampaignRow): JSX.Element => {
-        if (!row.createdByBranchId && !row.createdByVendorId) {
+        if (!row.createdByVendorId) {
           return (
             <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 shadow-sm">
               Từ hệ thống
-            </span>
-          );
-        }
-
-        if (row.createdByBranchId) {
-          return (
-            <span className="inline-flex items-center justify-center rounded-full border border-teal-200 bg-teal-100 px-2.5 py-0.5 text-xs font-bold text-teal-700 shadow-sm">
-              Từ chi nhánh
             </span>
           );
         }
@@ -278,12 +300,9 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     },
     {
       key: 'isActive',
-      label: 'Hoạt động',
-      render: (value: unknown): JSX.Element => (
-        <StatusBadge
-          label={value === true ? 'Đang hoạt động' : 'Tạm ngưng'}
-          type={value === true ? 'success' : 'error'}
-        />
+      label: 'Tình trạng',
+      render: (_: unknown, row: AdminVendorCampaignRow): JSX.Element => (
+        <StatusBadge startDate={row.startDate} endDate={row.endDate} />
       ),
     },
   ];
@@ -301,20 +320,88 @@ export default function AdminVendorCampaignPage(): JSX.Element {
     setPage(1);
   };
 
+  const startTour = (): void => {
+    setTourInstanceKey((prev) => prev + 1);
+    setIsTourRunning(true);
+  };
+
+  const handleJoyrideEvent = (data: EventData, controls: Controls): void => {
+    if (data.type === EVENTS.TARGET_NOT_FOUND) {
+      controls.next();
+      return;
+    }
+
+    if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
+      setIsTourRunning(false);
+    }
+  };
+
+  const tourSteps = useMemo(() => {
+    return getAdminVendorCampaignTourSteps({
+      hasSelectedVendor: Boolean(selectedVendor?.vendorId),
+      hasRows: filteredCampaigns.length > 0,
+    });
+  }, [filteredCampaigns.length, selectedVendor?.vendorId]);
+
   return (
     <div className="flex h-full flex-col font-(--font-nunito)">
-      <div className="mb-6 flex items-center justify-between">
+      <Joyride
+        key={tourInstanceKey}
+        run={isTourRunning}
+        steps={tourSteps}
+        continuous
+        scrollToFirstStep
+        onEvent={handleJoyrideEvent}
+        options={{
+          showProgress: true,
+          scrollDuration: 350,
+          scrollOffset: 80,
+          spotlightPadding: 8,
+          overlayColor: 'rgba(15, 23, 42, 0.5)',
+          primaryColor: '#7ab82d',
+          textColor: '#1f2937',
+          zIndex: 1700,
+          buttons: ['back', 'skip', 'primary'],
+        }}
+        locale={{
+          back: 'Quay lại',
+          close: 'Đóng',
+          last: 'Hoàn tất',
+          next: 'Tiếp theo',
+          nextWithProgress: 'Tiếp theo ({current}/{total})',
+          skip: 'Bỏ qua',
+        }}
+      />
+
+      <div
+        className="mb-6 flex items-center justify-between"
+        data-tour="admin-vendor-campaign-page-header"
+      >
         <div>
-          <h1 className="text-table-text-primary mb-1 text-3xl font-bold">
-            Chiến dịch từ cửa hàng
-          </h1>
+          <div className="mb-1 flex items-start gap-2">
+            <h1 className="text-table-text-primary text-3xl font-bold">
+              Chiến dịch từ cửa hàng
+            </h1>
+            <button
+              type="button"
+              onClick={startTour}
+              aria-label="Mở hướng dẫn chiến dịch từ cửa hàng"
+              title="Hướng dẫn"
+              className="text-primary-700 hover:text-primary-800 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors"
+            >
+              <HelpOutlineIcon sx={{ fontSize: 18 }} />
+            </button>
+          </div>
           <p className="text-table-text-secondary text-sm">
             Danh sách chiến dịch được tạo từ cửa hàng
           </p>
         </div>
       </div>
 
-      <Box className="mb-4 rounded-2xl border border-slate-200 bg-linear-to-r from-slate-50 to-white p-4 shadow-sm">
+      <Box
+        className="mb-4 rounded-2xl border border-slate-200 bg-linear-to-r from-slate-50 to-white p-4 shadow-sm"
+        data-tour="admin-vendor-campaign-filters"
+      >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-table-text-primary text-sm font-bold tracking-wide uppercase">
             Bộ lọc chiến dịch
@@ -396,13 +483,13 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               >
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="active">Đang hoạt động</MenuItem>
-                <MenuItem value="inactive">Tạm ngưng</MenuItem>
+                <MenuItem value="inactive">Đã kết thúc</MenuItem>
               </Select>
             </FormControl>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* <div className="mt-3 flex flex-wrap items-center gap-2">
           {createdFilterOptions.map((option) => (
             <Chip
               key={option.value}
@@ -424,9 +511,9 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               }}
             />
           ))}
-        </div>
+        </div> */}
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        {/* <div className="mt-3 flex flex-wrap gap-2">
           <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700">
             Tổng chiến dịch: {totalCount ?? 0}
           </span>
@@ -438,10 +525,13 @@ export default function AdminVendorCampaignPage(): JSX.Element {
               Cửa hàng: {selectedVendor.name}
             </span>
           )}
-        </div>
+        </div> */}
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0 }}
+        data-tour="admin-vendor-campaign-table"
+      >
         <Table
           columns={columns}
           data={filteredCampaigns}

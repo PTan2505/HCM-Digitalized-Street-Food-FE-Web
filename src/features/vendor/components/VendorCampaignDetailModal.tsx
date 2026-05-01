@@ -41,16 +41,45 @@ const formatVNDatetime = (isoStr: string | null): string => {
   });
 };
 
-const StatusBadge = ({ isActive }: { isActive: boolean }): JSX.Element => {
-  const tone = isActive
-    ? 'bg-green-100 text-green-700 border-green-200'
-    : 'bg-amber-100 text-amber-700 border-amber-200';
+const StatusBadge = ({
+  startDate,
+  endDate,
+}: {
+  startDate: string | null;
+  endDate: string | null;
+}): JSX.Element => {
+  const now = new Date();
+  const start = startDate ? new Date(startDate) : null;
+  const end = endDate ? new Date(endDate) : null;
+
+  const hasValidStart = start !== null && !Number.isNaN(start.getTime());
+  const hasValidEnd = end !== null && !Number.isNaN(end.getTime());
+
+  const status = !hasValidStart
+    ? {
+        label: 'Chưa diễn ra',
+        tone: 'bg-sky-100 text-sky-700 border-sky-200',
+      }
+    : now < start
+      ? {
+          label: 'Chưa diễn ra',
+          tone: 'bg-sky-100 text-sky-700 border-sky-200',
+        }
+      : hasValidEnd && now > end
+        ? {
+            label: 'Đã kết thúc',
+            tone: 'bg-slate-100 text-slate-700 border-slate-200',
+          }
+        : {
+            label: 'Đang hoạt động',
+            tone: 'bg-green-100 text-green-700 border-green-200',
+          };
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${tone}`}
+      className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${status.tone}`}
     >
-      {isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+      {status.label}
     </span>
   );
 };
@@ -123,7 +152,9 @@ const VoucherCard = ({ voucher }: { voucher: Voucher }): JSX.Element => {
 
           {/* Status */}
           <Chip
-            label={voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng'}
+            label={
+              voucher.isActive ? 'Đang hoạt động' : 'Tạm ngưng hoặc đã kết thúc'
+            }
             size="small"
             color={voucher.isActive ? 'success' : 'error'}
             variant="outlined"
@@ -203,7 +234,10 @@ export default function VendorCampaignDetailModal({
             <div className="space-y-4">
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <StatusBadge isActive={campaign.isActive} />
+                  <StatusBadge
+                    startDate={campaign.startDate}
+                    endDate={campaign.endDate}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -215,6 +249,22 @@ export default function VendorCampaignDetailModal({
                     label="Kết thúc chiến dịch"
                     value={formatVNDatetime(campaign.endDate)}
                   />
+                  {campaign.isSystemCampaign && (
+                    <>
+                      <DetailItem
+                        label="Ngày bắt đầu đăng ký"
+                        value={formatVNDatetime(
+                          campaign.registrationStartDate ?? null
+                        )}
+                      />
+                      <DetailItem
+                        label="Ngày kết thúc đăng ký"
+                        value={formatVNDatetime(
+                          campaign.registrationEndDate ?? null
+                        )}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -229,11 +279,11 @@ export default function VendorCampaignDetailModal({
                         : '-'
                     }
                   />
-                  <div className="h-28 rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
                     <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                       Mô tả
                     </p>
-                    <p className="text-table-text-primary mt-1 text-sm leading-6 whitespace-pre-wrap">
+                    <p className="text-table-text-primary mt-1 max-h-28 overflow-y-auto pr-1 text-sm leading-6 break-words whitespace-pre-wrap">
                       {campaign.description ?? 'Không có mô tả'}
                     </p>
                   </div>
@@ -283,21 +333,6 @@ export default function VendorCampaignDetailModal({
                     )}
                   </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <DetailItem
-                  label="Tạo lúc"
-                  value={formatVNDatetime(campaign.createdAt)}
-                />
-                <DetailItem
-                  label="Cập nhật lần cuối"
-                  value={
-                    campaign.updatedAt
-                      ? formatVNDatetime(campaign.updatedAt)
-                      : 'Chưa cập nhật'
-                  }
-                />
               </div>
 
               {/* ── Vouchers ── */}

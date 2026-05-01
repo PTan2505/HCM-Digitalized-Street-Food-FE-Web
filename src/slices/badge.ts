@@ -170,8 +170,13 @@ export const badgeSlice = createSlice({
       })
       .addCase(deleteBadge.fulfilled, (state, action) => {
         if (action.payload) {
-          state.badges = state.badges.filter(
-            (badge) => badge.badgeId !== action.payload
+          state.badges = state.badges.map((badge) =>
+            badge.badgeId === action.payload
+              ? {
+                  ...badge,
+                  isActive: !(badge.isActive ?? false),
+                }
+              : badge
           );
         }
       })

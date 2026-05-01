@@ -24,19 +24,20 @@ interface DayOffModalProps {
   branch: Branch | null;
 }
 
-const formatDate = (dateStr: string): string => {
-  const [y, m, d] = dateStr.split('T')[0].split('-');
-  return `${d}/${m}/${y}`;
+/** Format "YYYY-MM-DDTHH:mm" → "DD/MM/YYYY HH:mm" */
+const formatDateTime = (iso: string): string => {
+  const [datePart, timePart] = iso.split('T');
+  if (!datePart) return iso;
+  const [y, m, d] = datePart.split('-');
+  const time = timePart ? timePart.slice(0, 5) : '';
+  return time ? `${d}/${m}/${y} ${time}` : `${d}/${m}/${y}`;
 };
 
-const formatTime = (time: string | null): string => {
-  if (!time) return '';
-  return time.slice(0, 5);
+const getLocalDatetimeNow = (): string => {
+  const now = new Date();
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 };
-
-const getToday = (): string => new Date().toISOString().split('T')[0];
-
-const toRFC3339 = (dateStr: string): string => `${dateStr}T00:00:00Z`;
 
 /** Expand a dayOff's date range into individual YYYY-MM-DD strings */
 const expandRange = (startIso: string, endIso: string): string[] => {
@@ -75,30 +76,6 @@ export default function DayOffModal({
     return days.some((d) => occupiedDates.has(d));
   };
 
-  /** Returns the calendar day after the latest existing dayOff endDate, or today if none. */
-  const getNextAvailableDate = (): string => {
-    if (dayOffs.length === 0) return getToday();
-    const maxEnd = dayOffs.reduce((max, d) => {
-      const end = d.endDate.split('T')[0];
-      return end > max ? end : max;
-    }, '');
-    const next = new Date(maxEnd + 'T00:00:00Z');
-    next.setUTCDate(next.getUTCDate() + 1);
-    return next.toISOString().split('T')[0];
-  };
-
-  const openAddForm = (): void => {
-    const nextDate = getNextAvailableDate();
-    reset({
-      startDate: nextDate,
-      endDate: nextDate,
-      isAllDay: true,
-      startTime: null,
-      endTime: null,
-    });
-    setShowAddForm(true);
-  };
-
   const {
     setValue,
     watch,
@@ -110,26 +87,28 @@ export default function DayOffModal({
     resolver: zodResolver(AddDayOffSchema),
     mode: 'onChange',
     defaultValues: {
-      startDate: getToday(),
-      endDate: getToday(),
-      isAllDay: true,
-      startTime: null,
-      endTime: null,
+      startDate: getLocalDatetimeNow(),
+      endDate: getLocalDatetimeNow(),
     },
   });
 
   const form = watch();
+
+  const openAddForm = (): void => {
+    reset({
+      startDate: getLocalDatetimeNow(),
+      endDate: getLocalDatetimeNow(),
+    });
+    setShowAddForm(true);
+  };
 
   useEffect(() => {
     if (isOpen && branch) {
       void onGetDayOffs(branch.branchId);
       setShowAddForm(false);
       reset({
-        startDate: getToday(),
-        endDate: getToday(),
-        isAllDay: true,
-        startTime: null,
-        endTime: null,
+        startDate: getLocalDatetimeNow(),
+        endDate: getLocalDatetimeNow(),
       });
     }
   }, [isOpen, branch, onGetDayOffs, reset]);
@@ -143,19 +122,14 @@ export default function DayOffModal({
       await onSubmitDayOff({
         branchId: branch.branchId,
         data: {
-          startDate: toRFC3339(form.startDate),
-          endDate: toRFC3339(form.endDate),
-          startTime: form.isAllDay ? null : (form.startTime ?? null),
-          endTime: form.isAllDay ? null : (form.endTime ?? null),
+          startDate: form.startDate,
+          endDate: form.endDate,
         },
       });
       setShowAddForm(false);
       reset({
-        startDate: getToday(),
-        endDate: getToday(),
-        isAllDay: true,
-        startTime: null,
-        endTime: null,
+        startDate: getLocalDatetimeNow(),
+        endDate: getLocalDatetimeNow(),
       });
     } catch {
       // silent
@@ -222,23 +196,23 @@ export default function DayOffModal({
                   Thêm ngày nghỉ mới
                 </h3>
 
-                {/* Date range */}
+                {/* Datetime range */}
                 <div className="mb-4 grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-gray-600">
-                      Ngày bắt đầu
+                      Thời điểm bắt đầu
                     </label>
                     <input
-                      type="date"
+                      type="datetime-local"
                       value={form.startDate}
                       onChange={(e) => {
                         const val = e.target.value;
                         setValue('startDate', val, { shouldValidate: true });
-                        if (form.endDate && val > form.endDate) {
+                        if (form.endDate && val >= form.endDate) {
                           setValue('endDate', val, { shouldValidate: true });
                         }
                         const end =
-                          val > (form.endDate ?? '')
+                          val >= (form.endDate ?? '')
                             ? val
                             : (form.endDate ?? val);
                         if (hasRangeOverlap(val, end)) {
@@ -268,10 +242,10 @@ export default function DayOffModal({
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-gray-600">
-                      Ngày kết thúc
+                      Thời điểm kết thúc
                     </label>
                     <input
-                      type="date"
+                      type="datetime-local"
                       value={form.endDate}
                       min={form.startDate || undefined}
                       onChange={(e) => {
@@ -305,96 +279,6 @@ export default function DayOffModal({
                     )}
                   </div>
                 </div>
-
-                {/* All-day toggle */}
-                <div className="mb-4">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={form.isAllDay}
-                      onChange={(e) => {
-                        setValue('isAllDay', e.target.checked, {
-                          shouldValidate: true,
-                        });
-                        if (e.target.checked) {
-                          setValue('startTime', null, {
-                            shouldValidate: true,
-                          });
-                          setValue('endTime', null, { shouldValidate: true });
-                        }
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 accent-amber-500"
-                    />
-                    <span className="text-sm font-semibold text-gray-700">
-                      Nghỉ cả ngày
-                    </span>
-                  </label>
-                </div>
-
-                {/* Time inputs (only when not all-day) */}
-                {!form.isAllDay && (
-                  <div className="mb-4 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-gray-600">
-                        Giờ bắt đầu nghỉ
-                      </label>
-                      <input
-                        type="time"
-                        value={form.startTime ?? ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setValue('startTime', val || null, {
-                            shouldValidate: true,
-                          });
-                          if (
-                            form.startDate === form.endDate &&
-                            form.endTime &&
-                            val >= form.endTime
-                          ) {
-                            setValue('endTime', null, {
-                              shouldValidate: true,
-                            });
-                          }
-                        }}
-                        className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 ${
-                          errors.startTime
-                            ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
-                            : 'border-gray-300 focus:border-amber-500 focus:ring-amber-200'
-                        }`}
-                      />
-                      {errors.startTime && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.startTime.message}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-gray-600">
-                        Giờ hết nghỉ
-                      </label>
-                      <input
-                        type="time"
-                        value={form.endTime ?? ''}
-                        min={form.startTime ?? undefined}
-                        onChange={(e) =>
-                          setValue('endTime', e.target.value || null, {
-                            shouldValidate: true,
-                          })
-                        }
-                        className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 ${
-                          errors.endTime
-                            ? 'border-red-400 focus:border-red-400 focus:ring-red-200'
-                            : 'border-gray-300 focus:border-amber-500 focus:ring-amber-200'
-                        }`}
-                      />
-                      {errors.endTime && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.endTime.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {/* Form actions */}
                 <div className="flex items-center justify-end gap-2">
@@ -432,22 +316,10 @@ export default function DayOffModal({
               <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20 text-gray-400">
                 <EventBusyIcon sx={{ fontSize: 64, opacity: 0.3 }} />
                 <p className="text-base font-medium">Chưa có ngày nghỉ</p>
-                <button
-                  className="flex items-center gap-2 rounded-lg border-2 border-dashed border-amber-300 px-6 py-3 text-sm font-semibold text-amber-500 transition hover:border-amber-500 hover:text-amber-700"
-                  onClick={openAddForm}
-                >
-                  <AddIcon fontSize="small" />
-                  Thêm ngày nghỉ đầu tiên
-                </button>
               </div>
             ) : (
               <div className="space-y-2">
                 {sortedDayOffs.map((item) => {
-                  const isSingleDay =
-                    item.startDate.split('T')[0] === item.endDate.split('T')[0];
-                  const hasTime =
-                    item.startTime !== null || item.endTime !== null;
-
                   return (
                     <div
                       key={item.dayOffId}
@@ -455,28 +327,15 @@ export default function DayOffModal({
                     >
                       {/* Date & time display */}
                       <div className="flex flex-1 flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
-                          {formatDate(item.startDate)}
+                        <span className="flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                          <AccessTimeIcon sx={{ fontSize: 14 }} />
+                          {formatDateTime(item.startDate)}
                         </span>
-                        {!isSingleDay && (
-                          <>
-                            <span className="text-sm text-gray-400">—</span>
-                            <span className="rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
-                              {formatDate(item.endDate)}
-                            </span>
-                          </>
-                        )}
-                        {hasTime ? (
-                          <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                            <AccessTimeIcon sx={{ fontSize: 12 }} />
-                            {formatTime(item.startTime)} —{' '}
-                            {formatTime(item.endTime)}
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-                            Cả ngày
-                          </span>
-                        )}
+                        <span className="text-sm text-gray-400">—</span>
+                        <span className="flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-1 text-sm font-semibold text-amber-700">
+                          <AccessTimeIcon sx={{ fontSize: 14 }} />
+                          {formatDateTime(item.endDate)}
+                        </span>
                       </div>
 
                       {/* Delete action */}

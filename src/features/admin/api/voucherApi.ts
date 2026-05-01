@@ -1,6 +1,7 @@
 import type {
   Voucher,
   VoucherCreate,
+  VoucherQueryParams,
   VoucherUpdate,
 } from '@custom-types/voucher';
 import type ApiClient from '@lib/api/apiClient';
@@ -13,9 +14,10 @@ export class VoucherApi {
     this.apiClient = apiClient;
   }
 
-  async getVouchers(): Promise<Voucher[]> {
+  async getVouchers(params?: VoucherQueryParams): Promise<Voucher[]> {
     const res = await this.apiClient.get<Voucher[]>({
       url: apiUrl.voucher.GetOrPostVouchers,
+      params,
     });
     return res.data;
   }

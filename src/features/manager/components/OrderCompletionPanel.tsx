@@ -1,5 +1,4 @@
 import type { ChangeEvent, JSX } from 'react';
-import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import { Box, Button, TextField, Typography } from '@mui/material';
 
 export const OrderCompletionPanel = ({
@@ -64,7 +63,6 @@ export const OrderCompletionPanel = ({
         color="primary"
         onClick={() => void onCompleteOrderByCode()}
         disabled={verificationCode.length !== 6 || isCompletingByCode}
-        startIcon={<VerifiedUserOutlinedIcon />}
         className="bg-primary-600 hover:bg-primary-700 h-10 font-bold whitespace-nowrap text-white"
       >
         Hoàn tất đơn
