@@ -74,14 +74,14 @@ export default function ClaimBranchModal({
         {/* Modal Content */}
         <Box className="flex-1 overflow-y-auto px-8 py-6">
           <Typography className="text-table-text-secondary mb-4 text-sm font-medium">
-            Vui lòng cung cấp hình ảnh giấy phép kinh doanh để xác thực chủ sở
-            hữu.
+            Vui lòng cung cấp hình ảnh giấy phép kinh doanh (không bắt buộc) để
+            xác thực chủ sở hữu.
           </Typography>
           <LicenseUploadSection
             licenseImages={licenseImages}
             onFileChange={handleFileChange}
             title="Giấy phép kinh doanh"
-            required={true}
+            required={false}
           />
         </Box>
 
@@ -105,7 +105,7 @@ export default function ClaimBranchModal({
 
           <Button
             onClick={() => void handleSubmit()}
-            disabled={submitting || licenseImages.length === 0}
+            disabled={submitting}
             variant="contained"
             color="primary"
             startIcon={

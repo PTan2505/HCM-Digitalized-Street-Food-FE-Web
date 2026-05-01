@@ -32,6 +32,7 @@ import usePayment from '@features/vendor/hooks/usePayment';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectMyVendor, selectVendorStatus } from '@slices/vendor';
 import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
+import PaymentBenefitsModal from '@features/vendor/components/PaymentBenefitsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
@@ -94,6 +95,9 @@ function BranchPage(): JSX.Element {
     Record<number, string>
   >({});
   const [payingBranchId, setPayingBranchId] = useState<number | null>(null);
+  const [benefitsModalBranch, setBenefitsModalBranch] = useState<Branch | null>(
+    null
+  );
   const requestedManagerIdsRef = useRef<Set<number>>(new Set());
   const [showOnboardingGuide, setShowOnboardingGuide] = useState(() => {
     return (
@@ -214,12 +218,7 @@ function BranchPage(): JSX.Element {
   const hasAnySubscribedBranch = branches.some((b) => b.isSubscribed);
 
   const canRegisterPackage = (branch: Branch): boolean => {
-    return (
-      !branch.isSubscribed &&
-      branch.isVerified &&
-      branch.licenseStatus === 'Accept' &&
-      hasAnySubscribedBranch
-    );
+    return !branch.isSubscribed;
   };
 
   const handleRegisterPackagePayment = async (
@@ -530,7 +529,7 @@ function BranchPage(): JSX.Element {
       id: 'payment',
       menuLabel: 'Thanh toán đăng ký gói',
       onClick: (branch: Branch): void => {
-        void handleRegisterPackagePayment(branch);
+        setBenefitsModalBranch(branch);
       },
       color: 'success' as const,
       show: (branch: Branch): boolean => canRegisterPackage(branch),
@@ -700,6 +699,17 @@ function BranchPage(): JSX.Element {
         }
         hasAnySubscribedBranch={hasAnySubscribedBranch}
         showPayment={true}
+      />
+
+      <PaymentBenefitsModal
+        isOpen={benefitsModalBranch !== null}
+        onClose={() => setBenefitsModalBranch(null)}
+        onContinue={() => {
+          if (benefitsModalBranch) {
+            void handleRegisterPackagePayment(benefitsModalBranch);
+          }
+        }}
+        isPaying={payingBranchId !== null}
       />
 
       <BranchFormModal

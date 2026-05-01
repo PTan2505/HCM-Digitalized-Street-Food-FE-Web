@@ -253,20 +253,16 @@ export default function BranchDetailsModal({
                     <span className="text-sm font-medium text-gray-600">
                       Gói đăng ký
                     </span>
-                    {!branch.isSubscribed &&
-                      branch.isVerified &&
-                      branch.licenseStatus === 'Accept' &&
-                      showPayment &&
-                      !hasAnySubscribedBranch && (
-                        <button
-                          type="button"
-                          onClick={() => setShowBenefitsModal(true)}
-                          disabled={paying}
-                          className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Xem quyền lợi khi đăng ký gói
-                        </button>
-                      )}
+                    {!branch.isSubscribed && showPayment && (
+                      <button
+                        type="button"
+                        onClick={() => setShowBenefitsModal(true)}
+                        disabled={paying}
+                        className="text-left text-[11px] font-semibold text-blue-600 underline transition-colors hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Xem quyền lợi khi đăng ký gói
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {branch.isSubscribed &&
@@ -337,31 +333,7 @@ export default function BranchDetailsModal({
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-5">
-          <div>
-            {!branch.isSubscribed &&
-              branch.isVerified &&
-              branch.licenseStatus === 'Accept' &&
-              showPayment &&
-              hasAnySubscribedBranch && (
-                <Button
-                  onClick={() => void executePayment()}
-                  type="button"
-                  disabled={paying}
-                  variant="outlined"
-                  color="primary"
-                  startIcon={
-                    paying ? (
-                      <CircularProgress size={14} color="inherit" />
-                    ) : (
-                      <PaymentIcon fontSize="small" />
-                    )
-                  }
-                >
-                  Thanh toán
-                </Button>
-              )}
-          </div>
+        <div className="flex items-center justify-end border-t border-gray-100 bg-gray-50/50 px-8 py-5">
           <button
             onClick={onClose}
             type="button"
