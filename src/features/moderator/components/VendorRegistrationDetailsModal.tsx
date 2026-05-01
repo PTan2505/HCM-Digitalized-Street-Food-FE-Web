@@ -68,8 +68,8 @@ export default function VendorRegistrationDetails({
     : isOwnershipRequestDetail
       ? {
           sectionTitle: 'Thông tin người yêu cầu sở hữu',
-          shopNameLabel: '',
-          shopNameValue: '',
+          shopNameLabel: 'Tên cửa hàng',
+          shopNameValue: registration.vendorName ?? branch.vendorName ?? '',
           nameLabel: 'Tên người yêu cầu sở hữu',
           nameValue:
             branch.vendorUserName ??
