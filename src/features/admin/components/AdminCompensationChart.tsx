@@ -62,7 +62,9 @@ export default function AdminCompensationChart({
         <h3 className="text-lg font-semibold text-gray-900">
           Chi phí bồi thường
         </h3>
-        <p className="text-sm text-gray-500">Thống kê chi phí bồi thường</p>
+        <p className="text-sm text-gray-500">
+          Phí bồi thường cho cửa hàng do khách hàng sử dụng voucher hệ thống
+        </p>
       </div>
 
       <div className="h-[350px] w-full">
