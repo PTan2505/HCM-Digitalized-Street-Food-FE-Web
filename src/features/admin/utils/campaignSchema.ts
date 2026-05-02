@@ -18,7 +18,7 @@ export const CampaignSchema = z
     expectedBranchJoin: z
       .number()
       .int()
-      .min(0, 'Số lượng chi nhánh không được nhỏ hơn 0')
+      .min(1, 'Số lượng chi nhánh phải từ 1 trở lên')
       .nullable(),
     joinFee: z
       .number()

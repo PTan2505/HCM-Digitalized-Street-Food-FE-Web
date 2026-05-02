@@ -244,7 +244,7 @@ export default function CamPaignFormModal({
       description: '',
       targetSegment: '',
       requiredTierId: null,
-      expectedBranchJoin: null,
+      expectedBranchJoin: 1,
       joinFee: 10000,
       registrationStartDate: '',
       registrationEndDate: '',
@@ -296,7 +296,7 @@ export default function CamPaignFormModal({
           description: campaign.description ?? '',
           targetSegment: campaign.targetSegment ?? '',
           requiredTierId: campaign.requiredTierId ?? null,
-          expectedBranchJoin: campaign.expectedBranchJoin ?? null,
+          expectedBranchJoin: campaign.expectedBranchJoin ?? 1,
           joinFee: campaign.joinFee ?? 10000,
           registrationStartDate: toLocalDatetimeValue(
             campaign.registrationStartDate
@@ -313,7 +313,7 @@ export default function CamPaignFormModal({
           description: '',
           targetSegment: '',
           requiredTierId: null,
-          expectedBranchJoin: null,
+          expectedBranchJoin: 1,
           joinFee: 10000,
           registrationStartDate: '',
           registrationEndDate: '',
@@ -496,7 +496,7 @@ export default function CamPaignFormModal({
     const payload: CampaignFormData = {
       ...data,
       requiredTierId: data.requiredTierId ?? undefined,
-      expectedBranchJoin: data.expectedBranchJoin ?? 0,
+      expectedBranchJoin: data.expectedBranchJoin ?? 1,
       joinFee: data.joinFee,
       registrationStartDate: toIsoZulu(data.registrationStartDate) ?? '',
       registrationEndDate: toIsoZulu(data.registrationEndDate) ?? '',
@@ -803,14 +803,14 @@ export default function CamPaignFormModal({
                       <input
                         {...field}
                         type="number"
-                        min={0}
+                        min={1}
                         value={field.value ?? ''}
                         onChange={(e) => {
                           const val = e.target.value;
                           field.onChange(val === '' ? null : Number(val));
                         }}
                         className={inputClass(!!errors.expectedBranchJoin)}
-                        placeholder="Không bắt buộc"
+                        placeholder="VD: 1"
                       />
                     )}
                   />
