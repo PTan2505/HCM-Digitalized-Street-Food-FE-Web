@@ -75,9 +75,17 @@ export default function DishBarChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: '#6B7280', fontSize: 12 }}
-                tickFormatter={(value) =>
-                  value.length > 12 ? value.substring(0, 12) + '...' : value
-                }
+                tickFormatter={(value: string) => {
+                  const maxLen =
+                    sortedData.length <= 3
+                      ? 30
+                      : sortedData.length <= 5
+                        ? 18
+                        : 12;
+                  return value.length > maxLen
+                    ? value.substring(0, maxLen) + '...'
+                    : value;
+                }}
                 dy={10}
                 interval={0}
               />

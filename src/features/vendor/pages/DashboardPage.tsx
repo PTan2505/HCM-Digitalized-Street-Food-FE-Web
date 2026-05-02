@@ -190,7 +190,7 @@ export default function DashboardPage(): React.JSX.Element {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
             <SummaryCard
               title="Tổng doanh thu"
               value={formatCurrency(revenue?.totalRevenue ?? 0)}
@@ -200,6 +200,11 @@ export default function DashboardPage(): React.JSX.Element {
               title="Tổng đơn hàng"
               value={revenue?.totalOrders ?? 0}
               icon={ShoppingBag}
+            />
+            <SummaryCard
+              title="Tổng chiến dịch"
+              value={campaigns?.totalCampaigns ?? 0}
+              icon={Target}
             />
             <SummaryCard
               title="Doanh thu chiến dịch"
@@ -223,14 +228,14 @@ export default function DashboardPage(): React.JSX.Element {
             <DishBarChart data={dishes?.topDishes ?? []} />
           </div>
 
-          {/* Grouped analytics */}
-          <div className="grid grid-cols-1 gap-6 pb-12 lg:grid-cols-2">
-            <div className="lg:col-span-1">
-              <CampaignBarChart data={campaigns?.campaigns ?? []} />
-            </div>
-            <div className="lg:col-span-1">
-              <VoucherBarChart data={vouchers?.voucherUsages ?? []} />
-            </div>
+          {/* Campaign analytics */}
+          <div className="w-full">
+            <CampaignBarChart data={campaigns?.campaigns ?? []} />
+          </div>
+
+          {/* Voucher analytics */}
+          <div className="w-full pb-12">
+            <VoucherBarChart data={vouchers?.voucherUsages ?? []} />
           </div>
         </div>
       )}
