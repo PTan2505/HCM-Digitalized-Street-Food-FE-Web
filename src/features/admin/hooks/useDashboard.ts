@@ -4,11 +4,13 @@ import {
   getMoney,
   getCompensation,
   getConversions,
+  getSystemCampaignsStatistics,
   resetAdminDashboardState,
   selectAdminDashboardUserSignUps,
   selectAdminDashboardMoney,
   selectAdminDashboardCompensation,
   selectAdminDashboardConversions,
+  selectAdminDashboardSystemCampaignsStatistics,
   selectAdminDashboardStatus,
   selectAdminDashboardError,
 } from '@slices/adminDashboard';
@@ -18,6 +20,7 @@ import type {
   GetMoney,
   GetCompensation,
   GetConversions,
+  SystemCampaignStatistics,
 } from '@features/admin/types/dashboard';
 
 export default function useDashboard(): {
@@ -25,6 +28,7 @@ export default function useDashboard(): {
   money: GetMoney | null;
   compensation: GetCompensation | null;
   conversions: GetConversions | null;
+  systemCampaignsStatistics: SystemCampaignStatistics[] | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   onGetUserSignUps: (payload: {
@@ -43,6 +47,7 @@ export default function useDashboard(): {
     fromDate: string;
     toDate: string;
   }) => Promise<GetConversions>;
+  onGetSystemCampaignsStatistics: () => Promise<SystemCampaignStatistics[]>;
   onResetAdminDashboardState: () => void;
 } {
   const dispatch = useAppDispatch();
@@ -51,6 +56,9 @@ export default function useDashboard(): {
   const money = useAppSelector(selectAdminDashboardMoney);
   const compensation = useAppSelector(selectAdminDashboardCompensation);
   const conversions = useAppSelector(selectAdminDashboardConversions);
+  const systemCampaignsStatistics = useAppSelector(
+    selectAdminDashboardSystemCampaignsStatistics
+  );
   const status = useAppSelector(selectAdminDashboardStatus);
   const error = useAppSelector(selectAdminDashboardError);
 
@@ -98,17 +106,25 @@ export default function useDashboard(): {
     dispatch(resetAdminDashboardState());
   }, [dispatch]);
 
+  const onGetSystemCampaignsStatistics = useCallback(async (): Promise<
+    SystemCampaignStatistics[]
+  > => {
+    return await dispatch(getSystemCampaignsStatistics()).unwrap();
+  }, [dispatch]);
+
   return {
     userSignUps,
     money,
     compensation,
     conversions,
+    systemCampaignsStatistics,
     status,
     error,
     onGetUserSignUps,
     onGetMoney,
     onGetCompensation,
     onGetConversions,
+    onGetSystemCampaignsStatistics,
     onResetAdminDashboardState,
   };
 }

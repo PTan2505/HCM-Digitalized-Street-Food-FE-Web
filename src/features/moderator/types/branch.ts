@@ -21,6 +21,7 @@ export interface Branch {
   vendorUserName?: string | null;
   vendorUserEmail?: string | null;
   vendorUserPhone?: string | null;
+  vendorName?: string | null;
   name: string;
   phoneNumber: string | null;
   email: string | null;
@@ -60,6 +61,7 @@ export interface BranchRegisterRequest {
   vendorUserName?: string;
   vendorUserEmail?: string;
   vendorUserPhone?: string;
+  vendorName?: string;
   branch: Branch;
 }
 

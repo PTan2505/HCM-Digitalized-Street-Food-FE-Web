@@ -30,11 +30,11 @@ interface Column<T> {
 interface Action<T> {
   id?: string;
   label: string | React.ReactNode | ((row: T) => React.ReactNode);
-  menuLabel?: React.ReactNode;
+  menuLabel?: React.ReactNode | ((row: T) => React.ReactNode);
   onClick: (row: T) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   variant?: 'text' | 'outlined' | 'contained';
-  tooltip?: string;
+  tooltip?: string | ((row: T) => string);
   show?: (row: T) => boolean;
   disabled?: (row: T) => boolean;
 }
@@ -269,10 +269,15 @@ const Table = <T extends object>({
                                     return actionButton;
                                   }
 
+                                  const tooltipTitle =
+                                    typeof action.tooltip === 'function'
+                                      ? action.tooltip(row)
+                                      : action.tooltip;
+
                                   return (
                                     <Tooltip
                                       key={index}
-                                      title={action.tooltip}
+                                      title={tooltipTitle}
                                       arrow
                                     >
                                       {actionButton}
@@ -340,12 +345,13 @@ const Table = <T extends object>({
             )
             .map((action, index) => {
               const currentRow = menuState.row;
+              if (currentRow === null) {
+                return null;
+              }
+
               let label: React.ReactNode;
 
               if (typeof action.label === 'function') {
-                if (currentRow === null) {
-                  return null;
-                }
                 label = action.label(currentRow);
               } else {
                 label = action.label;
@@ -418,7 +424,9 @@ const Table = <T extends object>({
                           fontFamily: 'inherit',
                         }}
                       >
-                        {action.menuLabel}
+                        {typeof action.menuLabel === 'function'
+                          ? action.menuLabel(currentRow)
+                          : action.menuLabel}
                       </Typography>
                     )}
                   </Box>

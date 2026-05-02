@@ -548,14 +548,16 @@ export default function CampaignPage(): JSX.Element {
     {
       id: 'quests',
       label: <AssignmentTurnedInIcon fontSize="small" />,
-      menuLabel: 'Xem nhiệm vụ chiến dịch',
+      menuLabel: (row: Campaign): string =>
+        !row.isUpdateable ? 'Chi tiết nhiệm vụ' : 'Quản lý nhiệm vụ',
       onClick: (row: Campaign): void => {
         void handleOpenCampaignQuestModal(row);
       },
-      tooltip: 'Xem nhiệm vụ chiến dịch',
+      tooltip: (row: Campaign): string =>
+        !row.isUpdateable ? 'Chi tiết nhiệm vụ' : 'Quản lý nhiệm vụ',
       color: 'secondary' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean => row.isUpdateable,
+      // show: (row: Campaign): boolean => row.isUpdateable,
     },
     {
       id: 'voucher',
@@ -705,6 +707,7 @@ export default function CampaignPage(): JSX.Element {
         status={questStatus}
         enableViewModeToggle
         initialViewMode
+        campaignIsUpdateable={selectedCampaign?.isUpdateable ?? true}
       />
 
       <Dialog

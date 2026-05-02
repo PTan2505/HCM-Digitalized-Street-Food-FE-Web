@@ -30,6 +30,7 @@ import {
   AddPhotoAlternate as AddPhotoAlternateIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import {
   Button,
@@ -84,6 +85,7 @@ interface QuestFormModalProps {
   forcedCampaignStartDate?: string | null;
   forcedCampaignEndDate?: string | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
+  campaignIsUpdateable?: boolean;
 }
 
 type RewardVoucherMode = 'existing' | 'create' | 'update';
@@ -2340,6 +2342,7 @@ export default function QuestFormModal({
   forcedCampaignStartDate = null,
   forcedCampaignEndDate = null,
   status,
+  campaignIsUpdateable,
 }: QuestFormModalProps): JSX.Element | null {
   const { onGetCampaigns } = useCampaign();
   const { onGetAllBadges } = useBadge();
@@ -3314,12 +3317,22 @@ export default function QuestFormModal({
       }}
     >
       <AppModalHeader
-        title={quest ? 'Chỉnh sửa nhiệm vụ' : 'Tạo nhiệm vụ mới'}
+        title={
+          forcedCampaignId !== null
+            ? campaignIsUpdateable === false
+              ? 'Chi tiết nhiệm vụ'
+              : 'Quản lý nhiệm vụ'
+            : quest
+              ? 'Chỉnh sửa nhiệm vụ'
+              : 'Tạo nhiệm vụ mới'
+        }
         subtitle={quest?.title ?? ''}
         icon={<AddIcon />}
         iconTone="admin"
         rightActions={
-          quest !== null && enableViewModeToggle ? (
+          quest !== null &&
+          enableViewModeToggle &&
+          !(forcedCampaignId !== null && campaignIsUpdateable === false) ? (
             <Tooltip
               title={isViewMode ? 'Bật chế độ chỉnh sửa' : 'Bật chế độ xem'}
               arrow
@@ -3333,7 +3346,11 @@ export default function QuestFormModal({
                   '&:hover': { bgcolor: '#f3f4f6' },
                 }}
               >
-                <EditIcon fontSize="small" />
+                {isViewMode ? (
+                  <EditIcon fontSize="small" />
+                ) : (
+                  <VisibilityIcon fontSize="small" />
+                )}
               </IconButton>
             </Tooltip>
           ) : null

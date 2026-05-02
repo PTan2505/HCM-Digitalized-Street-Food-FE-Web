@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -73,7 +73,7 @@ export default function AdminCompensationChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
+            <LineChart
               data={data}
               margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
             >
@@ -106,16 +106,22 @@ export default function AdminCompensationChart({
               />
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'rgba(239,68,68,0.1)' }}
+                cursor={{
+                  stroke: '#EF4444',
+                  strokeWidth: 2,
+                  strokeDasharray: '3 3',
+                }}
               />
-              <Bar
+              <Line
+                type="monotone"
                 dataKey="compensationAmount"
-                fill="#EF4444"
-                radius={[4, 4, 0, 0]}
+                stroke="#EF4444"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
                 animationDuration={1500}
-                barSize={30}
               />
-            </BarChart>
+            </LineChart>
           </ResponsiveContainer>
         )}
       </div>
