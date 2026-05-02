@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -94,7 +94,7 @@ export default function AdminMoneyChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
+            <LineChart
               data={data}
               margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
             >
@@ -127,7 +127,11 @@ export default function AdminMoneyChart({
               />
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                cursor={{
+                  stroke: '#E5E7EB',
+                  strokeWidth: 2,
+                  strokeDasharray: '3 3',
+                }}
               />
               <Legend
                 verticalAlign="top"
@@ -135,23 +139,27 @@ export default function AdminMoneyChart({
                 iconType="circle"
                 wrapperStyle={{ fontSize: '12px', color: '#4B5563' }}
               />
-              <Bar
-                name="ĐK Chi nhánh"
+              <Line
+                type="monotone"
+                name="Phí đăng ký chi nhánh"
                 dataKey="branchRegistrationAmount"
-                stackId="a"
-                fill="#10B981"
-                radius={[0, 0, 4, 4]}
+                stroke="#10B981"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
                 animationDuration={1500}
               />
-              <Bar
+              <Line
+                type="monotone"
                 name="Chiến dịch"
                 dataKey="systemCampaignAmount"
-                stackId="a"
-                fill="#F59E0B"
-                radius={[4, 4, 0, 0]}
+                stroke="#F59E0B"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
                 animationDuration={1500}
               />
-            </BarChart>
+            </LineChart>
           </ResponsiveContainer>
         )}
       </div>

@@ -240,6 +240,7 @@ export const apiUrl = {
     getMoney: '/AdminDashboard/money',
     getCompensation: '/AdminDashboard/compensation',
     getUserToVendorConversions: '/AdminDashboard/user-to-vendor-conversions',
+    getSystemCampaignsStatistics: '/AdminDashboard/system-campaigns/statistics',
   },
   branch: {
     getBranches: '/Branch',

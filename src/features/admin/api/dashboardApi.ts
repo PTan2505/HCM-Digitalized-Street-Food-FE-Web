@@ -3,6 +3,7 @@ import type {
   GetMoney,
   GetCompensation,
   GetConversions,
+  SystemCampaignStatistics,
 } from '@features/admin/types/dashboard';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -54,6 +55,13 @@ export class AdminDashboardApi {
     const res = await this.apiClient.get<GetConversions>({
       url: apiUrl.adminDashboard.getUserToVendorConversions,
       params,
+    });
+    return res.data;
+  }
+
+  async getSystemCampaignsStatistics(): Promise<SystemCampaignStatistics[]> {
+    const res = await this.apiClient.get<SystemCampaignStatistics[]>({
+      url: apiUrl.adminDashboard.getSystemCampaignsStatistics,
     });
     return res.data;
   }

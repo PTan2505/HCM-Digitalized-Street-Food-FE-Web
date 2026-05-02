@@ -59,3 +59,43 @@ export interface GetConversions {
   conversionGrowthRate: number | null;
   dailyConversions: DailyConversions[];
 }
+
+export interface SystemCampaignQuest {
+  questId: number;
+  questTitle: string;
+  totalUsersDoing: number;
+  usersCurrentlyDoing: number;
+  usersFinished: number;
+}
+
+export interface SystemCampaignBranchOrder {
+  branchId: number;
+  branchName: string;
+  orderCount: number;
+}
+
+export interface SystemCampaignVoucher {
+  voucherId: number;
+  voucherName: string;
+  totalUsed: number;
+}
+
+export interface SystemCampaignOrder {
+  orderId: number;
+  branchName: string;
+  voucherName: string;
+  totalAmount: number;
+  discountAmount: number;
+  createdAt: string;
+}
+
+export interface SystemCampaignStatistics {
+  campaignId: number;
+  campaignName: string;
+  totalBranchesJoined: number;
+  totalOrders: number;
+  quests: SystemCampaignQuest[];
+  branchOrders: SystemCampaignBranchOrder[];
+  vouchers: SystemCampaignVoucher[];
+  campaignOrders: SystemCampaignOrder[];
+}

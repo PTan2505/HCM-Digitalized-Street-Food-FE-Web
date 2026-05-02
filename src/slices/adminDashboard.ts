@@ -4,6 +4,7 @@ import type {
   GetMoney,
   GetCompensation,
   GetConversions,
+  SystemCampaignStatistics,
 } from '@features/admin/types/dashboard';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -19,6 +20,7 @@ export interface AdminDashboardState {
   money: GetMoney | null;
   compensation: GetCompensation | null;
   conversions: GetConversions | null;
+  systemCampaignsStatistics: SystemCampaignStatistics[] | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
 }
@@ -28,6 +30,7 @@ const initialState: AdminDashboardState = {
   money: null,
   compensation: null,
   conversions: null,
+  systemCampaignsStatistics: null,
   status: 'idle',
   error: null,
 };
@@ -110,6 +113,19 @@ export const getConversions = createAppAsyncThunk(
   }
 );
 
+export const getSystemCampaignsStatistics = createAppAsyncThunk(
+  'adminDashboard/getSystemCampaignsStatistics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: SystemCampaignStatistics[] =
+        await axiosApi.adminDashboardApi.getSystemCampaignsStatistics();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────
 
 const allThunks = [
@@ -117,6 +133,7 @@ const allThunks = [
   getMoney,
   getCompensation,
   getConversions,
+  getSystemCampaignsStatistics,
 ] as const;
 
 export const adminDashboardSlice = createSlice({
@@ -138,6 +155,9 @@ export const adminDashboardSlice = createSlice({
       })
       .addCase(getConversions.fulfilled, (state, action) => {
         state.conversions = action.payload;
+      })
+      .addCase(getSystemCampaignsStatistics.fulfilled, (state, action) => {
+        state.systemCampaignsStatistics = action.payload;
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';
@@ -182,3 +202,8 @@ export const selectAdminDashboardCompensation = (
 export const selectAdminDashboardConversions = (
   state: RootState
 ): GetConversions | null => state.adminDashboard.conversions;
+
+export const selectAdminDashboardSystemCampaignsStatistics = (
+  state: RootState
+): SystemCampaignStatistics[] | null =>
+  state.adminDashboard.systemCampaignsStatistics;

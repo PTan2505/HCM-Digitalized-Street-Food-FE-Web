@@ -2,12 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Tooltip } from '@mui/material';
 import { Users, DollarSign, AlertCircle, UserCheck } from 'lucide-react';
 import useDashboard from '@features/admin/hooks/useDashboard';
-import SummaryCard from '@features/vendor/components/SummaryCard';
+import SummaryCard from '@features/admin/components/SummaryCard';
 import AdminSignupsChart from '@features/admin/components/AdminSignupsChart';
 import AdminMoneyChart from '@features/admin/components/AdminMoneyChart';
 import AdminCompensationChart from '@features/admin/components/AdminCompensationChart';
 import AdminConversionsChart from '@features/admin/components/AdminConversionsChart';
 import CompensationDetailModal from '@features/admin/components/CompensationDetailModal';
+import SystemCampaignStatisticsModal from '@features/admin/components/SystemCampaignStatisticsModal';
+import Table from '@features/admin/components/Table';
+import { Visibility as VisibilityIcon } from '@mui/icons-material';
+import type { SystemCampaignStatistics } from '@features/admin/types/dashboard';
 
 export default function DashboardPage(): React.JSX.Element {
   const {
@@ -15,11 +19,13 @@ export default function DashboardPage(): React.JSX.Element {
     money,
     compensation,
     conversions,
+    systemCampaignsStatistics,
     status,
     onGetUserSignUps,
     onGetMoney,
     onGetCompensation,
     onGetConversions,
+    onGetSystemCampaignsStatistics,
   } = useDashboard();
 
   // Default to the last 30 days which is a standard logical period for dashboards
@@ -57,12 +63,14 @@ export default function DashboardPage(): React.JSX.Element {
       fromDate: dateRange.fromDate,
       toDate: dateRange.toDate,
     });
+    onGetSystemCampaignsStatistics();
   }, [
     dateRange,
     onGetUserSignUps,
     onGetMoney,
     onGetCompensation,
     onGetConversions,
+    onGetSystemCampaignsStatistics,
   ]);
 
   const handleFilterApply = (): void => {
@@ -92,6 +100,8 @@ export default function DashboardPage(): React.JSX.Element {
   };
 
   const [showCompensationDetail, setShowCompensationDetail] = useState(false);
+  const [selectedCampaignStats, setSelectedCampaignStats] =
+    useState<SystemCampaignStatistics | null>(null);
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('vi-VN', {
@@ -359,9 +369,70 @@ export default function DashboardPage(): React.JSX.Element {
           </div>
 
           {/* Users metrics */}
-          <div className="grid grid-cols-1 gap-6 pb-12 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <AdminSignupsChart data={userSignUps?.dailySignups ?? []} />
             <AdminConversionsChart data={conversions?.dailyConversions ?? []} />
+          </div>
+
+          {/* System Campaigns Statistics */}
+          <div
+            className="rounded-xl border border-gray-100 p-6 shadow-sm"
+            style={{
+              background: 'linear-gradient(to right, #ffffff, #f8fafc)',
+            }}
+          >
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Thống kê chiến dịch hệ thống
+              </h3>
+              <p className="text-sm text-gray-500">
+                Thông tin chi tiết về các chiến dịch hệ thống
+              </p>
+            </div>
+            <Table
+              rowKey="campaignId"
+              data={systemCampaignsStatistics ?? []}
+              loading={!systemCampaignsStatistics && status === 'pending'}
+              columns={[
+                {
+                  key: 'campaignName',
+                  label: 'Tên chiến dịch',
+                  style: { fontWeight: 600 },
+                },
+                {
+                  key: 'totalBranchesJoined',
+                  label: 'Chi nhánh tham gia',
+                  style: { textAlign: 'right' },
+                  render: (v) => (
+                    <span className="font-semibold text-blue-600">
+                      {Number(v ?? 0).toString()}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'totalOrders',
+                  label: 'Tổng đơn hàng',
+                  style: { textAlign: 'right' },
+                  render: (v) => (
+                    <span className="font-semibold text-emerald-600">
+                      {Number(v ?? 0).toString()}
+                    </span>
+                  ),
+                },
+              ]}
+              actions={[
+                {
+                  id: 'view',
+                  label: <VisibilityIcon fontSize="small" />,
+                  tooltip: 'Xem chi tiết chiến dịch',
+                  onClick: (row) => setSelectedCampaignStats(row),
+                  color: 'primary',
+                  variant: 'outlined',
+                },
+              ]}
+              emptyMessage="Không có dữ liệu chiến dịch hệ thống"
+              maxHeight="500px"
+            />
           </div>
         </div>
       )}
@@ -369,6 +440,11 @@ export default function DashboardPage(): React.JSX.Element {
         open={showCompensationDetail}
         onClose={() => setShowCompensationDetail(false)}
         data={compensation?.compensationByVendors ?? []}
+      />
+      <SystemCampaignStatisticsModal
+        open={selectedCampaignStats !== null}
+        onClose={() => setSelectedCampaignStats(null)}
+        data={selectedCampaignStats}
       />
     </div>
   );
