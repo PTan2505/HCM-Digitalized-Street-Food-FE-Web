@@ -3670,10 +3670,17 @@ export default function QuestFormModal({
                                 )}
                               >
                                 {Object.entries(QUEST_TASK_TYPE_LABELS)
-                                  .filter(
-                                    ([value]) =>
-                                      value !== String(QuestTaskType.TIER_UP)
-                                  )
+                                  .filter(([value]) => {
+                                    if (
+                                      value === String(QuestTaskType.TIER_UP)
+                                    ) {
+                                      return false;
+                                    }
+                                    if (value === String(QuestTaskType.SHARE)) {
+                                      return Number(value) === currentTaskType;
+                                    }
+                                    return true;
+                                  })
                                   .map(([value, label]) => (
                                     <option key={value} value={value}>
                                       {label}

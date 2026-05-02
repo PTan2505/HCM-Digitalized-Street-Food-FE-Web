@@ -1279,14 +1279,21 @@ export default function CamPaignFormModal({
                                           }
                                           className={inputClass(false)}
                                         >
-                                          {taskOptions.map((option) => (
-                                            <option
-                                              key={option.value}
-                                              value={option.value}
-                                            >
-                                              {option.label}
-                                            </option>
-                                          ))}
+                                          {taskOptions
+                                            .filter(
+                                              (option) =>
+                                                option.value !==
+                                                  QuestTaskType.SHARE ||
+                                                option.value === task.taskType
+                                            )
+                                            .map((option) => (
+                                              <option
+                                                key={option.value}
+                                                value={option.value}
+                                              >
+                                                {option.label}
+                                              </option>
+                                            ))}
                                         </select>
                                       </div>
 
