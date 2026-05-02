@@ -53,7 +53,7 @@ export default function AdminSignupsChart({
     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">
-          Đăng ký người dùng
+          Lượng người dùng mới
         </h3>
         <p className="text-sm text-gray-500">Thống kê lượt đăng ký mới</p>
       </div>

@@ -39,9 +39,17 @@ export interface VendorDashboardCampaigns {
   campaigns: CampaignStat[];
 }
 
+export interface CampaignBranchStat {
+  branchId: number;
+  branchName: string;
+  orderCount: number;
+  revenue: number;
+}
+
 export interface CampaignStat {
   campaignId: number;
   campaignName: string;
   orderCount: number;
   revenue: number;
+  branches?: CampaignBranchStat[];
 }
