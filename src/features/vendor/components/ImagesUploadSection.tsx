@@ -6,12 +6,14 @@ interface ImagesUploadSectionProps {
   storeImages: File[];
   onFileChange: (files: FileList | null) => void;
   readonly?: boolean;
+  title?: string;
 }
 
 export default function ImagesUploadSection({
   storeImages,
   onFileChange,
   readonly = false,
+  title = '3. Hình ảnh cửa hàng',
 }: ImagesUploadSectionProps): JSX.Element {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [fullViewImage, setFullViewImage] = useState<string | null>(null);
@@ -45,9 +47,7 @@ export default function ImagesUploadSection({
 
   return (
     <div className="mb-12">
-      <h2 className="mb-6 text-lg font-semibold text-gray-800">
-        3. Hình ảnh cửa hàng
-      </h2>
+      <h2 className="mb-6 text-lg font-semibold text-gray-800">{title}</h2>
 
       {!readonly && (
         <>
