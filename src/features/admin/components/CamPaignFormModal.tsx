@@ -194,7 +194,10 @@ const taskOptions: Array<{ value: QuestTaskType; label: string }> = [
   { value: QuestTaskType.REVIEW, label: 'Đánh giá' },
   { value: QuestTaskType.ORDER_AMOUNT, label: 'Tổng chi tiêu đơn hàng' },
   { value: QuestTaskType.SHARE, label: 'Chia sẻ' },
-  { value: QuestTaskType.CREATE_GHOST_PIN, label: 'Tạo ghost pin' },
+  {
+    value: QuestTaskType.CREATE_GHOST_PIN,
+    label: 'Chia sẻ quán ăn ngon cho cộng đồng',
+  },
 ];
 
 const getIssuedVoucherQuantity = (
