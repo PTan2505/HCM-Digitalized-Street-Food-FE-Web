@@ -19,6 +19,7 @@ interface MapLocationPickerProps {
     ward: string;
     city: string;
   }) => void;
+  hideWarnings?: boolean;
 }
 
 export default function MapLocationPicker({
@@ -27,6 +28,7 @@ export default function MapLocationPicker({
   longitude,
   onLocationChange,
   onAddressResolved,
+  hideWarnings = false,
 }: MapLocationPickerProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -316,27 +318,30 @@ export default function MapLocationPicker({
   return (
     <div>
       {/* Thông báo quan trọng về độ chính xác */}
-      <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-        <p className="mb-2 text-sm font-medium text-yellow-800">
-          Lưu ý về độ chính xác định vị
-        </p>
-        <ul className="ml-5 list-disc space-y-1 text-xs text-yellow-700">
-          <li>
-            Hệ thống tự động định vị có thể{' '}
-            <strong>không chính xác 100%</strong>
-          </li>
-          <li>
-            Vui lòng <strong>kiểm tra marker (chấm đỏ)</strong> trên bản đồ
-          </li>
-          <li>
-            <strong>Kéo marker</strong> đến đúng vị trí cửa hàng của bạn nếu cần
-          </li>
-          <li>
-            Hoặc <strong>click trực tiếp</strong> vào bản đồ để đánh dấu vị trí
-            chính xác
-          </li>
-        </ul>
-      </div>
+      {!hideWarnings && (
+        <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <p className="mb-2 text-sm font-medium text-yellow-800">
+            Lưu ý về độ chính xác định vị
+          </p>
+          <ul className="ml-5 list-disc space-y-1 text-xs text-yellow-700">
+            <li>
+              Hệ thống tự động định vị có thể{' '}
+              <strong>không chính xác 100%</strong>
+            </li>
+            <li>
+              Vui lòng <strong>kiểm tra marker (chấm đỏ)</strong> trên bản đồ
+            </li>
+            <li>
+              <strong>Kéo marker</strong> đến đúng vị trí cửa hàng của bạn nếu
+              cần
+            </li>
+            <li>
+              Hoặc <strong>click trực tiếp</strong> vào bản đồ để đánh dấu vị
+              trí chính xác
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* Hiển thị trạng thái geocoding */}
       {/* {isGeocoding && (
@@ -388,7 +393,7 @@ export default function MapLocationPicker({
         </div>
       )} */}
 
-      {address && address.length < 20 && (
+      {!hideWarnings && address && address.length < 20 && (
         <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
           <p className="text-sm text-yellow-700">
             Vui lòng nhập đầy đủ địa chỉ chi tiết để hệ thống có thể định vị

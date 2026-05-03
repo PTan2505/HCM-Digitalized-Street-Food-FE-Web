@@ -1,6 +1,7 @@
 import type { BranchRegisterRequest } from '@features/moderator/types/branch';
 import AppModalHeader from '@components/AppModalHeader';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
+import MapLocationPicker from '@features/vendor/components/MapLocationPicker';
 import type { JSX } from 'react';
 
 interface VendorOwnerInfo {
@@ -287,6 +288,30 @@ export default function VendorRegistrationDetails({
             Thông tin chi nhánh
           </h3>
           {renderTable(branchRows)}
+
+          {/* Map Info */}
+          {branch.lat != null && branch.long != null && (
+            <>
+              <h3 className="mt-6 mb-3 flex items-center gap-2 text-sm font-bold tracking-wider text-gray-800 uppercase">
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                Vị trí trên bản đồ
+              </h3>
+              <div className="overflow-hidden rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+                <div className="pointer-events-none">
+                  <MapLocationPicker
+                    address={branch.addressDetail ?? ''}
+                    latitude={branch.lat}
+                    longitude={branch.long}
+                    onLocationChange={() => {}}
+                    hideWarnings={true}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Tọa độ: {branch.lat.toFixed(6)}, {branch.long.toFixed(6)}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Footer */}
