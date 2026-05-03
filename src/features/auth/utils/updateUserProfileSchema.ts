@@ -15,17 +15,10 @@ export const UpdateProfileSchema = z.object({
     .nullable(),
   phoneNumber: z
     .string()
-    .optional()
-    .nullable()
-    .refine(
-      (value) => {
-        if (!value) return true;
-        return validator.isMobilePhone(value, 'vi-VN');
-      },
-      {
-        message: VALIDATE_ERROR_MESSAGES.INVALID_PHONE_NUMBER,
-      }
-    ),
+    .nonempty(VALIDATE_ERROR_MESSAGES.EMPTY_PHONE_NUMBER)
+    .refine((value) => validator.isMobilePhone(value, 'vi-VN'), {
+      message: VALIDATE_ERROR_MESSAGES.INVALID_PHONE_NUMBER,
+    }),
   username: z
     .string()
     .nonempty(VALIDATE_ERROR_MESSAGES.EMPTY_USERNAME)

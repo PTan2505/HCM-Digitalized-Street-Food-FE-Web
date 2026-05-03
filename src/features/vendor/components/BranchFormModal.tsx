@@ -534,7 +534,7 @@ export default function BranchFormModal({
               onChange={handleChange}
               onLocationChange={handleLocationChange}
               errors={storeErrors}
-              branchNameRequired={mode.type !== 'createVendor'}
+              branchNameRequired={true}
               {...(mode.type === 'addBranch'
                 ? {
                     sectionTitle: '2. Thông tin chi nhánh',

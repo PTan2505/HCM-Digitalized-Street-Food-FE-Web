@@ -416,7 +416,9 @@ export default function UserProfileForm({
           {/* Phone Number */}
           <div>
             <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-              <span>Số điện thoại</span>
+              <span>
+                Số điện thoại <span className="text-red-500">*</span>
+              </span>
               {isModal && verifiedState.phoneNumber && (
                 <span className="inline-flex h-6 items-center gap-1 rounded-full bg-emerald-100 px-2 text-xs font-semibold text-emerald-700">
                   <BadgeCheck size={14} />

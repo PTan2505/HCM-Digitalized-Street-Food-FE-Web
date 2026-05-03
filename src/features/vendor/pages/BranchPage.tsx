@@ -679,7 +679,7 @@ function BranchPage(): JSX.Element {
           data={verifiedBranches}
           rowKey="branchId"
           loading={status === 'pending'}
-          emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng đăng ký chi nhánh ở tab Lịch sử đăng ký)"
+          emptyMessage="Chưa có chi nhánh đã xác thực (Vui lòng xem danh sách các chi nhánh đã đăng ký tại mục Lịch sử đăng ký)"
           actions={actions}
           maxHeight="calc(100vh - 240px)"
           tourId="vendor-branch"

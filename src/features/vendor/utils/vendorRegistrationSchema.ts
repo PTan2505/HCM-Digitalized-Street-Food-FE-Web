@@ -16,7 +16,11 @@ const baseFields = {
     .refine((value) => validator.isEmail(value), {
       message: VALIDATE_ERROR_MESSAGES.INVALID_EMAIL,
     }),
-  branchName: z.string().optional(),
+  branchName: z
+    .string()
+    .nonempty('Vui lòng nhập tên chi nhánh!')
+    .min(3, 'Tên chi nhánh phải có ít nhất 3 ký tự!')
+    .max(100, 'Tên chi nhánh không được vượt quá 100 ký tự!'),
   detailAddress: z
     .string()
     .nonempty('Vui lòng nhập địa chỉ cửa hàng!')
@@ -50,24 +54,14 @@ export const CreateVendorSchema = z.object({
     .min(1, 'Vui lòng chọn ít nhất một chế độ ăn phù hợp!'),
 });
 
-// Schema for addBranch mode — requires branchName
+// Schema for addBranch mode
 export const AddBranchSchema = z.object({
   ...baseFields,
-  branchName: z
-    .string()
-    .nonempty('Vui lòng nhập tên chi nhánh!')
-    .min(3, 'Tên chi nhánh phải có ít nhất 3 ký tự!')
-    .max(100, 'Tên chi nhánh không được vượt quá 100 ký tự!'),
 });
 
-// Schema for editBranch mode — same as addBranch
+// Schema for editBranch mode
 export const EditBranchSchema = z.object({
   ...baseFields,
-  branchName: z
-    .string()
-    .nonempty('Vui lòng nhập tên chi nhánh!')
-    .min(3, 'Tên chi nhánh phải có ít nhất 3 ký tự!')
-    .max(100, 'Tên chi nhánh không được vượt quá 100 ký tự!'),
 });
 
 export type CreateVendorFormData = z.infer<typeof CreateVendorSchema>;
