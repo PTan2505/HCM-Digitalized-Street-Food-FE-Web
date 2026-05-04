@@ -211,6 +211,14 @@ const getIssuedVoucherQuantity = (
   return rewardQuantity * expectedParticipantCount;
 };
 
+const translateTierName = (name: string): string => {
+  const normalized = name.trim().toLowerCase();
+  if (normalized === 'silver') return 'Bạc';
+  if (normalized === 'gold') return 'Vàng';
+  if (normalized === 'diamond') return 'Kim cương';
+  return name;
+};
+
 export default function CamPaignFormModal({
   isOpen,
   onClose,
@@ -787,7 +795,7 @@ export default function CamPaignFormModal({
                         <option value="">Không yêu cầu hạng</option>
                         {tiers.map((tier) => (
                           <option key={tier.tierId} value={tier.tierId}>
-                            {tier.name}
+                            {translateTierName(tier.name)}
                           </option>
                         ))}
                       </select>
@@ -1568,8 +1576,8 @@ export default function CamPaignFormModal({
                                                     className="mb-3 text-xs font-bold uppercase"
                                                     style={{ color: '#8bcf3f' }}
                                                   >
-                                                    Form tạo voucher cho phần
-                                                    thưởng này
+                                                    Tạo voucher cho phần thưởng
+                                                    này
                                                   </p>
 
                                                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
