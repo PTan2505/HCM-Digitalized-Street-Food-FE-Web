@@ -211,6 +211,14 @@ const VoucherCard = ({ voucher }: { voucher: Voucher }): JSX.Element => {
   );
 };
 
+const translateTierName = (name: string): string => {
+  const normalized = name.trim().toLowerCase();
+  if (normalized === 'silver') return 'Bạc';
+  if (normalized === 'gold') return 'Vàng';
+  if (normalized === 'diamond') return 'Kim cương';
+  return name;
+};
+
 export default function CampaignDetailModal({
   isOpen,
   onClose,
@@ -275,7 +283,7 @@ export default function CampaignDetailModal({
 
     const tier = tiers.find((item) => item.tierId === campaign.requiredTierId);
 
-    return tier?.name ?? `#${campaign.requiredTierId}`;
+    return tier ? translateTierName(tier.name) : `#${campaign.requiredTierId}`;
   })();
 
   if (!isOpen) return null;
@@ -345,10 +353,10 @@ export default function CampaignDetailModal({
                 <div className="space-y-3 lg:col-span-3">
                   <DetailItem label="Tên chiến dịch" value={campaign.name} />
                   <DetailItem label="Hạng yêu cầu" value={requiredTierLabel} />
-                  <DetailItem
+                  {/* <DetailItem
                     label="Phân khúc mục tiêu"
                     value={campaign.targetSegment ?? 'Tất cả'}
-                  />
+                  /> */}
                   <div className="rounded-lg border border-slate-200 bg-white p-3">
                     <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                       Mô tả

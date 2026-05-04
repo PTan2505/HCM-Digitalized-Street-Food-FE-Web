@@ -271,14 +271,14 @@ export default function VendorCampaignDetailModal({
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
                 <div className="space-y-3 lg:col-span-3">
                   <DetailItem label="Tên chiến dịch" value={campaign.name} />
-                  <DetailItem
+                  {/* <DetailItem
                     label="Phân khúc mục tiêu"
                     value={
                       campaign.targetSegment?.trim()
                         ? campaign.targetSegment
                         : '-'
                     }
-                  />
+                  /> */}
                   <div className="rounded-lg border border-slate-200 bg-white p-3">
                     <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
                       Mô tả
