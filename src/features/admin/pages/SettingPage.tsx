@@ -26,6 +26,17 @@ export default function SettingPage(): JSX.Element {
   const status = useAppSelector(selectSettingStatus);
   const { onGetAllSettings, onUpdateSetting, onReloadSettings } = useSetting();
 
+  const settingNameMap: Record<string, string> = {
+    orderXP: 'Điểm kinh nghiệm cho đơn hàng',
+    ghostpinXP: 'Điểm kinh nghiệm cho Ghost Pin',
+    feedbackDailyLimit: 'Giới hạn phản hồi mỗi ngày',
+    GoldMinXP: 'Điểm kinh nghiệm tối thiểu hạng Vàng',
+    SubscriptionFee: 'Phí đăng ký',
+    DiamondMinXP: 'Điểm kinh nghiệm tối thiểu hạng Kim cương',
+    feedbackXP: 'Điểm kinh nghiệm cho phản hồi',
+    SubscriptionDurationDays: 'Số ngày đăng ký cho gói',
+  };
+
   const [editingValues, setEditingValues] = useState<Record<number, string>>(
     {}
   );
@@ -113,7 +124,16 @@ export default function SettingPage(): JSX.Element {
     () => [
       {
         key: 'name',
-        label: 'Tên setting',
+        label: 'Tên cài đặt',
+        render: (_: unknown, row: Setting): JSX.Element => {
+          const label = settingNameMap[row.name] ?? row.name;
+
+          return (
+            <span className="text-table-text-primary text-sm font-medium">
+              {label}
+            </span>
+          );
+        },
       },
       {
         key: 'value',
@@ -248,7 +268,7 @@ export default function SettingPage(): JSX.Element {
             </button>
           </div>
           <p className="text-table-text-secondary text-sm">
-            Quản lý giá trị settings và tải lại cấu hình runtime
+            Quản lý giá trị cài đặt và tải lại cấu hình khi chạy
           </p>
         </div>
 
