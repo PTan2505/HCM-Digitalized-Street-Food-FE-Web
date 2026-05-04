@@ -26,7 +26,7 @@ export default function HomePage(): JSX.Element {
   const navigate = useNavigate();
   const [carouselSlides, setCarouselSlides] = useState<HeroSlide[]>([]);
   const downloadLink =
-    'https://drive.google.com/file/d/1a7EL-MoxaaYxjIE890ElxiXTx8snLZ0E/view?usp=drive_link';
+    'https://expo.dev/artifacts/eas/dA3be8eZtDUZP4D8rjwJdK.apk';
 
   const topFinalScoreBranches = useMemo(() => {
     return [...activeBranches]
@@ -145,7 +145,7 @@ export default function HomePage(): JSX.Element {
                     Đừng quên ăn đủ chất dinh dưỡng mỗi ngày!
                   </Typography>
                   <Typography color="text.secondary" variant="body2">
-                    www.lowca.vn
+                    https://lowca-seven.vercel.app/
                   </Typography>
                 </Box>
                 <img
