@@ -3,6 +3,7 @@ import type {
   VendorDashboardVoucher,
   VendorDashboardDishes,
   VendorDashboardCampaigns,
+  VendorRevenueBarResponse,
 } from '@features/vendor/types/dashboard';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import {
@@ -10,11 +11,14 @@ import {
   getVouchers,
   getDishes,
   getCampaigns,
+  getVendorRevenueBar,
   resetVendorDashboardState,
   selectVendorDashboardRevenue,
   selectVendorDashboardVouchers,
   selectVendorDashboardDishes,
   selectVendorDashboardCampaigns,
+  selectVendorDashboardRevenueBar,
+  selectVendorDashboardRevenueBarStatus,
   selectVendorDashboardStatus,
   selectVendorDashboardError,
 } from '@slices/vendorDashboard';
@@ -25,6 +29,8 @@ export default function useDashboard(): {
   vouchers: VendorDashboardVoucher | null;
   dishes: VendorDashboardDishes | null;
   campaigns: VendorDashboardCampaigns | null;
+  vendorRevenueBar: VendorRevenueBarResponse | null;
+  revenueBarStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   onGetRevenue: (payload: {
@@ -43,6 +49,10 @@ export default function useDashboard(): {
     fromDate: string;
     toDate: string;
   }) => Promise<VendorDashboardCampaigns>;
+  onGetVendorRevenueBar: (payload: {
+    fromDate: string;
+    toDate: string;
+  }) => Promise<VendorRevenueBarResponse>;
   onResetVendorDashboardState: () => void;
 } {
   const dispatch = useAppDispatch();
@@ -51,6 +61,10 @@ export default function useDashboard(): {
   const vouchers = useAppSelector(selectVendorDashboardVouchers);
   const dishes = useAppSelector(selectVendorDashboardDishes);
   const campaigns = useAppSelector(selectVendorDashboardCampaigns);
+  const vendorRevenueBar = useAppSelector(selectVendorDashboardRevenueBar);
+  const revenueBarStatus = useAppSelector(
+    selectVendorDashboardRevenueBarStatus
+  );
   const status = useAppSelector(selectVendorDashboardStatus);
   const error = useAppSelector(selectVendorDashboardError);
 
@@ -98,17 +112,30 @@ export default function useDashboard(): {
     dispatch(resetVendorDashboardState());
   }, [dispatch]);
 
+  const onGetVendorRevenueBar = useCallback(
+    async (payload: {
+      fromDate: string;
+      toDate: string;
+    }): Promise<VendorRevenueBarResponse> => {
+      return await dispatch(getVendorRevenueBar(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     revenue,
     vouchers,
     dishes,
     campaigns,
+    vendorRevenueBar,
+    revenueBarStatus,
     status,
     error,
     onGetRevenue,
     onGetVouchers,
     onGetDishes,
     onGetCampaigns,
+    onGetVendorRevenueBar,
     onResetVendorDashboardState,
   };
 }

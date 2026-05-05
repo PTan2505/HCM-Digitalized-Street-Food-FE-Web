@@ -56,3 +56,14 @@ export interface CampaignStat {
   revenue: number;
   branches?: CampaignBranchStat[];
 }
+
+export interface RevenueBarItem {
+  label: string;
+  fromDate: string;
+  toDate: string;
+  value: number;
+}
+
+export interface VendorRevenueBarResponse {
+  items: RevenueBarItem[];
+}
