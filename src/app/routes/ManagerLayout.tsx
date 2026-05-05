@@ -16,6 +16,7 @@ import {
   Schedule as ScheduleIcon,
   EventBusy as EventBusyIcon,
   Close as XMarkIcon,
+  BarChart as DashboardIcon,
 } from '@mui/icons-material';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { Box, IconButton, Typography } from '@mui/material';
@@ -29,6 +30,11 @@ const managerBase = ROUTES.MANAGER.BASE;
 const managerPaths = ROUTES.MANAGER.PATHS;
 
 const navigation = [
+  {
+    name: 'Dashboard',
+    href: `${managerBase}/${managerPaths.DASHBOARD}`,
+    icon: DashboardIcon,
+  },
   {
     name: 'Quản lý đơn hàng',
     href: `${managerBase}/${managerPaths.ORDER}`,

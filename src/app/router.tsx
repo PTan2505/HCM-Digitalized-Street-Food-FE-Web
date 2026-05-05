@@ -34,6 +34,7 @@ import ModeratorBranchPage from '@features/moderator/pages/BranchPage';
 import GhostPinVerificationPage from '@features/moderator/pages/GhostPinVerificationPage';
 import PendingVendorVerificationPage from '@features/moderator/pages/PendingVendorVerificationPage';
 import OwnershipRequestVerificationPage from '@features/moderator/pages/OwnershipRequestVerificationPage';
+import ManagerDashboardPage from '@features/manager/pages/DashboardPage';
 import OrderManagementPage from '@features/manager/pages/OrderManagementPage';
 import BranchManagementPage from '@features/manager/pages/BranchManagementPage';
 import DishManagementPage from '@features/manager/pages/DishManagementPage';
@@ -153,7 +154,11 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to={ROUTES.MANAGER.PATHS.ORDER} replace />,
+            element: <Navigate to={ROUTES.MANAGER.PATHS.DASHBOARD} replace />,
+          },
+          {
+            path: ROUTES.MANAGER.PATHS.DASHBOARD,
+            element: <ManagerDashboardPage />,
           },
           {
             path: ROUTES.MANAGER.PATHS.ORDER,
