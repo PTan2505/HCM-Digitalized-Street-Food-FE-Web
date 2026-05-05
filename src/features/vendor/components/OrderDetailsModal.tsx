@@ -56,12 +56,14 @@ export default function OrderDetailsModal({
   const { onGetOrderDetails, onDecideVendorOrder, onCompleteVendorOrder } =
     useOrder();
   const [verificationCode, setVerificationCode] = useState('');
+  const [orderIdInput, setOrderIdInput] = useState('');
   const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
   const [isSubmittingComplete, setIsSubmittingComplete] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !orderId) return;
     setVerificationCode('');
+    setOrderIdInput(String(orderId));
     void onGetOrderDetails(orderId);
   }, [isOpen, orderId, onGetOrderDetails]);
 
@@ -86,11 +88,22 @@ export default function OrderDetailsModal({
     setVerificationCode(value.replace(/\D/g, '').slice(0, 6));
   };
 
+  const handleOrderIdChange = (value: string): void => {
+    setOrderIdInput(value.replace(/\D/g, ''));
+  };
+
   const handleCompleteOrder = async (): Promise<void> => {
     if (!order || verificationCode.length !== 6) return;
+    const parsedOrderId = Number(orderIdInput);
+    if (!Number.isInteger(parsedOrderId) || parsedOrderId !== order.orderId) {
+      return;
+    }
     setIsSubmittingComplete(true);
     try {
-      await onCompleteVendorOrder({ orderId: order.orderId, verificationCode });
+      await onCompleteVendorOrder({
+        orderId: parsedOrderId,
+        verificationCode,
+      });
       setVerificationCode('');
     } finally {
       setIsSubmittingComplete(false);
@@ -291,10 +304,21 @@ export default function OrderDetailsModal({
                   {order.status === 2 && (
                     <div className="space-y-3">
                       <p className="text-xs font-semibold text-gray-600">
-                        Vui lòng nhập 6 số xác thực từ khách hàng để hoàn tất
+                        Nhập mã đơn và 6 số xác thực từ khách hàng để hoàn tất
                         đơn:
                       </p>
                       <div className="flex flex-wrap items-center gap-3">
+                        <input
+                          type="text"
+                          value={orderIdInput}
+                          onChange={(e) => handleOrderIdChange(e.target.value)}
+                          inputMode="numeric"
+                          placeholder="Nhập mã đơn"
+                          disabled={
+                            isSubmittingComplete || isSubmittingDecision
+                          }
+                          className="focus:border-primary-500 focus:ring-primary-200 h-10 min-w-40 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 outline-none placeholder:text-gray-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100"
+                        />
                         <input
                           type="text"
                           value={verificationCode}
@@ -315,6 +339,7 @@ export default function OrderDetailsModal({
                             void handleCompleteOrder();
                           }}
                           disabled={
+                            Number(orderIdInput) !== order.orderId ||
                             verificationCode.length !== 6 ||
                             isSubmittingComplete ||
                             isSubmittingDecision

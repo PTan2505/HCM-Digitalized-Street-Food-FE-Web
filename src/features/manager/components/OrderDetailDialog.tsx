@@ -98,15 +98,26 @@ export const OrderDetailDialog = ({
   onClose,
   onUpdateOrderTable,
   tableAutoEditKey,
+  onDecideOrder,
+  onCompleteOrder,
 }: {
   detailOrder: ManagerOrder | null;
   onClose: () => void;
   onUpdateOrderTable: (orderId: number, table: string) => Promise<void>;
   tableAutoEditKey?: number;
+  onDecideOrder: (orderId: number, approve: boolean) => Promise<void>;
+  onCompleteOrder: (payload: {
+    orderId: number;
+    verificationCode: string;
+  }) => Promise<unknown>;
 }): JSX.Element => {
   const [isEditingTable, setIsEditingTable] = useState(false);
   const [tableDraft, setTableDraft] = useState('');
   const [isSavingTable, setIsSavingTable] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [orderIdInput, setOrderIdInput] = useState('');
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+  const [isSubmittingComplete, setIsSubmittingComplete] = useState(false);
   const lastAutoEditKeyRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -114,11 +125,17 @@ export const OrderDetailDialog = ({
       setIsEditingTable(false);
       setTableDraft('');
       setIsSavingTable(false);
+      setVerificationCode('');
+      setOrderIdInput('');
+      setIsSubmittingDecision(false);
+      setIsSubmittingComplete(false);
       return;
     }
 
     setIsEditingTable(false);
     setTableDraft(detailOrder.table?.trim() ?? '');
+    setVerificationCode('');
+    setOrderIdInput(String(detailOrder.orderId));
   }, [detailOrder]);
 
   useEffect(() => {
@@ -175,6 +192,70 @@ export const OrderDetailDialog = ({
       setIsSavingTable(false);
     }
   };
+
+  const handleDecision = async (approve: boolean): Promise<void> => {
+    if (!detailOrder || isSubmittingDecision || isSubmittingComplete) {
+      return;
+    }
+
+    setIsSubmittingDecision(true);
+    try {
+      await onDecideOrder(detailOrder.orderId, approve);
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  };
+
+  const handleVerificationCodeChange = (value: string): void => {
+    setVerificationCode(value.replace(/\D/g, '').slice(0, 6));
+  };
+
+  const handleOrderIdChange = (value: string): void => {
+    setOrderIdInput(value.replace(/\D/g, ''));
+  };
+
+  const handleCompleteOrder = async (): Promise<void> => {
+    if (!detailOrder || isSubmittingComplete || isSubmittingDecision) {
+      return;
+    }
+
+    const parsedOrderId = Number(orderIdInput);
+    if (
+      !Number.isInteger(parsedOrderId) ||
+      parsedOrderId <= 0 ||
+      parsedOrderId !== detailOrder.orderId
+    ) {
+      return;
+    }
+
+    if (verificationCode.length !== 6) {
+      return;
+    }
+
+    setIsSubmittingComplete(true);
+    try {
+      await onCompleteOrder({
+        orderId: parsedOrderId,
+        verificationCode,
+      });
+      setVerificationCode('');
+    } finally {
+      setIsSubmittingComplete(false);
+    }
+  };
+
+  const needsAction =
+    detailOrder !== null &&
+    (detailOrder.status === 1 || detailOrder.status === 2);
+
+  const isOrderIdValid = (() => {
+    const parsedOrderId = Number(orderIdInput);
+    return (
+      Number.isInteger(parsedOrderId) &&
+      parsedOrderId > 0 &&
+      parsedOrderId === detailOrder?.orderId
+    );
+  })();
 
   return (
     <Dialog
@@ -439,6 +520,89 @@ export const OrderDetailDialog = ({
               </Box>
             </Box>
           </Box>
+
+          {needsAction ? (
+            <Box className="rounded-xl border border-gray-100 bg-slate-50/60 p-4 shadow-sm">
+              <Typography className="mb-3 text-xs font-bold tracking-wider text-gray-700 uppercase">
+                Thao tác đơn hàng
+              </Typography>
+
+              {detailOrder?.status === 1 ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleDecision(true);
+                    }}
+                    disabled={isSubmittingDecision || isSubmittingComplete}
+                    className="bg-primary-600 hover:bg-primary-700 inline-flex h-10 items-center justify-center rounded-lg px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmittingDecision ? 'Đang xử lý...' : 'Chấp nhận'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleDecision(false);
+                    }}
+                    disabled={isSubmittingDecision || isSubmittingComplete}
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-5 text-sm font-bold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmittingDecision ? 'Đang xử lý...' : 'Từ chối'}
+                  </button>
+                </div>
+              ) : null}
+
+              {detailOrder?.status === 2 ? (
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-gray-600">
+                    Nhập mã đơn và 6 số xác minh để hoàn tất đơn:
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <input
+                      type="text"
+                      value={orderIdInput}
+                      onChange={(event) =>
+                        handleOrderIdChange(event.target.value)
+                      }
+                      inputMode="numeric"
+                      placeholder="Nhập mã đơn"
+                      disabled={isSubmittingComplete || isSubmittingDecision}
+                      className="focus:border-primary-500 focus:ring-primary-200 h-10 min-w-40 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 outline-none placeholder:text-gray-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    />
+                    <input
+                      type="text"
+                      value={verificationCode}
+                      onChange={(event) =>
+                        handleVerificationCodeChange(event.target.value)
+                      }
+                      maxLength={6}
+                      inputMode="numeric"
+                      placeholder="Nhập 6 chữ số"
+                      disabled={isSubmittingComplete || isSubmittingDecision}
+                      className="focus:border-primary-500 focus:ring-primary-200 h-10 min-w-48 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold tracking-[0.15em] text-gray-800 outline-none placeholder:tracking-normal placeholder:text-gray-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleCompleteOrder();
+                      }}
+                      disabled={
+                        verificationCode.length !== 6 ||
+                        !isOrderIdValid ||
+                        isSubmittingComplete ||
+                        isSubmittingDecision
+                      }
+                      className="bg-primary-600 hover:bg-primary-700 inline-flex h-10 items-center justify-center rounded-lg px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmittingComplete
+                        ? 'Đang hoàn tất...'
+                        : 'Hoàn tất đơn'}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </Box>
+          ) : null}
         </Box>
       </DialogContent>
       <DialogActions className="border-t border-gray-100 bg-gray-50/50 px-6 py-3">
