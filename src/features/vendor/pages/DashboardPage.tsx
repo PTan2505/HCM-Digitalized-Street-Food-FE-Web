@@ -13,6 +13,8 @@ import RevenueLineChart from '@features/vendor/components/RevenueLineChart';
 import DishBarChart from '@features/vendor/components/DishBarChart';
 import VoucherBarChart from '@features/vendor/components/VoucherBarChart';
 import CampaignBarChart from '@features/vendor/components/CampaignBarChart';
+import VendorRevenueBarModal from '@features/vendor/components/VendorRevenueBarModal';
+import { Tooltip } from '@mui/material';
 
 export default function DashboardPage(): React.JSX.Element {
   const {
@@ -26,6 +28,8 @@ export default function DashboardPage(): React.JSX.Element {
     onGetCampaigns,
     status,
   } = useDashboard();
+
+  const [showRevenueBarModal, setShowRevenueBarModal] = useState(false);
 
   // Default to the last 30 days which is a standard logical period for dashoards
   const [dateRange, setDateRange] = useState(() => {
@@ -103,6 +107,18 @@ export default function DashboardPage(): React.JSX.Element {
     previousPeriod: string | null | undefined
   ): React.ReactNode | undefined => {
     if (!previousPeriod) return undefined;
+
+    // Check if it matches the format: từ [date1] tới [date2]
+    const match = previousPeriod.match(/từ\s+(.*?)\s+tới\s+(.*)/i);
+    if (match) {
+      return (
+        <span>
+          so với cùng kỳ từ <span className="text-primary-600">{match[1]}</span>{' '}
+          tới <span className="text-primary-600">{match[2]}</span>
+        </span>
+      );
+    }
+
     return (
       <span>
         so với cùng kỳ <span className="text-red-500">{previousPeriod}</span>
@@ -210,15 +226,60 @@ export default function DashboardPage(): React.JSX.Element {
           )}
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
-            <SummaryCard
-              title="Tổng doanh thu"
-              value={formatCurrency(revenue?.totalRevenue ?? 0)}
-              icon={DollarSign}
-              trend={makeTrend(
-                revenue?.revenueGrowthRate,
-                buildPeriodLabel(revenue?.previousPeriod)
-              )}
-            />
+            <Tooltip
+              title={
+                <div className="pointer-events-auto flex min-w-[200px] flex-col gap-1.5 p-1.5">
+                  <div className="mb-1 border-b border-gray-100 pb-2">
+                    <span className="mb-1 block text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                      Tổng doanh thu
+                    </span>
+                    <span className="text-xl font-bold text-gray-900">
+                      {formatCurrency(revenue?.totalRevenue ?? 0)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowRevenueBarModal(true)}
+                    className="bg-primary-600 hover:bg-primary-700 mt-1 w-full rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-all hover:shadow-sm"
+                  >
+                    Xem chi tiết so sánh
+                  </button>
+                </div>
+              }
+              placement="bottom"
+              arrow
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    boxShadow:
+                      '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid #f3f4f6',
+                    px: 1.5,
+                    py: 1.5,
+                    pointerEvents: 'auto',
+                  },
+                },
+                arrow: {
+                  sx: {
+                    color: '#ffffff',
+                    '&::before': { border: '1px solid #f3f4f6' },
+                  },
+                },
+              }}
+            >
+              <div className="h-full">
+                <SummaryCard
+                  title="Tổng doanh thu"
+                  value={formatCurrency(revenue?.totalRevenue ?? 0)}
+                  icon={DollarSign}
+                  trend={makeTrend(
+                    revenue?.revenueGrowthRate,
+                    buildPeriodLabel(revenue?.previousPeriod)
+                  )}
+                />
+              </div>
+            </Tooltip>
             <SummaryCard
               title="Tổng đơn hàng"
               value={revenue?.totalOrders ?? 0}
@@ -266,6 +327,10 @@ export default function DashboardPage(): React.JSX.Element {
           </div>
         </div>
       )}
+      <VendorRevenueBarModal
+        isOpen={showRevenueBarModal}
+        onClose={() => setShowRevenueBarModal(false)}
+      />
     </div>
   );
 }

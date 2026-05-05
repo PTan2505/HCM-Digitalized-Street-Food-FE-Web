@@ -234,6 +234,7 @@ export const apiUrl = {
     getVouchers: '/VendorDashboard/vouchers',
     getDishes: '/VendorDashboard/dishes',
     getCampaigns: '/VendorDashboard/campaigns',
+    getVendorRevenueBar: '/VendorDashboard/revenue/bar',
   },
   adminDashboard: {
     getUserSignUps: '/AdminDashboard/user-signups',
@@ -241,6 +242,7 @@ export const apiUrl = {
     getCompensation: '/AdminDashboard/compensation',
     getUserToVendorConversions: '/AdminDashboard/user-to-vendor-conversions',
     getSystemCampaignsStatistics: '/AdminDashboard/system-campaigns/statistics',
+    getAdminRevenueBar: '/AdminDashboard/revenue/bar',
   },
   branch: {
     getBranches: '/Branch',

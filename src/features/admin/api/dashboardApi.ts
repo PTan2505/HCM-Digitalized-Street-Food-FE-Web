@@ -4,6 +4,7 @@ import type {
   GetCompensation,
   GetConversions,
   SystemCampaignStatistics,
+  AdminRevenueBarResponse,
 } from '@features/admin/types/dashboard';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -62,6 +63,17 @@ export class AdminDashboardApi {
   async getSystemCampaignsStatistics(): Promise<SystemCampaignStatistics[]> {
     const res = await this.apiClient.get<SystemCampaignStatistics[]>({
       url: apiUrl.adminDashboard.getSystemCampaignsStatistics,
+    });
+    return res.data;
+  }
+
+  async getAdminRevenueBar(params: {
+    fromDate: string;
+    toDate: string;
+  }): Promise<AdminRevenueBarResponse> {
+    const res = await this.apiClient.get<AdminRevenueBarResponse>({
+      url: apiUrl.adminDashboard.getAdminRevenueBar,
+      params,
     });
     return res.data;
   }

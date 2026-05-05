@@ -4,6 +4,7 @@ import type {
   VendorDashboardVoucher,
   VendorDashboardDishes,
   VendorDashboardCampaigns,
+  VendorRevenueBarResponse,
 } from '@features/vendor/types/dashboard';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -19,8 +20,11 @@ export interface VendorDashboardState {
   vouchers: VendorDashboardVoucher | null;
   dishes: VendorDashboardDishes | null;
   campaigns: VendorDashboardCampaigns | null;
+  vendorRevenueBar: VendorRevenueBarResponse | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
+  revenueBarStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+  revenueBarError: unknown;
 }
 
 const initialState: VendorDashboardState = {
@@ -28,8 +32,11 @@ const initialState: VendorDashboardState = {
   vouchers: null,
   dishes: null,
   campaigns: null,
+  vendorRevenueBar: null,
   status: 'idle',
   error: null,
+  revenueBarStatus: 'idle',
+  revenueBarError: null,
 };
 
 // ─── Thunks ───────────────────────────────────────────────
@@ -110,6 +117,22 @@ export const getCampaigns = createAppAsyncThunk(
   }
 );
 
+export const getVendorRevenueBar = createAppAsyncThunk(
+  'vendorDashboard/getVendorRevenueBar',
+  async (
+    payload: { fromDate: string; toDate: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: VendorRevenueBarResponse =
+        await axiosApi.dashboardApi.getVendorRevenueBar(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────
 
 const allThunks = [getRevenue, getVouchers, getDishes, getCampaigns] as const;
@@ -133,6 +156,20 @@ export const vendorDashboardSlice = createSlice({
       })
       .addCase(getCampaigns.fulfilled, (state, action) => {
         state.campaigns = action.payload;
+      })
+      .addCase(getVendorRevenueBar.pending, (state) => {
+        state.revenueBarStatus = 'pending';
+        state.revenueBarError = null;
+      })
+      .addCase(getVendorRevenueBar.fulfilled, (state, action) => {
+        state.revenueBarStatus = 'succeeded';
+        state.vendorRevenueBar = action.payload;
+      })
+      .addCase(getVendorRevenueBar.rejected, (state, action) => {
+        state.revenueBarStatus = 'failed';
+        state.revenueBarError = (action as { payload?: unknown }).payload ?? {
+          message: 'An error occurred',
+        };
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';
@@ -178,3 +215,16 @@ export const selectVendorDashboardDishes = (
 export const selectVendorDashboardCampaigns = (
   state: RootState
 ): VendorDashboardCampaigns | null => state.vendorDashboard.campaigns;
+
+export const selectVendorDashboardRevenueBar = (
+  state: RootState
+): VendorRevenueBarResponse | null => state.vendorDashboard.vendorRevenueBar;
+
+export const selectVendorDashboardRevenueBarStatus = (
+  state: RootState
+): 'idle' | 'pending' | 'succeeded' | 'failed' =>
+  state.vendorDashboard.revenueBarStatus;
+
+export const selectVendorDashboardRevenueBarError = (
+  state: RootState
+): unknown => state.vendorDashboard.revenueBarError;
