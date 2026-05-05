@@ -6,6 +6,7 @@ export interface DailySignups {
 export interface GetUserSignUps {
   fromDate: string;
   toDate: string;
+  previousPeriod: string | null;
   totalSignupCount: number;
   signupGrowthRate: number | null;
   dailySignups: DailySignups[];
@@ -20,6 +21,7 @@ export interface DailyAmount {
 export interface GetMoney {
   fromDate: string;
   toDate: string;
+  previousPeriod: string | null;
   totalBranchRegistrationAmount: number;
   totalSystemCampaignAmount: number;
   branchRegistrationGrowthRate: number | null;
@@ -41,6 +43,7 @@ export interface VendorCompensation {
 export interface GetCompensation {
   fromDate: string;
   toDate: string;
+  previousPeriod: string | null;
   totalCompensationAmount: number;
   compensationGrowthRate: number | null;
   dailyCompensations: DailyCompensation[];
@@ -55,6 +58,7 @@ export interface DailyConversions {
 export interface GetConversions {
   fromDate: string;
   toDate: string;
+  previousPeriod: string | null;
   totalConversionCount: number;
   conversionGrowthRate: number | null;
   dailyConversions: DailyConversions[];

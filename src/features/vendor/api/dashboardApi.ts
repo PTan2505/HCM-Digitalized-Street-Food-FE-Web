@@ -25,16 +25,24 @@ export class DashboardApi {
     return res.data;
   }
 
-  async getVouchers(): Promise<VendorDashboardVoucher> {
+  async getVouchers(params: {
+    fromDate: string;
+    toDate: string;
+  }): Promise<VendorDashboardVoucher> {
     const res = await this.apiClient.get<VendorDashboardVoucher>({
       url: apiUrl.vendorDashboard.getVouchers,
+      params,
     });
     return res.data;
   }
 
-  async getDishes(): Promise<VendorDashboardDishes> {
+  async getDishes(params: {
+    fromDate: string;
+    toDate: string;
+  }): Promise<VendorDashboardDishes> {
     const res = await this.apiClient.get<VendorDashboardDishes>({
       url: apiUrl.vendorDashboard.getDishes,
+      params,
     });
     return res.data;
   }

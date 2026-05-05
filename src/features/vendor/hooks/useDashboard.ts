@@ -31,8 +31,14 @@ export default function useDashboard(): {
     fromDate: string;
     toDate: string;
   }) => Promise<VendorDashboardRevenue>;
-  onGetVouchers: () => Promise<VendorDashboardVoucher>;
-  onGetDishes: () => Promise<VendorDashboardDishes>;
+  onGetVouchers: (payload: {
+    fromDate: string;
+    toDate: string;
+  }) => Promise<VendorDashboardVoucher>;
+  onGetDishes: (payload: {
+    fromDate: string;
+    toDate: string;
+  }) => Promise<VendorDashboardDishes>;
   onGetCampaigns: (payload: {
     fromDate: string;
     toDate: string;
@@ -58,14 +64,25 @@ export default function useDashboard(): {
     [dispatch]
   );
 
-  const onGetVouchers =
-    useCallback(async (): Promise<VendorDashboardVoucher> => {
-      return await dispatch(getVouchers()).unwrap();
-    }, [dispatch]);
+  const onGetVouchers = useCallback(
+    async (payload: {
+      fromDate: string;
+      toDate: string;
+    }): Promise<VendorDashboardVoucher> => {
+      return await dispatch(getVouchers(payload)).unwrap();
+    },
+    [dispatch]
+  );
 
-  const onGetDishes = useCallback(async (): Promise<VendorDashboardDishes> => {
-    return await dispatch(getDishes()).unwrap();
-  }, [dispatch]);
+  const onGetDishes = useCallback(
+    async (payload: {
+      fromDate: string;
+      toDate: string;
+    }): Promise<VendorDashboardDishes> => {
+      return await dispatch(getDishes(payload)).unwrap();
+    },
+    [dispatch]
+  );
 
   const onGetCampaigns = useCallback(
     async (payload: {
