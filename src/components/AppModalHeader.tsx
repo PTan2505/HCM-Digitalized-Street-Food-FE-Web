@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 
 interface AppModalHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   icon: ReactNode;
   iconTone?: 'default' | 'admin' | 'category' | 'campaign' | 'voucher';
   onClose?: () => void;
@@ -42,7 +42,10 @@ export default function AppModalHeader({
             {title}
           </Typography>
           {subtitle ? (
-            <Typography className="text-table-text-secondary mt-0.5 truncate text-sm font-medium">
+            <Typography
+              component="div"
+              className="text-table-text-secondary mt-0.5 text-sm font-medium"
+            >
               {subtitle}
             </Typography>
           ) : null}
