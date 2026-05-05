@@ -28,6 +28,7 @@ export const ROUTES = {
     BASE: '/manager',
     // Child paths
     PATHS: {
+      DASHBOARD: 'dashboard',
       ORDER: 'orders',
       BRANCH: 'branches',
       DISH: 'dishes',
