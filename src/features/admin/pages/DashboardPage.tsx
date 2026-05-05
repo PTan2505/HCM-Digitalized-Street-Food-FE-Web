@@ -9,8 +9,7 @@ import AdminCompensationChart from '@features/admin/components/AdminCompensation
 import AdminConversionsChart from '@features/admin/components/AdminConversionsChart';
 import CompensationDetailModal from '@features/admin/components/CompensationDetailModal';
 import SystemCampaignStatisticsModal from '@features/admin/components/SystemCampaignStatisticsModal';
-import Table from '@features/admin/components/Table';
-import { Visibility as VisibilityIcon } from '@mui/icons-material';
+import AdminSystemCampaignChart from '@features/admin/components/AdminSystemCampaignChart';
 import type { SystemCampaignStatistics } from '@features/admin/types/dashboard';
 
 export default function DashboardPage(): React.JSX.Element {
@@ -389,49 +388,10 @@ export default function DashboardPage(): React.JSX.Element {
                 Thông tin chi tiết về các chiến dịch hệ thống
               </p>
             </div>
-            <Table
-              rowKey="campaignId"
+            <AdminSystemCampaignChart
               data={systemCampaignsStatistics ?? []}
               loading={!systemCampaignsStatistics && status === 'pending'}
-              columns={[
-                {
-                  key: 'campaignName',
-                  label: 'Tên chiến dịch',
-                  style: { fontWeight: 600 },
-                },
-                {
-                  key: 'totalBranchesJoined',
-                  label: 'Chi nhánh tham gia',
-                  style: { textAlign: 'right' },
-                  render: (v) => (
-                    <span className="font-semibold text-blue-600">
-                      {Number(v ?? 0).toString()}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'totalOrders',
-                  label: 'Tổng đơn hàng',
-                  style: { textAlign: 'right' },
-                  render: (v) => (
-                    <span className="font-semibold text-emerald-600">
-                      {Number(v ?? 0).toString()}
-                    </span>
-                  ),
-                },
-              ]}
-              actions={[
-                {
-                  id: 'view',
-                  label: <VisibilityIcon fontSize="small" />,
-                  tooltip: 'Xem chi tiết chiến dịch',
-                  onClick: (row) => setSelectedCampaignStats(row),
-                  color: 'primary',
-                  variant: 'outlined',
-                },
-              ]}
-              emptyMessage="Không có dữ liệu chiến dịch hệ thống"
-              maxHeight="500px"
+              onViewDetail={setSelectedCampaignStats}
             />
           </div>
         </div>
