@@ -80,13 +80,13 @@ export default function AdminOrderDetailModal({
         title={`Chi tiết đơn hàng #${order.orderId}`}
         subtitle={
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-gray-500 text-sm">
+            <span className="text-sm text-gray-500">
               {new Date(order.createdAt).toLocaleString('vi-VN')}
             </span>
             <span className="text-gray-300">•</span>
             <OrderStatusBadge label={statusMeta.label} type={statusMeta.type} />
             <span className="text-gray-300">•</span>
-            <span className="font-medium text-gray-700 text-sm">
+            <span className="text-sm font-medium text-gray-700">
               {order.isTakeAway ? 'Mang đi' : 'Ăn tại quán'}
             </span>
           </div>

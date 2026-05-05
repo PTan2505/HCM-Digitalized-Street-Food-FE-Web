@@ -14,9 +14,7 @@ export default function useAdminOrder(): {
   const dispatch = useAppDispatch();
 
   const onGetAdminOrders = useCallback(
-    async (
-      payload: GetAdminOrdersPayload
-    ): Promise<GetAdminOrdersResponse> => {
+    async (payload: GetAdminOrdersPayload): Promise<GetAdminOrdersResponse> => {
       const response = await dispatch(getAdminOrders(payload)).unwrap();
       return response;
     },

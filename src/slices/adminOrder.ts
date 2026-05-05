@@ -5,7 +5,12 @@ import type {
 } from '@features/admin/types/order';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
-import { createSlice, isFulfilled, isPending, isRejected } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  isFulfilled,
+  isPending,
+  isRejected,
+} from '@reduxjs/toolkit';
 
 type PaginationState = {
   currentPage: number;
@@ -93,15 +98,17 @@ export const { resetAdminOrderState } = adminOrderSlice.actions;
 
 export default adminOrderSlice.reducer;
 
-export const selectAdminOrders = (state: RootState): AdminOrderState['orders'] =>
-  state.adminOrder.orders;
+export const selectAdminOrders = (
+  state: RootState
+): AdminOrderState['orders'] => state.adminOrder.orders;
 
 export const selectAdminOrdersPagination = (
   state: RootState
 ): AdminOrderState['pagination'] => state.adminOrder.pagination;
 
-export const selectAdminOrderStatus = (state: RootState): AdminOrderState['status'] =>
-  state.adminOrder.status;
+export const selectAdminOrderStatus = (
+  state: RootState
+): AdminOrderState['status'] => state.adminOrder.status;
 
 export const selectAdminOrderError = (state: RootState): unknown =>
   state.adminOrder.error;
