@@ -225,11 +225,11 @@ export default function OrderPage(): JSX.Element {
 
   const columns = useMemo(
     () => [
-      // {
-      //   key: 'orderId',
-      //   label: 'Mã đơn',
-      //   style: { width: '90px' },
-      // },
+      {
+        key: 'orderId',
+        label: 'Mã đơn',
+        style: { width: '90px' },
+      },
       {
         key: 'branchName',
         label: 'Chi nhánh',
