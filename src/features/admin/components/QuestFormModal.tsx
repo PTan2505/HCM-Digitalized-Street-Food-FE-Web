@@ -430,6 +430,7 @@ interface TaskRewardFieldsProps {
   setRewardExpectedParticipantMap: Dispatch<
     SetStateAction<Record<string, number>>
   >;
+  campaignIsUpdateable?: boolean;
   onAppendReward: (taskIndex: number) => void;
   inputClass: (hasError: boolean) => string;
 }
@@ -465,6 +466,7 @@ function TaskRewardFields({
   setHasVoucherDraftChanges,
   rewardExpectedParticipantMap,
   setRewardExpectedParticipantMap,
+  campaignIsUpdateable,
   onAppendReward,
   inputClass,
 }: TaskRewardFieldsProps): JSX.Element {
@@ -548,15 +550,17 @@ function TaskRewardFields({
     <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-semibold text-gray-700">Phần thưởng</p>
-        <button
-          type="button"
-          onClick={() => onAppendReward(taskIndex)}
-          disabled={isReadOnly}
-          className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
-        >
-          <AddIcon fontSize="small" />
-          Thêm thưởng
-        </button>
+        {campaignIsUpdateable !== false && (
+          <button
+            type="button"
+            onClick={() => onAppendReward(taskIndex)}
+            disabled={isReadOnly}
+            className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+          >
+            <AddIcon fontSize="small" />
+            Thêm thưởng
+          </button>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -679,14 +683,16 @@ function TaskRewardFields({
                 <p className="text-xs font-semibold text-gray-600">
                   Phần thưởng {rewardIndex + 1}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => remove(rewardIndex)}
-                  disabled={fields.length === 1 || isReadOnly}
-                  className="text-xs font-semibold text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
-                >
-                  Xóa
-                </button>
+                {campaignIsUpdateable !== false && (
+                  <button
+                    type="button"
+                    onClick={() => remove(rewardIndex)}
+                    disabled={fields.length === 1 || isReadOnly}
+                    className="text-xs font-semibold text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
+                  >
+                    Xóa
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -3598,17 +3604,18 @@ export default function QuestFormModal({
                   <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                     Danh sách nhiệm vụ con
                   </p>
-                  {questScope !== 'upgrade' && (
-                    <button
-                      type="button"
-                      onClick={handleAppendTask}
-                      disabled={isTaskEditingLocked}
-                      className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
-                    >
-                      <AddIcon fontSize="small" />
-                      Thêm nhiệm vụ
-                    </button>
-                  )}
+                  {questScope !== 'upgrade' &&
+                    campaignIsUpdateable !== false && (
+                      <button
+                        type="button"
+                        onClick={handleAppendTask}
+                        disabled={isTaskEditingLocked}
+                        className="border-primary-500 text-primary-600 hover:bg-primary-50 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
+                      >
+                        <AddIcon fontSize="small" />
+                        Thêm nhiệm vụ
+                      </button>
+                    )}
                 </div>
 
                 {errors.tasks?.message && (
@@ -3634,19 +3641,21 @@ export default function QuestFormModal({
                           <h4 className="font-semibold text-gray-700">
                             Nhiệm vụ {index + 1}
                           </h4>
-                          <button
-                            type="button"
-                            onClick={() => remove(index)}
-                            disabled={
-                              fields.length === 1 ||
-                              questScope === 'upgrade' ||
-                              isTaskEditingLocked
-                            }
-                            className="flex items-center gap-1 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
-                          >
-                            <DeleteIcon fontSize="small" />
-                            Xóa
-                          </button>
+                          {campaignIsUpdateable !== false && (
+                            <button
+                              type="button"
+                              onClick={() => remove(index)}
+                              disabled={
+                                fields.length === 1 ||
+                                questScope === 'upgrade' ||
+                                isTaskEditingLocked
+                              }
+                              className="flex items-center gap-1 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:text-gray-400"
+                            >
+                              <DeleteIcon fontSize="small" />
+                              Xóa
+                            </button>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -3843,6 +3852,7 @@ export default function QuestFormModal({
                           setRewardExpectedParticipantMap={
                             setRewardExpectedParticipantMap
                           }
+                          campaignIsUpdateable={campaignIsUpdateable}
                           onAppendReward={handleAppendReward}
                           inputClass={inputClass}
                         />

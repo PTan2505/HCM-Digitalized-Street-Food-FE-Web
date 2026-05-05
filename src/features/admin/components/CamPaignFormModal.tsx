@@ -1,29 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import AppModalHeader from '@components/AppModalHeader';
+import useTier from '@features/admin/hooks/useTier';
+import type { Campaign } from '@features/admin/types/campaign';
+import { QuestTaskType } from '@features/admin/types/quest';
+import type { Tier } from '@features/admin/types/tier';
+import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import { CampaignSchema } from '@features/admin/utils/campaignSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Dialog,
-  DialogContent,
-  DialogActions,
+  Add as AddIcon,
+  AddPhotoAlternate as AddPhotoAlternateIcon,
+  Campaign as CampaignIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
+import {
   Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
   IconButton,
   Tooltip,
 } from '@mui/material';
-import {
-  AddPhotoAlternate as AddPhotoAlternateIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Campaign as CampaignIcon,
-} from '@mui/icons-material';
-import type { Campaign } from '@features/admin/types/campaign';
-import type { Tier } from '@features/admin/types/tier';
-import { QuestTaskType } from '@features/admin/types/quest';
-import { CampaignSchema } from '@features/admin/utils/campaignSchema';
-import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
-import AppModalHeader from '@components/AppModalHeader';
-import useTier from '@features/admin/hooks/useTier';
+import type { ChangeEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
 type VoucherDraft = {
   name: string;
@@ -35,6 +35,8 @@ type VoucherDraft = {
   minAmountRequired: number;
   quantity: number;
   isActive: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
 };
 
 type RewardDraft = {
@@ -515,6 +517,9 @@ export default function CamPaignFormModal({
       endDate: toIsoZulu(data.endDate) ?? '',
     };
 
+    const campaignStartDate = toIsoZulu(data.startDate);
+    const campaignEndDate = toIsoZulu(data.endDate);
+
     const createQuestBundles = campaign
       ? undefined
       : questBundles.map((quest) => ({
@@ -532,6 +537,8 @@ export default function CamPaignFormModal({
                   task.expectedParticipantCount
                 ),
                 isActive: true,
+                startDate: campaignStartDate,
+                endDate: campaignEndDate,
               },
             })),
           })),
