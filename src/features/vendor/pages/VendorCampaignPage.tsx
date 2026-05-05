@@ -1,4 +1,5 @@
 import type { VoucherCreate } from '@custom-types/voucher';
+import DeleteConfirmationDialog from '@components/ui/DeleteConfirmationDialog';
 import JoinableSystemCampaignModal from '@features/vendor/components/JoinableSystemCampaignModal';
 import Pagination from '@features/vendor/components/Pagination';
 import Table from '@features/vendor/components/Table';
@@ -18,6 +19,8 @@ import {
   Edit as EditIcon,
   GroupAdd as GroupAddIcon,
   HelpOutline as HelpOutlineIcon,
+  PauseCircleOutline as PauseIcon,
+  PlayCircleOutline as PlayIcon,
   Storefront as StorefrontIcon,
   Visibility as VisibilityIcon,
   ConfirmationNumber as VoucherIcon,
@@ -38,6 +41,64 @@ import {
   type Controls,
   type EventData,
 } from 'react-joyride';
+
+type CampaignStatusInfo = {
+  label: string;
+  type: 'success' | 'error' | 'warning' | 'default' | 'info';
+};
+
+const getCampaignStatus = (row: VendorCampaign): CampaignStatusInfo => {
+  const now = Date.now();
+  const parseTime = (value: string | null | undefined): number | null => {
+    if (!value) return null;
+    const timestamp = new Date(value).getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+  };
+
+  const regStart = parseTime(row.registrationStartDate);
+  const regEnd = parseTime(row.registrationEndDate);
+  const start = parseTime(row.startDate);
+  const end = parseTime(row.endDate);
+
+  if (end !== null && now > end) {
+    return { label: 'Đã kết thúc', type: 'error' };
+  }
+
+  if (start !== null && end !== null && now >= start && now <= end) {
+    if (!row.isActive) {
+      return { label: 'Tạm ngưng', type: 'default' };
+    }
+    return { label: 'Đang hoạt động', type: 'success' };
+  }
+
+  if (
+    regStart !== null &&
+    regEnd !== null &&
+    now >= regStart &&
+    now <= regEnd &&
+    (start === null || now < start)
+  ) {
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  }
+
+  if (regStart !== null && now < regStart) {
+    return { label: 'Chưa đến lúc đăng ký', type: 'default' };
+  }
+
+  if (start !== null && now < start) {
+    return { label: 'Chưa bắt đầu', type: 'warning' };
+  }
+
+  if (row.isRegisterable && !row.isActive) {
+    return { label: 'Đang mở đăng ký', type: 'info' };
+  }
+
+  if (row.isActive && !row.isRegisterable) {
+    return { label: 'Đang hoạt động', type: 'success' };
+  }
+
+  return { label: 'Không xác định', type: 'default' };
+};
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -66,7 +127,8 @@ export default function VendorCampaignPage(): JSX.Element {
     onPostCampaignImage,
     onDeleteCampaignImage,
   } = useVendorCampaign();
-  const { onCreateVoucher } = useVoucher();
+  const { onCreateVoucher, onGetVouchersByCampaignId, onUpdateVoucher } =
+    useVoucher();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -86,6 +148,9 @@ export default function VendorCampaignPage(): JSX.Element {
   );
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
+  const [deactivatingCampaign, setDeactivatingCampaign] =
+    useState<VendorCampaign | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   const branchOptions = useMemo<Branch[]>(() => {
     return myVendor?.branches ?? [];
@@ -180,6 +245,29 @@ export default function VendorCampaignPage(): JSX.Element {
             createImageFormData(imageFile)
           );
         }
+        const existingVouchers = await onGetVouchersByCampaignId(
+          editingCampaign.campaignId
+        );
+        await Promise.all(
+          existingVouchers.map((voucher) =>
+            onUpdateVoucher(voucher.voucherId, {
+              name: voucher.name,
+              voucherCode: voucher.voucherCode,
+              type: voucher.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+              description: voucher.description,
+              discountValue: voucher.discountValue,
+              maxDiscountValue: voucher.maxDiscountValue,
+              minAmountRequired: voucher.minAmountRequired,
+              quantity: voucher.quantity,
+              redeemPoint: voucher.redeemPoint,
+              startDate: payload.startDate,
+              endDate: payload.endDate,
+              expiredDate: voucher.expiredDate,
+              isActive: voucher.isActive,
+              campaignId: voucher.campaignId,
+            })
+          )
+        );
       } else {
         const createdCampaign = await onCreateVendorCampaign(payload);
         if (imageFile) {
@@ -200,6 +288,53 @@ export default function VendorCampaignPage(): JSX.Element {
       handleCloseModal();
     } catch (err) {
       console.error('Failed to save vendor campaign', err);
+    }
+  };
+
+  const handleToggleActiveCampaign = async (): Promise<void> => {
+    if (!deactivatingCampaign) return;
+    setIsDeactivating(true);
+    try {
+      const nextActive = !deactivatingCampaign.isActive;
+      await onUpdateVendorCampaign(deactivatingCampaign.campaignId, {
+        name: deactivatingCampaign.name,
+        description: deactivatingCampaign.description,
+        targetSegment: deactivatingCampaign.targetSegment,
+        startDate: deactivatingCampaign.startDate,
+        endDate: deactivatingCampaign.endDate,
+        branchIds: deactivatingCampaign.branchIds ?? null,
+        isActive: nextActive,
+      });
+      const vouchers = await onGetVouchersByCampaignId(
+        deactivatingCampaign.campaignId
+      );
+      await Promise.all(
+        vouchers
+          .filter((v) => (nextActive ? !v.isActive : v.isActive))
+          .map((v) =>
+            onUpdateVoucher(v.voucherId, {
+              name: v.name,
+              voucherCode: v.voucherCode,
+              type: v.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+              description: v.description,
+              discountValue: v.discountValue,
+              maxDiscountValue: v.maxDiscountValue,
+              minAmountRequired: v.minAmountRequired,
+              quantity: v.quantity,
+              redeemPoint: v.redeemPoint,
+              startDate: v.startDate,
+              endDate: v.endDate,
+              expiredDate: v.expiredDate,
+              isActive: nextActive,
+              campaignId: v.campaignId,
+            })
+          )
+      );
+      setDeactivatingCampaign(null);
+    } catch (err) {
+      console.error('Failed to toggle campaign active state', err);
+    } finally {
+      setIsDeactivating(false);
     }
   };
 
@@ -288,6 +423,27 @@ export default function VendorCampaignPage(): JSX.Element {
     //     />
     //   ),
     // },
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      render: (_: unknown, row: VendorCampaign): JSX.Element => {
+        const { label, type } = getCampaignStatus(row);
+        const colorMap: Record<string, string> = {
+          success: 'bg-green-100 text-green-700 border-green-200',
+          error: 'bg-red-100 text-red-700 border-red-200',
+          warning: 'bg-amber-100 text-amber-700 border-amber-200',
+          default: 'bg-slate-100 text-slate-700 border-slate-200',
+          info: 'bg-blue-100 text-blue-700 border-blue-200',
+        };
+        return (
+          <span
+            className={`inline-flex min-w-32.5 items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-bold shadow-sm ${colorMap[type]}`}
+          >
+            {label}
+          </span>
+        );
+      },
+    },
     {
       key: 'actions',
       label: 'Thao tác',
@@ -385,6 +541,45 @@ export default function VendorCampaignPage(): JSX.Element {
                 <EditIcon fontSize="small" />
               </Button>
             </Tooltip>
+            {((): JSX.Element | null => {
+              const now = Date.now();
+              const start = row.startDate
+                ? new Date(row.startDate).getTime()
+                : null;
+              const end = row.endDate ? new Date(row.endDate).getTime() : null;
+              const inRange =
+                start !== null && end !== null && now >= start && now <= end;
+              if (!inRange) return null;
+              return row.isActive ? (
+                <Tooltip title="Tạm ngưng chiến dịch" arrow>
+                  <Button
+                    size="small"
+                    color="warning"
+                    variant="outlined"
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                      event.stopPropagation();
+                      setDeactivatingCampaign(row);
+                    }}
+                  >
+                    <PauseIcon fontSize="small" />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Tooltip title="Kích hoạt chiến dịch" arrow>
+                  <Button
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                      event.stopPropagation();
+                      setDeactivatingCampaign(row);
+                    }}
+                  >
+                    <PlayIcon fontSize="small" />
+                  </Button>
+                </Tooltip>
+              );
+            })()}
 
             {/* {!isLocked ? (
               <>
@@ -592,6 +787,41 @@ export default function VendorCampaignPage(): JSX.Element {
         onClose={() => setOpenDetailModal(false)}
         campaign={detailCampaign}
         isLoading={isDetailLoading}
+      />
+
+      <DeleteConfirmationDialog
+        open={deactivatingCampaign !== null}
+        onClose={() => setDeactivatingCampaign(null)}
+        onConfirm={handleToggleActiveCampaign}
+        title={
+          deactivatingCampaign?.isActive
+            ? 'Xác nhận tạm ngưng chiến dịch'
+            : 'Xác nhận kích hoạt chiến dịch'
+        }
+        confirmButtonLabel={
+          isDeactivating
+            ? 'Đang xử lý...'
+            : deactivatingCampaign?.isActive
+              ? 'Tạm ngưng'
+              : 'Kích hoạt'
+        }
+        confirmButtonColor={
+          deactivatingCampaign?.isActive ? 'warning' : 'success'
+        }
+        confirmationMessage={
+          deactivatingCampaign?.isActive ? (
+            <>
+              Bạn có chắc chắn muốn tạm ngưng chiến dịch &quot;
+              {deactivatingCampaign?.name}&quot;? Tất cả voucher thuộc chiến
+              dịch này cũng sẽ bị tạm ngưng.
+            </>
+          ) : (
+            <>
+              Bạn có chắc chắn muốn kích hoạt lại chiến dịch &quot;
+              {deactivatingCampaign?.name}&quot;?
+            </>
+          )
+        }
       />
     </div>
   );

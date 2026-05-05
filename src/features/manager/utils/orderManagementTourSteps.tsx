@@ -21,7 +21,8 @@ export const getManagerOrderManagementTourSteps = ({
     {
       target: '[data-tour="manager-order-completion-panel"]',
       title: 'Xác minh để hoàn tất đơn',
-      content: 'Nhập mã đơn và mã xác minh để hoàn tất nhanh đơn hàng.',
+      content:
+        'Bạn có thể nhập mã xác minh để hoàn tất nhanh các đơn đã được chấp nhận.',
       placement: 'bottom-start',
     },
     {
@@ -60,7 +61,7 @@ export const getManagerOrderManagementTourSteps = ({
       target: `[data-tour-action-trigger="${MANAGER_ORDER_TOUR_ID}"]`,
       title: 'Menu thao tác nhanh',
       content:
-        'Nhấn nút ba chấm để xem chi tiết. Thao tác chấp nhận, từ chối và hoàn tất nằm trong màn hình chi tiết.',
+        'Nhấn nút ba chấm để mở các thao tác như xem chi tiết, chấp nhận hoặc từ chối đơn. Từ màn hình chi tiết, bạn có thể nhập số bàn cho đơn tại chỗ khi cần.',
       placement: 'left',
       spotlightPadding: 8,
     },

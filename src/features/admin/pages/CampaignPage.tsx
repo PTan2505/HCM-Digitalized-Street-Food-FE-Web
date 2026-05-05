@@ -1,5 +1,32 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { JSX } from 'react';
+import AppModalHeader from '@components/AppModalHeader';
+import type { VoucherCreate } from '@custom-types/voucher';
+import CampaignBranchModal from '@features/admin/components/CampaignBranchModal';
+import CampaignDetailModal from '@features/admin/components/CampaignDetailModal';
+import CamPaignFormModal, {
+  type CampaignQuestBundleSubmitDraft,
+} from '@features/admin/components/CamPaignFormModal';
+import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
+import Pagination from '@features/admin/components/Pagination';
+import QuestFormModal from '@features/admin/components/QuestFormModal';
+import Table from '@features/admin/components/Table';
+import useCampaign from '@features/admin/hooks/useCampaign';
+import useQuest from '@features/admin/hooks/useQuest';
+import useVoucher from '@features/admin/hooks/useVoucher';
+import type { Campaign } from '@features/admin/types/campaign';
+import type { Quest } from '@features/admin/types/quest';
+import { QuestRewardType } from '@features/admin/types/quest';
+import { getCampaignOverviewTourSteps } from '@features/admin/utils/campaignOverviewTourSteps';
+import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
+import { useAppSelector } from '@hooks/reduxHooks';
+import {
+  Add as AddIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
+  Edit as EditIcon,
+  HelpOutline as HelpOutlineIcon,
+  Storefront as StorefrontIcon,
+  Visibility as VisibilityIcon,
+  ConfirmationNumber as VoucherIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -8,47 +35,20 @@ import {
   DialogContent,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  AssignmentTurnedIn as AssignmentTurnedInIcon,
-  Edit as EditIcon,
-  HelpOutline as HelpOutlineIcon,
-  ConfirmationNumber as VoucherIcon,
-  Visibility as VisibilityIcon,
-  Storefront as StorefrontIcon,
-} from '@mui/icons-material';
-import {
-  type Controls,
-  EVENTS,
-  Joyride,
-  STATUS,
-  type EventData,
-} from 'react-joyride';
-import Table from '@features/admin/components/Table';
-import Pagination from '@features/admin/components/Pagination';
-import CamPaignFormModal, {
-  type CampaignQuestBundleSubmitDraft,
-} from '@features/admin/components/CamPaignFormModal';
-import QuestFormModal from '@features/admin/components/QuestFormModal';
-import CampaignVoucherModal from '@features/admin/components/CampaignVoucherModal';
-import CampaignDetailModal from '@features/admin/components/CampaignDetailModal';
-import CampaignBranchModal from '@features/admin/components/CampaignBranchModal';
-import AppModalHeader from '@components/AppModalHeader';
-import type { Campaign } from '@features/admin/types/campaign';
-import { QuestRewardType } from '@features/admin/types/quest';
-import useCampaign from '@features/admin/hooks/useCampaign';
-import useQuest from '@features/admin/hooks/useQuest';
-import useVoucher from '@features/admin/hooks/useVoucher';
-import { useAppSelector } from '@hooks/reduxHooks';
-import {
   selectCampaigns,
   selectCampaignStatus,
   selectCampaignTotalCount,
 } from '@slices/campaign';
 import { selectQuestStatus } from '@slices/quest';
-import type { CampaignFormData } from '@features/admin/utils/campaignSchema';
-import { getCampaignOverviewTourSteps } from '@features/admin/utils/campaignOverviewTourSteps';
-import type { VoucherCreate } from '@custom-types/voucher';
-import type { Quest } from '@features/admin/types/quest';
+import type { JSX } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  EVENTS,
+  Joyride,
+  STATUS,
+  type Controls,
+  type EventData,
+} from 'react-joyride';
 
 const formatVNDatetime = (isoStr: string | null): string => {
   if (!isoStr) return '-';
@@ -143,7 +143,8 @@ export default function CampaignPage(): JSX.Element {
     onUpdateQuestTasks,
     onPostQuestImage,
   } = useQuest();
-  const { onCreateVoucher } = useVoucher();
+  const { onCreateVoucher, onGetVouchersByCampaignId, onUpdateVoucher } =
+    useVoucher();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -216,6 +217,30 @@ export default function CampaignPage(): JSX.Element {
           formData.append('image', imageFile);
           await onPostCampaignImage(editingCampaign.campaignId, formData);
         }
+
+        const existingVouchers = await onGetVouchersByCampaignId(
+          editingCampaign.campaignId
+        );
+        await Promise.all(
+          existingVouchers.map((voucher) =>
+            onUpdateVoucher(voucher.voucherId, {
+              name: voucher.name,
+              voucherCode: voucher.voucherCode,
+              type: voucher.type === 'PERCENT' ? 'PERCENTAGE' : 'AMOUNT',
+              description: voucher.description,
+              discountValue: voucher.discountValue,
+              maxDiscountValue: voucher.maxDiscountValue,
+              minAmountRequired: voucher.minAmountRequired,
+              quantity: voucher.quantity,
+              redeemPoint: voucher.redeemPoint,
+              startDate: data.startDate,
+              endDate: data.endDate,
+              expiredDate: voucher.expiredDate,
+              isActive: voucher.isActive,
+              campaignId: voucher.campaignId,
+            })
+          )
+        );
 
         handleCloseModal();
       } else {
@@ -549,12 +574,16 @@ export default function CampaignPage(): JSX.Element {
       id: 'quests',
       label: <AssignmentTurnedInIcon fontSize="small" />,
       menuLabel: (row: Campaign): string =>
-        !row.isUpdateable ? 'Chi tiết nhiệm vụ' : 'Quản lý nhiệm vụ',
+        !row.isUpdateable
+          ? 'Chi tiết nhiệm vụ và voucher'
+          : 'Quản lý nhiệm vụ và voucher',
       onClick: (row: Campaign): void => {
         void handleOpenCampaignQuestModal(row);
       },
       tooltip: (row: Campaign): string =>
-        !row.isUpdateable ? 'Chi tiết nhiệm vụ' : 'Quản lý nhiệm vụ',
+        !row.isUpdateable
+          ? 'Chi tiết nhiệm vụ và voucher'
+          : 'Quản lý nhiệm vụ và voucher',
       color: 'secondary' as const,
       variant: 'outlined' as const,
       // show: (row: Campaign): boolean => row.isUpdateable,
@@ -570,7 +599,8 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Quản lý voucher chiến dịch',
       color: 'warning' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean => row.isUpdateable,
+      show: (row: Campaign): boolean =>
+        getCampaignStatus(row).label === 'Đang hoạt động',
     },
     {
       id: 'edit',
@@ -580,7 +610,8 @@ export default function CampaignPage(): JSX.Element {
       tooltip: 'Chỉnh sửa chiến dịch',
       color: 'primary' as const,
       variant: 'outlined' as const,
-      show: (row: Campaign): boolean => row.isUpdateable,
+      show: (row: Campaign): boolean =>
+        getCampaignStatus(row).label === 'Chưa đến lúc đăng ký',
     },
   ];
 

@@ -50,12 +50,10 @@ export default function DashboardPage(): React.JSX.Element {
       fromDate: dateRange.fromDate,
       toDate: dateRange.toDate,
     };
-    // Re-fetch revenue based on selected dates
     onGetRevenue(params);
     onGetCampaigns(params);
-    // Fetch dishes and vouchers
-    onGetVouchers();
-    onGetDishes();
+    onGetVouchers(params);
+    onGetDishes(params);
   }, [dateRange, onGetDishes, onGetRevenue, onGetVouchers, onGetCampaigns]);
 
   const handleFilterApply = (): void => {
@@ -89,6 +87,27 @@ export default function DashboardPage(): React.JSX.Element {
       style: 'currency',
       currency: 'VND',
     }).format(value);
+  };
+
+  const makeTrend = (
+    rate: number | null | undefined,
+    label?: React.ReactNode
+  ):
+    | { value: number; isPositive: boolean; label?: React.ReactNode }
+    | undefined => {
+    if (rate == null) return undefined;
+    return { value: Math.abs(rate), isPositive: rate >= 0, label };
+  };
+
+  const buildPeriodLabel = (
+    previousPeriod: string | null | undefined
+  ): React.ReactNode | undefined => {
+    if (!previousPeriod) return undefined;
+    return (
+      <span>
+        so với cùng kỳ <span className="text-red-500">{previousPeriod}</span>
+      </span>
+    );
   };
 
   const totalDishesSold =
@@ -195,11 +214,19 @@ export default function DashboardPage(): React.JSX.Element {
               title="Tổng doanh thu"
               value={formatCurrency(revenue?.totalRevenue ?? 0)}
               icon={DollarSign}
+              trend={makeTrend(
+                revenue?.revenueGrowthRate,
+                buildPeriodLabel(revenue?.previousPeriod)
+              )}
             />
             <SummaryCard
               title="Tổng đơn hàng"
               value={revenue?.totalOrders ?? 0}
               icon={ShoppingBag}
+              trend={makeTrend(
+                revenue?.ordersGrowthRate,
+                buildPeriodLabel(revenue?.previousPeriod)
+              )}
             />
             <SummaryCard
               title="Tổng chiến dịch"

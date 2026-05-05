@@ -1,6 +1,9 @@
 export interface VendorDashboardRevenue {
   totalRevenue: number;
   totalOrders: number;
+  revenueGrowthRate: number | null;
+  ordersGrowthRate: number | null;
+  previousPeriod: string | null;
   dailyRevenues: DailyRevenue[];
 }
 
