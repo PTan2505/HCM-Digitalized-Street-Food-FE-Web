@@ -110,6 +110,14 @@ const VoucherCard = ({ voucher }: { voucher: Voucher }): JSX.Element => {
   );
 };
 
+const translateTierName = (name: string): string => {
+  const normalized = name.trim().toLowerCase();
+  if (normalized === 'silver') return 'Bạc';
+  if (normalized === 'gold') return 'Vàng';
+  if (normalized === 'diamond') return 'Kim cương';
+  return name;
+};
+
 export default function SystemCampaignDetailsModal({
   isOpen,
   onClose,
@@ -195,7 +203,7 @@ export default function SystemCampaignDetailsModal({
     }
 
     const tier = tiers.find((item) => item.tierId === details.requiredTierId);
-    return tier?.name ?? `#${details.requiredTierId}`;
+    return tier ? translateTierName(tier.name) : `#${details.requiredTierId}`;
   }, [details?.requiredTierId, isLoadingTiers, tiers]);
 
   const joinableBranches = useMemo(() => {
@@ -301,12 +309,12 @@ export default function SystemCampaignDetailsModal({
           </div>
         </div>
 
-        <div>
+        {/* <div>
           <p className="mb-1 font-semibold text-gray-700">Phân khúc mục tiêu</p>
           <p className="text-table-text-primary">
             {details.targetSegment?.trim() ? details.targetSegment : 'Tất cả'}
           </p>
-        </div>
+        </div> */}
 
         {/* ── Vouchers ── */}
         <div>

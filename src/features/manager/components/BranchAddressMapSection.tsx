@@ -135,6 +135,7 @@ export default function BranchAddressMapSection({
                   latitude={currentBranch.lat}
                   longitude={currentBranch.long}
                   onLocationChange={() => {}}
+                  hideWarnings={true}
                 />
               </div>
               <p className="text-xs text-gray-500">

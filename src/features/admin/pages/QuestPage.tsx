@@ -279,11 +279,21 @@ export default function QuestPage(): JSX.Element {
     {
       key: 'title',
       label: 'Tiêu đề',
-      render: (value: unknown): JSX.Element => (
-        <Box className="text-table-text-primary font-semibold">
-          {String(value)}
-        </Box>
-      ),
+      render: (value: unknown): JSX.Element => {
+        const titleStr = String(value);
+        const words = titleStr.trim().split(/\s+/);
+        const displayTitle =
+          words.length > 4 ? `${words.slice(0, 4).join(' ')}...` : titleStr;
+
+        return (
+          <Box
+            className="text-table-text-primary font-semibold"
+            title={titleStr}
+          >
+            {displayTitle}
+          </Box>
+        );
+      },
     },
     {
       key: 'questType',

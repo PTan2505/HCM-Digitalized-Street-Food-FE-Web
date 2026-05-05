@@ -534,12 +534,16 @@ export default function BranchFormModal({
               onChange={handleChange}
               onLocationChange={handleLocationChange}
               errors={storeErrors}
-              branchNameRequired={mode.type !== 'createVendor'}
+              branchNameRequired={true}
               {...(mode.type === 'addBranch'
                 ? {
                     sectionTitle: '2. Thông tin chi nhánh',
                   }
-                : {})}
+                : mode.type === 'createVendor'
+                  ? {
+                      sectionTitle: '3. Thông tin chi nhánh chính',
+                    }
+                  : {})}
             />
 
             {/* Section 3: Images upload — create modes only */}
@@ -547,6 +551,11 @@ export default function BranchFormModal({
               <ImagesUploadSection
                 storeImages={storeImages}
                 onFileChange={handleImageFileChange}
+                title={
+                  mode.type === 'createVendor'
+                    ? '4. Hình ảnh cửa hàng'
+                    : '3. Hình ảnh cửa hàng'
+                }
               />
             )}
 
@@ -555,6 +564,11 @@ export default function BranchFormModal({
               <LicenseUploadSection
                 licenseImages={licenseImages}
                 onFileChange={handleLicenseFileChange}
+                title={
+                  mode.type === 'createVendor'
+                    ? '5. Giấy phép kinh doanh'
+                    : '4. Giấy phép kinh doanh'
+                }
               />
             )}
           </div>

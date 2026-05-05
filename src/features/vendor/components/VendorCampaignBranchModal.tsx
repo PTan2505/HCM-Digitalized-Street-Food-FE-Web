@@ -29,6 +29,14 @@ interface VendorCampaignBranchModalProps {
   branches: Branch[];
 }
 
+const translateTierName = (name: string): string => {
+  const normalized = name.trim().toLowerCase();
+  if (normalized === 'silver') return 'Bạc';
+  if (normalized === 'gold') return 'Vàng';
+  if (normalized === 'diamond') return 'Kim cương';
+  return name;
+};
+
 export default function VendorCampaignBranchModal({
   isOpen,
   onClose,
@@ -94,7 +102,7 @@ export default function VendorCampaignBranchModal({
     if (!isSystemCampaign) return '';
     if (!details?.requiredTierId) return 'Không yêu cầu';
     const tier = tiers.find((item) => item.tierId === details.requiredTierId);
-    return tier?.name ?? `#${details.requiredTierId}`;
+    return tier ? translateTierName(tier.name) : `#${details.requiredTierId}`;
   }, [isSystemCampaign, details?.requiredTierId, tiers]);
 
   const selectableSystemBranchesCount = useMemo(() => {

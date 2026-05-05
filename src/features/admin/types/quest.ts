@@ -162,7 +162,7 @@ export const QUEST_TASK_TYPE_LABELS: Record<QuestTaskType, string> = {
   [QuestTaskType.REVIEW]: 'Đánh giá',
   [QuestTaskType.ORDER_AMOUNT]: 'Tổng chi tiêu đơn hàng',
   [QuestTaskType.SHARE]: 'Chia sẻ',
-  [QuestTaskType.CREATE_GHOST_PIN]: 'Tạo ghost pin',
+  [QuestTaskType.CREATE_GHOST_PIN]: 'Chia sẻ quán ăn ngon cho cộng đồng',
   [QuestTaskType.TIER_UP]: 'Nâng hạng',
 };
 
