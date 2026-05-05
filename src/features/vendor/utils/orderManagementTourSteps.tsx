@@ -26,7 +26,7 @@ export const getOrderManagementTourSteps = ({
     {
       target: '[data-tour="order-completion-panel"]',
       title: 'Xác minh hoàn tất đơn',
-      content: 'Nhập mã đơn và mã xác minh để hoàn tất đơn hàng.',
+      content: 'Nhập mã xác minh để hoàn tất đơn hàng đã được chấp nhận.',
       placement: 'bottom',
     },
     {
@@ -61,7 +61,7 @@ export const getOrderManagementTourSteps = ({
     {
       target: `[data-tour-action-trigger="${ORDER_TOUR_ID}"]`,
       title: 'Menu thao tác đơn hàng',
-      content: 'Mở menu để xem chi tiết đơn hàng.',
+      content: 'Mở menu để xem chi tiết hoặc ra quyết định chấp nhận/từ chối.',
       placement: 'left',
       spotlightPadding: 8,
     },
