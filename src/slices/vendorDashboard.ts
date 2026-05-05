@@ -55,10 +55,16 @@ export const getRevenue = createAppAsyncThunk(
 
 export const getVouchers = createAppAsyncThunk(
   'vendorDashboard/getVouchers',
-  async (_, { rejectWithValue }) => {
+  async (
+    payload: {
+      fromDate: string;
+      toDate: string;
+    },
+    { rejectWithValue }
+  ) => {
     try {
       const response: VendorDashboardVoucher =
-        await axiosApi.dashboardApi.getVouchers();
+        await axiosApi.dashboardApi.getVouchers(payload);
       return response;
     } catch (error) {
       return rejectWithValue(error);
@@ -68,10 +74,16 @@ export const getVouchers = createAppAsyncThunk(
 
 export const getDishes = createAppAsyncThunk(
   'vendorDashboard/getDishes',
-  async (_, { rejectWithValue }) => {
+  async (
+    payload: {
+      fromDate: string;
+      toDate: string;
+    },
+    { rejectWithValue }
+  ) => {
     try {
       const response: VendorDashboardDishes =
-        await axiosApi.dashboardApi.getDishes();
+        await axiosApi.dashboardApi.getDishes(payload);
       return response;
     } catch (error) {
       return rejectWithValue(error);

@@ -4,7 +4,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 interface TrendItem {
   value: number;
   isPositive: boolean;
-  label?: string;
+  label?: React.ReactNode;
 }
 
 interface SummaryCardProps {

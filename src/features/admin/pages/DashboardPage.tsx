@@ -5,6 +5,7 @@ import useDashboard from '@features/admin/hooks/useDashboard';
 import SummaryCard from '@features/admin/components/SummaryCard';
 import AdminSignupsChart from '@features/admin/components/AdminSignupsChart';
 import AdminMoneyChart from '@features/admin/components/AdminMoneyChart';
+import AdminRevenuePieChart from '@features/admin/components/AdminRevenuePieChart';
 import AdminCompensationChart from '@features/admin/components/AdminCompensationChart';
 import AdminConversionsChart from '@features/admin/components/AdminConversionsChart';
 import CompensationDetailModal from '@features/admin/components/CompensationDetailModal';
@@ -115,10 +116,23 @@ export default function DashboardPage(): React.JSX.Element {
 
   const makeTrend = (
     rate: number | null,
-    label?: string
-  ): { value: number; isPositive: boolean; label?: string } | undefined => {
+    label?: React.ReactNode
+  ):
+    | { value: number; isPositive: boolean; label?: React.ReactNode }
+    | undefined => {
     if (rate === null) return undefined;
     return { value: Math.abs(rate), isPositive: rate >= 0, label };
+  };
+
+  const buildPeriodLabel = (
+    previousPeriod: string | null | undefined
+  ): React.ReactNode | undefined => {
+    if (!previousPeriod) return undefined;
+    return (
+      <span>
+        so với cùng kỳ <span className="text-red-500">{previousPeriod}</span>
+      </span>
+    );
   };
 
   const isInitialLoading =
@@ -317,11 +331,11 @@ export default function DashboardPage(): React.JSX.Element {
                     [
                       makeTrend(
                         money?.branchRegistrationGrowthRate ?? null,
-                        'Đối với đăng ký chi nhánh'
+                        buildPeriodLabel(money?.previousPeriod)
                       ),
                       makeTrend(
                         money?.systemCampaignGrowthRate ?? null,
-                        'Đối với chiến dịch hệ thống'
+                        buildPeriodLabel(money?.previousPeriod)
                       ),
                     ].filter(Boolean) as {
                       value: number;
@@ -337,31 +351,48 @@ export default function DashboardPage(): React.JSX.Element {
               onClick={() => setShowCompensationDetail(true)}
             >
               <SummaryCard
-                title="Chi phí bồi thường"
+                title="Chi phí hoàn tiền"
                 value={formatCurrency(
                   compensation?.totalCompensationAmount ?? 0
                 )}
                 icon={AlertCircle}
-                trend={makeTrend(compensation?.compensationGrowthRate ?? null)}
+                trend={makeTrend(
+                  compensation?.compensationGrowthRate ?? null,
+                  buildPeriodLabel(compensation?.previousPeriod)
+                )}
               />
             </div>
             <SummaryCard
               title="Người dùng đăng ký"
               value={userSignUps?.totalSignupCount ?? 0}
               icon={Users}
-              trend={makeTrend(userSignUps?.signupGrowthRate ?? null)}
+              trend={makeTrend(
+                userSignUps?.signupGrowthRate ?? null,
+                buildPeriodLabel(userSignUps?.previousPeriod)
+              )}
             />
             <SummaryCard
               title="Chuyển đổi người bán"
               value={conversions?.totalConversionCount ?? 0}
               icon={UserCheck}
-              trend={makeTrend(conversions?.conversionGrowthRate ?? null)}
+              trend={makeTrend(
+                conversions?.conversionGrowthRate ?? null,
+                buildPeriodLabel(conversions?.previousPeriod)
+              )}
             />
           </div>
 
-          {/* Money and Compensation */}
+          {/* Money */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <AdminMoneyChart data={money?.dailyAmounts ?? []} />
+            <AdminRevenuePieChart
+              branchAmount={money?.totalBranchRegistrationAmount ?? 0}
+              campaignAmount={money?.totalSystemCampaignAmount ?? 0}
+            />
+          </div>
+
+          {/* Compensation */}
+          <div className="grid grid-cols-1 gap-6">
             <AdminCompensationChart
               data={compensation?.dailyCompensations ?? []}
             />
