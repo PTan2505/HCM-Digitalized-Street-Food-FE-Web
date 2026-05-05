@@ -11,8 +11,12 @@ import {
   selectAdminDashboardCompensation,
   selectAdminDashboardConversions,
   selectAdminDashboardSystemCampaignsStatistics,
+  selectAdminDashboardRevenueBar,
+  selectAdminDashboardRevenueBarStatus,
+  selectAdminDashboardRevenueBarError,
   selectAdminDashboardStatus,
   selectAdminDashboardError,
+  getAdminRevenueBar,
 } from '@slices/adminDashboard';
 import { useCallback } from 'react';
 import type {
@@ -21,6 +25,7 @@ import type {
   GetCompensation,
   GetConversions,
   SystemCampaignStatistics,
+  AdminRevenueBarResponse,
 } from '@features/admin/types/dashboard';
 
 export default function useDashboard(): {
@@ -29,6 +34,9 @@ export default function useDashboard(): {
   compensation: GetCompensation | null;
   conversions: GetConversions | null;
   systemCampaignsStatistics: SystemCampaignStatistics[] | null;
+  adminRevenueBar: AdminRevenueBarResponse | null;
+  revenueBarStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+  revenueBarError: unknown;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   onGetUserSignUps: (payload: {
@@ -47,6 +55,10 @@ export default function useDashboard(): {
     fromDate: string;
     toDate: string;
   }) => Promise<GetConversions>;
+  onGetAdminRevenueBar: (payload: {
+    fromDate: string;
+    toDate: string;
+  }) => Promise<AdminRevenueBarResponse>;
   onGetSystemCampaignsStatistics: () => Promise<SystemCampaignStatistics[]>;
   onResetAdminDashboardState: () => void;
 } {
@@ -59,6 +71,9 @@ export default function useDashboard(): {
   const systemCampaignsStatistics = useAppSelector(
     selectAdminDashboardSystemCampaignsStatistics
   );
+  const adminRevenueBar = useAppSelector(selectAdminDashboardRevenueBar);
+  const revenueBarStatus = useAppSelector(selectAdminDashboardRevenueBarStatus);
+  const revenueBarError = useAppSelector(selectAdminDashboardRevenueBarError);
   const status = useAppSelector(selectAdminDashboardStatus);
   const error = useAppSelector(selectAdminDashboardError);
 
@@ -112,12 +127,25 @@ export default function useDashboard(): {
     return await dispatch(getSystemCampaignsStatistics()).unwrap();
   }, [dispatch]);
 
+  const onGetAdminRevenueBar = useCallback(
+    async (payload: {
+      fromDate: string;
+      toDate: string;
+    }): Promise<AdminRevenueBarResponse> => {
+      return await dispatch(getAdminRevenueBar(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
   return {
     userSignUps,
     money,
     compensation,
     conversions,
     systemCampaignsStatistics,
+    adminRevenueBar,
+    revenueBarStatus,
+    revenueBarError,
     status,
     error,
     onGetUserSignUps,
@@ -125,6 +153,7 @@ export default function useDashboard(): {
     onGetCompensation,
     onGetConversions,
     onGetSystemCampaignsStatistics,
+    onGetAdminRevenueBar,
     onResetAdminDashboardState,
   };
 }

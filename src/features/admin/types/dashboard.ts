@@ -103,3 +103,14 @@ export interface SystemCampaignStatistics {
   vouchers: SystemCampaignVoucher[];
   campaignOrders: SystemCampaignOrder[];
 }
+
+export interface RevenueBarItem {
+  label: string;
+  fromDate: string;
+  toDate: string;
+  value: number;
+}
+
+export interface AdminRevenueBarResponse {
+  items: RevenueBarItem[];
+}

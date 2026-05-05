@@ -5,6 +5,7 @@ import type {
   GetCompensation,
   GetConversions,
   SystemCampaignStatistics,
+  AdminRevenueBarResponse,
 } from '@features/admin/types/dashboard';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -21,8 +22,11 @@ export interface AdminDashboardState {
   compensation: GetCompensation | null;
   conversions: GetConversions | null;
   systemCampaignsStatistics: SystemCampaignStatistics[] | null;
+  adminRevenueBar: AdminRevenueBarResponse | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
+  revenueBarStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
+  revenueBarError: unknown;
 }
 
 const initialState: AdminDashboardState = {
@@ -31,8 +35,11 @@ const initialState: AdminDashboardState = {
   compensation: null,
   conversions: null,
   systemCampaignsStatistics: null,
+  adminRevenueBar: null,
   status: 'idle',
   error: null,
+  revenueBarStatus: 'idle',
+  revenueBarError: null,
 };
 
 // ─── Thunks ───────────────────────────────────────────────
@@ -126,6 +133,25 @@ export const getSystemCampaignsStatistics = createAppAsyncThunk(
   }
 );
 
+export const getAdminRevenueBar = createAppAsyncThunk(
+  'adminDashboard/getAdminRevenueBar',
+  async (
+    payload: {
+      fromDate: string;
+      toDate: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: AdminRevenueBarResponse =
+        await axiosApi.adminDashboardApi.getAdminRevenueBar(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────
 
 const allThunks = [
@@ -158,6 +184,20 @@ export const adminDashboardSlice = createSlice({
       })
       .addCase(getSystemCampaignsStatistics.fulfilled, (state, action) => {
         state.systemCampaignsStatistics = action.payload;
+      })
+      .addCase(getAdminRevenueBar.pending, (state) => {
+        state.revenueBarStatus = 'pending';
+        state.revenueBarError = null;
+      })
+      .addCase(getAdminRevenueBar.fulfilled, (state, action) => {
+        state.revenueBarStatus = 'succeeded';
+        state.adminRevenueBar = action.payload;
+      })
+      .addCase(getAdminRevenueBar.rejected, (state, action) => {
+        state.revenueBarStatus = 'failed';
+        state.revenueBarError = (action as { payload?: unknown }).payload ?? {
+          message: 'An error occurred',
+        };
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';
@@ -207,3 +247,16 @@ export const selectAdminDashboardSystemCampaignsStatistics = (
   state: RootState
 ): SystemCampaignStatistics[] | null =>
   state.adminDashboard.systemCampaignsStatistics;
+
+export const selectAdminDashboardRevenueBar = (
+  state: RootState
+): AdminRevenueBarResponse | null => state.adminDashboard.adminRevenueBar;
+
+export const selectAdminDashboardRevenueBarStatus = (
+  state: RootState
+): 'idle' | 'pending' | 'succeeded' | 'failed' =>
+  state.adminDashboard.revenueBarStatus;
+
+export const selectAdminDashboardRevenueBarError = (
+  state: RootState
+): unknown => state.adminDashboard.revenueBarError;

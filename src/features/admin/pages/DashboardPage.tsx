@@ -11,6 +11,7 @@ import AdminConversionsChart from '@features/admin/components/AdminConversionsCh
 import CompensationDetailModal from '@features/admin/components/CompensationDetailModal';
 import SystemCampaignStatisticsModal from '@features/admin/components/SystemCampaignStatisticsModal';
 import AdminSystemCampaignChart from '@features/admin/components/AdminSystemCampaignChart';
+import AdminRevenueBarModal from '@features/admin/components/AdminRevenueBarModal';
 import type { SystemCampaignStatistics } from '@features/admin/types/dashboard';
 
 export default function DashboardPage(): React.JSX.Element {
@@ -100,6 +101,7 @@ export default function DashboardPage(): React.JSX.Element {
   };
 
   const [showCompensationDetail, setShowCompensationDetail] = useState(false);
+  const [showRevenueBarModal, setShowRevenueBarModal] = useState(false);
   const [selectedCampaignStats, setSelectedCampaignStats] =
     useState<SystemCampaignStatistics | null>(null);
 
@@ -125,12 +127,27 @@ export default function DashboardPage(): React.JSX.Element {
   };
 
   const buildPeriodLabel = (
-    previousPeriod: string | null | undefined
+    previousPeriod: string | null | undefined,
+    suffix?: string
   ): React.ReactNode | undefined => {
     if (!previousPeriod) return undefined;
+
+    // Check if it matches the format: từ [date1] tới [date2]
+    const match = previousPeriod.match(/từ\s+(.*?)\s+tới\s+(.*)/i);
+    if (match) {
+      return (
+        <span>
+          so với cùng kỳ từ <span className="text-primary-600">{match[1]}</span>{' '}
+          tới <span className="text-primary-600">{match[2]}</span>
+          {suffix && <span className="text-red-500"> {suffix}</span>}
+        </span>
+      );
+    }
+
     return (
       <span>
         so với cùng kỳ <span className="text-red-500">{previousPeriod}</span>
+        {suffix && <span className="text-red-500"> {suffix}</span>}
       </span>
     );
   };
@@ -239,7 +256,7 @@ export default function DashboardPage(): React.JSX.Element {
           <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Tooltip
               title={
-                <div className="flex min-w-[220px] flex-col gap-1.5 p-1.5">
+                <div className="pointer-events-auto flex min-w-[220px] flex-col gap-1.5 p-1.5">
                   <div className="mb-1 border-b border-gray-100 pb-2">
                     <span className="mb-1 block text-xs font-semibold tracking-wider text-gray-500 uppercase">
                       Chi tiết doanh thu
@@ -273,7 +290,7 @@ export default function DashboardPage(): React.JSX.Element {
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="mb-2 flex flex-col gap-1">
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
                         <span className="h-2 w-2 rounded-full bg-amber-500"></span>
@@ -296,6 +313,12 @@ export default function DashboardPage(): React.JSX.Element {
                       </span>
                     )}
                   </div>
+                  <button
+                    onClick={() => setShowRevenueBarModal(true)}
+                    className="bg-primary-600 hover:bg-primary-700 mt-1 w-full rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-all hover:shadow-sm"
+                  >
+                    Xem chi tiết so sánh
+                  </button>
                 </div>
               }
               placement="bottom"
@@ -310,6 +333,7 @@ export default function DashboardPage(): React.JSX.Element {
                     border: '1px solid #f3f4f6',
                     px: 1.5,
                     py: 1.5,
+                    pointerEvents: 'auto',
                   },
                 },
                 arrow: {
@@ -322,7 +346,7 @@ export default function DashboardPage(): React.JSX.Element {
                 },
               }}
             >
-              <div className="h-full cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="h-full">
                 <SummaryCard
                   title="Tổng doanh thu"
                   value={formatCurrency(totalRevenue)}
@@ -331,11 +355,17 @@ export default function DashboardPage(): React.JSX.Element {
                     [
                       makeTrend(
                         money?.branchRegistrationGrowthRate ?? null,
-                        buildPeriodLabel(money?.previousPeriod)
+                        buildPeriodLabel(
+                          money?.previousPeriod,
+                          'đối với đăng kí chi nhánh'
+                        )
                       ),
                       makeTrend(
                         money?.systemCampaignGrowthRate ?? null,
-                        buildPeriodLabel(money?.previousPeriod)
+                        buildPeriodLabel(
+                          money?.previousPeriod,
+                          'đối với tham gia chiến dịch hệ thống'
+                        )
                       ),
                     ].filter(Boolean) as {
                       value: number;
@@ -436,6 +466,10 @@ export default function DashboardPage(): React.JSX.Element {
         open={selectedCampaignStats !== null}
         onClose={() => setSelectedCampaignStats(null)}
         data={selectedCampaignStats}
+      />
+      <AdminRevenueBarModal
+        isOpen={showRevenueBarModal}
+        onClose={() => setShowRevenueBarModal(false)}
       />
     </div>
   );
