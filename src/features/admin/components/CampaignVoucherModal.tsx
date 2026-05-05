@@ -3,7 +3,6 @@ import type { JSX } from 'react';
 import { Dialog, DialogContent, Box, Button, Chip } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
-  Edit as EditIcon,
   LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 import Table from '@features/admin/components/Table';
@@ -267,17 +266,6 @@ export default function CampaignVoucherModal({
             }}
           >
             <VisibilityIcon fontSize="small" />
-          </Button>
-          <Button
-            size="small"
-            color="primary"
-            variant="outlined"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleOpenForm(row);
-            }}
-          >
-            <EditIcon fontSize="small" />
           </Button>
           {/* <Button
             size="small"

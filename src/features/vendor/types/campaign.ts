@@ -33,6 +33,7 @@ export interface VendorCampaignUpdate {
   startDate: string;
   endDate: string;
   branchIds: number[] | null;
+  isActive?: boolean;
 }
 
 export interface VendorCampaignListResponse {
