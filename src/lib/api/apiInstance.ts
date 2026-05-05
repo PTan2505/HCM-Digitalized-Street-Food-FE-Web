@@ -1,3 +1,4 @@
+import { AdminOrderApi } from '@features/admin/api/orderApi';
 import { AxiosApiService } from '@config/axiosApiService';
 import { LoginApi } from '@features/auth/api/loginApi';
 import { UserProfileApi } from '@features/user/api/profileApi';
@@ -65,4 +66,5 @@ export const axiosApi = {
   branchAdminApi: new BranchAdminApi(axiosClient),
   tierApi: new TierApi(axiosClient),
   adminPaymentApi: new AdminPaymentApi(axiosClient),
+  adminOrderApi: new AdminOrderApi(axiosClient),
 };

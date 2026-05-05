@@ -12,6 +12,7 @@ import CompensationDetailModal from '@features/admin/components/CompensationDeta
 import SystemCampaignStatisticsModal from '@features/admin/components/SystemCampaignStatisticsModal';
 import AdminSystemCampaignChart from '@features/admin/components/AdminSystemCampaignChart';
 import AdminRevenueBarModal from '@features/admin/components/AdminRevenueBarModal';
+import AdminOrdersSection from '@features/admin/components/AdminOrdersSection';
 import type { SystemCampaignStatistics } from '@features/admin/types/dashboard';
 
 export default function DashboardPage(): React.JSX.Element {
@@ -455,6 +456,12 @@ export default function DashboardPage(): React.JSX.Element {
               onViewDetail={setSelectedCampaignStats}
             />
           </div>
+
+          {/* Admin Orders Table */}
+          <AdminOrdersSection
+            fromDate={dateRange.fromDate}
+            toDate={dateRange.toDate}
+          />
         </div>
       )}
       <CompensationDetailModal

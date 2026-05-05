@@ -18,6 +18,7 @@ import tierReducer from '@slices/tier';
 import voucherReducer from '@slices/voucher';
 import vendorDashboardReducer from '@slices/vendorDashboard';
 import adminDashboardReducer from '@slices/adminDashboard';
+import adminOrderReducer from '@slices/adminOrder';
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +41,7 @@ export const store = configureStore({
     voucher: voucherReducer,
     vendorDashboard: vendorDashboardReducer,
     adminDashboard: adminDashboardReducer,
+    adminOrder: adminOrderReducer,
   },
 });
 
