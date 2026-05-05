@@ -35,6 +35,8 @@ export default function SettingPage(): JSX.Element {
     DiamondMinXP: 'Điểm kinh nghiệm tối thiểu hạng Kim cương',
     feedbackXP: 'Điểm kinh nghiệm cho phản hồi',
     SubscriptionDurationDays: 'Số ngày đăng ký cho gói',
+    vendorTierFeedbackWindowSize:
+      'Độ rộng của đánh giá để tính hạng của chi nhánh',
   };
 
   const [editingValues, setEditingValues] = useState<Record<number, string>>(
