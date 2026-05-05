@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX } from 'react';
 import useOrder from '@features/vendor/hooks/useOrder';
 import {
@@ -10,12 +10,17 @@ import { selectSelectedOrder, selectOrderStatus } from '@slices/order';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CircularProgress from '@mui/material/CircularProgress';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: number | null;
+  onUpdateOrderTable?: (orderId: number, table: string) => Promise<void>;
+  tableAutoEditKey?: number;
 }
 
 const formatDateTime = (value?: string | null): string => {
@@ -49,6 +54,8 @@ export default function OrderDetailsModal({
   isOpen,
   onClose,
   orderId,
+  onUpdateOrderTable,
+  tableAutoEditKey,
 }: OrderDetailsModalProps): JSX.Element | null {
   const order = useAppSelector(selectSelectedOrder);
   const status = useAppSelector(selectOrderStatus);
@@ -56,16 +63,84 @@ export default function OrderDetailsModal({
   const { onGetOrderDetails, onDecideVendorOrder, onCompleteVendorOrder } =
     useOrder();
   const [verificationCode, setVerificationCode] = useState('');
-  const [orderIdInput, setOrderIdInput] = useState('');
   const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
   const [isSubmittingComplete, setIsSubmittingComplete] = useState(false);
+
+  // Table editing state
+  const [isEditingTable, setIsEditingTable] = useState(false);
+  const [tableDraft, setTableDraft] = useState('');
+  const [isSavingTable, setIsSavingTable] = useState(false);
+  const lastAutoEditKeyRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isOpen || !orderId) return;
     setVerificationCode('');
-    setOrderIdInput(String(orderId));
     void onGetOrderDetails(orderId);
   }, [isOpen, orderId, onGetOrderDetails]);
+
+  // Reset table edit state when order changes
+  useEffect(() => {
+    if (!order) {
+      setIsEditingTable(false);
+      setTableDraft('');
+      setIsSavingTable(false);
+      return;
+    }
+    setIsEditingTable(false);
+    setTableDraft(order.table?.trim() ?? '');
+  }, [order]);
+
+  // Auto-open table edit when tableAutoEditKey changes
+  useEffect(() => {
+    if (
+      !order ||
+      order.isTakeAway ||
+      tableAutoEditKey === undefined ||
+      !onUpdateOrderTable
+    ) {
+      return;
+    }
+
+    if (lastAutoEditKeyRef.current === tableAutoEditKey) {
+      return;
+    }
+
+    lastAutoEditKeyRef.current = tableAutoEditKey;
+
+    if (order.table?.trim()) {
+      return;
+    }
+
+    setIsEditingTable(true);
+    setTableDraft(order.table?.trim() ?? '');
+  }, [order, tableAutoEditKey, onUpdateOrderTable]);
+
+  const canEditTable =
+    order !== null && !order.isTakeAway && !!onUpdateOrderTable;
+
+  const handleStartEditTable = (): void => {
+    if (!canEditTable || !order) return;
+    setTableDraft(order.table?.trim() ?? '');
+    setIsEditingTable(true);
+  };
+
+  const handleCancelEditTable = (): void => {
+    setTableDraft(order?.table?.trim() ?? '');
+    setIsEditingTable(false);
+  };
+
+  const handleSaveTable = async (): Promise<void> => {
+    if (!order || isSavingTable || !onUpdateOrderTable) return;
+    const sanitizedTable = tableDraft.trim();
+    if (sanitizedTable.length === 0) return;
+    setIsSavingTable(true);
+    try {
+      await onUpdateOrderTable(order.orderId, sanitizedTable);
+      setIsEditingTable(false);
+    } finally {
+      setIsSavingTable(false);
+    }
+  };
 
   const isLoading = status === 'pending' && order?.orderId !== orderId;
 
@@ -88,22 +163,11 @@ export default function OrderDetailsModal({
     setVerificationCode(value.replace(/\D/g, '').slice(0, 6));
   };
 
-  const handleOrderIdChange = (value: string): void => {
-    setOrderIdInput(value.replace(/\D/g, ''));
-  };
-
   const handleCompleteOrder = async (): Promise<void> => {
     if (!order || verificationCode.length !== 6) return;
-    const parsedOrderId = Number(orderIdInput);
-    if (!Number.isInteger(parsedOrderId) || parsedOrderId !== order.orderId) {
-      return;
-    }
     setIsSubmittingComplete(true);
     try {
-      await onCompleteVendorOrder({
-        orderId: parsedOrderId,
-        verificationCode,
-      });
+      await onCompleteVendorOrder({ orderId: order.orderId, verificationCode });
       setVerificationCode('');
     } finally {
       setIsSubmittingComplete(false);
@@ -123,7 +187,7 @@ export default function OrderDetailsModal({
         className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header (giống BranchDetailsModal) ─────────────────── */}
+        {/* ── Header ─────────────────────────────────────────────── */}
         <VendorModalHeader
           title="Chi tiết đơn hàng"
           subtitle={order?.branchName ?? '—'}
@@ -188,6 +252,70 @@ export default function OrderDetailsModal({
                     </span>
                   </div>
                 </div>
+
+                {/* Table edit row — only shown when onUpdateOrderTable is provided */}
+                {!order.isTakeAway && onUpdateOrderTable ? (
+                  <div className="mt-3 rounded-lg border border-gray-200/60 bg-white px-3 py-2.5">
+                    <p className="mb-1 text-xs font-bold tracking-wide text-gray-500 uppercase">
+                      Bàn
+                    </p>
+                    {isEditingTable ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          value={tableDraft}
+                          onChange={(e) => setTableDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              void handleSaveTable();
+                            }
+                            if (e.key === 'Escape') {
+                              e.preventDefault();
+                              handleCancelEditTable();
+                            }
+                          }}
+                          className="focus:border-primary-500 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm outline-none"
+                          autoFocus
+                          disabled={isSavingTable}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveTable()}
+                          disabled={
+                            isSavingTable || tableDraft.trim().length === 0
+                          }
+                          className="inline-flex h-7 w-7 items-center justify-center text-green-700 transition-colors hover:text-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <CheckIcon sx={{ fontSize: 18, color: '#166534' }} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEditTable}
+                          disabled={isSavingTable}
+                          className="inline-flex h-7 w-7 items-center justify-center text-red-700 transition-colors hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <CloseIcon sx={{ fontSize: 18, color: '#b91c1c' }} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-gray-800">
+                          {order.table?.trim() ? order.table.trim() : '-'}
+                        </span>
+                        {canEditTable ? (
+                          <button
+                            type="button"
+                            onClick={handleStartEditTable}
+                            className="inline-flex h-6 w-6 items-center justify-center text-gray-500 transition-colors hover:text-gray-700"
+                          >
+                            <EditIcon sx={{ fontSize: 16 }} />
+                          </button>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
                 {order.note?.trim() ? (
                   <div className="mt-3 rounded-lg border border-gray-200/60 bg-white px-3 py-2.5">
                     <p className="mb-0.5 text-xs font-bold tracking-wide text-gray-500 uppercase">
@@ -304,21 +432,10 @@ export default function OrderDetailsModal({
                   {order.status === 2 && (
                     <div className="space-y-3">
                       <p className="text-xs font-semibold text-gray-600">
-                        Nhập mã đơn và 6 số xác thực từ khách hàng để hoàn tất
+                        Vui lòng nhập 6 số xác thực từ khách hàng để hoàn tất
                         đơn:
                       </p>
                       <div className="flex flex-wrap items-center gap-3">
-                        <input
-                          type="text"
-                          value={orderIdInput}
-                          onChange={(e) => handleOrderIdChange(e.target.value)}
-                          inputMode="numeric"
-                          placeholder="Nhập mã đơn"
-                          disabled={
-                            isSubmittingComplete || isSubmittingDecision
-                          }
-                          className="focus:border-primary-500 focus:ring-primary-200 h-10 min-w-40 rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 outline-none placeholder:text-gray-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100"
-                        />
                         <input
                           type="text"
                           value={verificationCode}
@@ -339,7 +456,6 @@ export default function OrderDetailsModal({
                             void handleCompleteOrder();
                           }}
                           disabled={
-                            Number(orderIdInput) !== order.orderId ||
                             verificationCode.length !== 6 ||
                             isSubmittingComplete ||
                             isSubmittingDecision
@@ -359,7 +475,7 @@ export default function OrderDetailsModal({
           )}
         </div>
 
-        {/* ── Footer (giống BranchDetailsModal) ─────────────────── */}
+        {/* ── Footer ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-8 py-4">
           <div className="text-xs text-gray-400">
             {order ? `Mã đơn: #${order.orderId}` : ''}

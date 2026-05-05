@@ -11,6 +11,8 @@ import {
   type SelectChangeEvent,
 } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import {
   type Controls,
@@ -20,8 +22,9 @@ import {
   type EventData,
 } from 'react-joyride';
 import { OrderCompletionPanel } from '@features/vendor/components/OrderCompletionPanel';
-import { OrderDetailDialog } from '@features/vendor/components/OrderDetailDialog';
+import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
 import {
+  canDecideOrder,
   getOrderStatusMeta,
   OrderStatusBadge,
 } from '@features/vendor/components/OrderStatusBadge';
@@ -68,9 +71,9 @@ export default function OrderPage(): JSX.Element {
     useState<SelectedBranch>('all');
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [detailOrder, setDetailOrder] = useState<VendorOrder | null>(null);
-  const [orderIdInput, setOrderIdInput] = useState('');
+  const [detailOrderId, setDetailOrderId] = useState<number | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
+  const [orderIdInput, setOrderIdInput] = useState('');
   const [isCompletingByCode, setIsCompletingByCode] = useState(false);
   const [completeMessage, setCompleteMessage] = useState('');
   const [isTourRunning, setIsTourRunning] = useState(false);
@@ -127,15 +130,6 @@ export default function OrderPage(): JSX.Element {
     approve: boolean
   ): Promise<void> => {
     await onDecideVendorOrder({ orderId, approve });
-
-    // if (selectedBranchId === 'all') {
-    //   await onGetVendorOrders({ pageNumber, pageSize });
-    // } else {
-    //   await onGetVendorBranchOrders({
-    //     branchId: selectedBranchId,
-    //     params: { pageNumber, pageSize },
-    //   });
-    // }
   };
 
   const handleVerificationCodeChange = (
@@ -149,55 +143,41 @@ export default function OrderPage(): JSX.Element {
   };
 
   const handleOrderIdChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const sanitizedId = event.target.value.replace(/\D/g, '');
+    const sanitized = event.target.value.replace(/\D/g, '');
     if (completeMessage !== '') {
       setCompleteMessage('');
     }
-    setOrderIdInput(sanitizedId);
+    setOrderIdInput(sanitized);
   };
 
   const handleCompleteOrderByCode = async (): Promise<void> => {
-    if (verificationCode.length !== 6 || isCompletingByCode) {
-      return;
-    }
-
-    const parsedOrderId = Number(orderIdInput);
-    if (!Number.isInteger(parsedOrderId) || parsedOrderId <= 0) {
-      setCompleteMessage('Vui lòng nhập mã đơn hợp lệ.');
+    if (
+      verificationCode.length !== 6 ||
+      orderIdInput.trim() === '' ||
+      Number(orderIdInput) <= 0 ||
+      isCompletingByCode
+    ) {
       return;
     }
 
     setIsCompletingByCode(true);
     setCompleteMessage('');
 
+    const targetOrderId = Number(orderIdInput);
+
     try {
       await onCompleteVendorOrder({
-        orderId: parsedOrderId,
+        orderId: targetOrderId,
         verificationCode,
       });
 
-      const matchedOrder = orders.find(
-        (order) => order.orderId === parsedOrderId
-      );
-
-      if (matchedOrder) {
-        const completedOrder: VendorOrder = {
-          ...matchedOrder,
-          status: 4,
-          updatedAt: new Date().toISOString(),
-        };
-
-        setDetailOrder(completedOrder);
-        if (!completedOrder.isTakeAway && !completedOrder.table?.trim()) {
-          setTableAutoEditKey((prev) => prev + 1);
-        }
-      }
-
-      setOrderIdInput('');
+      setDetailOrderId(targetOrderId);
+      setTableAutoEditKey((prev) => prev + 1);
       setVerificationCode('');
+      setOrderIdInput('');
       setCompleteMessage('Hoàn tất đơn hàng thành công.');
     } catch {
-      setCompleteMessage('Không thể hoàn tất đơn với mã đã nhập.');
+      setCompleteMessage('Không thể hoàn tất đơn. Vui lòng kiểm tra lại mã.');
     } finally {
       setIsCompletingByCode(false);
     }
@@ -207,22 +187,18 @@ export default function OrderPage(): JSX.Element {
     orderId: number,
     table: string
   ): Promise<void> => {
-    const updatedOrder = await onUpdateOrder({
+    await onUpdateOrder({
       orderId,
       data: { table },
     });
-
-    setDetailOrder((prev) =>
-      prev && prev.orderId === updatedOrder.orderId ? updatedOrder : prev
-    );
   };
 
   const handleOpenDetail = (order: VendorOrder): void => {
-    setDetailOrder(order);
+    setDetailOrderId(order.orderId);
   };
 
   const handleCloseDetail = (): void => {
-    setDetailOrder(null);
+    setDetailOrderId(null);
   };
 
   const startOrderTour = (): void => {
@@ -344,6 +320,26 @@ export default function OrderPage(): JSX.Element {
         handleOpenDetail(row);
       },
     },
+    {
+      id: 'approve',
+      label: (
+        <CheckCircleOutlineIcon fontSize="small" className="text-primary-700" />
+      ),
+      menuLabel: <span className="text-primary-700 font-bold">Chấp nhận</span>,
+      onClick: (row: VendorOrder): void => {
+        void handleDecision(row.orderId, true);
+      },
+      show: (row: VendorOrder): boolean => canDecideOrder(row.status),
+    },
+    {
+      id: 'reject',
+      label: <CancelOutlinedIcon fontSize="small" className="text-red-600" />,
+      menuLabel: <span className="font-bold text-red-600">Từ chối</span>,
+      onClick: (row: VendorOrder): void => {
+        void handleDecision(row.orderId, false);
+      },
+      show: (row: VendorOrder): boolean => canDecideOrder(row.status),
+    },
   ];
 
   return (
@@ -458,12 +454,12 @@ export default function OrderPage(): JSX.Element {
 
       <div data-tour="order-completion-panel">
         <OrderCompletionPanel
-          orderId={orderIdInput}
           verificationCode={verificationCode}
+          orderId={orderIdInput}
           isCompletingByCode={isCompletingByCode}
           completeMessage={completeMessage}
-          onOrderIdChange={handleOrderIdChange}
           onVerificationCodeChange={handleVerificationCodeChange}
+          onOrderIdChange={handleOrderIdChange}
           onCompleteOrderByCode={handleCompleteOrderByCode}
         />
       </div>
@@ -497,13 +493,12 @@ export default function OrderPage(): JSX.Element {
         />
       </div>
 
-      <OrderDetailDialog
-        detailOrder={detailOrder}
+      <OrderDetailsModal
+        isOpen={detailOrderId !== null}
+        orderId={detailOrderId}
         onClose={handleCloseDetail}
         onUpdateOrderTable={handleUpdateOrderTable}
         tableAutoEditKey={tableAutoEditKey}
-        onDecideOrder={handleDecision}
-        onCompleteOrder={onCompleteVendorOrder}
       />
     </div>
   );
