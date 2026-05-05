@@ -31,6 +31,7 @@ import { resetAdminDashboardState } from '@slices/adminDashboard';
 import { resetVendorDashboardState } from '@slices/vendorDashboard';
 import { resetSettingState } from '@slices/setting';
 import { resetTierState } from '@slices/tier';
+import { resetAdminOrderState } from '@slices/adminOrder';
 import { useNavigate } from 'react-router';
 
 export default function useLogin(): {
@@ -99,6 +100,7 @@ export default function useLogin(): {
     dispatch(resetVendorDashboardState());
     dispatch(resetSettingState());
     dispatch(resetTierState());
+    dispatch(resetAdminOrderState());
     navigate(ROUTES.LOGIN);
   }
   return {

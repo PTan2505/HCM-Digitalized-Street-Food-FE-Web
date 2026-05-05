@@ -212,8 +212,9 @@ export default function AdminRevenueBarModal({
                   tick={{ fill: '#6b7280', fontSize: 12 }}
                   tickFormatter={(value) => {
                     if (value >= 1000000)
-                      return `${(value / 1000000).toFixed(0)}tr`;
-                    if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                      return `${(value / 1000000).toFixed(1).replace(/\\.0$/, '')}tr`;
+                    if (value >= 1000)
+                      return `${(value / 1000).toFixed(1).replace(/\\.0$/, '')}k`;
                     return value;
                   }}
                   dx={-10}
