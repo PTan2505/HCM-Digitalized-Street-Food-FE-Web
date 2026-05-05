@@ -59,7 +59,20 @@ export default function SystemCampaignStatisticsModal({
     >
       <AppModalHeader
         title={data?.campaignName ?? 'Chi tiết chiến dịch'}
-        subtitle="Thống kê chi tiết chiến dịch hệ thống"
+        subtitle={
+          <div className="mt-1 flex flex-col gap-0.5 text-sm font-normal text-gray-500">
+            <span className="mb-0.5 font-medium text-gray-600">
+              Thống kê chi tiết chiến dịch hệ thống
+            </span>
+            <span>
+              Số lượng chi nhánh tham gia: {data?.totalBranchesJoined ?? 0}
+            </span>
+            <span>
+              Tổng đơn hàng:{' '}
+              {new Intl.NumberFormat('vi-VN').format(data?.totalOrders ?? 0)}
+            </span>
+          </div>
+        }
         icon={<BarChartIcon />}
         iconTone="admin"
         onClose={onClose}
