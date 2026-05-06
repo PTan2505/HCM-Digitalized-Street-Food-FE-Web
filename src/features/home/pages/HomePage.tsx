@@ -106,12 +106,13 @@ export default function HomePage(): JSX.Element {
               đầy hương vị.
             </Typography>
           </Box>
-          <Grid container spacing={3}>
+          <Grid container spacing={3} alignItems="stretch">
             {topFinalScoreBranches.slice(0, 5).map((branch, index) => (
               <Grid
                 key={branch.branchId}
                 size={{ xs: 12, sm: 6, md: 4 }}
                 data-aos={index === 0 ? 'fade-right' : 'fade-up'}
+                sx={{ display: 'flex' }}
               >
                 <RecipeCard
                   branchId={branch.branchId}
@@ -125,12 +126,17 @@ export default function HomePage(): JSX.Element {
                     ', ' +
                     branch.city
                   }
+                  stretch
                 />
               </Grid>
             ))}
 
             {/* Ad card */}
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} data-aos="zoom-in">
+            <Grid
+              size={{ xs: 12, sm: 6, md: 4 }}
+              data-aos="zoom-in"
+              sx={{ display: 'flex' }}
+            >
               <Box
                 className="from-primary-50 to-primary-100 relative flex h-full items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br p-10"
                 style={{ minHeight: 200 }}
@@ -162,6 +168,7 @@ export default function HomePage(): JSX.Element {
                 key={branch.branchId}
                 size={{ xs: 12, sm: 6, md: 4 }}
                 data-aos="fade-up"
+                sx={{ display: 'flex' }}
               >
                 <RecipeCard
                   branchId={branch.branchId}
@@ -175,6 +182,7 @@ export default function HomePage(): JSX.Element {
                     ', ' +
                     branch.city
                   }
+                  stretch
                 />
               </Grid>
             ))}
