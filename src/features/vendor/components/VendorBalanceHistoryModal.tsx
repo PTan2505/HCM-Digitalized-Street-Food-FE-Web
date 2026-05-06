@@ -12,7 +12,10 @@ import TableRow from '@mui/material/TableRow';
 import Skeleton from '@mui/material/Skeleton';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useAppSelector } from '@hooks/reduxHooks';
-import { selectVendorBalanceHistory, selectPaymentStatus } from '@slices/payment';
+import {
+  selectVendorBalanceHistory,
+  selectPaymentStatus,
+} from '@slices/payment';
 import VendorModalHeader from '@features/vendor/components/VendorModalHeader';
 import usePayment from '@features/vendor/hooks/usePayment';
 import type { VendorBalanceHistoryItem } from '@features/vendor/types/payment';
@@ -92,7 +95,12 @@ export default function VendorBalanceHistoryModal({
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} variant="rectangular" height={44} className="rounded" />
+              <Skeleton
+                key={i}
+                variant="rectangular"
+                height={44}
+                className="rounded"
+              />
             ))}
           </div>
         ) : rows.length === 0 ? (
@@ -105,28 +113,43 @@ export default function VendorBalanceHistoryModal({
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell className="font-semibold text-gray-600">Ngày</TableCell>
-                  <TableCell className="font-semibold text-gray-600">Mô tả / Phương thức</TableCell>
-                  <TableCell className="font-semibold text-gray-600">Mã giao dịch</TableCell>
-                  <TableCell align="right" className="font-semibold text-gray-600">Số tiền</TableCell>
+                  <TableCell className="font-semibold text-gray-600">
+                    Ngày
+                  </TableCell>
+                  <TableCell className="font-semibold text-gray-600">
+                    Mô tả / Phương thức
+                  </TableCell>
+                  <TableCell className="font-semibold text-gray-600">
+                    Mã giao dịch
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    className="font-semibold text-gray-600"
+                  >
+                    Số tiền
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {rows.map((item) => (
                   <TableRow key={item.id} hover>
-                    <TableCell className="whitespace-nowrap text-sm text-gray-700">
+                    <TableCell className="text-sm whitespace-nowrap text-gray-700">
                       {formatDate(item.createdAt)}
                     </TableCell>
                     <TableCell className="text-sm text-gray-700">
                       <div>{item.description}</div>
                       <div className="text-xs text-gray-400">
-                        {METHOD_LABEL[item.paymentMethod ?? ''] ?? item.paymentMethod}
+                        {METHOD_LABEL[item.paymentMethod ?? ''] ??
+                          item.paymentMethod}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {item.transactionCode ?? '—'}
                     </TableCell>
-                    <TableCell align="right" className="whitespace-nowrap text-sm font-semibold">
+                    <TableCell
+                      align="right"
+                      className="text-sm font-semibold whitespace-nowrap"
+                    >
                       {activeTab === 0 ? (
                         <span style={{ color: '#00B14F' }}>
                           +{formatCurrencyVnd(item.amount)}

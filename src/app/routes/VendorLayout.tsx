@@ -120,7 +120,8 @@ function VendorLayout(): JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [isBalanceHistoryModalOpen, setIsBalanceHistoryModalOpen] = useState(false);
+  const [isBalanceHistoryModalOpen, setIsBalanceHistoryModalOpen] =
+    useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const [orderModalId, setOrderModalId] = useState<number | null>(null);
@@ -579,7 +580,7 @@ function VendorLayout(): JSX.Element {
                   <Box
                     component="button"
                     onClick={() => setIsBalanceHistoryModalOpen(true)}
-                    className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm hover:bg-primary-100 transition-colors"
+                    className="border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100 flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm transition-colors"
                   >
                     Số dư: {formatCurrencyVnd(accountBalance?.balance)}
                   </Box>
