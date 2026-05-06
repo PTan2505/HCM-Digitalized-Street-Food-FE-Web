@@ -264,11 +264,25 @@ export const orderSlice = createSlice({
           targetOrder.status = action.payload.status;
           targetOrder.finalAmount = action.payload.finalAmount;
           targetOrder.updatedAt = new Date().toISOString();
+
+          // Update moneyLocation based on status
+          if (action.payload.status === 2) {
+            targetOrder.moneyLocation = 'systemKeep';
+          } else if (action.payload.status === 3) {
+            targetOrder.moneyLocation = 'refundToCustomer';
+          }
         }
         if (state.selectedOrder?.orderId === action.payload.orderId) {
           state.selectedOrder.status = action.payload.status;
           state.selectedOrder.finalAmount = action.payload.finalAmount;
           state.selectedOrder.updatedAt = new Date().toISOString();
+
+          // Update moneyLocation based on status
+          if (action.payload.status === 2) {
+            state.selectedOrder.moneyLocation = 'systemKeep';
+          } else if (action.payload.status === 3) {
+            state.selectedOrder.moneyLocation = 'refundToCustomer';
+          }
         }
       })
       .addCase(completeVendorOrder.fulfilled, (state, action) => {
@@ -279,11 +293,19 @@ export const orderSlice = createSlice({
           targetOrder.status = action.payload.status;
           targetOrder.finalAmount = action.payload.finalAmount;
           targetOrder.updatedAt = new Date().toISOString();
+
+          if (action.payload.status === 4) {
+            targetOrder.moneyLocation = 'transToVendor';
+          }
         }
         if (state.selectedOrder?.orderId === action.payload.orderId) {
           state.selectedOrder.status = action.payload.status;
           state.selectedOrder.finalAmount = action.payload.finalAmount;
           state.selectedOrder.updatedAt = new Date().toISOString();
+
+          if (action.payload.status === 4) {
+            state.selectedOrder.moneyLocation = 'transToVendor';
+          }
         }
       })
       .addCase(getOrderDetails.fulfilled, (state, action) => {

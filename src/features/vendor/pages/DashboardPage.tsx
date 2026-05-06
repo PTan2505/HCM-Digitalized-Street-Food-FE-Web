@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   DollarSign,
   ShoppingBag,
-  TrendingUp,
   Megaphone,
   Target,
   ShoppingCart,
@@ -13,6 +12,7 @@ import RevenueLineChart from '@features/vendor/components/RevenueLineChart';
 import DishBarChart from '@features/vendor/components/DishBarChart';
 import VoucherBarChart from '@features/vendor/components/VoucherBarChart';
 import CampaignBarChart from '@features/vendor/components/CampaignBarChart';
+import BranchesPerformanceChart from '@features/vendor/components/BranchesPerformanceChart';
 import VendorRevenueBarModal from '@features/vendor/components/VendorRevenueBarModal';
 import { Tooltip } from '@mui/material';
 
@@ -22,10 +22,12 @@ export default function DashboardPage(): React.JSX.Element {
     vouchers,
     dishes,
     campaigns,
+    branchesPerformance,
     onGetRevenue,
     onGetVouchers,
     onGetDishes,
     onGetCampaigns,
+    onGetBranchesPerformance,
     status,
   } = useDashboard();
 
@@ -58,7 +60,15 @@ export default function DashboardPage(): React.JSX.Element {
     onGetCampaigns(params);
     onGetVouchers(params);
     onGetDishes(params);
-  }, [dateRange, onGetDishes, onGetRevenue, onGetVouchers, onGetCampaigns]);
+    onGetBranchesPerformance(params);
+  }, [
+    dateRange,
+    onGetDishes,
+    onGetRevenue,
+    onGetVouchers,
+    onGetCampaigns,
+    onGetBranchesPerformance,
+  ]);
 
   const handleFilterApply = (): void => {
     const start = new Date(startDateInput);
@@ -314,6 +324,13 @@ export default function DashboardPage(): React.JSX.Element {
           {/* Top Dishes */}
           <div className="w-full">
             <DishBarChart data={dishes?.topDishes ?? []} />
+          </div>
+
+          {/* Branches Performance */}
+          <div className="w-full">
+            <BranchesPerformanceChart
+              data={branchesPerformance?.branches ?? []}
+            />
           </div>
 
           {/* Campaign analytics */}
