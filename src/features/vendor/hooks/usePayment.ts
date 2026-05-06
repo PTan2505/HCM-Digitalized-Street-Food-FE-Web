@@ -45,7 +45,9 @@ export default function usePayment(): {
     orderCode: number;
   }) => Promise<GetPaymentCancelResponse>;
   onGetVendorBalance: () => Promise<GetVendorBalanceResponse>;
-  onFetchVendorBalanceHistory: (filter: VendorBalanceHistoryFilter) => Promise<GetVendorBalanceHistoryResponse>;
+  onFetchVendorBalanceHistory: (
+    filter: VendorBalanceHistoryFilter
+  ) => Promise<GetVendorBalanceHistoryResponse>;
   onVendorRequestTransfer: (
     payload: VendorRequestTransferRequest
   ) => Promise<VendorRequestTransferResponse>;
@@ -113,8 +115,12 @@ export default function usePayment(): {
     }, [dispatch]);
 
   const onFetchVendorBalanceHistory = useCallback(
-    async (filter: VendorBalanceHistoryFilter): Promise<GetVendorBalanceHistoryResponse> => {
-      const response = await dispatch(fetchVendorBalanceHistory(filter)).unwrap();
+    async (
+      filter: VendorBalanceHistoryFilter
+    ): Promise<GetVendorBalanceHistoryResponse> => {
+      const response = await dispatch(
+        fetchVendorBalanceHistory(filter)
+      ).unwrap();
       return response;
     },
     [dispatch]

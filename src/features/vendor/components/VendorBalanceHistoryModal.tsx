@@ -148,7 +148,7 @@ export default function VendorBalanceHistoryModal({
             value={fromDate}
             max={toDate || undefined}
             onChange={handleFromDate}
-            className="focus:ring-primary-600 rounded-lg border border-gray-300 bg-white px-3 py-1.75 text-sm text-gray-800 outline-none transition-all hover:border-gray-400 focus:ring-1"
+            className="focus:ring-primary-600 rounded-lg border border-gray-300 bg-white px-3 py-1.75 text-sm text-gray-800 transition-all outline-none hover:border-gray-400 focus:ring-1"
           />
         </div>
         <div>
@@ -160,7 +160,7 @@ export default function VendorBalanceHistoryModal({
             value={toDate}
             min={fromDate || undefined}
             onChange={handleToDate}
-            className="focus:ring-primary-600 rounded-lg border border-gray-300 bg-white px-3 py-1.75 text-sm text-gray-800 outline-none transition-all hover:border-gray-400 focus:ring-1"
+            className="focus:ring-primary-600 rounded-lg border border-gray-300 bg-white px-3 py-1.75 text-sm text-gray-800 transition-all outline-none hover:border-gray-400 focus:ring-1"
           />
         </div>
       </div>

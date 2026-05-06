@@ -121,4 +121,5 @@ export interface VendorBalanceHistoryPaginatedResponse {
   items: VendorBalanceHistoryItem[];
 }
 
-export type GetVendorBalanceHistoryResponse = VendorBalanceHistoryPaginatedResponse;
+export type GetVendorBalanceHistoryResponse =
+  VendorBalanceHistoryPaginatedResponse;
