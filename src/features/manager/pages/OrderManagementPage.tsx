@@ -198,23 +198,30 @@ export default function OrderManagementPage(): JSX.Element {
 
           return (
             <Box className="flex max-w-[320px] flex-wrap gap-1">
-              {items.length > 0
-                ? items.map((item: ManagerOrderItem) => (
+              {items.length > 0 ? (
+                <>
+                  {items.slice(0, 2).map((item: ManagerOrderItem) => (
                     <Chip
                       key={`${item.dishId}-${item.dishName}`}
                       label={`${item.dishName} x${item.quantity}`}
                       size="small"
                       variant="outlined"
                     />
-                  ))
-                : '-'}
+                  ))}
+                  {items.length > 2 && (
+                    <Chip label="..." size="small" variant="outlined" />
+                  )}
+                </>
+              ) : (
+                '-'
+              )}
             </Box>
           );
         },
       },
       {
-        key: 'finalAmount',
-        label: 'Thành tiền',
+        key: 'vendorPayout',
+        label: 'Tiền nhận được',
         style: { width: '150px' },
         render: (value: unknown): React.ReactNode =>
           typeof value === 'number' ? `${value.toLocaleString('vi-VN')}đ` : '-',

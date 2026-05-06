@@ -26,6 +26,8 @@ export interface VendorOrder {
   totalAmount: number;
   discountAmount: number | null;
   finalAmount: number;
+  platformFee: number;
+  vendorPayout: number;
   isTakeAway: boolean;
   lockedAt: string | null;
   createdAt: string;

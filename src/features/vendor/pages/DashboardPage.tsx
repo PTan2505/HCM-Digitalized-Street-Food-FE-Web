@@ -310,7 +310,7 @@ export default function DashboardPage(): React.JSX.Element {
               icon={Megaphone}
             />
             <SummaryCard
-              title="Đơn hàng từ chiến dịch"
+              title="Đơn hàng chiến dịch"
               value={campaigns?.totalCampaignOrders ?? 0}
               icon={ShoppingCart}
             />

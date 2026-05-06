@@ -379,37 +379,48 @@ export default function OrderDetailsModal({
                     <span>Tổng tiền món:</span>
                     <span>{formatCurrencyVnd(order.totalAmount)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span>Mã voucher:</span>
-                    <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
-                      {order.appliedVoucherCode?.trim()
-                        ? order.appliedVoucherCode.trim()
-                        : '-'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-3 text-sm text-gray-600">
-                    <span>Tên voucher:</span>
-                    <span className="text-right font-medium text-gray-700">
-                      {order.appliedVoucherName?.trim()
-                        ? order.appliedVoucherName.trim()
-                        : '-'}
-                    </span>
-                  </div>
+                  {order.appliedVoucherCode?.trim() ? (
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>Mã voucher:</span>
+                      <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                        {order.appliedVoucherCode.trim()}
+                      </span>
+                    </div>
+                  ) : null}
+                  {order.appliedVoucherName?.trim() ? (
+                    <div className="flex justify-between gap-3 text-sm text-gray-600">
+                      <span>Tên voucher:</span>
+                      <span className="text-right font-medium text-gray-700">
+                        {order.appliedVoucherName.trim()}
+                      </span>
+                    </div>
+                  ) : null}
                   {order.discountAmount && order.discountAmount > 0 ? (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Giảm giá:</span>
                       <span>-{formatCurrencyVnd(order.discountAmount)}</span>
                     </div>
                   ) : null}
-                  <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900">
+                  <div className="flex justify-between border-t border-gray-200 pt-2 text-sm text-gray-600">
                     <span>Thành tiền:</span>
-                    <span className="text-primary-600">
+                    <span className="font-semibold">
                       {formatCurrencyVnd(order.finalAmount)}
                     </span>
                   </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Phí hệ thống:</span>
+                    <span className="text-red-500">
+                      -{formatCurrencyVnd(order.platformFee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-dashed border-gray-200 pt-3 text-lg font-bold text-gray-900">
+                    <span className="text-primary-700">Tiền nhận được:</span>
+                    <span className="text-primary-700 underline decoration-2 underline-offset-4">
+                      {formatCurrencyVnd(order.vendorPayout)}
+                    </span>
+                  </div>
                   {order.moneyLocation && (
-                    <div className="mt-2 flex items-center justify-between text-xs text-gray-500 italic">
-                      <span>Vị trí tiền:</span>
+                    <div className="mt-2 flex justify-end text-xs text-gray-500 italic">
                       <span className="font-medium text-gray-700">
                         {getMoneyLocationLabel(order.moneyLocation)}
                       </span>

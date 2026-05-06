@@ -271,7 +271,7 @@ export default function DashboardPage(): React.JSX.Element {
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
                         <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                        Đăng ký chi nhánh
+                        Từ đăng ký chi nhánh
                       </span>
                       <span className="text-sm font-bold text-emerald-600">
                         {formatCurrency(
@@ -297,7 +297,7 @@ export default function DashboardPage(): React.JSX.Element {
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
                         <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                        Chiến dịch hệ thống
+                        Từ chiến dịch hệ thống
                       </span>
                       <span className="text-sm font-bold text-amber-600">
                         {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
@@ -321,7 +321,7 @@ export default function DashboardPage(): React.JSX.Element {
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
                         <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                        Hoa hồng đơn hàng
+                        Từ hoa hồng của đơn hàng
                       </span>
                       <span className="text-sm font-bold text-blue-600">
                         {formatCurrency(money?.totalOrderCommissionAmount ?? 0)}

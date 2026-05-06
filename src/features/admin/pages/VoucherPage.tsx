@@ -324,6 +324,29 @@ export default function VoucherPage(): JSX.Element {
       ),
     },
     {
+      key: 'validity',
+      label: 'Tình trạng',
+      render: (_: unknown, row: Voucher): JSX.Element => {
+        const now = new Date();
+        const hasEndDate =
+          typeof row.endDate === 'string' && row.endDate.trim() !== '';
+
+        if (!hasEndDate) {
+          return <StatusBadge label="Còn hiệu lực" type="success" />;
+        }
+
+        const endDate = new Date(row.endDate as string);
+        const isValid = now <= endDate;
+
+        return (
+          <StatusBadge
+            label={isValid ? 'Còn hiệu lực' : 'Hết hiệu lực'}
+            type={isValid ? 'success' : 'error'}
+          />
+        );
+      },
+    },
+    {
       key: 'isActive',
       label: 'Hoạt động',
       render: (value: unknown): JSX.Element => (
