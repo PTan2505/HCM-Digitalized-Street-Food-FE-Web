@@ -117,7 +117,10 @@ export default function VendorBalanceHistoryModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ className: 'rounded-2xl overflow-hidden' }}
+      PaperProps={{
+        className: 'rounded-2xl overflow-hidden flex flex-col',
+        style: { maxHeight: '90vh' },
+      }}
     >
       <VendorModalHeader
         title="Lịch sử số dư"
@@ -165,7 +168,7 @@ export default function VendorBalanceHistoryModal({
         </div>
       </div>
 
-      <div className="px-6 py-4" style={{ minHeight: 320 }}>
+      <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -184,8 +187,8 @@ export default function VendorBalanceHistoryModal({
           </div>
         ) : (
           <>
-            <TableContainer>
-              <Table size="small">
+            <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
+              <Table size="small" stickyHeader>
                 <TableHead>
                   <TableRow>
                     <TableCell className="font-semibold text-gray-600">
