@@ -117,7 +117,10 @@ export default function VendorBalanceHistoryModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ className: 'rounded-2xl overflow-hidden flex flex-col', style: { maxHeight: '90vh' } }}
+      PaperProps={{
+        className: 'rounded-2xl overflow-hidden flex flex-col',
+        style: { maxHeight: '90vh' },
+      }}
     >
       <VendorModalHeader
         title="Lịch sử số dư"
