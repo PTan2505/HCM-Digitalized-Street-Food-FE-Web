@@ -43,12 +43,16 @@ export interface Branch {
   dayOffs?: unknown[] | null;
   branchImages?: unknown[] | null;
   dishes?: unknown[];
+  verifiedBy?: number | null;
+  licenseUrl?: string | string[] | null;
+  licenseUrls?: string[] | null;
 }
 
 export interface BranchRegisterRequest {
   branchRequestId: number;
   branchId: number | null;
-  licenseUrl: string | null;
+  licenseUrl: string | string[] | null;
+  licenseUrls?: string[] | null;
   status: number;
   rejectReason: string | null;
   createdAt: string;
@@ -63,6 +67,7 @@ export interface BranchRegisterRequest {
   vendorUserPhone?: string;
   vendorName?: string;
   branch: Branch;
+  verifiedBy?: number | null;
 }
 
 export type PendingRegistrationType = 0 | 1 | 2;
