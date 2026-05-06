@@ -84,3 +84,23 @@ export interface VendorRequestTransferResponse {
   approvalState: string;
   currentVendorBalance: number;
 }
+
+export interface VendorBalanceHistoryItem {
+  id: number;
+  userId: number;
+  userName: string | null;
+  userEmail: string | null;
+  amount: number;
+  description: string;
+  status: string | null;
+  createdAt: string;
+  paidAt: string | null;
+  transactionCode: string | null;
+  orderId: number | null;
+  branchId: number | null;
+  branchCampaignId: number | null;
+  paymentMethod: 'Vendor Wallet' | 'PAYOS_PAYOUT' | null;
+  checkoutUrl: string | null;
+}
+
+export type GetVendorBalanceHistoryResponse = VendorBalanceHistoryItem[];

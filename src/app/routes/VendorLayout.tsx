@@ -6,6 +6,7 @@ import NotificationBell from '@components/NotificationBell';
 import useLogin from '@features/auth/hooks/useLogin';
 import FeedbackDetailsModal from '@features/vendor/components/FeedbackDetailsModal';
 import OrderDetailsModal from '@features/vendor/components/OrderDetailsModal';
+import VendorBalanceHistoryModal from '@features/vendor/components/VendorBalanceHistoryModal';
 import OnboardingMissingBranchModal from '@features/vendor/components/OnboardingMissingBranchModal';
 import OnboardingMissingBranchDishModal from '@features/vendor/components/OnboardingMissingBranchDishModal';
 import OnboardingMissingDietaryModal from '@features/vendor/components/OnboardingMissingDietaryModal';
@@ -119,6 +120,7 @@ function VendorLayout(): JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isBalanceHistoryModalOpen, setIsBalanceHistoryModalOpen] = useState(false);
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
   const [feedbackModalId, setFeedbackModalId] = useState<number | null>(null);
   const [orderModalId, setOrderModalId] = useState<number | null>(null);
@@ -574,8 +576,11 @@ function VendorLayout(): JSX.Element {
             <Box className="flex items-center gap-4">
               {isVendor && (
                 <Box className="flex items-center gap-3">
-                  <Box className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm">
-                    {/* <AccountBalanceIcon fontSize="small" /> */}
+                  <Box
+                    component="button"
+                    onClick={() => setIsBalanceHistoryModalOpen(true)}
+                    className="border-primary-200 bg-primary-50 text-primary-700 flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold whitespace-nowrap shadow-sm hover:bg-primary-100 transition-colors"
+                  >
                     Số dư: {formatCurrencyVnd(accountBalance?.balance)}
                   </Box>
                   <Button
@@ -611,6 +616,10 @@ function VendorLayout(): JSX.Element {
         </Box>
       </Box>
 
+      <VendorBalanceHistoryModal
+        isOpen={isBalanceHistoryModalOpen}
+        onClose={() => setIsBalanceHistoryModalOpen(false)}
+      />
       <RequestTransferModal
         isOpen={isTransferModalOpen}
         isSubmitting={isSubmittingTransfer}

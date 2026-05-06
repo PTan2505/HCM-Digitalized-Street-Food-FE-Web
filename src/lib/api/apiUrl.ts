@@ -128,6 +128,7 @@ export const apiUrl = {
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm',
     getVendorBalance: '/Payment/vendor/balance',
+    getVendorBalanceHistory: '/Payment/vendor/history',
     vendorRequestTransfer: '/Payment/vendor/transfer',
     getPaymentPayout: '/Payment/payouts',
   },

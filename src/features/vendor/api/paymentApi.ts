@@ -8,6 +8,7 @@ import type {
   GetPaymentStatusResponse,
   GetPaymentSuccessResponse,
   GetVendorBalanceResponse,
+  GetVendorBalanceHistoryResponse,
   VendorRequestTransferRequest,
   VendorRequestTransferResponse,
 } from '@features/vendor/types/payment';
@@ -85,6 +86,13 @@ export class PaymentApi {
   async getVendorBalance(): Promise<GetVendorBalanceResponse> {
     const res = await this.apiClient.get<GetVendorBalanceResponse>({
       url: apiUrl.payment.getVendorBalance,
+    });
+    return res.data;
+  }
+
+  async getVendorBalanceHistory(): Promise<GetVendorBalanceHistoryResponse> {
+    const res = await this.apiClient.get<GetVendorBalanceHistoryResponse>({
+      url: apiUrl.payment.getVendorBalanceHistory,
     });
     return res.data;
   }
