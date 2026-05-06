@@ -47,7 +47,7 @@ const CustomTooltip = ({
                 className="mr-2 inline-block h-3 w-3 rounded-full"
                 style={{ backgroundColor: '#10B981' }}
               ></span>
-              Đăng ký chi nhánh:
+              Doanh thu từ đăng ký chi nhánh:
             </span>
             <span className="font-bold text-gray-900">
               {formatCurrency(data.branchRegistrationAmount ?? 0)}
@@ -59,7 +59,7 @@ const CustomTooltip = ({
                 className="mr-2 inline-block h-3 w-3 rounded-full"
                 style={{ backgroundColor: '#F59E0B' }}
               ></span>
-              Chiến dịch hệ thống:
+              Doanh thu từ chiến dịch hệ thống:
             </span>
             <span className="font-bold text-gray-900">
               {formatCurrency(data.systemCampaignAmount ?? 0)}
@@ -71,7 +71,7 @@ const CustomTooltip = ({
                 className="mr-2 inline-block h-3 w-3 rounded-full"
                 style={{ backgroundColor: '#3B82F6' }}
               ></span>
-              Hoa hồng đơn hàng:
+              Doanh thu từ hoa hồng của đơn hàng:
             </span>
             <span className="font-bold text-gray-900">
               {formatCurrency(data.orderCommissionAmount ?? 0)}
@@ -163,7 +163,7 @@ export default function AdminMoneyChart({
               />
               <Line
                 type="monotone"
-                name="Chiến dịch"
+                name="Phí tham gia chiến dịch"
                 dataKey="systemCampaignAmount"
                 stroke="#F59E0B"
                 strokeWidth={3}
@@ -173,7 +173,7 @@ export default function AdminMoneyChart({
               />
               <Line
                 type="monotone"
-                name="Hoa hồng đơn hàng"
+                name="Phí hoa hồng từ đơn hàng"
                 dataKey="orderCommissionAmount"
                 stroke="#3B82F6"
                 strokeWidth={3}

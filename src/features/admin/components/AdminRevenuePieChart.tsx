@@ -91,12 +91,12 @@ export default function AdminRevenuePieChart({
   const data = [
     { name: 'Phí đăng ký chi nhánh', value: branchAmount, color: '#10B981' },
     {
-      name: 'Phí chiến dịch hệ thống',
+      name: 'Phí tham gia chiến dịch',
       value: campaignAmount,
       color: '#F59E0B',
     },
     {
-      name: 'Hoa hồng đơn hàng',
+      name: 'Phí hoa hồng từ đơn hàng',
       value: orderCommissionAmount,
       color: '#3B82F6',
     },
