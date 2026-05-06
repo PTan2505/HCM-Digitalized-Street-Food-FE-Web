@@ -4,25 +4,31 @@ import PendingTypeFilterSection from '@features/moderator/components/PendingType
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
 import VendorLicenseDetails from '@features/moderator/components/VendorLicenseDetailsModal';
+import LicenseModal from '@features/vendor/components/LicenseModal';
 import VendorRegistrationDetails from '@features/moderator/components/VendorRegistrationDetailsModal';
 import useBranch from '@features/moderator/hooks/useBranch';
 import type {
   BranchRegisterRequest,
   PendingRegistrationType,
 } from '@features/moderator/types/branch';
-import { useAppSelector } from '@hooks/reduxHooks';
+import { useAppSelector, useAppDispatch } from '@hooks/reduxHooks';
+import { selectUser } from '@slices/auth';
 import { axiosApi } from '@lib/api/apiInstance';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ImageIcon from '@mui/icons-material/Image';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import {
   selectBranchStatus,
   selectPendingRegistrations,
   selectPendingRegistrationsPagination,
+  updatePendingRegistrationLicense,
 } from '@slices/branch';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -64,9 +70,11 @@ const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
 };
 
 export default function VendorVerificationPage(): React.JSX.Element {
+  const dispatch = useAppDispatch();
   const pendingRegistrations = useAppSelector(selectPendingRegistrations);
   const pagination = useAppSelector(selectPendingRegistrationsPagination);
   const status = useAppSelector(selectBranchStatus);
+  const currentUser = useAppSelector(selectUser);
   const {
     onGetPendingRegistrations,
     onVerifyBranchRegistration,
@@ -80,10 +88,15 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [imagesModalOpen, setImagesModalOpen] = useState(false);
+  const [uploadLicenseModalOpen, setUploadLicenseModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
+  // Map branchId -> verifiedBy (from claim API response)
+  const [claimedRows, setClaimedRows] = useState<Record<number, number>>({});
+  // Tracks which rows are currently loading the claim API
+  const [claimingRows, setClaimingRows] = useState<Record<number, boolean>>({});
   const [vendorDetails, setVendorDetails] = useState<
     Record<
       number,
@@ -255,6 +268,43 @@ export default function VendorVerificationPage(): React.JSX.Element {
     }
   };
 
+  const handleClaim = async (row: Record<string, unknown>): Promise<void> => {
+    const registration = row as unknown as BranchRegisterRequest;
+    const branchId = registration.branchId;
+    if (branchId === null || branchId === undefined) return;
+    setClaimingRows((prev) => ({ ...prev, [branchId]: true }));
+    try {
+      const result = await axiosApi.branchApi.claimBranchRegistration(branchId);
+      setClaimedRows((prev) => ({ ...prev, [branchId]: result.verifiedBy }));
+    } catch (error) {
+      console.error('Failed to claim branch registration:', error);
+    } finally {
+      setClaimingRows((prev) => ({ ...prev, [branchId]: false }));
+    }
+  };
+
+  const handleOpenUploadLicenseModal = (row: Record<string, unknown>): void => {
+    setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setUploadLicenseModalOpen(true);
+  };
+
+  const handleCloseUploadLicenseModal = (): void => {
+    setUploadLicenseModalOpen(false);
+    setSelectedRegistration(null);
+  };
+
+  const handleUploadLicenseSuccess = (licenseUrls: string[]): void => {
+    if (selectedRegistration?.branchId) {
+      dispatch(
+        updatePendingRegistrationLicense({
+          branchId: selectedRegistration.branchId,
+          licenseUrls,
+        })
+      );
+    }
+    handleCloseUploadLicenseModal();
+  };
+
   const hiddenColumnKeys = HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE[pendingType];
 
   const columns = [
@@ -387,84 +437,169 @@ export default function VendorVerificationPage(): React.JSX.Element {
       render: (value: unknown): string =>
         new Date(value as string).toLocaleString('vi-VN'),
     },
-  ].filter((column) => !hiddenColumnKeys.includes(column.key));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ].filter((column) => !hiddenColumnKeys.includes(column.key)) as any[];
 
-  const actions = [
-    {
-      label: (
-        <Tooltip title="Xem chi tiết">
-          <IconButton size="small" color="primary">
-            <VisibilityIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
-      onClick: (row: Record<string, unknown>): void => {
-        handleOpenDetailsModal(row);
-      },
-    },
-    {
-      label: (
-        <Tooltip title="Xem giấy phép">
-          <IconButton size="small" color="primary">
-            <AssignmentIndIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
-      onClick: (row: Record<string, unknown>): void => {
-        handleOpenLicenseModal(row);
-      },
-      show: (row: Record<string, unknown>): boolean => {
+  // Append the dynamic action column at the end
+  columns.push({
+    key: '__actions__',
+    label: 'Thao tác',
+    render: (
+      _value: unknown,
+      row: Record<string, unknown>
+    ): React.ReactNode => {
+      const registration = row as unknown as BranchRegisterRequest;
+      const branchId = registration.branchId;
+      if (branchId === null || branchId === undefined) return null;
+
+      const apiVerifiedBy =
+        registration.verifiedBy ?? registration.branch?.verifiedBy;
+      const verifiedBy = claimedRows[branchId] ?? apiVerifiedBy;
+      const isClaiming = claimingRows[branchId] ?? false;
+
+      // Not yet claimed – show only "Nhận đơn" button
+      if (verifiedBy === undefined || verifiedBy === null) {
+        return (
+          <Tooltip title="Nhận đơn">
+            <span>
+              <IconButton
+                size="small"
+                color="warning"
+                disabled={isClaiming}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void handleClaim(row);
+                }}
+              >
+                {isClaiming ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <AssignmentIndIcon fontSize="small" />
+                )}
+              </IconButton>
+            </span>
+          </Tooltip>
+        );
+      }
+
+      // Get current user ID (API might return userId instead of id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const currentUserId = (currentUser as any)?.userId ?? currentUser?.id;
+
+      // Claimed by someone else
+      if (String(verifiedBy) !== String(currentUserId)) {
+        return (
+          <Chip
+            label="Đơn đã được nhận bởi người khác"
+            color="default"
+            size="small"
+            variant="outlined"
+            sx={{ fontSize: '0.7rem' }}
+          />
+        );
+      }
+
+      // Claimed by current user – show all original action buttons
+      const hasLicense = ((): boolean => {
         const licenseUrl = row.licenseUrl;
         if (!licenseUrl) return false;
         if (typeof licenseUrl === 'string') return licenseUrl.length > 0;
         if (Array.isArray(licenseUrl)) return licenseUrl.length > 0;
         return false;
-      },
-    },
-    {
-      label: (
-        <Tooltip title="Xem hình ảnh">
-          <IconButton size="small" color="primary">
-            <ImageIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
-      onClick: (row: Record<string, unknown>): void => {
-        handleOpenImagesModal(row);
-      },
-      show: (row: Record<string, unknown>): boolean => {
+      })();
+
+      const hasImages = ((): boolean => {
         const branchImages = row?.branch as Record<string, unknown> | undefined;
         return (
           Array.isArray(branchImages?.branchImages) &&
           branchImages.branchImages.length > 0
         );
-      },
+      })();
+
+      return (
+        <span style={{ display: 'flex', gap: 2 }}>
+          <Tooltip title="Xem chi tiết">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDetailsModal(row);
+              }}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          {hasLicense && (
+            <Tooltip title="Xem giấy phép">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenLicenseModal(row);
+                }}
+              >
+                <AssignmentIndIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {!hasLicense && (pendingType === 1 || pendingType === 2) && (
+            <Tooltip title="Cập nhật giấy phép">
+              <IconButton
+                size="small"
+                color="secondary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenUploadLicenseModal(row);
+                }}
+              >
+                <UploadFileIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {hasImages && (
+            <Tooltip title="Xem hình ảnh">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenImagesModal(row);
+                }}
+              >
+                <ImageIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title="Duyệt">
+            <IconButton
+              size="small"
+              color="success"
+              onClick={(e) => {
+                e.stopPropagation();
+                void handleVerify(row);
+              }}
+            >
+              <CheckCircleIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Từ chối">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenRejectModal(row);
+              }}
+            >
+              <CancelIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </span>
+      );
     },
-    {
-      label: (
-        <Tooltip title="Duyệt">
-          <IconButton size="small" color="success">
-            <CheckCircleIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
-      onClick: (row: Record<string, unknown>): void => {
-        void handleVerify(row);
-      },
-    },
-    {
-      label: (
-        <Tooltip title="Từ chối">
-          <IconButton size="small" color="error">
-            <CancelIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
-      onClick: (row: Record<string, unknown>): void => {
-        handleOpenRejectModal(row);
-      },
-    },
-  ];
+  });
 
   const startTour = (): void => {
     setTourInstanceKey((prev) => prev + 1);
@@ -555,7 +690,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
           data={pendingRegistrations as unknown as Record<string, unknown>[]}
           loading={status === 'pending'}
           rowKey="branchRequestId"
-          actions={actions}
           emptyMessage="Chưa có yêu cầu xác minh nào"
           loadingMessage="Đang tải danh sách..."
         />
@@ -609,6 +743,16 @@ export default function VendorVerificationPage(): React.JSX.Element {
         isOpen={rejectModalOpen}
         onClose={handleCloseRejectModal}
         onConfirm={handleConfirmReject}
+      />
+
+      {/* Upload License Modal */}
+      <LicenseModal
+        isOpen={uploadLicenseModalOpen}
+        onClose={handleCloseUploadLicenseModal}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        branch={selectedRegistration?.branch as any}
+        mode="update"
+        onUploadSuccess={handleUploadLicenseSuccess}
       />
     </div>
   );

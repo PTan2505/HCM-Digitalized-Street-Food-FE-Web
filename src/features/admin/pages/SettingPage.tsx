@@ -37,6 +37,7 @@ export default function SettingPage(): JSX.Element {
     SubscriptionDurationDays: 'Số ngày đăng ký cho gói',
     vendorTierFeedbackWindowSize:
       'Độ rộng của đánh giá để tính hạng của chi nhánh',
+    VendorOrderCommissionPercent: 'Phần trăm hoa hồng cho đơn hàng',
   };
 
   const [editingValues, setEditingValues] = useState<Record<number, string>>(

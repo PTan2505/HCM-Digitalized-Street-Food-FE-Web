@@ -65,6 +65,18 @@ const CustomTooltip = ({
               {formatCurrency(data.systemCampaignAmount ?? 0)}
             </span>
           </p>
+          <p className="text-sm">
+            <span className="mr-2 flex items-center text-gray-500">
+              <span
+                className="mr-2 inline-block h-3 w-3 rounded-full"
+                style={{ backgroundColor: '#3B82F6' }}
+              ></span>
+              Hoa hồng đơn hàng:
+            </span>
+            <span className="font-bold text-gray-900">
+              {formatCurrency(data.orderCommissionAmount ?? 0)}
+            </span>
+          </p>
         </div>
       </div>
     );
@@ -82,7 +94,7 @@ export default function AdminMoneyChart({
           Dòng tiền thu về
         </h3>
         <p className="text-sm text-gray-500">
-          Thu nhập từ đăng ký chi nhánh và chiến dịch
+          Thu nhập từ hệ thống (chi nhánh, chiến dịch, hoa hồng)
         </p>
       </div>
 
@@ -154,6 +166,16 @@ export default function AdminMoneyChart({
                 name="Chiến dịch"
                 dataKey="systemCampaignAmount"
                 stroke="#F59E0B"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+                animationDuration={1500}
+              />
+              <Line
+                type="monotone"
+                name="Hoa hồng đơn hàng"
+                dataKey="orderCommissionAmount"
+                stroke="#3B82F6"
                 strokeWidth={3}
                 dot={{ r: 4, strokeWidth: 2 }}
                 activeDot={{ r: 6, strokeWidth: 0 }}

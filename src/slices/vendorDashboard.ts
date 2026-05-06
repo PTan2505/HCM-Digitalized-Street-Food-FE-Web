@@ -5,6 +5,8 @@ import type {
   VendorDashboardDishes,
   VendorDashboardCampaigns,
   VendorRevenueBarResponse,
+  VendorDashboardBranchesPerformance,
+  CommissionRateResponse,
 } from '@features/vendor/types/dashboard';
 import { createAppAsyncThunk } from '@hooks/reduxHooks';
 import { axiosApi } from '@lib/api/apiInstance';
@@ -21,6 +23,8 @@ export interface VendorDashboardState {
   dishes: VendorDashboardDishes | null;
   campaigns: VendorDashboardCampaigns | null;
   vendorRevenueBar: VendorRevenueBarResponse | null;
+  branchesPerformance: VendorDashboardBranchesPerformance | null;
+  commissionRate: CommissionRateResponse | null;
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
   revenueBarStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
@@ -33,6 +37,8 @@ const initialState: VendorDashboardState = {
   dishes: null,
   campaigns: null,
   vendorRevenueBar: null,
+  branchesPerformance: null,
+  commissionRate: null,
   status: 'idle',
   error: null,
   revenueBarStatus: 'idle',
@@ -133,6 +139,35 @@ export const getVendorRevenueBar = createAppAsyncThunk(
   }
 );
 
+export const getBranchesPerformance = createAppAsyncThunk(
+  'vendorDashboard/getBranchesPerformance',
+  async (
+    payload: { fromDate: string; toDate: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: VendorDashboardBranchesPerformance =
+        await axiosApi.dashboardApi.getBranchesPerformance(payload);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getCommissionRate = createAppAsyncThunk(
+  'vendorDashboard/getCommissionRate',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: CommissionRateResponse =
+        await axiosApi.dashboardApi.getCommissionRate();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────────────────
 
 const allThunks = [getRevenue, getVouchers, getDishes, getCampaigns] as const;
@@ -170,6 +205,12 @@ export const vendorDashboardSlice = createSlice({
         state.revenueBarError = (action as { payload?: unknown }).payload ?? {
           message: 'An error occurred',
         };
+      })
+      .addCase(getBranchesPerformance.fulfilled, (state, action) => {
+        state.branchesPerformance = action.payload;
+      })
+      .addCase(getCommissionRate.fulfilled, (state, action) => {
+        state.commissionRate = action.payload;
       })
       .addMatcher(isPending(...allThunks), (state) => {
         state.status = 'pending';
@@ -228,3 +269,12 @@ export const selectVendorDashboardRevenueBarStatus = (
 export const selectVendorDashboardRevenueBarError = (
   state: RootState
 ): unknown => state.vendorDashboard.revenueBarError;
+
+export const selectVendorDashboardBranchesPerformance = (
+  state: RootState
+): VendorDashboardBranchesPerformance | null =>
+  state.vendorDashboard.branchesPerformance;
+
+export const selectVendorDashboardCommissionRate = (
+  state: RootState
+): CommissionRateResponse | null => state.vendorDashboard.commissionRate;

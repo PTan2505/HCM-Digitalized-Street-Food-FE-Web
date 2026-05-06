@@ -195,6 +195,13 @@ export const paymentSlice = createSlice({
   initialState,
   reducers: {
     resetPaymentState: () => initialState,
+    updateBalance: (state, action: { payload: number }) => {
+      if (state.accountBalance) {
+        state.accountBalance.balance += action.payload;
+      } else {
+        state.accountBalance = { balance: action.payload };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -296,7 +303,7 @@ export const paymentSlice = createSlice({
   },
 });
 
-export const { resetPaymentState } = paymentSlice.actions;
+export const { resetPaymentState, updateBalance } = paymentSlice.actions;
 
 export default paymentSlice.reducer;
 

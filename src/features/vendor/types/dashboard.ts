@@ -67,3 +67,18 @@ export interface RevenueBarItem {
 export interface VendorRevenueBarResponse {
   items: RevenueBarItem[];
 }
+
+export interface BranchPerformance {
+  branchId: number;
+  branchName: string;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface VendorDashboardBranchesPerformance {
+  branches: BranchPerformance[];
+}
+
+export interface CommissionRateResponse {
+  commissionPercent: number;
+}
