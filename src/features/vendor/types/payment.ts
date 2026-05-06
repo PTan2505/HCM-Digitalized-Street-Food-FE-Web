@@ -103,4 +103,23 @@ export interface VendorBalanceHistoryItem {
   checkoutUrl: string | null;
 }
 
-export type GetVendorBalanceHistoryResponse = VendorBalanceHistoryItem[];
+export interface VendorBalanceHistoryFilter {
+  fromDate?: string;
+  toDate?: string;
+  paymentMethod?: string;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface VendorBalanceHistoryPaginatedResponse {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  items: VendorBalanceHistoryItem[];
+}
+
+export type GetVendorBalanceHistoryResponse =
+  VendorBalanceHistoryPaginatedResponse;

@@ -11,6 +11,7 @@ import type {
   GetPaymentCancelResponse,
   GetVendorBalanceResponse,
   GetVendorBalanceHistoryResponse,
+  VendorBalanceHistoryFilter,
   VendorRequestTransferRequest,
   VendorRequestTransferResponse,
 } from '@features/vendor/types/payment';
@@ -161,10 +162,10 @@ export const vendorRequestTransfer = createAppAsyncThunk(
 
 export const fetchVendorBalanceHistory = createAppAsyncThunk(
   'payment/fetchVendorBalanceHistory',
-  async (_, { rejectWithValue }) => {
+  async (filter: VendorBalanceHistoryFilter, { rejectWithValue }) => {
     try {
       const response: GetVendorBalanceHistoryResponse =
-        await axiosApi.paymentApi.getVendorBalanceHistory();
+        await axiosApi.paymentApi.getVendorBalanceHistory(filter);
       return response;
     } catch (error) {
       return rejectWithValue(error);

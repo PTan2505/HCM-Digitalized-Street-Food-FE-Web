@@ -135,7 +135,9 @@ function PaymentHistoryPage(): JSX.Element {
     },
   ];
 
-  const rows: PaymentHistoryItem[] = history ?? [];
+  const rows: PaymentHistoryItem[] = (history ?? []).filter(
+    (item) => item.paymentMethod === 'QR Code'
+  );
 
   return (
     <div className="font-[var(--font-nunito)]">
