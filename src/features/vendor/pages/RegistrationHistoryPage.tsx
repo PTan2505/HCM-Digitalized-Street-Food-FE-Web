@@ -6,6 +6,8 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
 import EditIcon from '@mui/icons-material/Edit';
+import ArticleIcon from '@mui/icons-material/Article';
+import BadgeIcon from '@mui/icons-material/Badge';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {
@@ -24,6 +26,7 @@ import BranchDetailsModal from '@features/vendor/components/BranchDetailsModal';
 import BranchFormModal from '@features/vendor/components/BranchFormModal';
 import type { BranchFormMode } from '@features/vendor/components/BranchFormModal';
 import ImagesDetailsModal from '@features/vendor/components/ImagesDetailsModal';
+import LicenseModal from '@features/vendor/components/LicenseModal';
 import { getRegistrationHistoryTourSteps } from '@features/vendor/utils/registrationHistoryTourSteps';
 
 const StatusBadge = ({
@@ -58,6 +61,12 @@ function RegistrationHistoryPage(): JSX.Element {
     type: 'createVendor',
   });
   const [imagesBranch, setImagesBranch] = useState<Branch | null>(null);
+  const [licenseModalBranch, setLicenseModalBranch] = useState<Branch | null>(
+    null
+  );
+  const [licenseModalMode, setLicenseModalMode] = useState<'view' | 'update'>(
+    'view'
+  );
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [tourInstanceKey, setTourInstanceKey] = useState(0);
 
@@ -234,6 +243,30 @@ function RegistrationHistoryPage(): JSX.Element {
       color: 'error' as const,
       show: (): boolean => false,
     },
+    {
+      id: 'view-license',
+      label: <ArticleIcon fontSize="small" />,
+      menuLabel: 'Xem giấy phép',
+      onClick: (branch: Branch): void => {
+        setLicenseModalMode('view');
+        setLicenseModalBranch(branch);
+      },
+      color: 'info' as const,
+      show: (branch: Branch): boolean =>
+        !!(branch.licenseUrls && branch.licenseUrls.length > 0),
+    },
+    {
+      id: 'update-license',
+      label: <BadgeIcon fontSize="small" />,
+      menuLabel: 'Cập nhật giấy phép',
+      onClick: (branch: Branch): void => {
+        setLicenseModalMode('update');
+        setLicenseModalBranch(branch);
+      },
+      color: 'warning' as const,
+      show: (branch: Branch): boolean =>
+        !branch.licenseUrls || branch.licenseUrls.length === 0,
+    },
   ];
 
   return (
@@ -322,6 +355,13 @@ function RegistrationHistoryPage(): JSX.Element {
         isOpen={imagesBranch !== null}
         onClose={() => setImagesBranch(null)}
         branch={imagesBranch}
+      />
+
+      <LicenseModal
+        isOpen={licenseModalBranch !== null}
+        onClose={() => setLicenseModalBranch(null)}
+        branch={licenseModalBranch}
+        mode={licenseModalMode}
       />
     </div>
   );

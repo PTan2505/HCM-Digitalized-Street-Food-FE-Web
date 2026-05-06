@@ -8,6 +8,7 @@ import type {
   GetPaymentSuccessResponse,
   GetPaymentCancelResponse,
   GetVendorBalanceResponse,
+  GetVendorBalanceHistoryResponse,
   VendorRequestTransferRequest,
   VendorRequestTransferResponse,
 } from '@features/vendor/types/payment';
@@ -20,6 +21,7 @@ import {
   getPaymentSuccess,
   getPaymentCancel,
   getVendorBalance,
+  fetchVendorBalanceHistory,
   vendorRequestTransfer,
   resetPaymentState,
 } from '@slices/payment';
@@ -42,6 +44,7 @@ export default function usePayment(): {
     orderCode: number;
   }) => Promise<GetPaymentCancelResponse>;
   onGetVendorBalance: () => Promise<GetVendorBalanceResponse>;
+  onFetchVendorBalanceHistory: () => Promise<GetVendorBalanceHistoryResponse>;
   onVendorRequestTransfer: (
     payload: VendorRequestTransferRequest
   ) => Promise<VendorRequestTransferResponse>;
@@ -108,6 +111,12 @@ export default function usePayment(): {
       return response;
     }, [dispatch]);
 
+  const onFetchVendorBalanceHistory =
+    useCallback(async (): Promise<GetVendorBalanceHistoryResponse> => {
+      const response = await dispatch(fetchVendorBalanceHistory()).unwrap();
+      return response;
+    }, [dispatch]);
+
   const onVendorRequestTransfer = useCallback(
     async (
       payload: VendorRequestTransferRequest
@@ -130,6 +139,7 @@ export default function usePayment(): {
     onGetPaymentSuccess,
     onGetPaymentCancel,
     onGetVendorBalance,
+    onFetchVendorBalanceHistory,
     onVendorRequestTransfer,
     onResetPaymentState,
   };
