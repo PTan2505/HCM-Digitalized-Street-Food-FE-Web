@@ -53,4 +53,13 @@ export class BranchApi {
     });
     return res.data;
   }
+
+  async claimBranchRegistration(
+    branchId: number
+  ): Promise<{ verifiedBy: number }> {
+    const res = await this.apiClient.put<{ verifiedBy: number }, undefined>({
+      url: apiUrl.vendor.claimBranchRegistration(branchId),
+    });
+    return res.data;
+  }
 }

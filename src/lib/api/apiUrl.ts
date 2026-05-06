@@ -114,6 +114,8 @@ export const apiUrl = {
     getActiveBranches: '/Branch/active',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
+    claimBranchRegistration: (branchId: number): string =>
+      `/Branch/${branchId}/claim`,
   },
   taste: {
     getAllOrPostTaste: '/tastes',
