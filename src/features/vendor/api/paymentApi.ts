@@ -9,6 +9,7 @@ import type {
   GetPaymentSuccessResponse,
   GetVendorBalanceResponse,
   GetVendorBalanceHistoryResponse,
+  VendorBalanceHistoryFilter,
   VendorRequestTransferRequest,
   VendorRequestTransferResponse,
 } from '@features/vendor/types/payment';
@@ -90,9 +91,18 @@ export class PaymentApi {
     return res.data;
   }
 
-  async getVendorBalanceHistory(): Promise<GetVendorBalanceHistoryResponse> {
+  async getVendorBalanceHistory(
+    filter: VendorBalanceHistoryFilter
+  ): Promise<GetVendorBalanceHistoryResponse> {
     const res = await this.apiClient.get<GetVendorBalanceHistoryResponse>({
       url: apiUrl.payment.getVendorBalanceHistory,
+      params: {
+        ...(filter.fromDate && { fromDate: filter.fromDate }),
+        ...(filter.toDate && { toDate: filter.toDate }),
+        ...(filter.paymentMethod && { paymentMethod: filter.paymentMethod }),
+        pageNumber: filter.pageNumber,
+        pageSize: filter.pageSize,
+      },
     });
     return res.data;
   }
