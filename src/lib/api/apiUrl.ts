@@ -239,6 +239,8 @@ export const apiUrl = {
     getDishes: '/VendorDashboard/dishes',
     getCampaigns: '/VendorDashboard/campaigns',
     getVendorRevenueBar: '/VendorDashboard/revenue/bar',
+    getBranchesPerformance: '/VendorDashboard/branches/performance',
+    getCommissionRate: '/VendorDashboard/commission-rate',
   },
   adminDashboard: {
     getUserSignUps: '/AdminDashboard/user-signups',

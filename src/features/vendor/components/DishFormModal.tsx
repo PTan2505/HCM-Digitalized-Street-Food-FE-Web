@@ -31,6 +31,7 @@ import type { Taste } from '@features/admin/types/taste';
 // import type { UserDietaryPreference } from '@features/admin/types/userDietaryPreference';
 import useCategory from '@features/admin/hooks/useCategory';
 import useTaste from '@features/admin/hooks/useTaste';
+import useDashboard from '@features/vendor/hooks/useDashboard';
 // import useDietary from '@features/admin/hooks/useDietary';
 import { useAppSelector } from '@hooks/reduxHooks';
 import { selectCategories } from '@slices/category';
@@ -89,6 +90,7 @@ export default function DishFormModal({
 
   const { onGetAllCategories } = useCategory();
   const { onGetAllTastes } = useTaste();
+  const { onGetCommissionRate, commissionRate } = useDashboard();
   // const { onGetAllUserDietaryPreferences } = useDietary();
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -100,6 +102,7 @@ export default function DishFormModal({
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<DishFormData>({
     resolver: zodResolver(DishSchema),
@@ -118,9 +121,10 @@ export default function DishFormModal({
     if (isOpen) {
       void onGetAllCategories();
       void onGetAllTastes();
+      void onGetCommissionRate();
       // void onGetAllUserDietaryPreferences();
     }
-  }, [isOpen, onGetAllCategories, onGetAllTastes]);
+  }, [isOpen, onGetAllCategories, onGetAllTastes, onGetCommissionRate]);
 
   useEffect(() => {
     if (isOpen && isEditMode && editingDish) {
@@ -307,6 +311,37 @@ export default function DishFormModal({
                   )}
                 />
               </Box>
+
+              {/* Commission Rate Calculation */}
+              {commissionRate && watch('price') > 0 && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'primary.dark',
+                    mt: 0.5,
+                    fontStyle: 'italic',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  * Bạn nhận được{' '}
+                  {formatNumberWithDots(
+                    watch('price') -
+                      Math.floor(
+                        (watch('price') * commissionRate.commissionPercent) /
+                          100
+                      )
+                  )}
+                  đ khi có khách order món (sau khi đã trừ phí hoa hồng{' '}
+                  {commissionRate.commissionPercent}% (
+                  {formatNumberWithDots(
+                    Math.floor(
+                      (watch('price') * commissionRate.commissionPercent) / 100
+                    )
+                  )}
+                  đ))
+                </Typography>
+              )}
 
               {/* Is Signature */}
               <Box>

@@ -16,6 +16,7 @@ export interface DailyAmount {
   date: string;
   branchRegistrationAmount: number;
   systemCampaignAmount: number;
+  orderCommissionAmount: number;
 }
 
 export interface GetMoney {
@@ -24,8 +25,10 @@ export interface GetMoney {
   previousPeriod: string | null;
   totalBranchRegistrationAmount: number;
   totalSystemCampaignAmount: number;
+  totalOrderCommissionAmount: number;
   branchRegistrationGrowthRate: number | null;
   systemCampaignGrowthRate: number | null;
+  orderCommissionGrowthRate: number | null;
   dailyAmounts: DailyAmount[];
 }
 

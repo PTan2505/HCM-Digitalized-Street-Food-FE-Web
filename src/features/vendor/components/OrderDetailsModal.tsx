@@ -37,6 +37,19 @@ const formatCurrencyVnd = (value?: number | null): string => {
   return `${value.toLocaleString('vi-VN')} VND`;
 };
 
+const getMoneyLocationLabel = (location: string | null | undefined): string => {
+  switch (location) {
+    case 'systemKeep':
+      return 'Hệ thống đang giữ';
+    case 'transToVendor':
+      return 'Đã chuyển tới Vendor';
+    case 'refundToCustomer':
+      return 'Đã hoàn lại cho khách hàng';
+    default:
+      return location ?? '-';
+  }
+};
+
 const SectionHeading = ({
   dotColor,
   children,
@@ -394,6 +407,14 @@ export default function OrderDetailsModal({
                       {formatCurrencyVnd(order.finalAmount)}
                     </span>
                   </div>
+                  {order.moneyLocation && (
+                    <div className="mt-2 flex items-center justify-between text-xs text-gray-500 italic">
+                      <span>Vị trí tiền:</span>
+                      <span className="font-medium text-gray-700">
+                        {getMoneyLocationLabel(order.moneyLocation)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

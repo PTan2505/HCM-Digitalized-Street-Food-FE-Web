@@ -12,6 +12,7 @@ import type { PieLabelRenderProps } from 'recharts';
 interface AdminRevenuePieChartProps {
   branchAmount: number;
   campaignAmount: number;
+  orderCommissionAmount: number;
 }
 
 const formatCurrency = (value: number): string => {
@@ -85,6 +86,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 export default function AdminRevenuePieChart({
   branchAmount,
   campaignAmount,
+  orderCommissionAmount,
 }: AdminRevenuePieChartProps): React.JSX.Element {
   const data = [
     { name: 'Phí đăng ký chi nhánh', value: branchAmount, color: '#10B981' },
@@ -93,9 +95,15 @@ export default function AdminRevenuePieChart({
       value: campaignAmount,
       color: '#F59E0B',
     },
+    {
+      name: 'Hoa hồng đơn hàng',
+      value: orderCommissionAmount,
+      color: '#3B82F6',
+    },
   ];
 
-  const hasData = branchAmount > 0 || campaignAmount > 0;
+  const hasData =
+    branchAmount > 0 || campaignAmount > 0 || orderCommissionAmount > 0;
 
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">

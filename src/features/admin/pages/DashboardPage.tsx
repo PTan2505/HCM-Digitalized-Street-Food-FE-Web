@@ -115,7 +115,8 @@ export default function DashboardPage(): React.JSX.Element {
 
   const totalRevenue =
     (money?.totalBranchRegistrationAmount ?? 0) +
-    (money?.totalSystemCampaignAmount ?? 0);
+    (money?.totalSystemCampaignAmount ?? 0) +
+    (money?.totalOrderCommissionAmount ?? 0);
 
   const makeTrend = (
     rate: number | null,
@@ -287,7 +288,8 @@ export default function DashboardPage(): React.JSX.Element {
                         }`}
                       >
                         {money.branchRegistrationGrowthRate > 0 ? '+' : ''}
-                        {money.branchRegistrationGrowthRate}% so với kỳ trước
+                        {money.branchRegistrationGrowthRate}% so với kỳ{' '}
+                        {money?.previousPeriod?.toLowerCase()}
                       </span>
                     )}
                   </div>
@@ -310,7 +312,32 @@ export default function DashboardPage(): React.JSX.Element {
                         }`}
                       >
                         {money.systemCampaignGrowthRate > 0 ? '+' : ''}
-                        {money.systemCampaignGrowthRate}% so với kỳ trước
+                        {money.systemCampaignGrowthRate}% so với kỳ{' '}
+                        {money?.previousPeriod?.toLowerCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mb-2 flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                        Hoa hồng đơn hàng
+                      </span>
+                      <span className="text-sm font-bold text-blue-600">
+                        {formatCurrency(money?.totalOrderCommissionAmount ?? 0)}
+                      </span>
+                    </div>
+                    {money?.orderCommissionGrowthRate != null && (
+                      <span
+                        className={`text-right text-xs font-medium ${
+                          money.orderCommissionGrowthRate >= 0
+                            ? 'text-blue-600'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {money.orderCommissionGrowthRate > 0 ? '+' : ''}
+                        {money.orderCommissionGrowthRate}% so với kỳ{' '}
+                        {money?.previousPeriod?.toLowerCase()}
                       </span>
                     )}
                   </div>
@@ -356,17 +383,15 @@ export default function DashboardPage(): React.JSX.Element {
                     [
                       makeTrend(
                         money?.branchRegistrationGrowthRate ?? null,
-                        buildPeriodLabel(
-                          money?.previousPeriod,
-                          'đối với đăng kí chi nhánh'
-                        )
+                        'đối với đăng kí chi nhánh'
                       ),
                       makeTrend(
                         money?.systemCampaignGrowthRate ?? null,
-                        buildPeriodLabel(
-                          money?.previousPeriod,
-                          'đối với tham gia chiến dịch hệ thống'
-                        )
+                        'đối với tham gia chiến dịch hệ thống'
+                      ),
+                      makeTrend(
+                        money?.orderCommissionGrowthRate ?? null,
+                        'đối với phí hoa hồng đơn hàng'
                       ),
                     ].filter(Boolean) as {
                       value: number;
@@ -419,6 +444,7 @@ export default function DashboardPage(): React.JSX.Element {
             <AdminRevenuePieChart
               branchAmount={money?.totalBranchRegistrationAmount ?? 0}
               campaignAmount={money?.totalSystemCampaignAmount ?? 0}
+              orderCommissionAmount={money?.totalOrderCommissionAmount ?? 0}
             />
           </div>
 

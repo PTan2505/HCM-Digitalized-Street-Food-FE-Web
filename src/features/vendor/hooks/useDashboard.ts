@@ -4,6 +4,8 @@ import type {
   VendorDashboardDishes,
   VendorDashboardCampaigns,
   VendorRevenueBarResponse,
+  VendorDashboardBranchesPerformance,
+  CommissionRateResponse,
 } from '@features/vendor/types/dashboard';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
 import {
@@ -12,6 +14,8 @@ import {
   getDishes,
   getCampaigns,
   getVendorRevenueBar,
+  getBranchesPerformance,
+  getCommissionRate,
   resetVendorDashboardState,
   selectVendorDashboardRevenue,
   selectVendorDashboardVouchers,
@@ -21,6 +25,8 @@ import {
   selectVendorDashboardRevenueBarStatus,
   selectVendorDashboardStatus,
   selectVendorDashboardError,
+  selectVendorDashboardBranchesPerformance,
+  selectVendorDashboardCommissionRate,
 } from '@slices/vendorDashboard';
 import { useCallback } from 'react';
 
@@ -30,6 +36,8 @@ export default function useDashboard(): {
   dishes: VendorDashboardDishes | null;
   campaigns: VendorDashboardCampaigns | null;
   vendorRevenueBar: VendorRevenueBarResponse | null;
+  branchesPerformance: VendorDashboardBranchesPerformance | null;
+  commissionRate: CommissionRateResponse | null;
   revenueBarStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
   status: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: unknown;
@@ -53,6 +61,11 @@ export default function useDashboard(): {
     fromDate: string;
     toDate: string;
   }) => Promise<VendorRevenueBarResponse>;
+  onGetBranchesPerformance: (payload: {
+    fromDate: string;
+    toDate: string;
+  }) => Promise<VendorDashboardBranchesPerformance>;
+  onGetCommissionRate: () => Promise<CommissionRateResponse>;
   onResetVendorDashboardState: () => void;
 } {
   const dispatch = useAppDispatch();
@@ -62,6 +75,10 @@ export default function useDashboard(): {
   const dishes = useAppSelector(selectVendorDashboardDishes);
   const campaigns = useAppSelector(selectVendorDashboardCampaigns);
   const vendorRevenueBar = useAppSelector(selectVendorDashboardRevenueBar);
+  const branchesPerformance = useAppSelector(
+    selectVendorDashboardBranchesPerformance
+  );
+  const commissionRate = useAppSelector(selectVendorDashboardCommissionRate);
   const revenueBarStatus = useAppSelector(
     selectVendorDashboardRevenueBarStatus
   );
@@ -122,12 +139,29 @@ export default function useDashboard(): {
     [dispatch]
   );
 
+  const onGetBranchesPerformance = useCallback(
+    async (payload: {
+      fromDate: string;
+      toDate: string;
+    }): Promise<VendorDashboardBranchesPerformance> => {
+      return await dispatch(getBranchesPerformance(payload)).unwrap();
+    },
+    [dispatch]
+  );
+
+  const onGetCommissionRate =
+    useCallback(async (): Promise<CommissionRateResponse> => {
+      return await dispatch(getCommissionRate()).unwrap();
+    }, [dispatch]);
+
   return {
     revenue,
     vouchers,
     dishes,
     campaigns,
     vendorRevenueBar,
+    branchesPerformance,
+    commissionRate,
     revenueBarStatus,
     status,
     error,
@@ -136,6 +170,8 @@ export default function useDashboard(): {
     onGetDishes,
     onGetCampaigns,
     onGetVendorRevenueBar,
+    onGetBranchesPerformance,
+    onGetCommissionRate,
     onResetVendorDashboardState,
   };
 }

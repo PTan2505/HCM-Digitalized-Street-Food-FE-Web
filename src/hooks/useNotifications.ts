@@ -11,6 +11,7 @@ import {
   getMyVendor,
   updateBranchVerificationStatusRealtime,
 } from '@slices/vendor';
+import { updateBalance } from '@slices/payment';
 import { loadUserFromStorage, selectUser } from '@slices/auth';
 import { ROLES } from '@constants/role';
 import { tokenManagement } from '@utils/tokenManagement';
@@ -19,6 +20,7 @@ export type { NotificationDto } from '@custom-types/notification';
 
 const BRANCH_NAME_REGEX = /chi nhánh\s+'([^']+)'/i;
 const REJECT_REASON_REGEX = /Lý do:\s*(.+)$/i;
+const REFUND_AMOUNT_REGEX = /Số tiền ([\d,.]+)\s*VNĐ/i;
 
 const parseBranchVerificationNotification = (
   message: string
@@ -208,6 +210,18 @@ export const useNotifications = (
           });
           setNotifications((prev) => [data, ...prev]);
           setUnreadCount((prev) => prev + 1);
+
+          if (data.type === 'CampaignCancelledRefund') {
+            const amountStr = data.message
+              .match(REFUND_AMOUNT_REGEX)?.[1]
+              ?.replace(/[,.]/g, '');
+            if (amountStr) {
+              const amount = parseInt(amountStr, 10);
+              if (!isNaN(amount)) {
+                dispatch(updateBalance(amount));
+              }
+            }
+          }
 
           if (data.type === 'NewOrder' && data.referenceId) {
             axiosApi.orderApi

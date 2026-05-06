@@ -30,6 +30,7 @@ export interface VendorOrder {
   lockedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  moneyLocation?: string | null;
   items: VendorOrderItem[];
 }
 
