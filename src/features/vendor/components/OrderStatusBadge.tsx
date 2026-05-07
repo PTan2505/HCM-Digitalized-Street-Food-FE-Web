@@ -18,6 +18,7 @@ export const getOrderStatusMeta = (
   if (status === 2) return { label: 'Đã thanh toán', type: 'info' };
   if (status === 3) return { label: 'Đã hủy', type: 'error' };
   if (status === 4) return { label: 'Hoàn tất', type: 'success' };
+  if (status === 5) return { label: 'Đã hết hạn', type: 'default' };
   return { label: 'Không xác định', type: 'default' };
 };
 
