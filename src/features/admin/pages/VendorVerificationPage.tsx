@@ -1,4 +1,5 @@
 import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
+import BranchLocationModal from '@features/moderator/components/BranchLocationModal';
 import Pagination from '@features/moderator/components/Pagination';
 import PendingTypeFilterSection from '@features/moderator/components/PendingTypeFilterSection';
 import RejectModal from '@features/moderator/components/RejectModal';
@@ -19,6 +20,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ImageIcon from '@mui/icons-material/Image';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -45,19 +47,9 @@ const HIDDEN_COLUMN_KEYS_BY_PENDING_TYPE: Record<
   PendingRegistrationType,
   string[]
 > = {
-  0: [
-    'branch.vendorId',
-    'branch.vendorOwnerName',
-    'branch.email',
-    'branch.phoneNumber',
-  ],
+  0: ['branch.vendorId', 'branch.vendorOwnerName', 'branch.phoneNumber'],
   1: [],
-  2: [
-    'branch.vendorId',
-    'branch.vendorOwnerName',
-    'branch.email',
-    'branch.phoneNumber',
-  ],
+  2: ['branch.vendorId', 'branch.vendorOwnerName', 'branch.phoneNumber'],
 };
 
 const DETAILS_MODAL_TITLE_BY_PENDING_TYPE: Record<
@@ -88,6 +80,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [imagesModalOpen, setImagesModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [uploadLicenseModalOpen, setUploadLicenseModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
@@ -238,6 +231,16 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setSelectedRegistration(null);
   };
 
+  const handleOpenLocationModal = (row: Record<string, unknown>): void => {
+    setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setLocationModalOpen(true);
+  };
+
+  const handleCloseLocationModal = (): void => {
+    setLocationModalOpen(false);
+    setSelectedRegistration(null);
+  };
+
   const handleOpenRejectModal = (row: Record<string, unknown>): void => {
     setSelectedRegistration(row as unknown as BranchRegisterRequest);
     setRejectModalOpen(true);
@@ -268,14 +271,16 @@ export default function VendorVerificationPage(): React.JSX.Element {
     }
   };
 
-  const handleClaim = async (row: Record<string, unknown>): Promise<void> => {
-    const registration = row as unknown as BranchRegisterRequest;
+  const handleClaim = async (
+    registration: BranchRegisterRequest
+  ): Promise<void> => {
     const branchId = registration.branchId;
     if (branchId === null || branchId === undefined) return;
     setClaimingRows((prev) => ({ ...prev, [branchId]: true }));
     try {
       const result = await axiosApi.branchApi.claimBranchRegistration(branchId);
       setClaimedRows((prev) => ({ ...prev, [branchId]: result.verifiedBy }));
+      handleCloseLocationModal();
     } catch (error) {
       console.error('Failed to claim branch registration:', error);
     } finally {
@@ -309,13 +314,9 @@ export default function VendorVerificationPage(): React.JSX.Element {
 
   const columns = [
     {
-      key: 'branchRequestId',
-      label: 'STT',
-      render: (
-        _: unknown,
-        _row: Record<string, unknown>,
-        index?: number
-      ): number => (index ?? 0) + 1,
+      key: 'branch.name',
+      label: pendingType === 0 ? 'Tên quán' : 'Tên chi nhánh',
+      className: 'font-medium',
     },
     {
       key: 'branch.vendorId',
@@ -327,16 +328,33 @@ export default function VendorVerificationPage(): React.JSX.Element {
       },
     },
     {
+      key: 'branch.addressDetail',
+      label: 'Địa chỉ',
+      render: (_: unknown, row: Record<string, unknown>): string => {
+        const branch = row.branch as { addressDetail: string } | undefined;
+        return branch?.addressDetail ?? '-';
+      },
+    },
+    {
+      key: 'branch.ward',
+      label: 'Phường/Xã',
+      render: (_: unknown, row: Record<string, unknown>): string => {
+        const branch = row.branch as { ward: string } | undefined;
+        return branch?.ward ?? '-';
+      },
+    },
+    {
       key: 'branch.vendorOwnerName',
       label: 'Tên người bán',
       render: (_: unknown, row: Record<string, unknown>): string => {
         const branch = row.branch as { vendorId: number } | undefined;
         if (!branch) return '-';
-        // const owner = vendorDetails[branch.vendorId]?.vendorOwner;
-        // if (!owner) return '...';
-        // return `${owner.firstName} ${owner.lastName}`.trim();
         return vendorDetails[branch.vendorId]?.vendorOwnerName ?? '...';
       },
+    },
+    {
+      key: 'branch.phoneNumber',
+      label: 'Số điện thoại',
     },
     ...(pendingType === 0
       ? [
@@ -348,18 +366,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
               return (
                 registration.branch.userShareName ??
                 registration.userShareName ??
-                '-'
-              );
-            },
-          },
-          {
-            key: 'branch.userShareEmail',
-            label: 'Email người chia sẻ',
-            render: (_: unknown, row: Record<string, unknown>): string => {
-              const registration = row as unknown as BranchRegisterRequest;
-              return (
-                registration.branch.userShareEmail ??
-                registration.userShareEmail ??
                 '-'
               );
             },
@@ -393,18 +399,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
             },
           },
           {
-            key: 'branch.vendorUserEmail',
-            label: 'Email người yêu cầu',
-            render: (_: unknown, row: Record<string, unknown>): string => {
-              const registration = row as unknown as BranchRegisterRequest;
-              return (
-                registration.branch.vendorUserEmail ??
-                registration.vendorUserEmail ??
-                '-'
-              );
-            },
-          },
-          {
             key: 'branch.vendorUserPhone',
             label: 'SĐT người yêu cầu',
             render: (_: unknown, row: Record<string, unknown>): string => {
@@ -418,19 +412,6 @@ export default function VendorVerificationPage(): React.JSX.Element {
           },
         ]
       : []),
-    {
-      key: 'branch.name',
-      label: 'Tên chi nhánh',
-      className: 'font-medium',
-    },
-    {
-      key: 'branch.email',
-      label: 'Email',
-    },
-    {
-      key: 'branch.phoneNumber',
-      label: 'Số điện thoại',
-    },
     {
       key: 'createdAt',
       label: 'Ngày tạo',
@@ -460,25 +441,39 @@ export default function VendorVerificationPage(): React.JSX.Element {
       // Not yet claimed – show only "Nhận đơn" button
       if (verifiedBy === undefined || verifiedBy === null) {
         return (
-          <Tooltip title="Nhận đơn">
-            <span>
+          <span style={{ display: 'flex', gap: 2 }}>
+            <Tooltip title="Nhận đơn">
+              <span>
+                <IconButton
+                  size="small"
+                  color="warning"
+                  disabled={isClaiming}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleClaim(registration);
+                  }}
+                >
+                  {isClaiming ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : (
+                    <AssignmentIndIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Xem trên bản đồ">
               <IconButton
                 size="small"
-                color="warning"
-                disabled={isClaiming}
+                color="primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  void handleClaim(row);
+                  handleOpenLocationModal(row);
                 }}
               >
-                {isClaiming ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <AssignmentIndIcon fontSize="small" />
-                )}
+                <LocationOnIcon fontSize="small" />
               </IconButton>
-            </span>
-          </Tooltip>
+            </Tooltip>
+          </span>
         );
       }
 
@@ -736,6 +731,19 @@ export default function VendorVerificationPage(): React.JSX.Element {
         isOpen={imagesModalOpen}
         onClose={handleCloseImagesModal}
         registration={selectedRegistration}
+      />
+
+      {/* Location Modal */}
+      <BranchLocationModal
+        isOpen={locationModalOpen}
+        onClose={handleCloseLocationModal}
+        registration={selectedRegistration}
+        onClaim={handleClaim}
+        isClaiming={
+          selectedRegistration?.branchId
+            ? claimingRows[selectedRegistration.branchId]
+            : false
+        }
       />
 
       {/* Reject Modal */}

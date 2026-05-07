@@ -20,6 +20,7 @@ interface MapLocationPickerProps {
     city: string;
   }) => void;
   hideWarnings?: boolean;
+  readonly?: boolean;
 }
 
 export default function MapLocationPicker({
@@ -29,6 +30,7 @@ export default function MapLocationPicker({
   onLocationChange,
   onAddressResolved,
   hideWarnings = false,
+  readonly = false,
 }: MapLocationPickerProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -146,18 +148,20 @@ export default function MapLocationPicker({
     if (marker.current) {
       marker.current.setLngLat([longitude, latitude]);
     } else {
-      marker.current = new maplibregl.Marker({ draggable: true })
+      marker.current = new maplibregl.Marker({ draggable: !readonly })
         .setLngLat([longitude, latitude])
         .addTo(map.current);
 
-      marker.current.on('dragend', () => {
-        if (marker.current) {
-          const lngLat = marker.current.getLngLat();
-          updateSourceRef.current = 'map';
-          onLocationChangeRef.current(lngLat.lat, lngLat.lng);
-          void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
-        }
-      });
+      if (!readonly) {
+        marker.current.on('dragend', () => {
+          if (marker.current) {
+            const lngLat = marker.current.getLngLat();
+            updateSourceRef.current = 'map';
+            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
+          }
+        });
+      }
     }
 
     if (updateSourceRef.current === 'map') {
@@ -244,33 +248,12 @@ export default function MapLocationPicker({
 
       // Thêm marker nếu đã có tọa độ
       if (latitude !== null && longitude !== null) {
-        marker.current = new maplibregl.Marker({ draggable: true })
+        marker.current = new maplibregl.Marker({ draggable: !readonly })
           .setLngLat([longitude, latitude])
           .addTo(map.current);
 
         // Xử lý khi kéo marker
-        marker.current.on('dragend', () => {
-          if (marker.current) {
-            const lngLat = marker.current.getLngLat();
-            updateSourceRef.current = 'map';
-            onLocationChangeRef.current(lngLat.lat, lngLat.lng);
-            void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
-          }
-        });
-      }
-
-      // Xử lý click vào map
-      map.current.on('click', (e: maplibregl.MapMouseEvent) => {
-        const { lng, lat } = e.lngLat;
-
-        // Tạo hoặc di chuyển marker
-        if (marker.current) {
-          marker.current.setLngLat([lng, lat]);
-        } else if (map.current) {
-          marker.current = new maplibregl.Marker({ draggable: true })
-            .setLngLat([lng, lat])
-            .addTo(map.current);
-
+        if (!readonly) {
           marker.current.on('dragend', () => {
             if (marker.current) {
               const lngLat = marker.current.getLngLat();
@@ -280,11 +263,36 @@ export default function MapLocationPicker({
             }
           });
         }
+      }
 
-        updateSourceRef.current = 'map';
-        onLocationChangeRef.current(lat, lng);
-        void reverseGeocodeAndSync(lat, lng);
-      });
+      // Xử lý click vào map
+      if (!readonly) {
+        map.current.on('click', (e: maplibregl.MapMouseEvent) => {
+          const { lng, lat } = e.lngLat;
+
+          // Tạo hoặc di chuyển marker
+          if (marker.current) {
+            marker.current.setLngLat([lng, lat]);
+          } else if (map.current) {
+            marker.current = new maplibregl.Marker({ draggable: true })
+              .setLngLat([lng, lat])
+              .addTo(map.current);
+
+            marker.current.on('dragend', () => {
+              if (marker.current) {
+                const lngLat = marker.current.getLngLat();
+                updateSourceRef.current = 'map';
+                onLocationChangeRef.current(lngLat.lat, lngLat.lng);
+                void reverseGeocodeAndSync(lngLat.lat, lngLat.lng);
+              }
+            });
+          }
+
+          updateSourceRef.current = 'map';
+          onLocationChangeRef.current(lat, lng);
+          void reverseGeocodeAndSync(lat, lng);
+        });
+      }
     } catch {
       // map failed to load
     }
