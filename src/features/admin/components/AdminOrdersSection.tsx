@@ -68,6 +68,8 @@ export default function AdminOrdersSection({
         return 'Đã chuyển tới Vendor';
       case 'refundToCustomer':
         return 'Đã hoàn lại cho khách hàng';
+      case 'notPaid':
+        return 'Chưa thanh toán';
       default:
         return location ?? '-';
     }
