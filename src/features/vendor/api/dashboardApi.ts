@@ -4,6 +4,8 @@ import type {
   VendorDashboardDishes,
   VendorDashboardCampaigns,
   VendorRevenueBarResponse,
+  VendorDashboardBranchesPerformance,
+  CommissionRateResponse,
 } from '@features/vendor/types/dashboard';
 import type ApiClient from '@lib/api/apiClient';
 import { apiUrl } from '@lib/api/apiUrl';
@@ -66,6 +68,24 @@ export class DashboardApi {
     const res = await this.apiClient.get<VendorRevenueBarResponse>({
       url: apiUrl.vendorDashboard.getVendorRevenueBar,
       params,
+    });
+    return res.data;
+  }
+
+  async getBranchesPerformance(params: {
+    fromDate: string;
+    toDate: string;
+  }): Promise<VendorDashboardBranchesPerformance> {
+    const res = await this.apiClient.get<VendorDashboardBranchesPerformance>({
+      url: apiUrl.vendorDashboard.getBranchesPerformance,
+      params,
+    });
+    return res.data;
+  }
+
+  async getCommissionRate(): Promise<CommissionRateResponse> {
+    const res = await this.apiClient.get<CommissionRateResponse>({
+      url: apiUrl.vendorDashboard.getCommissionRate,
     });
     return res.data;
   }

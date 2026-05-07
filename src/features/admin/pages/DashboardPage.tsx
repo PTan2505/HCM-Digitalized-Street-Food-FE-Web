@@ -15,6 +15,13 @@ import AdminRevenueBarModal from '@features/admin/components/AdminRevenueBarModa
 import AdminOrdersSection from '@features/admin/components/AdminOrdersSection';
 import type { SystemCampaignStatistics } from '@features/admin/types/dashboard';
 
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function DashboardPage(): React.JSX.Element {
   const {
     userSignUps,
@@ -32,20 +39,26 @@ export default function DashboardPage(): React.JSX.Element {
 
   // Default to the last 30 days which is a standard logical period for dashboards
   const [dateRange, setDateRange] = useState(() => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - 30);
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
+
+    const start = new Date(Date.UTC(y, m, d - 30, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999));
+
     return {
       fromDate: start.toISOString(),
       toDate: end.toISOString(),
     };
   });
-
-  const [startDateInput, setStartDateInput] = useState(
-    dateRange.fromDate.slice(0, 10)
-  );
-  const [endDateInput, setEndDateInput] = useState(
-    dateRange.toDate.slice(0, 10)
+  const [startDateInput, setStartDateInput] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return toLocalDateString(d);
+  });
+  const [endDateInput, setEndDateInput] = useState(() =>
+    toLocalDateString(new Date())
   );
 
   useEffect(() => {
@@ -76,10 +89,11 @@ export default function DashboardPage(): React.JSX.Element {
   ]);
 
   const handleFilterApply = (): void => {
-    const start = new Date(startDateInput);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(endDateInput);
-    end.setHours(23, 59, 59, 999);
+    const [y1, m1, d1] = startDateInput.split('-').map(Number);
+    const start = new Date(Date.UTC(y1, m1 - 1, d1, 0, 0, 0, 0));
+
+    const [y2, m2, d2] = endDateInput.split('-').map(Number);
+    const end = new Date(Date.UTC(y2, m2 - 1, d2, 23, 59, 59, 999));
 
     setDateRange({
       fromDate: start.toISOString(),
@@ -88,12 +102,16 @@ export default function DashboardPage(): React.JSX.Element {
   };
 
   const setQuickFilter = (days: number): void => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - days);
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
 
-    setStartDateInput(start.toISOString().slice(0, 10));
-    setEndDateInput(end.toISOString().slice(0, 10));
+    const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999));
+    const start = new Date(Date.UTC(y, m, d - days, 0, 0, 0, 0));
+
+    setStartDateInput(toLocalDateString(new Date(y, m, d - days)));
+    setEndDateInput(toLocalDateString(new Date(y, m, d)));
 
     setDateRange({
       fromDate: start.toISOString(),
@@ -115,7 +133,8 @@ export default function DashboardPage(): React.JSX.Element {
 
   const totalRevenue =
     (money?.totalBranchRegistrationAmount ?? 0) +
-    (money?.totalSystemCampaignAmount ?? 0);
+    (money?.totalSystemCampaignAmount ?? 0) +
+    (money?.totalOrderCommissionAmount ?? 0);
 
   const makeTrend = (
     rate: number | null,
@@ -270,7 +289,7 @@ export default function DashboardPage(): React.JSX.Element {
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
                         <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                        Đăng ký chi nhánh
+                        Từ đăng ký chi nhánh
                       </span>
                       <span className="text-sm font-bold text-emerald-600">
                         {formatCurrency(
@@ -287,7 +306,8 @@ export default function DashboardPage(): React.JSX.Element {
                         }`}
                       >
                         {money.branchRegistrationGrowthRate > 0 ? '+' : ''}
-                        {money.branchRegistrationGrowthRate}% so với kỳ trước
+                        {money.branchRegistrationGrowthRate}% so với kỳ{' '}
+                        {money?.previousPeriod?.toLowerCase()}
                       </span>
                     )}
                   </div>
@@ -295,7 +315,7 @@ export default function DashboardPage(): React.JSX.Element {
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
                         <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                        Chiến dịch hệ thống
+                        Từ chiến dịch hệ thống
                       </span>
                       <span className="text-sm font-bold text-amber-600">
                         {formatCurrency(money?.totalSystemCampaignAmount ?? 0)}
@@ -310,7 +330,32 @@ export default function DashboardPage(): React.JSX.Element {
                         }`}
                       >
                         {money.systemCampaignGrowthRate > 0 ? '+' : ''}
-                        {money.systemCampaignGrowthRate}% so với kỳ trước
+                        {money.systemCampaignGrowthRate}% so với kỳ{' '}
+                        {money?.previousPeriod?.toLowerCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mb-2 flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600">
+                        <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                        Từ hoa hồng của đơn hàng
+                      </span>
+                      <span className="text-sm font-bold text-blue-600">
+                        {formatCurrency(money?.totalOrderCommissionAmount ?? 0)}
+                      </span>
+                    </div>
+                    {money?.orderCommissionGrowthRate != null && (
+                      <span
+                        className={`text-right text-xs font-medium ${
+                          money.orderCommissionGrowthRate >= 0
+                            ? 'text-blue-600'
+                            : 'text-red-500'
+                        }`}
+                      >
+                        {money.orderCommissionGrowthRate > 0 ? '+' : ''}
+                        {money.orderCommissionGrowthRate}% so với kỳ{' '}
+                        {money?.previousPeriod?.toLowerCase()}
                       </span>
                     )}
                   </div>
@@ -356,17 +401,15 @@ export default function DashboardPage(): React.JSX.Element {
                     [
                       makeTrend(
                         money?.branchRegistrationGrowthRate ?? null,
-                        buildPeriodLabel(
-                          money?.previousPeriod,
-                          'đối với đăng kí chi nhánh'
-                        )
+                        'đối với đăng kí chi nhánh'
                       ),
                       makeTrend(
                         money?.systemCampaignGrowthRate ?? null,
-                        buildPeriodLabel(
-                          money?.previousPeriod,
-                          'đối với tham gia chiến dịch hệ thống'
-                        )
+                        'đối với tham gia chiến dịch hệ thống'
+                      ),
+                      makeTrend(
+                        money?.orderCommissionGrowthRate ?? null,
+                        'đối với phí hoa hồng đơn hàng'
                       ),
                     ].filter(Boolean) as {
                       value: number;
@@ -419,6 +462,7 @@ export default function DashboardPage(): React.JSX.Element {
             <AdminRevenuePieChart
               branchAmount={money?.totalBranchRegistrationAmount ?? 0}
               campaignAmount={money?.totalSystemCampaignAmount ?? 0}
+              orderCommissionAmount={money?.totalOrderCommissionAmount ?? 0}
             />
           </div>
 

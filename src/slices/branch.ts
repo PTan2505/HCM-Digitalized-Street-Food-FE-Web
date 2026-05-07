@@ -151,6 +151,23 @@ const branchSlice = createSlice({
   initialState,
   reducers: {
     resetBranchState: () => initialState,
+    updatePendingRegistrationLicense: (
+      state,
+      action: { payload: { branchId: number; licenseUrls: string[] } }
+    ) => {
+      const registration = state.pendingRegistrations.find(
+        (reg) => reg.branchId === action.payload.branchId
+      );
+      if (registration) {
+        // Since `licenseUrl` expects a string or null (or arrays sometimes), we update it.
+        // It could be string or array depending on the codebase, we'll store the array or the first URL.
+        // Let's store the whole array if it accepts it, or just pass it to `licenseUrl` and `branch.licenseUrls`.
+        registration.licenseUrl = action.payload.licenseUrls;
+        if (registration.branch) {
+          registration.branch.licenseUrls = action.payload.licenseUrls;
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -234,7 +251,8 @@ const branchSlice = createSlice({
   },
 });
 
-export const { resetBranchState } = branchSlice.actions;
+export const { resetBranchState, updatePendingRegistrationLicense } =
+  branchSlice.actions;
 
 export default branchSlice.reducer;
 

@@ -114,6 +114,8 @@ export const apiUrl = {
     getActiveBranches: '/Branch/active',
     verifyBranch: (branchId: number): string => `/Branch/${branchId}/verify`,
     rejectBranch: (branchId: number): string => `/Branch/${branchId}/reject`,
+    claimBranchRegistration: (branchId: number): string =>
+      `/Branch/${branchId}/claim`,
   },
   taste: {
     getAllOrPostTaste: '/tastes',
@@ -128,6 +130,7 @@ export const apiUrl = {
     getPaymentCancel: '/Payment/cancel',
     confirmPayment: '/Payment/confirm',
     getVendorBalance: '/Payment/vendor/balance',
+    getVendorBalanceHistory: '/Payment/vendor/history',
     vendorRequestTransfer: '/Payment/vendor/transfer',
     getPaymentPayout: '/Payment/payouts',
   },
@@ -236,6 +239,8 @@ export const apiUrl = {
     getDishes: '/VendorDashboard/dishes',
     getCampaigns: '/VendorDashboard/campaigns',
     getVendorRevenueBar: '/VendorDashboard/revenue/bar',
+    getBranchesPerformance: '/VendorDashboard/branches/performance',
+    getCommissionRate: '/VendorDashboard/commission-rate',
   },
   adminDashboard: {
     getUserSignUps: '/AdminDashboard/user-signups',

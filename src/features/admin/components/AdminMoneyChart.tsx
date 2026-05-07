@@ -47,7 +47,7 @@ const CustomTooltip = ({
                 className="mr-2 inline-block h-3 w-3 rounded-full"
                 style={{ backgroundColor: '#10B981' }}
               ></span>
-              Đăng ký chi nhánh:
+              Doanh thu từ đăng ký chi nhánh:
             </span>
             <span className="font-bold text-gray-900">
               {formatCurrency(data.branchRegistrationAmount ?? 0)}
@@ -59,10 +59,22 @@ const CustomTooltip = ({
                 className="mr-2 inline-block h-3 w-3 rounded-full"
                 style={{ backgroundColor: '#F59E0B' }}
               ></span>
-              Chiến dịch hệ thống:
+              Doanh thu từ chiến dịch hệ thống:
             </span>
             <span className="font-bold text-gray-900">
               {formatCurrency(data.systemCampaignAmount ?? 0)}
+            </span>
+          </p>
+          <p className="text-sm">
+            <span className="mr-2 flex items-center text-gray-500">
+              <span
+                className="mr-2 inline-block h-3 w-3 rounded-full"
+                style={{ backgroundColor: '#3B82F6' }}
+              ></span>
+              Doanh thu từ hoa hồng của đơn hàng:
+            </span>
+            <span className="font-bold text-gray-900">
+              {formatCurrency(data.orderCommissionAmount ?? 0)}
             </span>
           </p>
         </div>
@@ -82,7 +94,7 @@ export default function AdminMoneyChart({
           Dòng tiền thu về
         </h3>
         <p className="text-sm text-gray-500">
-          Thu nhập từ đăng ký chi nhánh và chiến dịch
+          Thu nhập từ hệ thống (chi nhánh, chiến dịch, hoa hồng)
         </p>
       </div>
 
@@ -151,9 +163,19 @@ export default function AdminMoneyChart({
               />
               <Line
                 type="monotone"
-                name="Chiến dịch"
+                name="Phí tham gia chiến dịch"
                 dataKey="systemCampaignAmount"
                 stroke="#F59E0B"
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+                animationDuration={1500}
+              />
+              <Line
+                type="monotone"
+                name="Phí hoa hồng từ đơn hàng"
+                dataKey="orderCommissionAmount"
+                stroke="#3B82F6"
                 strokeWidth={3}
                 dot={{ r: 4, strokeWidth: 2 }}
                 activeDot={{ r: 6, strokeWidth: 0 }}

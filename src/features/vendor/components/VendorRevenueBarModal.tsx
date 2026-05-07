@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from 'recharts';
 import useDashboard from '@features/vendor/hooks/useDashboard';
 import type { RevenueBarItem } from '@features/vendor/types/dashboard';
@@ -29,6 +30,8 @@ const LABEL_MAP: Record<string, string> = {
 function mapLabel(item: RevenueBarItem): RevenueBarItem {
   return { ...item, label: LABEL_MAP[item.label] ?? item.label };
 }
+
+const COLORS = ['#f87171', '#3b82f6']; // Red for Previous, Blue for Now
 
 export default function VendorRevenueBarModal({
   isOpen,
@@ -239,12 +242,14 @@ export default function VendorRevenueBarModal({
                     marginBottom: '4px',
                   }}
                 />
-                <Bar
-                  dataKey="value"
-                  fill="#10b981"
-                  radius={[6, 6, 0, 0]}
-                  barSize={60}
-                />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={60}>
+                  {chartData.map((_entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (

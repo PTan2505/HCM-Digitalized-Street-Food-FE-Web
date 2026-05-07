@@ -8,6 +8,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ImageIcon from '@mui/icons-material/Image';
+import ArticleIcon from '@mui/icons-material/Article';
+import BadgeIcon from '@mui/icons-material/Badge';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -42,6 +44,7 @@ import BranchDishDetailsModal from '@features/vendor/components/BranchDishDetail
 import BranchFeedbackModal from '@features/vendor/components/BranchFeedbackModal';
 import OnboardingGuideModal from '@features/vendor/components/OnboardingGuideModal';
 import BranchManagerModal from '@features/vendor/components/BranchManagerModal';
+import LicenseModal from '@features/vendor/components/LicenseModal';
 import { getBranchManagementTourSteps } from '@features/vendor/utils/branchManagementTourSteps';
 // import BranchCampaignManagementModal from '@features/vendor/components/BranchCampaignManagementModal';
 
@@ -90,6 +93,12 @@ function BranchPage(): JSX.Element {
   const [dishBranch, setDishBranch] = useState<Branch | null>(null);
   const [feedbackBranch, setFeedbackBranch] = useState<Branch | null>(null);
   const [managerBranch, setManagerBranch] = useState<Branch | null>(null);
+  const [licenseModalBranch, setLicenseModalBranch] = useState<Branch | null>(
+    null
+  );
+  const [licenseModalMode, setLicenseModalMode] = useState<'view' | 'update'>(
+    'view'
+  );
   // const [campaignBranch, setCampaignBranch] = useState<Branch | null>(null);
   const [managerNameById, setManagerNameById] = useState<
     Record<number, string>
@@ -150,8 +159,11 @@ function BranchPage(): JSX.Element {
 
   const branches: Branch[] = myVendor?.branches ?? [];
   const vendorId: number | undefined = myVendor?.vendorId;
+  // const verifiedBranches: Branch[] = branches.filter(
+  //   (b) => b.licenseStatus === 'Accept'
+  // );
   const verifiedBranches: Branch[] = branches.filter(
-    (b) => b.licenseStatus === 'Accept'
+    (b) => b.isVerified === true
   );
 
   const getValidManagerId = (managerId: unknown): number | null => {
@@ -544,6 +556,30 @@ function BranchPage(): JSX.Element {
       },
       color: 'info' as const,
     },
+    {
+      id: 'view-license',
+      label: <ArticleIcon fontSize="small" />,
+      menuLabel: 'Xem giấy phép',
+      onClick: (branch: Branch): void => {
+        setLicenseModalMode('view');
+        setLicenseModalBranch(branch);
+      },
+      color: 'info' as const,
+      show: (branch: Branch): boolean =>
+        !!(branch.licenseUrls && branch.licenseUrls.length > 0),
+    },
+    {
+      id: 'update-license',
+      label: <BadgeIcon fontSize="small" />,
+      menuLabel: 'Cập nhật giấy phép',
+      onClick: (branch: Branch): void => {
+        setLicenseModalMode('update');
+        setLicenseModalBranch(branch);
+      },
+      color: 'warning' as const,
+      show: (branch: Branch): boolean =>
+        !branch.licenseUrls || branch.licenseUrls.length === 0,
+    },
   ];
 
   return (
@@ -757,6 +793,13 @@ function BranchPage(): JSX.Element {
         onAssigned={() => {
           void onGetMyVendor();
         }}
+      />
+
+      <LicenseModal
+        isOpen={licenseModalBranch !== null}
+        onClose={() => setLicenseModalBranch(null)}
+        branch={licenseModalBranch}
+        mode={licenseModalMode}
       />
 
       {/* <BranchCampaignManagementModal
