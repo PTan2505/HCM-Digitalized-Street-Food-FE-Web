@@ -31,11 +31,12 @@ export default function SettingPage(): JSX.Element {
     ghostpinXP: 'Điểm kinh nghiệm cho chia sẻ quán',
     feedbackDailyLimit: 'Giới hạn phản hồi mỗi ngày',
     GoldMinXP: 'Điểm kinh nghiệm tối thiểu hạng Vàng',
-    SubscriptionFee: 'Phí đăng ký',
+    SubscriptionFee: 'Phí đăng ký dịch vụ bán hàng',
     DiamondMinXP: 'Điểm kinh nghiệm tối thiểu hạng Kim cương',
     feedbackXP: 'Điểm kinh nghiệm cho phản hồi',
-    SubscriptionDurationDays: 'Số ngày đăng ký cho gói',
+    SubscriptionDurationDays: 'Thời hạn dịch vụ bán hàng',
     vendorTierFeedbackWindowSize: 'Số lượng đánh giá để tính hạng',
+    VendorOrderCommissionPercent: 'Phần trăm hoa hồng trên mỗi đơn hàng',
   };
 
   const [editingValues, setEditingValues] = useState<Record<number, string>>(
