@@ -70,6 +70,8 @@ export class AdminDashboardApi {
   async getAdminRevenueBar(params: {
     fromDate: string;
     toDate: string;
+    previousFromDate?: string;
+    previousToDate?: string;
   }): Promise<AdminRevenueBarResponse> {
     const res = await this.apiClient.get<AdminRevenueBarResponse>({
       url: apiUrl.adminDashboard.getAdminRevenueBar,

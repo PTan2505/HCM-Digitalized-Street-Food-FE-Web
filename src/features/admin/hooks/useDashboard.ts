@@ -58,6 +58,8 @@ export default function useDashboard(): {
   onGetAdminRevenueBar: (payload: {
     fromDate: string;
     toDate: string;
+    previousFromDate?: string;
+    previousToDate?: string;
   }) => Promise<AdminRevenueBarResponse>;
   onGetSystemCampaignsStatistics: () => Promise<SystemCampaignStatistics[]>;
   onResetAdminDashboardState: () => void;
@@ -131,6 +133,8 @@ export default function useDashboard(): {
     async (payload: {
       fromDate: string;
       toDate: string;
+      previousFromDate?: string;
+      previousToDate?: string;
     }): Promise<AdminRevenueBarResponse> => {
       return await dispatch(getAdminRevenueBar(payload)).unwrap();
     },

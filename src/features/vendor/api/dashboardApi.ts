@@ -64,6 +64,8 @@ export class DashboardApi {
   async getVendorRevenueBar(params: {
     fromDate: string;
     toDate: string;
+    previousFromDate?: string;
+    previousToDate?: string;
   }): Promise<VendorRevenueBarResponse> {
     const res = await this.apiClient.get<VendorRevenueBarResponse>({
       url: apiUrl.vendorDashboard.getVendorRevenueBar,

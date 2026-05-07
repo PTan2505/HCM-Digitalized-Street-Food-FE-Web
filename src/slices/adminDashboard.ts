@@ -139,6 +139,8 @@ export const getAdminRevenueBar = createAppAsyncThunk(
     payload: {
       fromDate: string;
       toDate: string;
+      previousFromDate?: string;
+      previousToDate?: string;
     },
     { rejectWithValue }
   ) => {
