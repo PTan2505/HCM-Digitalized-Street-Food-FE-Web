@@ -60,6 +60,8 @@ export default function useDashboard(): {
   onGetVendorRevenueBar: (payload: {
     fromDate: string;
     toDate: string;
+    previousFromDate?: string;
+    previousToDate?: string;
   }) => Promise<VendorRevenueBarResponse>;
   onGetBranchesPerformance: (payload: {
     fromDate: string;
@@ -133,6 +135,8 @@ export default function useDashboard(): {
     async (payload: {
       fromDate: string;
       toDate: string;
+      previousFromDate?: string;
+      previousToDate?: string;
     }): Promise<VendorRevenueBarResponse> => {
       return await dispatch(getVendorRevenueBar(payload)).unwrap();
     },

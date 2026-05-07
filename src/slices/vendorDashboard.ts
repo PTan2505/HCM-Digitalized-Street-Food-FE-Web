@@ -126,7 +126,12 @@ export const getCampaigns = createAppAsyncThunk(
 export const getVendorRevenueBar = createAppAsyncThunk(
   'vendorDashboard/getVendorRevenueBar',
   async (
-    payload: { fromDate: string; toDate: string },
+    payload: {
+      fromDate: string;
+      toDate: string;
+      previousFromDate?: string;
+      previousToDate?: string;
+    },
     { rejectWithValue }
   ) => {
     try {
