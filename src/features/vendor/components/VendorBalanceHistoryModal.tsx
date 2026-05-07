@@ -78,13 +78,15 @@ export default function VendorBalanceHistoryModal({
       let startIso: string | undefined;
       if (fromDate) {
         const [y, m, d] = fromDate.split('-').map(Number);
-        startIso = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)).toISOString();
+        startIso = new Date(
+          Date.UTC(y, m - 1, d - 1, 17, 0, 0, 0)
+        ).toISOString();
       }
 
       let endIso: string | undefined;
       if (toDate) {
         const [y, m, d] = toDate.split('-').map(Number);
-        endIso = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)).toISOString();
+        endIso = new Date(Date.UTC(y, m - 1, d, 16, 59, 59, 999)).toISOString();
       }
 
       void onFetchVendorBalanceHistory({

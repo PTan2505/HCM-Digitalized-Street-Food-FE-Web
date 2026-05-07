@@ -71,20 +71,30 @@ export default function AdminRevenueBarModal({
   const handleApply = (): void => {
     const fromDate =
       filterType === 'MONTH'
-        ? new Date(Date.UTC(selectedYear, selectedMonth - 1, 1, 0, 0, 0, 0))
+        ? new Date(
+            Date.UTC(selectedYear, selectedMonth - 1, 1 - 1, 17, 0, 0, 0)
+          )
         : new Date(
-            Date.UTC(selectedYear, (selectedQuarter - 1) * 3, 1, 0, 0, 0, 0)
+            Date.UTC(
+              selectedYear,
+              (selectedQuarter - 1) * 3,
+              1 - 1,
+              17,
+              0,
+              0,
+              0
+            )
           );
 
     const toDate =
       filterType === 'MONTH'
-        ? new Date(Date.UTC(selectedYear, selectedMonth, 0, 23, 59, 59, 999))
+        ? new Date(Date.UTC(selectedYear, selectedMonth, 0, 16, 59, 59, 999))
         : new Date(
             Date.UTC(
               selectedYear,
               (selectedQuarter - 1) * 3 + 3,
               0,
-              23,
+              16,
               59,
               59,
               999
@@ -97,14 +107,16 @@ export default function AdminRevenueBarModal({
     if (isPreviousEnabled) {
       const pFrom =
         filterType === 'MONTH'
-          ? new Date(Date.UTC(prevYear, prevMonth - 1, 1, 0, 0, 0, 0))
-          : new Date(Date.UTC(prevYear, (prevQuarter - 1) * 3, 1, 0, 0, 0, 0));
+          ? new Date(Date.UTC(prevYear, prevMonth - 1, 1 - 1, 17, 0, 0, 0))
+          : new Date(
+              Date.UTC(prevYear, (prevQuarter - 1) * 3, 1 - 1, 17, 0, 0, 0)
+            );
 
       const pTo =
         filterType === 'MONTH'
-          ? new Date(Date.UTC(prevYear, prevMonth, 0, 23, 59, 59, 999))
+          ? new Date(Date.UTC(prevYear, prevMonth, 0, 16, 59, 59, 999))
           : new Date(
-              Date.UTC(prevYear, (prevQuarter - 1) * 3 + 3, 0, 23, 59, 59, 999)
+              Date.UTC(prevYear, (prevQuarter - 1) * 3 + 3, 0, 16, 59, 59, 999)
             );
 
       previousFromDate = pFrom.toISOString();

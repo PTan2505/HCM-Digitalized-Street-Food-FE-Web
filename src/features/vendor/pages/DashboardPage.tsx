@@ -47,8 +47,8 @@ export default function DashboardPage(): React.JSX.Element {
     const m = now.getMonth();
     const d = now.getDate();
 
-    const start = new Date(Date.UTC(y, m, d - 30, 0, 0, 0, 0));
-    const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999));
+    const start = new Date(Date.UTC(y, m, d - 30 - 1, 17, 0, 0, 0));
+    const end = new Date(Date.UTC(y, m, d, 16, 59, 59, 999));
 
     return {
       fromDate: start.toISOString(),
@@ -86,10 +86,10 @@ export default function DashboardPage(): React.JSX.Element {
 
   const handleFilterApply = (): void => {
     const [y1, m1, d1] = startDateInput.split('-').map(Number);
-    const start = new Date(Date.UTC(y1, m1 - 1, d1, 0, 0, 0, 0));
+    const start = new Date(Date.UTC(y1, m1 - 1, d1 - 1, 17, 0, 0, 0));
 
     const [y2, m2, d2] = endDateInput.split('-').map(Number);
-    const end = new Date(Date.UTC(y2, m2 - 1, d2, 23, 59, 59, 999));
+    const end = new Date(Date.UTC(y2, m2 - 1, d2, 16, 59, 59, 999));
 
     setDateRange({
       fromDate: start.toISOString(),
@@ -103,8 +103,8 @@ export default function DashboardPage(): React.JSX.Element {
     const m = now.getMonth();
     const d = now.getDate();
 
-    const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999));
-    const start = new Date(Date.UTC(y, m, d - days, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(y, m, d, 16, 59, 59, 999));
+    const start = new Date(Date.UTC(y, m, d - days - 1, 17, 0, 0, 0));
 
     setStartDateInput(toLocalDateString(new Date(y, m, d - days)));
     setEndDateInput(toLocalDateString(new Date(y, m, d)));
