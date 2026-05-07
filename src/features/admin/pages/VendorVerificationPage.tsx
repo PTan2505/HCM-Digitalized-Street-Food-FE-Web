@@ -230,12 +230,12 @@ export default function VendorVerificationPage(): React.JSX.Element {
     setImagesModalOpen(false);
     setSelectedRegistration(null);
   };
- 
+
   const handleOpenLocationModal = (row: Record<string, unknown>): void => {
     setSelectedRegistration(row as unknown as BranchRegisterRequest);
     setLocationModalOpen(true);
   };
- 
+
   const handleCloseLocationModal = (): void => {
     setLocationModalOpen(false);
     setSelectedRegistration(null);
@@ -732,7 +732,7 @@ export default function VendorVerificationPage(): React.JSX.Element {
         onClose={handleCloseImagesModal}
         registration={selectedRegistration}
       />
- 
+
       {/* Location Modal */}
       <BranchLocationModal
         isOpen={locationModalOpen}
