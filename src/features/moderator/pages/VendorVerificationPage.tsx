@@ -239,12 +239,12 @@ export default function VendorVerificationPage({
     setImagesModalOpen(false);
     setSelectedRegistration(null);
   };
- 
+
   const handleOpenLocationModal = (row: Record<string, unknown>): void => {
     setSelectedRegistration(row as unknown as BranchRegisterRequest);
     setLocationModalOpen(true);
   };
- 
+
   const handleCloseLocationModal = (): void => {
     setLocationModalOpen(false);
     setSelectedRegistration(null);
@@ -655,7 +655,7 @@ export default function VendorVerificationPage({
         onClose={handleCloseImagesModal}
         registration={selectedRegistration}
       />
- 
+
       {/* Location Modal */}
       <BranchLocationModal
         isOpen={locationModalOpen}
