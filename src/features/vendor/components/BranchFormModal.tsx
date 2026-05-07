@@ -217,21 +217,26 @@ export default function BranchFormModal({
       return;
     }
 
+    // Auto-fill phone number
     const loginPhoneNumber = user?.phoneNumber?.trim();
-    if (!loginPhoneNumber) {
-      return;
-    }
-
     const currentPhoneValue = getValues('ownerPhone')?.trim();
-    if (currentPhoneValue) {
-      return;
+    if (loginPhoneNumber && !currentPhoneValue) {
+      setValue('ownerPhone', loginPhoneNumber, {
+        shouldValidate: true,
+        shouldDirty: false,
+      });
     }
 
-    setValue('ownerPhone', loginPhoneNumber, {
-      shouldValidate: true,
-      shouldDirty: false,
-    });
-  }, [isOpen, user?.phoneNumber, getValues, setValue]);
+    // Auto-fill email
+    const loginEmail = user?.email?.trim();
+    const currentEmailValue = getValues('email')?.trim();
+    if (loginEmail && !currentEmailValue) {
+      setValue('email', loginEmail, {
+        shouldValidate: true,
+        shouldDirty: false,
+      });
+    }
+  }, [isOpen, user?.phoneNumber, user?.email, getValues, setValue]);
 
   const handleChange = (field: string, value: unknown): void => {
     setValue(field as keyof BranchFormData, value as never, {

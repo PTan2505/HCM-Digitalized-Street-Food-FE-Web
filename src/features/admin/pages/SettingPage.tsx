@@ -28,16 +28,14 @@ export default function SettingPage(): JSX.Element {
 
   const settingNameMap: Record<string, string> = {
     orderXP: 'Điểm kinh nghiệm cho đơn hàng',
-    ghostpinXP: 'Điểm kinh nghiệm cho Ghost Pin',
+    ghostpinXP: 'Điểm kinh nghiệm cho chia sẻ quán',
     feedbackDailyLimit: 'Giới hạn phản hồi mỗi ngày',
     GoldMinXP: 'Điểm kinh nghiệm tối thiểu hạng Vàng',
     SubscriptionFee: 'Phí đăng ký',
     DiamondMinXP: 'Điểm kinh nghiệm tối thiểu hạng Kim cương',
     feedbackXP: 'Điểm kinh nghiệm cho phản hồi',
     SubscriptionDurationDays: 'Số ngày đăng ký cho gói',
-    vendorTierFeedbackWindowSize:
-      'Độ rộng của đánh giá để tính hạng của chi nhánh',
-    VendorOrderCommissionPercent: 'Phần trăm hoa hồng cho đơn hàng',
+    vendorTierFeedbackWindowSize: 'Số lượng đánh giá để tính hạng',
   };
 
   const [editingValues, setEditingValues] = useState<Record<number, string>>(
