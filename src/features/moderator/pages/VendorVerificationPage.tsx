@@ -1,4 +1,5 @@
 import BranchImagesDetails from '@features/moderator/components/BranchImagesDetailsModal';
+import BranchLocationModal from '@features/moderator/components/BranchLocationModal';
 import Pagination from '@features/moderator/components/Pagination';
 import RejectModal from '@features/moderator/components/RejectModal';
 import Table from '@features/moderator/components/Table';
@@ -18,6 +19,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ImageIcon from '@mui/icons-material/Image';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -97,6 +99,7 @@ export default function VendorVerificationPage({
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [imagesModalOpen, setImagesModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [uploadLicenseModalOpen, setUploadLicenseModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] =
     useState<BranchRegisterRequest | null>(null);
@@ -236,6 +239,16 @@ export default function VendorVerificationPage({
     setImagesModalOpen(false);
     setSelectedRegistration(null);
   };
+ 
+  const handleOpenLocationModal = (row: Record<string, unknown>): void => {
+    setSelectedRegistration(row as unknown as BranchRegisterRequest);
+    setLocationModalOpen(true);
+  };
+ 
+  const handleCloseLocationModal = (): void => {
+    setLocationModalOpen(false);
+    setSelectedRegistration(null);
+  };
 
   const handleOpenRejectModal = (row: Record<string, unknown>): void => {
     setSelectedRegistration(row as unknown as BranchRegisterRequest);
@@ -291,13 +304,10 @@ export default function VendorVerificationPage({
 
   const columns = [
     {
-      key: 'branchRequestId',
-      label: 'STT',
-      render: (
-        _: unknown,
-        _row: Record<string, unknown>,
-        index?: number
-      ): number => (index ?? 0) + 1,
+      key: 'branch.name',
+      label: pendingType === 0 ? 'Tên quán' : 'Tên chi nhánh',
+      className: 'font-medium',
+      render: (value: unknown): string => toDisplayText(value),
     },
     {
       key: 'branch.vendorId',
@@ -309,6 +319,22 @@ export default function VendorVerificationPage({
       },
     },
     {
+      key: 'branch.addressDetail',
+      label: 'Địa chỉ',
+      render: (_: unknown, row: Record<string, unknown>): string => {
+        const branch = row.branch as { addressDetail: string } | undefined;
+        return toDisplayText(branch?.addressDetail);
+      },
+    },
+    {
+      key: 'branch.ward',
+      label: 'Phường/Xã',
+      render: (_: unknown, row: Record<string, unknown>): string => {
+        const branch = row.branch as { ward: string } | undefined;
+        return toDisplayText(branch?.ward);
+      },
+    },
+    {
       key: 'branch.vendorOwnerName',
       label: 'Tên người bán',
       render: (_: unknown, row: Record<string, unknown>): string => {
@@ -316,6 +342,11 @@ export default function VendorVerificationPage({
         if (!branch) return '-';
         return toDisplayText(vendorDetails[branch.vendorId]?.vendorOwnerName);
       },
+    },
+    {
+      key: 'branch.phoneNumber',
+      label: 'Số điện thoại',
+      render: (value: unknown): string => toDisplayText(value),
     },
     ...(pendingType === 0
       ? [
@@ -326,17 +357,6 @@ export default function VendorVerificationPage({
               const registration = row as unknown as BranchRegisterRequest;
               return toDisplayText(
                 registration.branch.userShareName ?? registration.userShareName
-              );
-            },
-          },
-          {
-            key: 'branch.userShareEmail',
-            label: 'Email người chia sẻ',
-            render: (_: unknown, row: Record<string, unknown>): string => {
-              const registration = row as unknown as BranchRegisterRequest;
-              return toDisplayText(
-                registration.branch.userShareEmail ??
-                  registration.userShareEmail
               );
             },
           },
@@ -367,17 +387,6 @@ export default function VendorVerificationPage({
             },
           },
           {
-            key: 'branch.vendorUserEmail',
-            label: 'Email người yêu cầu',
-            render: (_: unknown, row: Record<string, unknown>): string => {
-              const registration = row as unknown as BranchRegisterRequest;
-              return toDisplayText(
-                registration.branch.vendorUserEmail ??
-                  registration.vendorUserEmail
-              );
-            },
-          },
-          {
             key: 'branch.vendorUserPhone',
             label: 'SĐT người yêu cầu',
             render: (_: unknown, row: Record<string, unknown>): string => {
@@ -391,22 +400,6 @@ export default function VendorVerificationPage({
         ]
       : []),
     {
-      key: 'branch.name',
-      label: 'Tên chi nhánh',
-      className: 'font-medium',
-      render: (value: unknown): string => toDisplayText(value),
-    },
-    {
-      key: 'branch.email',
-      label: 'Email',
-      render: (value: unknown): string => toDisplayText(value),
-    },
-    {
-      key: 'branch.phoneNumber',
-      label: 'Số điện thoại',
-      render: (value: unknown): string => toDisplayText(value),
-    },
-    {
       key: 'createdAt',
       label: 'Ngày tạo',
       render: (value: unknown): string => formatDisplayDateTime(value),
@@ -414,14 +407,16 @@ export default function VendorVerificationPage({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ].filter((column) => !hiddenColumnKeys.includes(column.key)) as any[];
 
-  const handleClaim = async (row: Record<string, unknown>): Promise<void> => {
-    const registration = row as unknown as BranchRegisterRequest;
+  const handleClaim = async (
+    registration: BranchRegisterRequest
+  ): Promise<void> => {
     const branchId = registration.branchId;
     if (branchId === null || branchId === undefined) return;
     setClaimingRows((prev) => ({ ...prev, [branchId]: true }));
     try {
       const result = await axiosApi.branchApi.claimBranchRegistration(branchId);
       setClaimedRows((prev) => ({ ...prev, [branchId]: result.verifiedBy }));
+      handleCloseLocationModal();
     } catch (error) {
       console.error('Failed to claim branch registration:', error);
     } finally {
@@ -449,25 +444,39 @@ export default function VendorVerificationPage({
       // Not yet claimed – show only "Nhận đơn" button
       if (verifiedBy === undefined || verifiedBy === null) {
         return (
-          <Tooltip title="Nhận đơn">
-            <span>
+          <span style={{ display: 'flex', gap: 2 }}>
+            <Tooltip title="Nhận đơn">
+              <span>
+                <IconButton
+                  size="small"
+                  color="warning"
+                  disabled={isClaiming}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleClaim(registration);
+                  }}
+                >
+                  {isClaiming ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : (
+                    <AssignmentIndIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Xem trên bản đồ">
               <IconButton
                 size="small"
-                color="warning"
-                disabled={isClaiming}
+                color="primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  void handleClaim(row);
+                  handleOpenLocationModal(row);
                 }}
               >
-                {isClaiming ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <AssignmentIndIcon fontSize="small" />
-                )}
+                <LocationOnIcon fontSize="small" />
               </IconButton>
-            </span>
-          </Tooltip>
+            </Tooltip>
+          </span>
         );
       }
 
@@ -645,6 +654,19 @@ export default function VendorVerificationPage({
         isOpen={imagesModalOpen}
         onClose={handleCloseImagesModal}
         registration={selectedRegistration}
+      />
+ 
+      {/* Location Modal */}
+      <BranchLocationModal
+        isOpen={locationModalOpen}
+        onClose={handleCloseLocationModal}
+        registration={selectedRegistration}
+        onClaim={handleClaim}
+        isClaiming={
+          selectedRegistration?.branchId
+            ? claimingRows[selectedRegistration.branchId]
+            : false
+        }
       />
 
       {/* Reject Modal */}
