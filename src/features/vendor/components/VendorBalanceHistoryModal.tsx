@@ -31,10 +31,22 @@ const TAB_METHODS = ['Vendor Wallet', 'PAYOS_PAYOUT'] as const;
 const formatCurrencyVnd = (value: number): string =>
   `${Math.abs(value).toLocaleString('vi-VN')} ₫`;
 
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const formatDate = (dateStr: string): string => {
   const d = new Date(dateStr);
-  const pad = (n: number): string => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return d.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const METHOD_LABEL: Record<string, string> = {
@@ -50,11 +62,9 @@ export default function VendorBalanceHistoryModal({
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 6);
-    return d.toISOString().slice(0, 10);
+    return toLocalDateString(d);
   });
-  const [toDate, setToDate] = useState(() =>
-    new Date().toISOString().slice(0, 10)
-  );
+  const [toDate, setToDate] = useState(() => toLocalDateString(new Date()));
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -65,10 +75,22 @@ export default function VendorBalanceHistoryModal({
 
   const fetchData = useCallback(
     (page: number, size: number) => {
+      let startIso: string | undefined;
+      if (fromDate) {
+        const [y, m, d] = fromDate.split('-').map(Number);
+        startIso = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)).toISOString();
+      }
+
+      let endIso: string | undefined;
+      if (toDate) {
+        const [y, m, d] = toDate.split('-').map(Number);
+        endIso = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)).toISOString();
+      }
+
       void onFetchVendorBalanceHistory({
         paymentMethod: TAB_METHODS[activeTab],
-        fromDate: fromDate || undefined,
-        toDate: toDate || undefined,
+        fromDate: startIso,
+        toDate: endIso,
         pageNumber: page,
         pageSize: size,
       });
