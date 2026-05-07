@@ -161,6 +161,8 @@ export default function DashboardPage(): React.JSX.Element {
       0
     ) ?? 0;
 
+  const isDateRangeInvalid = startDateInput > endDateInput;
+
   return (
     <div className="font-(--font-nunito)">
       {/* Header */}
@@ -206,10 +208,16 @@ export default function DashboardPage(): React.JSX.Element {
             />
           </div>
 
-          <div className="mt-5 flex w-full self-end sm:w-auto">
+          <div className="mt-5 flex w-full flex-col self-end sm:w-auto">
+            {isDateRangeInvalid && (
+              <span className="mb-1 text-[10px] font-medium text-red-500">
+                Ngày bắt đầu không được lớn hơn ngày kết thúc
+              </span>
+            )}
             <button
               onClick={handleFilterApply}
-              className="bg-primary-600 hover:bg-primary-700 flex items-center justify-center rounded-lg px-5 py-[0.625rem] text-sm font-semibold text-white transition-all hover:shadow-md"
+              disabled={isDateRangeInvalid}
+              className="bg-primary-600 hover:bg-primary-700 flex items-center justify-center rounded-lg px-5 py-[0.625rem] text-sm font-semibold text-white transition-all hover:shadow-md disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               Áp dụng
             </button>
