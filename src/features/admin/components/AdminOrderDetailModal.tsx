@@ -45,6 +45,8 @@ export default function AdminOrderDetailModal({
         return 'Đã chuyển tới Vendor';
       case 'refundToCustomer':
         return 'Đã hoàn lại cho khách hàng';
+      case 'notPaid':
+        return 'Chưa thanh toán';
       default:
         return location ?? '-';
     }
@@ -73,6 +75,7 @@ export default function AdminOrderDetailModal({
         sx: {
           borderRadius: '24px',
           overflow: 'hidden',
+          maxHeight: '85vh',
         },
       }}
     >
@@ -96,10 +99,10 @@ export default function AdminOrderDetailModal({
         onClose={onClose}
       />
 
-      <DialogContent className="pt-6">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <DialogContent className="flex flex-col overflow-hidden pt-6">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-8 overflow-hidden md:grid-cols-2">
           {/* Cột trái: Thông tin người dùng, chi nhánh, thanh toán */}
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto pr-2">
             {/* Người dùng */}
             <Box className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
               <Box className="text-primary-600 mb-3 flex items-center gap-2">
@@ -114,7 +117,7 @@ export default function AdminOrderDetailModal({
                     variant="body2"
                     className="font-medium text-gray-900"
                   >
-                    {order.user.lastName} {order.user.firstName}
+                    Tên: {order.user.lastName} {order.user.firstName}
                   </Typography>
                   <Typography variant="body2" className="text-gray-600">
                     SĐT: {order.user.phoneNumber || 'Không có'}
@@ -144,17 +147,17 @@ export default function AdminOrderDetailModal({
                     variant="body2"
                     className="font-medium text-gray-900"
                   >
-                    {order.branch.name}
+                    Tên chi nhánh: {order.branch.name}
                   </Typography>
                   <Typography variant="body2" className="text-gray-600">
-                    Vendor: {order.branch.vendorName}
+                    Tên cửa hàng: {order.branch.vendorName}
                   </Typography>
-                  <Box className="flex items-start gap-1">
+                  {/* <Box className="flex items-start gap-1">
                     <MapPin size={14} className="mt-0.5 text-gray-400" />
                     <Typography variant="body2" className="text-gray-600">
                       {order.branch.city}
                     </Typography>
-                  </Box>
+                  </Box> */}
                 </Box>
               ) : (
                 <Typography variant="body2" className="text-gray-500 italic">
@@ -236,8 +239,8 @@ export default function AdminOrderDetailModal({
           </div>
 
           {/* Cột phải: Chi tiết món và tổng tiền */}
-          <div>
-            <Box className="flex h-full flex-col rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+          <div className="flex min-h-0 flex-col">
+            <Box className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-gray-50/50 p-4">
               <Box className="text-primary-600 mb-4 flex items-center gap-2">
                 <Receipt size={20} />
                 <Typography variant="subtitle2" className="font-semibold">
